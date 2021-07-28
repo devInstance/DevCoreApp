@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net5.0</TargetFramework>
+        <AssemblyName>DevInstance.SampleWebApp.Server.Database.SqlServer</AssemblyName>
+        <RootNamespace>DevInstance.SampleWebApp.Server.Database.SqlServer</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Core\DevInstance.SampleWebApp.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="5.0.8" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="5.0.8" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Migrations\" />
+    </ItemGroup>
+
+</Project>

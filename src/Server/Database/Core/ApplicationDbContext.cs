@@ -1,4 +1,4 @@
-﻿using DevInstance.SampleWebApp.Server.Models;
+﻿using DevInstance.SampleWebApp.Server.Database.Core.Models;
 using IdentityServer4.EntityFramework.Options;
 using Microsoft.AspNetCore.ApiAuthorization.IdentityServer;
 using Microsoft.EntityFrameworkCore;
@@ -8,14 +8,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace DevInstance.SampleWebApp.Server.Data
+namespace DevInstance.SampleWebApp.Server.Database.Core
 {
-    public class ApplicationDbContext : ApiAuthorizationDbContext<ApplicationUser>
+    public abstract class ApplicationDbContext : ApiAuthorizationDbContext<ApplicationUser>
     {
         public ApplicationDbContext(
             DbContextOptions options,
             IOptions<OperationalStoreOptions> operationalStoreOptions) : base(options, operationalStoreOptions)
         {
         }
+
     }
 }

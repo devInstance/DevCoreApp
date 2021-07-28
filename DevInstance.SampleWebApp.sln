@@ -3,11 +3,19 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31515.178
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DevInstance.SampleWebApp.Server", "DevInstance.SampleWebApp\Server\DevInstance.SampleWebApp.Server.csproj", "{4CB9F89C-FC4C-460E-8E4D-CA82232105C2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DevInstance.SampleWebApp.Client", "src\Client\DevInstance.SampleWebApp.Client.csproj", "{733CE18D-2724-450C-B19C-B5DCF6B32720}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DevInstance.SampleWebApp.Client", "DevInstance.SampleWebApp\Client\DevInstance.SampleWebApp.Client.csproj", "{11C4C25E-F6C0-4667-BEA4-12AD9A603430}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DevInstance.SampleWebApp.Shared", "src\Shared\DevInstance.SampleWebApp.Shared.csproj", "{7AA514C3-8312-4AD5-9540-D6FF7262B744}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DevInstance.SampleWebApp.Shared", "DevInstance.SampleWebApp\Shared\DevInstance.SampleWebApp.Shared.csproj", "{D13FE170-C84C-4CE8-BC1B-DB21ED9825AC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DevInstance.SampleWebApp.Server", "src\Server\WebService\DevInstance.SampleWebApp.Server.csproj", "{2370A57D-307E-4ACF-9D5D-5D406FBAAC7C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Database", "Database", "{247E234E-54C7-44F3-A480-C3CA82611891}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DevInstance.SampleWebApp.Core", "src\Server\Database\Core\DevInstance.SampleWebApp.Core.csproj", "{A174DD1E-87A7-44FD-83E2-FC41A97E7FFF}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DevInstance.SampleWebApp.SqlServer", "src\Server\Database\SqlServer\DevInstance.SampleWebApp.SqlServer.csproj", "{3F04240A-E123-4891-B56C-768EBF1DA384}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DevInstance.SampleWebApp.Postgres", "src\Server\Database\Postgres\DevInstance.SampleWebApp.Postgres.csproj", "{40456C26-ED01-4749-A00D-B982380E5EB9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,21 +23,38 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{4CB9F89C-FC4C-460E-8E4D-CA82232105C2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4CB9F89C-FC4C-460E-8E4D-CA82232105C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4CB9F89C-FC4C-460E-8E4D-CA82232105C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4CB9F89C-FC4C-460E-8E4D-CA82232105C2}.Release|Any CPU.Build.0 = Release|Any CPU
-		{11C4C25E-F6C0-4667-BEA4-12AD9A603430}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{11C4C25E-F6C0-4667-BEA4-12AD9A603430}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{11C4C25E-F6C0-4667-BEA4-12AD9A603430}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{11C4C25E-F6C0-4667-BEA4-12AD9A603430}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D13FE170-C84C-4CE8-BC1B-DB21ED9825AC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D13FE170-C84C-4CE8-BC1B-DB21ED9825AC}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D13FE170-C84C-4CE8-BC1B-DB21ED9825AC}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D13FE170-C84C-4CE8-BC1B-DB21ED9825AC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{733CE18D-2724-450C-B19C-B5DCF6B32720}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{733CE18D-2724-450C-B19C-B5DCF6B32720}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{733CE18D-2724-450C-B19C-B5DCF6B32720}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{733CE18D-2724-450C-B19C-B5DCF6B32720}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7AA514C3-8312-4AD5-9540-D6FF7262B744}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7AA514C3-8312-4AD5-9540-D6FF7262B744}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7AA514C3-8312-4AD5-9540-D6FF7262B744}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7AA514C3-8312-4AD5-9540-D6FF7262B744}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2370A57D-307E-4ACF-9D5D-5D406FBAAC7C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2370A57D-307E-4ACF-9D5D-5D406FBAAC7C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2370A57D-307E-4ACF-9D5D-5D406FBAAC7C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2370A57D-307E-4ACF-9D5D-5D406FBAAC7C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A174DD1E-87A7-44FD-83E2-FC41A97E7FFF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A174DD1E-87A7-44FD-83E2-FC41A97E7FFF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A174DD1E-87A7-44FD-83E2-FC41A97E7FFF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A174DD1E-87A7-44FD-83E2-FC41A97E7FFF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3F04240A-E123-4891-B56C-768EBF1DA384}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3F04240A-E123-4891-B56C-768EBF1DA384}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3F04240A-E123-4891-B56C-768EBF1DA384}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3F04240A-E123-4891-B56C-768EBF1DA384}.Release|Any CPU.Build.0 = Release|Any CPU
+		{40456C26-ED01-4749-A00D-B982380E5EB9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{40456C26-ED01-4749-A00D-B982380E5EB9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{40456C26-ED01-4749-A00D-B982380E5EB9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{40456C26-ED01-4749-A00D-B982380E5EB9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{A174DD1E-87A7-44FD-83E2-FC41A97E7FFF} = {247E234E-54C7-44F3-A480-C3CA82611891}
+		{3F04240A-E123-4891-B56C-768EBF1DA384} = {247E234E-54C7-44F3-A480-C3CA82611891}
+		{40456C26-ED01-4749-A00D-B982380E5EB9} = {247E234E-54C7-44F3-A480-C3CA82611891}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {6BFA0519-0D2F-4B5F-B802-3227E2B7CFB3}

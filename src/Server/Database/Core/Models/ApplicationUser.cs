@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace DevInstance.SampleWebApp.Server.Models
+namespace DevInstance.SampleWebApp.Server.Database.Core.Models
 {
     public class ApplicationUser : IdentityUser
     {

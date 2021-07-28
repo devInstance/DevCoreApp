@@ -1,11 +1,12 @@
-using DevInstance.SampleWebApp.Server.Data;
-using DevInstance.SampleWebApp.Server.Models;
+using DevInstance.SampleWebApp.Server.Database.Core;
+using DevInstance.SampleWebApp.Server.Database.Core.Models;
+using DevInstance.SampleWebApp.Server.Database.Postgres;
+using DevInstance.SampleWebApp.Server.Database.SqlServer;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.ResponseCompression;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -26,17 +27,27 @@ namespace DevInstance.SampleWebApp.Server
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(
-                    Configuration.GetConnectionString("DefaultConnection")));
+            var provider = Configuration.GetSection("Database").GetValue(typeof(string), "Provider").ToString();
+
+            if(provider == "Postgres")
+            {
+                services.ConfigurePostgresDatabase(Configuration);
+            }
+            else if (provider == "SqlServer")
+            {
+                services.ConfigureSqlServerDatabase(Configuration);
+            }
 
             services.AddDatabaseDeveloperPageExceptionFilter();
 
-            services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
-                .AddEntityFrameworkStores<ApplicationDbContext>();
-
-            services.AddIdentityServer()
-                .AddApiAuthorization<ApplicationUser, ApplicationDbContext>();
+            if (provider == "Postgres")
+            {
+                services.ConfigurePostgresIdentityContext();
+            }
+            else if (provider == "SqlServer")
+            {
+                services.ConfigureSqlServerIdentityContext();
+            }
 
             services.AddAuthentication()
                 .AddIdentityServerJwt();
