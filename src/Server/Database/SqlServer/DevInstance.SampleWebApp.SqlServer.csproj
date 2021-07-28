@@ -16,6 +16,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Folder Include="Data\Queries\" />
       <Folder Include="Migrations\" />
     </ItemGroup>
 

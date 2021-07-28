@@ -16,6 +16,9 @@ namespace DevInstance.SampleWebApp.Server
 {
     public class Startup
     {
+        private const string PostgresProvider = "Postgres";
+        private const string SqlServerProvider = "SqlServer";
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -27,33 +30,38 @@ namespace DevInstance.SampleWebApp.Server
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            var provider = Configuration.GetSection("Database").GetValue(typeof(string), "Provider").ToString();
-
-            if(provider == "Postgres")
-            {
-                services.ConfigurePostgresDatabase(Configuration);
-            }
-            else if (provider == "SqlServer")
-            {
-                services.ConfigureSqlServerDatabase(Configuration);
-            }
-
-            services.AddDatabaseDeveloperPageExceptionFilter();
-
-            if (provider == "Postgres")
-            {
-                services.ConfigurePostgresIdentityContext();
-            }
-            else if (provider == "SqlServer")
-            {
-                services.ConfigureSqlServerIdentityContext();
-            }
+            ConfigureDatabase(services);
 
             services.AddAuthentication()
                 .AddIdentityServerJwt();
 
             services.AddControllersWithViews();
             services.AddRazorPages();
+        }
+
+        private void ConfigureDatabase(IServiceCollection services)
+        {
+            var provider = Configuration.GetSection("Database").GetValue(typeof(string), "Provider").ToString();
+
+            if (provider == PostgresProvider)
+            {
+                services.ConfigurePostgresDatabase(Configuration);
+            }
+            else if (provider == SqlServerProvider)
+            {
+                services.ConfigureSqlServerDatabase(Configuration);
+            }
+
+            services.AddDatabaseDeveloperPageExceptionFilter();
+
+            if (provider == PostgresProvider)
+            {
+                services.ConfigurePostgresIdentityContext();
+            }
+            else if (provider == SqlServerProvider)
+            {
+                services.ConfigureSqlServerIdentityContext();
+            }
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
