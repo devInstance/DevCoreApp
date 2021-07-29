@@ -1,16 +1,13 @@
-using DevInstance.SampleWebApp.Server.Database.Core;
-using DevInstance.SampleWebApp.Server.Database.Core.Models;
+using DevInstance.LogScope.Extensions.MicrosoftLogger;
+using DevInstance.LogScope.Formatters;
 using DevInstance.SampleWebApp.Server.Database.Postgres;
 using DevInstance.SampleWebApp.Server.Database.SqlServer;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System.Linq;
 
 namespace DevInstance.SampleWebApp.Server
 {
@@ -30,6 +27,8 @@ namespace DevInstance.SampleWebApp.Server
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddMicrosoftScopeLogging(new DefaultFormattersOptions { ShowTimestamp = true, ShowThreadNumber = true });
+
             ConfigureDatabase(services);
 
             services.AddAuthentication()

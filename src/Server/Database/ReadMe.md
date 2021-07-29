@@ -22,6 +22,7 @@ Provider implements a database engine specific logic. There are two providers in
 # Configuration
 
 The provider configuration is happening in the server project. Depending on the project itself, developer may choose to support single or multiple providers. For multiple configurations Startup.cs has already the code need to support the provider selection. In this case the appsettings.json should have the following configuration:
+
 `
     "Database": {
         "Provider": <Provider here "Postgres" or “SqlServer”>
@@ -37,6 +38,7 @@ In case the only one provider is supported the configuration can be simplified:
 1. Remove all the references to the provider from WebService project but one which will be used;
 2. appsettings.json can be change to support only one connection string
 3. In Startup.cs configuring database can be simplified:
+
 `
 //Configuring Postgres
 private void ConfigureDatabase(IServiceCollection services)

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.ApiAuthorization.IdentityServer;
+﻿using DevInstance.LogScope;
+using Microsoft.AspNetCore.ApiAuthorization.IdentityServer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -6,12 +7,12 @@ namespace DevInstance.SampleWebApp.Server.Controllers
 {
     public class OidcConfigurationController : Controller
     {
-        private readonly ILogger<OidcConfigurationController> _logger;
+        private readonly IScopeLog log;
 
-        public OidcConfigurationController(IClientRequestParametersProvider clientRequestParametersProvider, ILogger<OidcConfigurationController> logger)
+        public OidcConfigurationController(IClientRequestParametersProvider clientRequestParametersProvider, IScopeManager logManager)
         {
             ClientRequestParametersProvider = clientRequestParametersProvider;
-            _logger = logger;
+            log = logManager.CreateLogger(this);
         }
 
         public IClientRequestParametersProvider ClientRequestParametersProvider { get; }
@@ -19,8 +20,11 @@ namespace DevInstance.SampleWebApp.Server.Controllers
         [HttpGet("_configuration/{clientId}")]
         public IActionResult GetClientRequestParameters([FromRoute] string clientId)
         {
-            var parameters = ClientRequestParametersProvider.GetClientParameters(HttpContext, clientId);
-            return Ok(parameters);
+            using (log.TraceScope())
+            {
+                var parameters = ClientRequestParametersProvider.GetClientParameters(HttpContext, clientId);
+                return Ok(parameters);
+            }
         }
     }
 }
