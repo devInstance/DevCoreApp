@@ -3,6 +3,8 @@
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <UserSecretsId>DevInstance.SampleWebApp.Server-38988985-5AD0-4791-8BE5-DA7357ED66DF</UserSecretsId>
+      <AssemblyName>DevInstance.SampleWebApp.Server.WebService</AssemblyName>
+      <RootNamespace>DevInstance.SampleWebApp.Server.WebService</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,10 +24,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Client\DevInstance.SampleWebApp.Client.csproj" />
-    <ProjectReference Include="..\..\Shared\DevInstance.SampleWebApp.Shared.csproj" />
-    <ProjectReference Include="..\Database\Postgres\DevInstance.SampleWebApp.Postgres.csproj" />
-    <ProjectReference Include="..\Database\SqlServer\DevInstance.SampleWebApp.SqlServer.csproj" />
+    <ProjectReference Include="..\..\Client\Client.csproj" />
+    <ProjectReference Include="..\..\Shared\Shared.csproj" />
+    <ProjectReference Include="..\Database\Postgres\Postgres.csproj" />
+    <ProjectReference Include="..\Database\SqlServer\SqlServer.csproj" />
   </ItemGroup>
 
 </Project>

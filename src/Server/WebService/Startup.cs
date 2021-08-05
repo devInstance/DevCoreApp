@@ -2,12 +2,14 @@ using DevInstance.LogScope.Extensions.MicrosoftLogger;
 using DevInstance.LogScope.Formatters;
 using DevInstance.SampleWebApp.Server.Database.Postgres;
 using DevInstance.SampleWebApp.Server.Database.SqlServer;
+using DevInstance.SampleWebApp.Shared.Utils;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using NoCrast.Server.Indentity;
 
 namespace DevInstance.SampleWebApp.Server
 {
@@ -27,12 +29,13 @@ namespace DevInstance.SampleWebApp.Server
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddSingleton<ITimeProvider, TimeProvider>();
+
             services.AddMicrosoftScopeLogging(new DefaultFormattersOptions { ShowTimestamp = true, ShowThreadNumber = true });
 
             ConfigureDatabase(services);
 
-            services.AddAuthentication()
-                .AddIdentityServerJwt();
+            services.ConfigureIdentity();
 
             services.AddControllersWithViews();
             services.AddRazorPages();
@@ -45,22 +48,15 @@ namespace DevInstance.SampleWebApp.Server
             if (provider == PostgresProvider)
             {
                 services.ConfigurePostgresDatabase(Configuration);
-            }
-            else if (provider == SqlServerProvider)
-            {
-                services.ConfigureSqlServerDatabase(Configuration);
-            }
-
-            services.AddDatabaseDeveloperPageExceptionFilter();
-
-            if (provider == PostgresProvider)
-            {
                 services.ConfigurePostgresIdentityContext();
             }
             else if (provider == SqlServerProvider)
             {
+                services.ConfigureSqlServerDatabase(Configuration);
                 services.ConfigureSqlServerIdentityContext();
             }
+
+            services.AddDatabaseDeveloperPageExceptionFilter();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

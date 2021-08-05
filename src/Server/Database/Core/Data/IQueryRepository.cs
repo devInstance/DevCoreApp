@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using DevInstance.SampleWebApp.Server.Database.Core.Data.Queries;
+using DevInstance.SampleWebApp.Server.Database.Core.Models;
 
 namespace DevInstance.SampleWebApp.Server.Database.Core.Data
 {
     public interface IQueryRepository
     {
+        IUserProfilesQuery GetUserProfilesQuery(UserProfile currentProfile);
     }
 }

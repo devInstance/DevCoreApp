@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace DevInstance.SampleWebApp.Shared
+namespace DevInstance.SampleWebApp.Shared.Model
 {
     public class WeatherForecast
     {

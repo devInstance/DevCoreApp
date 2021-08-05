@@ -1,4 +1,4 @@
-﻿namespace DevInstance.SampleWebApp.Server.Database.Core.Data.Queries.Base
+﻿namespace DevInstance.SampleWebApp.Server.Database.Core.Data.Queries
 {
     public interface IModelQuery<T, D>
     {

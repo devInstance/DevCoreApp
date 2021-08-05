@@ -1,12 +1,11 @@
 ﻿using DevInstance.LogScope;
-using DevInstance.SampleWebApp.Shared;
+using DevInstance.SampleWebApp.Shared.Model;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace DevInstance.SampleWebApp.Server.Controllers
 {
