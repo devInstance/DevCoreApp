@@ -1,3 +1,4 @@
+using DevInstance.SampleWebApp.Client.UI;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.Configuration;
