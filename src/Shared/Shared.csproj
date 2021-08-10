@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
-    <AssemblyName>DevInstance.SampleWebApp.Server.Database.Shared</AssemblyName>
-    <RootNamespace>DevInstance.SampleWebApp.Server.Database.Shared</RootNamespace>
+    <AssemblyName>DevInstance.SampleWebApp.Shared</AssemblyName>
+    <RootNamespace>DevInstance.SampleWebApp.Shared</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

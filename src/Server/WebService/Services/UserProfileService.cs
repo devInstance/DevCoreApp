@@ -2,7 +2,7 @@
 using DevInstance.SampleWebApp.Server.Database.Core.Data;
 using DevInstance.SampleWebApp.Server.Database.Core.Data.Decorators;
 using DevInstance.SampleWebApp.Server.Indentity;
-using NoCrast.Shared.Model;
+using DevInstance.SampleWebApp.Shared.Model;
 
 namespace DevInstance.SampleWebApp.Server.Services
 {

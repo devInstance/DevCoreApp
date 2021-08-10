@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DevInstance.LogScope;
+using System;
 
 namespace NoCrast.TestUtils
 {
@@ -12,11 +13,18 @@ namespace NoCrast.TestUtils
         {
             return new IScopeLogMock();
         }
+
+        public IScopeLog CreateLogger(string scope, LogLevel levelOverride)
+        {
+            return new IScopeLogMock();
+        }
     }
 
     public class IScopeLogMock : IScopeLog
     {
         public string Name { get { return ""; } }
+
+        public LogLevel Level => throw new NotImplementedException();
 
         public void Dispose()
         {

@@ -1,0 +1,32 @@
+﻿<AuthorizeView>
+    <Authorized>
+        <NavMenu />
+        <div class="main">
+            <ToolBar />
+            <div class="px-3 pt-2 pb-2">
+                @Body
+            </div>
+        </div>
+        <OverlayModal />
+        <NotificationBar />
+    </Authorized>
+</AuthorizeView>
+
+@inherits LayoutComponentBase
+@inject NavigationManager navigationManager
+@inject IdentityAuthenticationStateProvider authStateProvider
+
+@functions {
+
+    [CascadingParameter]
+    Task<AuthenticationState> AuthenticationState { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!navigationManager.Uri.Contains("authentication") //TODO: it must be more elegant way to handle authentication routes
+            && !(await AuthenticationState).User.Identity.IsAuthenticated)
+        {
+            navigationManager.NavigateTo("/authentication/login");
+        }
+    }
+}

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.31515.178
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31521.260
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Client", "src\Client\Client.csproj", "{733CE18D-2724-450C-B19C-B5DCF6B32720}"
 EndProject
@@ -17,7 +17,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SqlServer", "src\Server\Dat
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Postgres", "src\Server\Database\Postgres\Postgres.csproj", "{40456C26-ED01-4749-A00D-B982380E5EB9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestUtils", "tests\Shared\NoCrast.TestUtils\TestUtils.csproj", "{A7077073-D68D-4153-B970-A84F6BE57F47}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestUtils", "tests\Shared\NoCrast.TestUtils\TestUtils.csproj", "{A7077073-D68D-4153-B970-A84F6BE57F47}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Email", "Email", "{087B6913-EB42-4798-8DD2-5B9C70CD99F8}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EmailProcessor", "..\nocrast\src\Server\Email\Processor\EmailProcessor.csproj", "{4444DACA-352F-4E5A-8972-75476EE82A34}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EmailProcessor.MailKit", "..\nocrast\src\Server\Email\MailKit\EmailProcessor.MailKit.csproj", "{ECA2B23A-A1FF-4F49-8B2A-7AF0D1BA2528}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -53,6 +59,14 @@ Global
 		{A7077073-D68D-4153-B970-A84F6BE57F47}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A7077073-D68D-4153-B970-A84F6BE57F47}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A7077073-D68D-4153-B970-A84F6BE57F47}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4444DACA-352F-4E5A-8972-75476EE82A34}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4444DACA-352F-4E5A-8972-75476EE82A34}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4444DACA-352F-4E5A-8972-75476EE82A34}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4444DACA-352F-4E5A-8972-75476EE82A34}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ECA2B23A-A1FF-4F49-8B2A-7AF0D1BA2528}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ECA2B23A-A1FF-4F49-8B2A-7AF0D1BA2528}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ECA2B23A-A1FF-4F49-8B2A-7AF0D1BA2528}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ECA2B23A-A1FF-4F49-8B2A-7AF0D1BA2528}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -61,6 +75,8 @@ Global
 		{A174DD1E-87A7-44FD-83E2-FC41A97E7FFF} = {247E234E-54C7-44F3-A480-C3CA82611891}
 		{3F04240A-E123-4891-B56C-768EBF1DA384} = {247E234E-54C7-44F3-A480-C3CA82611891}
 		{40456C26-ED01-4749-A00D-B982380E5EB9} = {247E234E-54C7-44F3-A480-C3CA82611891}
+		{4444DACA-352F-4E5A-8972-75476EE82A34} = {087B6913-EB42-4798-8DD2-5B9C70CD99F8}
+		{ECA2B23A-A1FF-4F49-8B2A-7AF0D1BA2528} = {087B6913-EB42-4798-8DD2-5B9C70CD99F8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {6BFA0519-0D2F-4B5F-B802-3227E2B7CFB3}

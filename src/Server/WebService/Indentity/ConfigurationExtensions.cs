@@ -1,5 +1,4 @@
-﻿using DevInstance.SampleWebApp.Server.Indentity;
-using Microsoft.AspNetCore.Authentication;
+﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
@@ -8,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace NoCrast.Server.Indentity
+namespace DevInstance.SampleWebApp.Server.Indentity
 {
     public static class ConfigurationExtensions
     {

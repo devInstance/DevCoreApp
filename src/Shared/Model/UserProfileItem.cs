@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace NoCrast.Shared.Model
+namespace DevInstance.SampleWebApp.Shared.Model
 {
     public class UserProfileItem : ModelItem
     {

@@ -2,6 +2,9 @@ using DevInstance.LogScope.Extensions.MicrosoftLogger;
 using DevInstance.LogScope.Formatters;
 using DevInstance.SampleWebApp.Server.Database.Postgres;
 using DevInstance.SampleWebApp.Server.Database.SqlServer;
+using DevInstance.SampleWebApp.Server.EmailProcessor.MailKit;
+using DevInstance.SampleWebApp.Server.Indentity;
+using DevInstance.SampleWebApp.Server.Services;
 using DevInstance.SampleWebApp.Shared.Utils;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
@@ -9,7 +12,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using NoCrast.Server.Indentity;
 
 namespace DevInstance.SampleWebApp.Server
 {
@@ -37,8 +39,13 @@ namespace DevInstance.SampleWebApp.Server
 
             services.ConfigureIdentity();
 
-            services.AddControllersWithViews();
-            services.AddRazorPages();
+            services.ConfigureMailKit(Configuration);
+            services.ConfigureServices();
+
+            services.AddScoped<IApplicationSignManager, ApplicationSignManager>();
+
+            services.AddControllersWithViews().AddNewtonsoftJson();
+            //services.AddRazorPages(); //???
         }
 
         private void ConfigureDatabase(IServiceCollection services)

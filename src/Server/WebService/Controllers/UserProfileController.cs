@@ -1,8 +1,8 @@
 ﻿using DevInstance.SampleWebApp.Server.Services;
+using DevInstance.SampleWebApp.Shared.Model;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using NoCrast.Shared.Model;
 
 namespace DevInstance.SampleWebApp.Server.Controllers
 {
@@ -37,7 +37,6 @@ namespace DevInstance.SampleWebApp.Server.Controllers
         {
             return HandleWebRequest((WebHandler<UserProfileItem>)(() =>
             {
-
                 return Ok(Service.Update(newProfile));
             }));
         }

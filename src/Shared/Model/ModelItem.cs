@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace NoCrast.Shared.Model
+namespace DevInstance.SampleWebApp.Shared.Model
 {
     public class ModelItem
     {

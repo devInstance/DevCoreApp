@@ -1,10 +1,5 @@
 ﻿using DevInstance.SampleWebApp.Server.Database.Core.Models;
-using NoCrast.Shared.Model;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using DevInstance.SampleWebApp.Shared.Model;
 
 namespace DevInstance.SampleWebApp.Server.Database.Core.Data.Decorators
 {
