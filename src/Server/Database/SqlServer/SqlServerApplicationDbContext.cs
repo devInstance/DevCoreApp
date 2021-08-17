@@ -7,9 +7,9 @@ namespace DevInstance.SampleWebApp.Server.Database.SqlServer
 {
     public class SqlServerApplicationDbContext : ApplicationDbContext
     {
-        public SqlServerApplicationDbContext(DbContextOptions options,
-            IOptions<OperationalStoreOptions> operationalStoreOptions)
-            : base(options, operationalStoreOptions)
+        public SqlServerApplicationDbContext(DbContextOptions options
+            /*,IOptions<OperationalStoreOptions> operationalStoreOptions*/)
+            : base(options/*, operationalStoreOptions*/)
         {
         }
     }

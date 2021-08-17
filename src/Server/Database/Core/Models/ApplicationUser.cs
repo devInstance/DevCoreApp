@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace DevInstance.SampleWebApp.Server.Database.Core.Models
 {
-    public class ApplicationUser : IdentityUser
+    public class ApplicationUser : IdentityUser<Guid>
     {
     }
 }

@@ -93,7 +93,7 @@ namespace NoCrast.Server.Database.Postgres.Data.Queries
             DB.SaveChanges();
         }
 
-        public IUserProfilesQuery ByApplicationUserId(string id)
+        public IUserProfilesQuery ByApplicationUserId(Guid id)
         {
             currentQuery = from pr in currentQuery
                            where pr.ApplicationUserId == id

@@ -1,4 +1,5 @@
 ﻿using DevInstance.SampleWebApp.Server.Database.Core.Models;
+using System;
 using System.Linq;
 
 namespace DevInstance.SampleWebApp.Server.Database.Core.Data.Queries
@@ -8,6 +9,6 @@ namespace DevInstance.SampleWebApp.Server.Database.Core.Data.Queries
         IQueryable<UserProfile> Select();
 
         IUserProfilesQuery ByName(string name);
-        IUserProfilesQuery ByApplicationUserId(string id);
+        IUserProfilesQuery ByApplicationUserId(Guid id);
     }
 }

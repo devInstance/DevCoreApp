@@ -1,4 +1,6 @@
 ﻿using DevInstance.SampleWebApp.Server.Database.Core;
+using DevInstance.SampleWebApp.Server.Database.Core.Data;
+using DevInstance.SampleWebApp.Server.Database.SqlServer.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,6 +17,8 @@ namespace DevInstance.SampleWebApp.Server.Database.SqlServer
                             connectionString,
                             b => b.MigrationsAssembly("DevInstance.SampleWebApp.Server.Database.SqlServer")
                             ));
+
+            services.AddScoped<IQueryRepository, SqlServerQueryRepository>();
         }
 
         public static void ConfigureSqlServerIdentityContext(this IServiceCollection services)

@@ -7,7 +7,7 @@ using MimeKit;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NoCrast.Server.EmailProcessor.MailKit
+namespace DevInstance.SampleWebApp.Server.EmailProcessor.MailKit
 {
     public class MailKitEmailSender : IEmailSender
     {

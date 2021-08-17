@@ -7,9 +7,9 @@ namespace DevInstance.SampleWebApp.Server.Database.Postgres
 {
     public class PostgresApplicationDbContext : ApplicationDbContext
     {
-        public PostgresApplicationDbContext(DbContextOptions options,
-            IOptions<OperationalStoreOptions> operationalStoreOptions)
-            : base(options, operationalStoreOptions)
+        public PostgresApplicationDbContext(DbContextOptions options
+            /*,IOptions<OperationalStoreOptions> operationalStoreOptions*/)
+            : base(options/*, operationalStoreOptions*/)
         {
         }
 

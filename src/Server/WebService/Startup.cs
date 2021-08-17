@@ -42,8 +42,6 @@ namespace DevInstance.SampleWebApp.Server
             services.ConfigureMailKit(Configuration);
             services.ConfigureServices();
 
-            services.AddScoped<IApplicationSignManager, ApplicationSignManager>();
-
             services.AddControllersWithViews().AddNewtonsoftJson();
             //services.AddRazorPages(); //???
         }
@@ -88,7 +86,7 @@ namespace DevInstance.SampleWebApp.Server
 
             app.UseRouting();
 
-            app.UseIdentityServer();
+//            app.UseIdentityServer();
             app.UseAuthentication();
             app.UseAuthorization();
 

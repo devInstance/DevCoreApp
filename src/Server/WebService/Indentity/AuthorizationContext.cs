@@ -35,7 +35,7 @@ namespace DevInstance.SampleWebApp.Server.Indentity
                     string userId = UserManager.GetUserId(HttpContextAccessor.HttpContext.User);
                     if (!String.IsNullOrEmpty(userId))
                     {
-                        currentProfile = Query.GetUserProfilesQuery(null).ByApplicationUserId(userId).Select().FirstOrDefault();
+                        currentProfile = Query.GetUserProfilesQuery(null).ByApplicationUserId(Guid.Parse(userId)).Select().FirstOrDefault();
                     }
                 }
                 return currentProfile;
@@ -51,7 +51,7 @@ namespace DevInstance.SampleWebApp.Server.Indentity
 
         public UserProfile FindUserProfile(ApplicationUser user)
         {
-            if (user != null && user.Id != null)
+            if (user != null && user.Id != Guid.Empty)
             {
                 return Query.GetUserProfilesQuery(null).ByApplicationUserId(user.Id).Select().FirstOrDefault();
             }

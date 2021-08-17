@@ -25,11 +25,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\nocrast\src\Server\Email\MailKit\EmailProcessor.MailKit.csproj" />
     <ProjectReference Include="..\..\Client\Client.csproj" />
     <ProjectReference Include="..\..\Shared\Shared.csproj" />
     <ProjectReference Include="..\Database\Postgres\Postgres.csproj" />
     <ProjectReference Include="..\Database\SqlServer\SqlServer.csproj" />
+    <ProjectReference Include="..\Email\MailKit\EmailProcessor.MailKit.csproj" />
   </ItemGroup>
 
 </Project>

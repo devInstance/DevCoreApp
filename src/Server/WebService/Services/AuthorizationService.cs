@@ -183,6 +183,7 @@ namespace DevInstance.SampleWebApp.Server.Services
                 {
                     foreach (var error in resetPassResult.Errors)
                     {
+                        //TODO: provide right error back to client
                         l.E($"code:{error.Code}, Description:{error.Description}");
                     }
                     throw new BadRequestException();

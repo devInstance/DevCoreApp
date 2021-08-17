@@ -28,7 +28,7 @@ namespace DevInstance.SampleWebApp.Server.Database.Core.Models
         public string Email { get; set; }
         public string Name { get; set; }
 
-        public string ApplicationUserId { get; set; }
+        public Guid ApplicationUserId { get; set; }
 
         public UserStatus Status { get; set; }
     }

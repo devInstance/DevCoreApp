@@ -1,0 +1,176 @@
+﻿//----- Side bar styles
+$background-gradient-color-start: rgb(5, 39, 103);
+$background-gradient-color-end: #212529;
+$sidebar-text-color: #d7d7d7;
+$sidebar-highligh-back-color: rgba(255,255,255,0.1);
+$sidebar-select-back-color: rgba(255,255,255,0.25);
+$sidebar-highligh-text-color: #fff;
+$sidebar-select-text-color: #fff;
+
+$sideback-width-expanded: 250px;
+$sideback-width-shrank: 70px;
+$sideback-animation: 0.5s;
+
+/* animations */
+@mixin bar-slide($name, $from, $to) {
+    @keyframes #{$name} {
+        from {
+            width: $from;
+        }
+
+        to {
+            width: $to;
+        }
+    }
+}
+
+@include bar-slide(slidein, $sideback-width-shrank, $sideback-width-expanded);
+@include bar-slide(slideout, $sideback-width-expanded, $sideback-width-shrank);
+
+.sidebar {
+    background-image: linear-gradient(180deg, $background-gradient-color-start 0%, $background-gradient-color-end 70%);
+    width: $sideback-width-expanded;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+
+    animation-duration: $sideback-animation;
+    animation-name: slidein;
+
+    .top-row {
+        background-color: rgba(0,0,0,0.4);
+    }
+
+    .navbar-brand {
+        font-size: 1.1rem;
+    }
+
+    .oi {
+        width: 2rem;
+        font-size: 1.1rem;
+        vertical-align: text-top;
+        top: -2px;
+    }
+
+    .nav-group {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        color: #a7a7a7;
+        padding: 1rem 0.75rem;
+        font-weight: 800;
+
+        .shrink {
+            display: none;
+        }
+    }
+
+    .nav-item {
+        font-size: 0.9rem;
+        padding-bottom: 0.5rem;
+        padding-right: 1rem !important;
+        padding-left: 1rem !important;
+
+
+        &:first-of-type {
+            padding-top: 1rem;
+        }
+
+        &:last-of-type {
+            padding-bottom: 1rem;
+        }
+
+        .nav-link {
+            color: $sidebar-text-color;
+            border-radius: 4px;
+            height: 3rem;
+            display: flex;
+            align-items: center;
+            line-height: 3rem;
+
+            &:hover {
+                background-color: $sidebar-highligh-back-color;
+                color: $sidebar-highligh-text-color;
+            }
+        }
+
+        a.active {
+            background-color: $sidebar-select-back-color;
+            color: $sidebar-select-text-color;
+        }
+    }
+}
+
+.shrink {
+    animation-duration: $sideback-animation;
+    animation-name: slideout;
+    width: $sideback-width-shrank /*!important*/;
+
+    .nav-group {
+        display: none;
+    }
+
+    .nav-item {
+        width: ($sideback-width-shrank - 2px);
+        padding: 5px 10px !important;
+    }
+
+    .nav-link {
+        margin-left: 3px;
+        padding-left: 0.75rem;
+    }
+
+    span {
+        display: none;
+    }
+}
+
+.navbar-toggler {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    @include bar-slide(slidein, $sideback-width-shrank, 0px);
+    @include bar-slide(slideout, 0px, $sideback-width-shrank);
+
+    .sidebar {
+        position:sticky;
+        z-index:9999;
+        width:0px;
+
+        & * {
+            display: none;
+        }
+    }
+
+    .shrink {
+        animation-duration: $sideback-animation;
+        animation-name: slideout;
+        width: $sideback-width-shrank /*!important*/;
+
+        & * {
+            display: block;
+        }
+
+        .nav-group {
+            display: none;
+        }
+
+        .nav-item {
+            width: ($sideback-width-shrank - 2px);
+            padding: 5px 10px !important;
+        }
+
+        .nav-link {
+            margin-left: 3px;
+            padding-left: 0.75rem;
+        }
+
+        span {
+            display: none;
+        }
+
+        .sidebar {
+            width: 75px;
+        }
+    }
+}

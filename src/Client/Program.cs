@@ -52,6 +52,7 @@ namespace DevInstance.SampleWebApp.Client
 
             builder.Services.AddScoped<AuthorizationService>();
             builder.Services.AddScoped<AccountService>();
+            builder.Services.AddScoped<ToolbarService>();
 
             await builder.Build().RunAsync();
         }

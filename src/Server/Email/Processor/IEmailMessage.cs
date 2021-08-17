@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NoCrast.Server.EmailProcessor
+namespace DevInstance.SampleWebApp.Server.EmailProcessor
 {
     public interface IEmailMessage
     {
