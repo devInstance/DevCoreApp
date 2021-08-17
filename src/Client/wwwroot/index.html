@@ -6,16 +6,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>SampleWebApp</title>
     <base href="/" />
-    <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet" />
+    <link href="css/bootstrap-5.1.0/bootstrap.min.css" rel="stylesheet" />
+    <link href="css/bootstrap-5.1.0/bootstrap-utilities.min.css" rel="stylesheet" />
+    <link href="css/bootstrap-icons-1.5.0/bootstrap-icons.css" rel="stylesheet">
     <link href="css/app.css" rel="stylesheet" />
-    <link href="css/open-iconic/font/css/open-iconic-bootstrap.min.css" rel="stylesheet" />
     <link href="manifest.json" rel="manifest" />
     <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png" />
 </head>
 
 <body>
     <script src="scripts/app.js"></script>
-    <div id="app">Loading...</div>
+    <div id="app">
+        <img class="loading-logo" src="img/logo.svg" width="176" height="48" />
+    </div>
 
     <div id="blazor-error-ui">
         An unhandled error has occurred.
@@ -24,6 +27,7 @@
     </div>
     <script src="_content/Microsoft.AspNetCore.Components.WebAssembly.Authentication/AuthenticationService.js"></script>
     <script src="_framework/blazor.webassembly.js"></script>
+    <script src="scripts/bootstrap-5.1.0/bootstrap.bundle.min.js"></script>
     <script>navigator.serviceWorker.register('service-worker.js');</script>
 </body>
 

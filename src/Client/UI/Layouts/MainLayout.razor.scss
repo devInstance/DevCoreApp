@@ -21,11 +21,11 @@ a, .btn-link {
     border-color: $button-border;
 }
 
-app {
+#app {
     position: relative;
     display: flex;
-    flex-direction: column;
-}
+/*    flex-direction: column;
+*/}
 
 .oi {
     position: relative;
