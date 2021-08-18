@@ -16,6 +16,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using DevInstance.SampleWebApp.Client.Extensions;
 
 namespace DevInstance.SampleWebApp.Client
 {
@@ -25,6 +26,8 @@ namespace DevInstance.SampleWebApp.Client
         {
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
             builder.RootComponents.Add<App>("#app");
+
+            builder.Services.AddLocalization(opts => { opts.ResourcesPath = "Resources"; });
 
             builder.Services.AddHttpClient("DevInstance.SampleWebApp.ServerAPI", client => client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress));
                 //.AddHttpMessageHandler<BaseAddressAuthorizationMessageHandler>();
@@ -53,8 +56,13 @@ namespace DevInstance.SampleWebApp.Client
             builder.Services.AddScoped<AuthorizationService>();
             builder.Services.AddScoped<AccountService>();
             builder.Services.AddScoped<ToolbarService>();
+            builder.Services.AddScoped<SettingsService>();
 
-            await builder.Build().RunAsync();
+            var host = builder.Build();
+
+            await host.SetDefaultCulture();
+
+            await host.RunAsync();
         }
     }
 }

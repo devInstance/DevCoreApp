@@ -1,29 +1,31 @@
 ﻿@page "/authentication/login"
 
+@inject IStringLocalizer<Login> baseloc;
+
 @layout LoginLayout
 @inject NavigationManager navigationManager
 @inject IdentityAuthenticationStateProvider authStateProvider
 
-<PageTitle Value="Login"></PageTitle>
+<PageTitle Value="@baseloc["LoginLabel"]"></PageTitle>
 
 <EditForm class="form-signin" OnValidSubmit="OnSubmit" Model="loginParameters">
     <DataAnnotationsValidator />
-    <h4 class="font-weight-normal text-center">Login</h4>
+    <h4 class="font-weight-normal text-center">@baseloc["LoginLabel"]</h4>
 
-    <label for="inputUsername" class="sr-only">User Name</label>
-    <InputText id="inputUsername" class="form-control" @bind-Value="loginParameters.UserName" autofocus placeholder="Username" />
+    <label for="inputUsername" class="sr-only">@baseloc["User Name"]</label>
+    <InputText id="inputUsername" class="form-control" @bind-Value="loginParameters.UserName" autofocus placeholder="@baseloc["User Name"]" />
     <ValidationMessage For="@(() => loginParameters.UserName)" />
 
-    <label for="inputPassword" class="sr-only">Password</label>
-    <InputText type="password" id="inputPassword" class="form-control" placeholder="Password" @bind-Value="loginParameters.Password" />
+    <label for="inputPassword" class="sr-only">@baseloc["Password"]</label>
+    <InputText type="password" id="inputPassword" class="form-control" placeholder="@baseloc["Password"]" @bind-Value="loginParameters.Password" />
     <ValidationMessage For="@(() => loginParameters.Password)" />
 
     <div class="form-check m-3">
         <InputCheckbox id="inputRememberMe" class="form-check-input" @bind-Value="@loginParameters.RememberMe" />
-        <label class="form-check-label" for="inputRememberMe">Remember Me</label>
+        <label class="form-check-label" for="inputRememberMe">@baseloc["Remember Me"]</label>
     </div>
 
-    <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
+    <button class="btn btn-lg btn-primary btn-block" type="submit">@baseloc["Sign in"]</button>
 
     @if (!String.IsNullOrEmpty(@error))
     {
@@ -31,10 +33,10 @@
     }
 </EditForm>
 <NavLink href="authentication/register">
-    <h6 class="font-weight-normal text-center">Create account</h6>
+    <h6 class="font-weight-normal text-center">@baseloc["Create account"]</h6>
 </NavLink>
 <NavLink href="authentication/forgot-password">
-    <h6 class="font-weight-normal text-center">Forgot password</h6>
+    <h6 class="font-weight-normal text-center">@baseloc["Forgot password"]</h6>
 </NavLink>
 
 @code{

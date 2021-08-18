@@ -1,5 +1,15 @@
-﻿<h3>SettingsIndex</h3>
+﻿@page "/settings"
+@inject IStringLocalizer<SettingsIndex> loc
 
-@code {
-
-}
+<PageTitle Value="@loc["Settings"]"></PageTitle>
+<div class="row mb-3">
+    <div class="col">
+        <h2>@loc["Language"]</h2>
+        <select class="form-control" @bind="Culture" style="width:300px; margin-left:10px;">
+            @foreach (var language in Settings.SupportedLanguages)
+            {
+                <option value="@language.Culture"><span>@language.FlagName</span> <span>@language.DisplayName</span></option>
+            }
+        </select>
+    </div>
+</div>

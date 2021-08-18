@@ -1,4 +1,6 @@
-﻿<div class="sidebar @NavContainerCssClass">
+﻿@inject IStringLocalizer<NavMenu> loc
+
+<div class="sidebar @NavContainerCssClass">
     <div class="top-row pl-4 navbar navbar-dark" @onclick="ExpandSiderbar">
         <a class="navbar-brand" href="">SampleWebApp</a>
     </div>
@@ -6,34 +8,34 @@
     <div>
         <ul class="nav flex-column">
             <li class="nav-group">
-                Reports
+                @loc["Pages"]
             </li>
             <li class="nav-item">
                 <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                    <i class="oi bi-house" aria-hidden="true"></i><span>Home</span>
+                    <i class="oi bi-house" aria-hidden="true"></i><span>@loc["Home"]</span>
                 </NavLink>
             </li>
             <li class="nav-item">
                 <NavLink class="nav-link" href="counter">
-                    <i class="oi bi-plus" aria-hidden="true"></i><span>Counter</span>
+                    <i class="oi bi-plus" aria-hidden="true"></i><span>@loc["Counter"]</span>
                 </NavLink>
             </li>
             <li class="nav-item">
                 <NavLink class="nav-link" href="fetchdata">
-                    <i class="oi bi-list-ul" aria-hidden="true"></i><span>Fetch data</span>
+                    <i class="oi bi-list-ul" aria-hidden="true"></i><span>@loc["Fetch data"]</span>
                 </NavLink>
             </li>
             <li class="nav-group">
-                Account
+                @loc["Account"]
             </li>
             <li class="nav-item">
                 <NavLink class="nav-link" href="profile" Match="NavLinkMatch.All">
-                    <i class="oi bi-person" aria-hidden="true"></i><span>Profile</span>
+                    <i class="oi bi-person" aria-hidden="true"></i><span>@loc["Profile"]</span>
                 </NavLink>
             </li>
             <li class="nav-item">
                 <NavLink class="nav-link" href="settings" Match="NavLinkMatch.All">
-                    <i class="oi bi-gear" aria-hidden="true"></i><span>Settings</span>
+                    <i class="oi bi-gear" aria-hidden="true"></i><span>@loc["Settings"]</span>
                 </NavLink>
             </li>
         </ul>
