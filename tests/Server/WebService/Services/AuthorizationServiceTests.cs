@@ -325,25 +325,76 @@ namespace DevInstance.SampleWebApp.Server.Services.Tests
         [TestMethod()]
         public async Task ForgotPasswordSuccessTest()
         {
-            Assert.Fail();
-        }
+            Mock<IApplicationUserManager> userManagerMock = null;
 
-        [TestMethod()]
-        public async Task ForgotPasswordFailedTest()
-        {
-            Assert.Fail();
+            var authorizationService =
+                SetupServiceMock((authContext, userManager, signinManagerMq, emailSender, mockRepository) =>
+                {
+                    userManagerMock = userManager;
+                    userManagerMock.Setup(x => x.FindByEmailAsync(It.IsAny<string>())).ReturnsAsync(new ApplicationUser { UserName = "test" });
+                    userManagerMock.Setup(x => x.GeneratePasswordResetTokenAsync(It.IsAny<ApplicationUser>()))
+                                    .ReturnsAsync("tocken");
+
+                    emailSender.Setup(x => x.SendAsync(It.IsAny<IEmailMessage>()));
+                });
+
+            await authorizationService.ForgotPasswordAsync(new ForgotPasswordParameters
+            {
+                Email = "test"
+            }, "test", "test", 80);
+
+            userManagerMock.Verify(x => x.GeneratePasswordResetTokenAsync(It.IsAny<ApplicationUser>()), Times.Once());
         }
 
         [TestMethod()]
         public async Task ResetPasswordSuccessTest()
         {
-            Assert.Fail();
+            Mock<IApplicationUserManager> userManagerMock = null;
+
+            var authorizationService =
+                SetupServiceMock((authContext, userManager, signinManagerMq, emailSender, mockRepository) =>
+                {
+                    userManagerMock = userManager;
+                    userManagerMock.Setup(x => x.FindByEmailAsync(It.IsAny<string>())).ReturnsAsync(new ApplicationUser { UserName = "test" });
+                    userManagerMock.Setup(x => x.ResetPasswordAsync(It.IsAny<ApplicationUser>(),
+                                                                It.Is<string>(v => v == "test"),
+                                                                It.Is<string>(v => v == "test"))).ReturnsAsync(new IdentityResultMock(true));
+                });
+
+            await authorizationService.ResetPasswordAsync(new ResetPasswordModel
+            {
+                Email = "test",
+                ConfirmPassword = "test",
+                Password = "test",
+                Token =  "test"
+            });
         }
 
         [TestMethod()]
         public async Task ResetPasswordFailedTest()
         {
-            Assert.Fail();
+            Mock<IApplicationUserManager> userManagerMock = null;
+
+            var authorizationService =
+                SetupServiceMock((authContext, userManager, signinManagerMq, emailSender, mockRepository) =>
+                {
+                    userManagerMock = userManager;
+                    userManagerMock.Setup(x => x.FindByEmailAsync(It.IsAny<string>())).ReturnsAsync(new ApplicationUser { UserName = "test" });
+                    userManagerMock.Setup(x => x.ResetPasswordAsync(It.IsAny<ApplicationUser>(),
+                                                                It.Is<string>(v => v == "test"),
+                                                                It.Is<string>(v => v == "test"))).ReturnsAsync(new IdentityResultMock(false));
+                });
+
+            await Assert.ThrowsExceptionAsync<BadRequestException>(async () =>
+            {
+                await authorizationService.ResetPasswordAsync(new ResetPasswordModel
+                {
+                    Email = "test",
+                    ConfirmPassword = "test",
+                    Password = "test",
+                    Token = "test"
+                });
+            });
         }
     }
 }

@@ -27,7 +27,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EmailProcessor.MailKit", "s
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Core.Tests", "tests\Server\Database\Core\Core.Tests.csproj", "{98A151E1-7D76-45E2-8115-9973140D01A5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server.Tests", "src\Server\Server.Tests\Server.Tests.csproj", "{A2846A66-E9FB-4EDB-8437-30A9C92EFEEE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Server.Tests", "tests\Server\WebService\Server.Tests.csproj", "{2957DEF7-912E-4C22-BA85-CDFFFC07F8AC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -75,10 +75,10 @@ Global
 		{98A151E1-7D76-45E2-8115-9973140D01A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{98A151E1-7D76-45E2-8115-9973140D01A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{98A151E1-7D76-45E2-8115-9973140D01A5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A2846A66-E9FB-4EDB-8437-30A9C92EFEEE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A2846A66-E9FB-4EDB-8437-30A9C92EFEEE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A2846A66-E9FB-4EDB-8437-30A9C92EFEEE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A2846A66-E9FB-4EDB-8437-30A9C92EFEEE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2957DEF7-912E-4C22-BA85-CDFFFC07F8AC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2957DEF7-912E-4C22-BA85-CDFFFC07F8AC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2957DEF7-912E-4C22-BA85-CDFFFC07F8AC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2957DEF7-912E-4C22-BA85-CDFFFC07F8AC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
