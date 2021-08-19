@@ -4,12 +4,10 @@ using DevInstance.SampleWebApp.Server.Database.Core.Models;
 using DevInstance.SampleWebApp.Server.EmailProcessor;
 using DevInstance.SampleWebApp.Server.EmailProcessor.Templates;
 using DevInstance.SampleWebApp.Server.Exceptions;
-using DevInstance.SampleWebApp.Server.Indentity;
+using DevInstance.SampleWebApp.Server.WebService.Indentity;
 using DevInstance.SampleWebApp.Shared.Model;
-using DevInstance.SampleWebApp.Shared.Utils;
 using Microsoft.AspNetCore.Identity;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
@@ -19,13 +17,12 @@ namespace DevInstance.SampleWebApp.Server.Services
     public class AuthorizationService : BaseService
     {
         private readonly IApplicationSignManager signInManager;
-        protected UserManager<ApplicationUser> UserManager { get; }
+        protected IApplicationUserManager UserManager { get; }
         protected IEmailSender EmailSender { get; }
 
         public AuthorizationService(IScopeManager logManager,
-                                    ITimeProvider timeProvider,
                                     IQueryRepository query,
-                                    UserManager<ApplicationUser> um,
+                                    IApplicationUserManager um,
                                     IApplicationSignManager sm,
                                     IAuthorizationContext authorizationContext,
                                     IEmailSender emailSender)

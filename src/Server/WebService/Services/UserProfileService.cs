@@ -1,7 +1,7 @@
 ﻿using DevInstance.LogScope;
 using DevInstance.SampleWebApp.Server.Database.Core.Data;
 using DevInstance.SampleWebApp.Server.Database.Core.Data.Decorators;
-using DevInstance.SampleWebApp.Server.Indentity;
+using DevInstance.SampleWebApp.Server.WebService.Indentity;
 using DevInstance.SampleWebApp.Shared.Model;
 
 namespace DevInstance.SampleWebApp.Server.Services

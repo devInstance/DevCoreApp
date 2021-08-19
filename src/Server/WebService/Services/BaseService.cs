@@ -1,6 +1,6 @@
 ﻿using DevInstance.LogScope;
 using DevInstance.SampleWebApp.Server.Database.Core.Data;
-using DevInstance.SampleWebApp.Server.Indentity;
+using DevInstance.SampleWebApp.Server.WebService.Indentity;
 
 namespace DevInstance.SampleWebApp.Server.Services
 {

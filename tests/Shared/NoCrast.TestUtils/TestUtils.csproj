@@ -8,6 +8,11 @@
 
   <ItemGroup>
     <PackageReference Include="DevInstance.LogScope" Version="1.2.0" />
+    <PackageReference Include="Moq" Version="4.16.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Shared\Shared.csproj" />
   </ItemGroup>
 
 </Project>

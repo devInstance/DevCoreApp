@@ -9,7 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace DevInstance.SampleWebApp.Server.Indentity
+namespace DevInstance.SampleWebApp.Server.WebService.Indentity
 {
     public static class ConfigurationExtensions
     {
@@ -52,6 +52,7 @@ namespace DevInstance.SampleWebApp.Server.Indentity
             //services.AddAuthentication().AddIdentityServerJwt();
 
             services.AddScoped<IApplicationSignManager, ApplicationSignManager>();
+            services.AddScoped<IApplicationUserManager, ApplicationUserManager>();
 
         }
     }

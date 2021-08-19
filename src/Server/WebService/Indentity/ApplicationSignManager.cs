@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using System.Threading.Tasks;
 
-namespace DevInstance.SampleWebApp.Server.Indentity
+namespace DevInstance.SampleWebApp.Server.WebService.Indentity
 {
     public class ApplicationSignManager : IApplicationSignManager
     {

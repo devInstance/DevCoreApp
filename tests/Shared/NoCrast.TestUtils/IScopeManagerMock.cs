@@ -1,7 +1,7 @@
 ﻿using DevInstance.LogScope;
 using System;
 
-namespace NoCrast.TestUtils
+namespace DevInstance.SampleWebApp.Shared.TestUtils
 {
     public class IScopeManagerMock : IScopeManager
     {

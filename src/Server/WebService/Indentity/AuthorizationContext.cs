@@ -6,7 +6,7 @@ using System;
 using System.Linq;
 using System.Security.Claims;
 
-namespace DevInstance.SampleWebApp.Server.Indentity
+namespace DevInstance.SampleWebApp.Server.WebService.Indentity
 {
     public class AuthorizationContext : IAuthorizationContext
     {
