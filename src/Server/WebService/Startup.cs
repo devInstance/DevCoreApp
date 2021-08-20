@@ -6,6 +6,7 @@ using DevInstance.SampleWebApp.Server.EmailProcessor.MailKit;
 using DevInstance.SampleWebApp.Server.Services;
 using DevInstance.SampleWebApp.Server.WebService.Indentity;
 using DevInstance.SampleWebApp.Shared.Utils;
+using Microsoft.AspNetCore.SpaServices.AngularCli;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -61,6 +62,10 @@ namespace DevInstance.SampleWebApp.Server
             }
 
             services.AddDatabaseDeveloperPageExceptionFilter();
+            services.AddSpaStaticFiles(configuration =>
+            {
+                configuration.RootPath = "ClientApp/dist";
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -70,7 +75,6 @@ namespace DevInstance.SampleWebApp.Server
             {
                 app.UseDeveloperExceptionPage();
                 app.UseMigrationsEndPoint();
-                app.UseWebAssemblyDebugging();
             }
             else
             {
@@ -80,19 +84,28 @@ namespace DevInstance.SampleWebApp.Server
             }
 
             app.UseHttpsRedirection();
-            app.UseBlazorFrameworkFiles();
             app.UseStaticFiles();
+            if (!env.IsDevelopment())
+            {
+                app.UseSpaStaticFiles();
+            }
 
             app.UseRouting();
 
-//            app.UseIdentityServer();
             app.UseAuthentication();
             app.UseAuthorization();
 
-            app.UseEndpoints(endpoints =>
+            app.UseSpa(spa =>
             {
-                endpoints.MapControllers();
-                endpoints.MapFallbackToFile("index.html");
+                // To learn more about options for serving an Angular SPA from ASP.NET Core,
+                // see https://go.microsoft.com/fwlink/?linkid=864501
+
+                spa.Options.SourcePath = "ClientApp";
+
+                if (env.IsDevelopment())
+                {
+                    spa.UseAngularCliServer(npmScript: "start");
+                }
             });
         }
     }
