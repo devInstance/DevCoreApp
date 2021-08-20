@@ -1,0 +1,12 @@
+/* ToolBar.razor section */
+
+.dropdown-item span {
+  padding-left: 1rem;
+}
+
+.dropdown-menu {
+  position: absolute;
+  inset: 0px auto auto 0px;
+  margin: 0px;
+  transform: translate(-112px, 0px);
+}

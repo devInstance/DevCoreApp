@@ -1,0 +1,35 @@
+<nav class="top-row navbar navbar-expand navbar-light navbar-bg bg-light">
+  <div class="container-fluid">
+    <div class="float-start">
+      <button class="btn btn-default" (click)="ShrinkSidebar()">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+    </div>
+    <div class="dropdown float-end px-2">
+      <a href="#" class="d-block link-dark text-decoration-none dropdown-toggle"
+         id="dropdownUser1"
+         data-bs-toggle="dropdown"
+         aria-expanded="true">
+        <i class="oi bi-person-circle" aria-hidden="true" style="font-size:2rem;"></i>
+      </a>
+      <ul class="dropdown-menu text-small"
+          aria-labelledby="dropdownUser1"
+          data-popper-placement="bottom-end">
+        <li>
+          <a class="dropdown-item" [routerLink]="['/profile']">
+            <i class="oi bi-person" aria-hidden="true"></i><span>Profile</span>
+          </a>
+        </li>
+        <li>
+          <a class="dropdown-item" [routerLink]="['/settings']">
+            <i class="oi bi-gear" aria-hidden="true"></i><span>Settings</span>
+          </a>
+        </li>
+        <li><hr class="dropdown-divider"></li>
+        <li>
+          <a class="dropdown-item" (click)="Logout()">Sign out</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>

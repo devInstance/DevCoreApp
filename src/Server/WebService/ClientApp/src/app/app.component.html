@@ -1,6 +1,9 @@
-<body>
+<div id="app">
   <app-nav-menu></app-nav-menu>
-  <div class="container">
-    <router-outlet></router-outlet>
+  <div class="main">
+    <app-toolbar></app-toolbar>
+    <div class="px-3 pt-2 pb-2">
+      <router-outlet></router-outlet>
+    </div>
   </div>
-</body>
+</div>
