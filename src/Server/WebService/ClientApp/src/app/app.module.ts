@@ -5,14 +5,15 @@ import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
 
 import { AppComponent } from './app.component';
-import { NavMenuComponent } from './components/nav-menu/nav-menu.component';
-import { HomeComponent } from './pages/home/home.component';
-import { CounterComponent } from './pages/counter/counter.component';
-import { FetchDataComponent } from './pages/fetch-data/fetch-data.component';
+import { NavMenuComponent } from './ui/components/nav-menu/nav-menu.component';
+import { HomeComponent } from './ui/pages/home/home.component';
+import { CounterComponent } from './ui/pages/counter/counter.component';
+import { FetchDataComponent } from './ui/pages/fetch-data/fetch-data.component';
 import { ApiAuthorizationModule } from 'src/api-authorization/api-authorization.module';
 import { AuthorizeGuard } from 'src/api-authorization/authorize.guard';
 import { AuthorizeInterceptor } from 'src/api-authorization/authorize.interceptor';
-import { AppToolbarComponent } from './components/toolbar/app-toolbar.component';
+import { AppToolbarComponent } from './ui/components/toolbar/app-toolbar.component';
+import { ToolbarService } from './services/toolbar.service';
 
 @NgModule({
   declarations: [
@@ -35,7 +36,8 @@ import { AppToolbarComponent } from './components/toolbar/app-toolbar.component'
     ])
   ],
   providers: [
-    { provide: HTTP_INTERCEPTORS, useClass: AuthorizeInterceptor, multi: true }
+    { provide: HTTP_INTERCEPTORS, useClass: AuthorizeInterceptor, multi: true },
+    ToolbarService
   ],
   bootstrap: [AppComponent]
 })

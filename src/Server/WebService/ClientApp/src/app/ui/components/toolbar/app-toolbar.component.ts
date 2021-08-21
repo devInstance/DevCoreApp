@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { ToolbarService } from '../../../services/toolbar.service';
 
 @Component({
   selector: 'app-toolbar',
@@ -7,8 +8,11 @@ import { Component } from '@angular/core';
 })
 export class AppToolbarComponent {
 
-  public ShrinkSidebar() {
+  constructor(private toolbarSvc: ToolbarService) {
+  }
 
+  public ShrinkSidebar() {
+    this.toolbarSvc.ToggelSidebar()
   }
 
   public Logout() {

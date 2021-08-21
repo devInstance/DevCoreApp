@@ -1,7 +1,5 @@
-<!--div class="sidebar @NavContainerCssClass"-->
 
-<div class="sidebar">
-  <!--div class="top-row pl-4 navbar navbar-dark" @onclick="ExpandSiderbar"-->
+<div class="sidebar" [ngClass]="{'shrink': isExpanded}" (click)="ExpandSiderbar()">
   <div class="top-row pl-4 navbar navbar-dark">
     <a class="navbar-brand" [routerLink]="['/']">SampleWebApp</a>
   </div>
