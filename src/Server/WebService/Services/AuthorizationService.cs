@@ -167,7 +167,7 @@ namespace DevInstance.SampleWebApp.Server.Services
             return true;
         }
 
-        public async Task<bool> ResetPasswordAsync(ResetPasswordModel parameters)
+        public async Task<bool> ResetPasswordAsync(ResetPasswordParameters parameters)
         {
             using (var l = log.DebugScope())
             {

@@ -120,7 +120,7 @@ namespace DevInstance.SampleWebApp.Server.Controllers
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> ResetPassword(ResetPasswordModel parameters)
+        public async Task<IActionResult> ResetPassword(ResetPasswordParameters parameters)
         {
             try
             {

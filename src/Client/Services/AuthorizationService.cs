@@ -35,7 +35,7 @@ namespace DevInstance.SampleWebApp.Client.Services
             return Api.ForgotPasswordAsync(forgotParameters);
         }
 
-        public Task ResetPasswordAsync(ResetPasswordModel resetPassswordParameters)
+        public Task ResetPasswordAsync(ResetPasswordParameters resetPassswordParameters)
         {
             return Api.ResetPasswordAsync(resetPassswordParameters);
         }

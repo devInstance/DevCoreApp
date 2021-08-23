@@ -5,7 +5,7 @@ using System.Text;
 
 namespace DevInstance.SampleWebApp.Shared.Model
 {
-    public class ResetPasswordModel
+    public class ResetPasswordParameters
     {
         [Required]
         [DataType(DataType.Password)]

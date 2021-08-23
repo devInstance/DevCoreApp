@@ -19,6 +19,6 @@ namespace DevInstance.SampleWebApp.Client.Net.Api
 
         Task ForgotPasswordAsync(ForgotPasswordParameters forgotParameters);
 
-        Task ResetPasswordAsync(ResetPasswordModel resetPassswordParameters);
+        Task ResetPasswordAsync(ResetPasswordParameters resetPassswordParameters);
     }
 }
