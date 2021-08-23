@@ -56,7 +56,7 @@ namespace DevInstance.SampleWebApp.Client.Net
             result.EnsureSuccessStatusCode();
         }
 
-        public async Task ResetPasswordAsync(ResetPasswordModel resetPassswordParameters)
+        public async Task ResetPasswordAsync(ResetPasswordParameters resetPassswordParameters)
         {
             var result = await httpClient.PostAsJsonAsync(Controller + "reset-password", resetPassswordParameters);
             result.EnsureSuccessStatusCode();

@@ -36,7 +36,7 @@ namespace DevInstance.SampleWebApp.Client.Services
             await service.ForgotPasswordAsync(forgotParameters);
         }
 
-        public async Task ResetPasswordAsync(ResetPasswordModel resetPassswordParameters)
+        public async Task ResetPasswordAsync(ResetPasswordParameters resetPassswordParameters)
         {
             await service.ResetPasswordAsync(resetPassswordParameters);
         }
