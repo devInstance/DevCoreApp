@@ -361,7 +361,7 @@ namespace DevInstance.SampleWebApp.Server.Services.Tests
                                                                 It.Is<string>(v => v == "test"))).ReturnsAsync(new IdentityResultMock(true));
                 });
 
-            await authorizationService.ResetPasswordAsync(new ResetPasswordModel
+            await authorizationService.ResetPasswordAsync(new ResetPasswordParameters
             {
                 Email = "test",
                 ConfirmPassword = "test",
@@ -387,7 +387,7 @@ namespace DevInstance.SampleWebApp.Server.Services.Tests
 
             await Assert.ThrowsExceptionAsync<BadRequestException>(async () =>
             {
-                await authorizationService.ResetPasswordAsync(new ResetPasswordModel
+                await authorizationService.ResetPasswordAsync(new ResetPasswordParameters
                 {
                     Email = "test",
                     ConfirmPassword = "test",

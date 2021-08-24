@@ -14,6 +14,11 @@ import { AuthorizeGuard } from 'src/api-authorization/authorize.guard';
 import { AuthorizeInterceptor } from 'src/api-authorization/authorize.interceptor';
 import { AppToolbarComponent } from './ui/components/toolbar/app-toolbar.component';
 import { ToolbarService } from './services/toolbar.service';
+import { AuthorizationApi } from './services/net/authorization-api';
+import { IAuthorizationApi } from './services/net/api/authorization-api.interface';
+import { FetchDataService } from './services/fetchdata.service';
+import { IFetchDataApi } from './services/net/api/fetchdata-api.interface';
+import { FetchDataApi } from './services/net/fetchdata-api';
 
 @NgModule({
   declarations: [
@@ -28,16 +33,19 @@ import { ToolbarService } from './services/toolbar.service';
     BrowserModule.withServerTransition({ appId: 'ng-cli-universal' }),
     HttpClientModule,
     FormsModule,
-    ApiAuthorizationModule,
+    //ApiAuthorizationModule,
     RouterModule.forRoot([
       { path: '', component: HomeComponent, pathMatch: 'full' },
       { path: 'counter', component: CounterComponent },
-      { path: 'fetch-data', component: FetchDataComponent, canActivate: [AuthorizeGuard] },
+      { path: 'fetch-data', component: FetchDataComponent/*, canActivate: [AuthorizeGuard]*/ },
     ])
   ],
   providers: [
-    { provide: HTTP_INTERCEPTORS, useClass: AuthorizeInterceptor, multi: true },
-    ToolbarService
+      //{ provide: HTTP_INTERCEPTORS, useClass: AuthorizeInterceptor, multi: true },
+      { provide: IAuthorizationApi, useClass: AuthorizationApi },
+      { provide: IFetchDataApi, useClass: FetchDataApi },
+      ToolbarService,
+      FetchDataService
   ],
   bootstrap: [AppComponent]
 })
