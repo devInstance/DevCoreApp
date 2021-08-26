@@ -10,7 +10,7 @@ namespace DevInstance.SampleWebApp.Server.EmailProcessor.MailKit
 {
     public static class ConfigurationExtensions
     {
-        public static void ConfigureMailKit(this IServiceCollection services, IConfiguration configuration)
+        public static void AddMailKit(this IServiceCollection services, IConfiguration configuration)
         {
             var emailConfig = new EmailConfiguration
             {

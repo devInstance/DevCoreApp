@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using DevInstance.SampleWebApp.Server.WebService.Tools;
 
 namespace DevInstance.SampleWebApp.Server
 {
@@ -31,22 +32,29 @@ namespace DevInstance.SampleWebApp.Server
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddSingleton<ITimeProvider, TimeProvider>();
+            services.AddTimeProvider();
 
             services.AddMicrosoftScopeLogging(new DefaultFormattersOptions { ShowTimestamp = true, ShowThreadNumber = true });
 
-            ConfigureDatabase(services);
+            AddDatabase(services);
 
-            services.ConfigureIdentity();
+            services.AddDatabaseDeveloperPageExceptionFilter();
 
-            services.ConfigureMailKit(Configuration);
-            services.ConfigureServices();
+            services.AddIdentity();
+
+            services.AddMailKit(Configuration);
+            
+            services.AddAppServices();
 
             services.AddControllersWithViews().AddNewtonsoftJson();
-            //services.AddRazorPages(); //???
+
+            services.AddSpaStaticFiles(configuration =>
+            {
+                configuration.RootPath = "ClientApp/dist";
+            });
         }
 
-        private void ConfigureDatabase(IServiceCollection services)
+        private void AddDatabase(IServiceCollection services)
         {
             var provider = Configuration.GetSection("Database").GetValue(typeof(string), "Provider").ToString();
 
@@ -60,12 +68,6 @@ namespace DevInstance.SampleWebApp.Server
                 services.ConfigureSqlServerDatabase(Configuration);
                 services.ConfigureSqlServerIdentityContext();
             }
-
-            services.AddDatabaseDeveloperPageExceptionFilter();
-            services.AddSpaStaticFiles(configuration =>
-            {
-                configuration.RootPath = "ClientApp/dist";
-            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
