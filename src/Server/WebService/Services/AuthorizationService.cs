@@ -5,6 +5,7 @@ using DevInstance.SampleWebApp.Server.EmailProcessor;
 using DevInstance.SampleWebApp.Server.EmailProcessor.Templates;
 using DevInstance.SampleWebApp.Server.Exceptions;
 using DevInstance.SampleWebApp.Server.WebService.Indentity;
+using DevInstance.SampleWebApp.Server.WebService.Tools;
 using DevInstance.SampleWebApp.Shared.Model;
 using Microsoft.AspNetCore.Identity;
 using System;
@@ -14,6 +15,7 @@ using System.Web;
 
 namespace DevInstance.SampleWebApp.Server.Services
 {
+    [AppService]
     public class AuthorizationService : BaseService
     {
         private readonly IApplicationSignManager signInManager;

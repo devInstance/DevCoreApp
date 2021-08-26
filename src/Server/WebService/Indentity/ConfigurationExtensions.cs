@@ -13,7 +13,7 @@ namespace DevInstance.SampleWebApp.Server.WebService.Indentity
 {
     public static class ConfigurationExtensions
     {
-        public static void ConfigureIdentity(this IServiceCollection services)
+        public static void AddIdentity(this IServiceCollection services)
         {
             services.AddHttpContextAccessor();
             services.AddScoped<IAuthorizationContext, AuthorizationContext>();

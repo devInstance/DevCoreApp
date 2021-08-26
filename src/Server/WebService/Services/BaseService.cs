@@ -4,7 +4,7 @@ using DevInstance.SampleWebApp.Server.WebService.Indentity;
 
 namespace DevInstance.SampleWebApp.Server.Services
 {
-    public class BaseService
+    public abstract class BaseService
     {
         protected readonly IScopeLog log;
 

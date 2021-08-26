@@ -2,10 +2,12 @@
 using DevInstance.SampleWebApp.Server.Database.Core.Data;
 using DevInstance.SampleWebApp.Server.Database.Core.Data.Decorators;
 using DevInstance.SampleWebApp.Server.WebService.Indentity;
+using DevInstance.SampleWebApp.Server.WebService.Tools;
 using DevInstance.SampleWebApp.Shared.Model;
 
 namespace DevInstance.SampleWebApp.Server.Services
 {
+    [AppService]
     public class UserProfileService : BaseService
     {
         public UserProfileService(IScopeManager logManager,
