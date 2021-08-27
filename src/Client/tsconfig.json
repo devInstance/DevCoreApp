@@ -1,8 +1,0 @@
-﻿{
-    "compilerOptions": {
-        "module": "commonjs",
-        "declaration": true,
-        "sourceMap": true,
-        "outDir": "./wwwroot/scripts/"
-    }
-}

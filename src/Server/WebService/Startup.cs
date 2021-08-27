@@ -35,15 +35,13 @@ namespace DevInstance.SampleWebApp.Server
 
             AddDatabase(services);
 
-            services.AddDatabaseDeveloperPageExceptionFilter();
-
             services.AddIdentity();
 
             services.AddMailKit(Configuration);
             
             services.AddAppServices();
 
-            services.AddControllersWithViews().AddNewtonsoftJson();
+            services.AddControllers().AddNewtonsoftJson();
         }
 
         private void AddDatabase(IServiceCollection services)
@@ -70,29 +68,22 @@ namespace DevInstance.SampleWebApp.Server
             {
                 app.UseDeveloperExceptionPage();
                 app.UseMigrationsEndPoint();
-                app.UseWebAssemblyDebugging();
             }
             else
             {
-                //app.UseExceptionHandler("/Error");
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
 
             app.UseHttpsRedirection();
-            app.UseBlazorFrameworkFiles();
-            app.UseStaticFiles();
 
             app.UseRouting();
 
-//            app.UseIdentityServer();
-            app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
-                endpoints.MapFallbackToFile("index.html");
             });
         }
     }
