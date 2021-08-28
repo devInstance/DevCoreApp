@@ -138,14 +138,17 @@ namespace DevInstance.SampleWebApp.Server.Services
 
         public async Task<bool> ForgotPasswordAsync(ForgotPasswordParameters forgotParameters, string scheme, string host, int? port)
         {
+            // Verify if the given email address exists in the system
             var user = await UserManager.FindByEmailAsync(forgotParameters.Email);
             if (user == null)
             {
+                // Pretend that email has been sent
                 return true;
             }
-
+            // Generate reset password token
             var token = await UserManager.GeneratePasswordResetTokenAsync(user);
 
+            // Create the url for the password reset
             var uriBuilder = new UriBuilder();
             uriBuilder.Scheme = scheme;
             uriBuilder.Host = host;
@@ -156,6 +159,7 @@ namespace DevInstance.SampleWebApp.Server.Services
             uriBuilder.Path = "authentication/reset-password";
             uriBuilder.Query = $"email={user.Email}&token={HttpUtility.UrlEncode(token)}";
 
+            // Send email to the customer
             await EmailSender.SendAsync(
                     TemplateFactory.CreateResetPasswordMessage(
                         new EmailAddress {
