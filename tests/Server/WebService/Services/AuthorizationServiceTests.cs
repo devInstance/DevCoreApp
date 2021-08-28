@@ -326,24 +326,58 @@ namespace DevInstance.SampleWebApp.Server.Services.Tests
         public async Task ForgotPasswordSuccessTest()
         {
             Mock<IApplicationUserManager> userManagerMock = null;
+            Mock<IEmailSender> emailSender = null;
 
             var authorizationService =
                 SetupServiceMock((authContext, userManager, signinManagerMq, emailSender, mockRepository) =>
                 {
                     userManagerMock = userManager;
-                    userManagerMock.Setup(x => x.FindByEmailAsync(It.IsAny<string>())).ReturnsAsync(new ApplicationUser { UserName = "test" });
+                    userManagerMock.Setup(x => x.FindByEmailAsync(It.IsAny<string>())).ReturnsAsync(new ApplicationUser { UserName = "test@test.com" });
                     userManagerMock.Setup(x => x.GeneratePasswordResetTokenAsync(It.IsAny<ApplicationUser>()))
-                                    .ReturnsAsync("tocken");
+                                    .ReturnsAsync("ttttokenxxx");
 
                     emailSender.Setup(x => x.SendAsync(It.IsAny<IEmailMessage>()));
                 });
 
             await authorizationService.ForgotPasswordAsync(new ForgotPasswordParameters
             {
-                Email = "test"
-            }, "test", "test", 80);
+                Email = "test@test.com"
+            }, "https", "test.com", 8080);
 
+            userManagerMock.Verify(x => x.FindByEmailAsync(It.IsAny<string>()), Times.Once());
             userManagerMock.Verify(x => x.GeneratePasswordResetTokenAsync(It.IsAny<ApplicationUser>()), Times.Once());
+            emailSender.Verify(x => x.SendAsync(It.IsAny<IEmailMessage>()), Times.Once());
+        }
+
+        [TestMethod()]
+        public async Task ForgotPasswordEmailDoesntExistTest()
+        {
+            Mock<IApplicationUserManager> userManagerMock = null;
+            Mock<IEmailSender> emailSenderMock = null;
+
+            var authorizationService =
+                SetupServiceMock((authContext, userManager, signinManagerMq, emailSender, mockRepository) =>
+                {
+                    userManagerMock = userManager;
+                    userManagerMock.Setup(x => x.FindByEmailAsync(It.IsAny<string>())).ReturnsAsync((ApplicationUser)null);
+                    userManagerMock.Setup(x => x.GeneratePasswordResetTokenAsync(It.IsAny<ApplicationUser>()))
+                                    .ReturnsAsync("ttttokenxxx");
+
+                    emailSenderMock = emailSender;
+                    emailSender.Setup(x => x.SendAsync(It.IsAny<IEmailMessage>()));
+                });
+
+            var result = await authorizationService.ForgotPasswordAsync(new ForgotPasswordParameters
+            {
+                Email = "test@test.com"
+            }, "https", "test.com", 8080);
+
+            Assert.IsTrue(result);
+
+            userManagerMock.Verify(x => x.FindByEmailAsync(It.IsAny<string>()), Times.Once());
+            // Following two should not be called
+            userManagerMock.Verify(x => x.GeneratePasswordResetTokenAsync(It.IsAny<ApplicationUser>()), Times.Never());
+            emailSenderMock.Verify(x => x.SendAsync(It.IsAny<IEmailMessage>()), Times.Never());
         }
 
         [TestMethod()]
