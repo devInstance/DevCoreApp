@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 
 namespace DevInstance.SampleWebApp.Server.Database.SqlServer
 {
-    public class SqlServerApplicationDbContext : ApplicationDbContext
+    internal class SqlServerApplicationDbContext : ApplicationDbContext
     {
         public SqlServerApplicationDbContext(DbContextOptions options
             /*,IOptions<OperationalStoreOptions> operationalStoreOptions*/)
