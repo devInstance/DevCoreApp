@@ -8,7 +8,7 @@ using NoCrast.Server.Database.Postgres.Data.Queries;
 
 namespace DevInstance.SampleWebApp.Server.Database.Postgres.Data
 {
-    public class CoreQueryRepository : IQueryRepository
+    public abstract class CoreQueryRepository : IQueryRepository
     {
         protected ApplicationDbContext DB { get; }
         public ITimeProvider TimeProvider { get; }

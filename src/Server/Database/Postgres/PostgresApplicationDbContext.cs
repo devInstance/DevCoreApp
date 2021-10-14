@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 
 namespace DevInstance.SampleWebApp.Server.Database.Postgres
 {
-    public class PostgresApplicationDbContext : ApplicationDbContext
+    internal class PostgresApplicationDbContext : ApplicationDbContext
     {
         public PostgresApplicationDbContext(DbContextOptions options
             /*,IOptions<OperationalStoreOptions> operationalStoreOptions*/)
