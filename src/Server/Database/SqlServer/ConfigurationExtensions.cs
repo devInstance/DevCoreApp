@@ -1,11 +1,11 @@
-﻿using DevInstance.SampleWebApp.Server.Database.Core;
-using DevInstance.SampleWebApp.Server.Database.Core.Data;
-using DevInstance.SampleWebApp.Server.Database.SqlServer.Data;
+﻿using DevInstance.DevCoreApp.Server.Database.Core;
+using DevInstance.DevCoreApp.Server.Database.Core.Data;
+using DevInstance.DevCoreApp.Server.Database.SqlServer.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace DevInstance.SampleWebApp.Server.Database.SqlServer
+namespace DevInstance.DevCoreApp.Server.Database.SqlServer
 {
     public static class ConfigurationExtensions
     {
@@ -15,7 +15,7 @@ namespace DevInstance.SampleWebApp.Server.Database.SqlServer
             services.AddDbContext<ApplicationDbContext, SqlServerApplicationDbContext>(options =>
                     options.UseSqlServer(
                             connectionString,
-                            b => b.MigrationsAssembly("DevInstance.SampleWebApp.Server.Database.SqlServer")
+                            b => b.MigrationsAssembly("DevInstance.DevCoreApp.Server.Database.SqlServer")
                             ));
 
             services.AddScoped<IQueryRepository, SqlServerQueryRepository>();

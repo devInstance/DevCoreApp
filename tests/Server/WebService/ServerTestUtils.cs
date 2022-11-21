@@ -1,10 +1,10 @@
-﻿using DevInstance.SampleWebApp.Server.Database.Core.Models;
-using DevInstance.SampleWebApp.Server.WebService.Indentity;
+﻿using DevInstance.DevCoreApp.Server.Database.Core.Models;
+using DevInstance.DevCoreApp.Server.WebService.Indentity;
 using Moq;
 using System;
 using System.Threading.Tasks;
 
-namespace DevInstance.SampleWebApp.Server.Tests
+namespace DevInstance.DevCoreApp.Server.Tests
 {
     public class ServerTestUtils
     {

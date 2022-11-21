@@ -1,7 +1,7 @@
-﻿using DevInstance.SampleWebApp.Server.Database.Core.Data.Queries;
-using DevInstance.SampleWebApp.Server.Database.Core.Models;
+﻿using DevInstance.DevCoreApp.Server.Database.Core.Data.Queries;
+using DevInstance.DevCoreApp.Server.Database.Core.Models;
 
-namespace DevInstance.SampleWebApp.Server.Database.Core.Data
+namespace DevInstance.DevCoreApp.Server.Database.Core.Data
 {
     public interface IQueryRepository
     {

@@ -1,12 +1,12 @@
 ﻿using DevInstance.LogScope;
-using DevInstance.SampleWebApp.Server.Database.Core;
-using DevInstance.SampleWebApp.Server.Database.Core.Data;
-using DevInstance.SampleWebApp.Server.Database.Core.Data.Queries;
-using DevInstance.SampleWebApp.Server.Database.Core.Models;
-using DevInstance.SampleWebApp.Shared.Utils;
+using DevInstance.DevCoreApp.Server.Database.Core;
+using DevInstance.DevCoreApp.Server.Database.Core.Data;
+using DevInstance.DevCoreApp.Server.Database.Core.Data.Queries;
+using DevInstance.DevCoreApp.Server.Database.Core.Models;
+using DevInstance.DevCoreApp.Shared.Utils;
 using NoCrast.Server.Database.Postgres.Data.Queries;
 
-namespace DevInstance.SampleWebApp.Server.Database.Postgres.Data
+namespace DevInstance.DevCoreApp.Server.Database.Postgres.Data
 {
     public abstract class CoreQueryRepository : IQueryRepository
     {

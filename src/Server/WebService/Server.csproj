@@ -2,9 +2,9 @@
 
     <PropertyGroup>
         <TargetFramework>net5.0</TargetFramework>
-        <UserSecretsId>DevInstance.SampleWebApp.Server-38988985-5AD0-4791-8BE5-DA7357ED66DF</UserSecretsId>
-        <AssemblyName>DevInstance.SampleWebApp.Server.WebService</AssemblyName>
-        <RootNamespace>DevInstance.SampleWebApp.Server.WebService</RootNamespace>
+        <UserSecretsId>DevInstance.DevCoreApp.Server-38988985-5AD0-4791-8BE5-DA7357ED66DF</UserSecretsId>
+        <AssemblyName>DevInstance.DevCoreApp.Server.WebService</AssemblyName>
+        <RootNamespace>DevInstance.DevCoreApp.Server.WebService</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>

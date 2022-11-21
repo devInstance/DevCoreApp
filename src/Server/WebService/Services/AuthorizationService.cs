@@ -1,19 +1,19 @@
 ﻿using DevInstance.LogScope;
-using DevInstance.SampleWebApp.Server.Database.Core.Data;
-using DevInstance.SampleWebApp.Server.Database.Core.Models;
-using DevInstance.SampleWebApp.Server.EmailProcessor;
-using DevInstance.SampleWebApp.Server.EmailProcessor.Templates;
-using DevInstance.SampleWebApp.Server.Exceptions;
-using DevInstance.SampleWebApp.Server.WebService.Indentity;
-using DevInstance.SampleWebApp.Server.WebService.Tools;
-using DevInstance.SampleWebApp.Shared.Model;
+using DevInstance.DevCoreApp.Server.Database.Core.Data;
+using DevInstance.DevCoreApp.Server.Database.Core.Models;
+using DevInstance.DevCoreApp.Server.EmailProcessor;
+using DevInstance.DevCoreApp.Server.EmailProcessor.Templates;
+using DevInstance.DevCoreApp.Server.Exceptions;
+using DevInstance.DevCoreApp.Server.WebService.Indentity;
+using DevInstance.DevCoreApp.Server.WebService.Tools;
+using DevInstance.DevCoreApp.Shared.Model;
 using Microsoft.AspNetCore.Identity;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
 
-namespace DevInstance.SampleWebApp.Server.Services
+namespace DevInstance.DevCoreApp.Server.Services
 {
     [AppService]
     public class AuthorizationService : BaseService

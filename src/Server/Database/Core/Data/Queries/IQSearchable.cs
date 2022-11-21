@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DevInstance.SampleWebApp.Server.Database.Core.Data.Queries
+namespace DevInstance.DevCoreApp.Server.Database.Core.Data.Queries
 {
     public interface IQSearchable<T>
     {

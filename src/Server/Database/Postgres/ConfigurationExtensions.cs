@@ -1,11 +1,11 @@
-﻿using DevInstance.SampleWebApp.Server.Database.Core;
-using DevInstance.SampleWebApp.Server.Database.Core.Data;
-using DevInstance.SampleWebApp.Server.Database.Postgres.Data;
+﻿using DevInstance.DevCoreApp.Server.Database.Core;
+using DevInstance.DevCoreApp.Server.Database.Core.Data;
+using DevInstance.DevCoreApp.Server.Database.Postgres.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace DevInstance.SampleWebApp.Server.Database.Postgres
+namespace DevInstance.DevCoreApp.Server.Database.Postgres
 {
     public static class ConfigurationExtensions
     {
@@ -15,7 +15,7 @@ namespace DevInstance.SampleWebApp.Server.Database.Postgres
             services.AddDbContext<ApplicationDbContext, PostgresApplicationDbContext>(options =>
                     options.UseNpgsql(
                             connectionString,
-                            b => b.MigrationsAssembly("DevInstance.SampleWebApp.Server.Database.Postgres")
+                            b => b.MigrationsAssembly("DevInstance.DevCoreApp.Server.Database.Postgres")
                             ));
             services.AddScoped<IQueryRepository, PostgresQueryRepository>();
         }

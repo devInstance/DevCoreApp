@@ -1,5 +1,5 @@
 ﻿using DevInstance.LogScope;
-using DevInstance.SampleWebApp.Shared.Model;
+using DevInstance.DevCoreApp.Shared.Model;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -7,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace DevInstance.SampleWebApp.Server.Controllers
+namespace DevInstance.DevCoreApp.Server.Controllers
 {
     [Authorize]
     [ApiController]

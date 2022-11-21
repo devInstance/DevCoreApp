@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DevInstance.SampleWebApp.Server.EmailProcessor.Templates
+namespace DevInstance.DevCoreApp.Server.EmailProcessor.Templates
 {
     public static class TemplateFactory
     {

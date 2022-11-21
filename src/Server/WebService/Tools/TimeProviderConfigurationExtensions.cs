@@ -1,10 +1,10 @@
-﻿using DevInstance.SampleWebApp.Shared.Utils;
+﻿using DevInstance.DevCoreApp.Shared.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace DevInstance.SampleWebApp.Server.WebService.Tools
+namespace DevInstance.DevCoreApp.Server.WebService.Tools
 {
     public static class TimeProviderConfigurationExtensions
     {

@@ -1,9 +1,9 @@
-﻿using DevInstance.SampleWebApp.Server.Database.Core;
+﻿using DevInstance.DevCoreApp.Server.Database.Core;
 using IdentityServer4.EntityFramework.Options;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
-namespace DevInstance.SampleWebApp.Server.Database.SqlServer
+namespace DevInstance.DevCoreApp.Server.Database.SqlServer
 {
     internal class SqlServerApplicationDbContext : ApplicationDbContext
     {

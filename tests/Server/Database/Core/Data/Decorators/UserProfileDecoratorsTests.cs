@@ -1,15 +1,15 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using DevInstance.SampleWebApp.Server.Database.Core.Data.Decorators;
+using DevInstance.DevCoreApp.Server.Database.Core.Data.Decorators;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using DevInstance.SampleWebApp.Server.Database.Core.Models;
-using DevInstance.SampleWebApp.Shared.Utils;
-using DevInstance.SampleWebApp.Shared.TestUtils;
+using DevInstance.DevCoreApp.Server.Database.Core.Models;
+using DevInstance.DevCoreApp.Shared.Utils;
+using DevInstance.DevCoreApp.Shared.TestUtils;
 
-namespace DevInstance.SampleWebApp.Server.Database.Core.Data.Decorators.Tests
+namespace DevInstance.DevCoreApp.Server.Database.Core.Data.Decorators.Tests
 {
     [TestClass()]
     public class UserProfileDecoratorsTests

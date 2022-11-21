@@ -1,10 +1,10 @@
-﻿using DevInstance.SampleWebApp.Server.Database.Core.Models.Base;
+﻿using DevInstance.DevCoreApp.Server.Database.Core.Models.Base;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace DevInstance.SampleWebApp.Server.Database.Core.Models
+namespace DevInstance.DevCoreApp.Server.Database.Core.Models
 {
     public enum UserStatus
     {

@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
-      <AssemblyName>DevInstance.SampleWebApp.Shared.TestUtils</AssemblyName>
-      <RootNamespace>DevInstance.SampleWebApp.Shared.TestUtils</RootNamespace>
+      <AssemblyName>DevInstance.DevCoreApp.Shared.TestUtils</AssemblyName>
+      <RootNamespace>DevInstance.DevCoreApp.Shared.TestUtils</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

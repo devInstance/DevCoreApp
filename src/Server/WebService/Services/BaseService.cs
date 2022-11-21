@@ -1,8 +1,8 @@
 ﻿using DevInstance.LogScope;
-using DevInstance.SampleWebApp.Server.Database.Core.Data;
-using DevInstance.SampleWebApp.Server.WebService.Indentity;
+using DevInstance.DevCoreApp.Server.Database.Core.Data;
+using DevInstance.DevCoreApp.Server.WebService.Indentity;
 
-namespace DevInstance.SampleWebApp.Server.Services
+namespace DevInstance.DevCoreApp.Server.Services
 {
     public abstract class BaseService
     {
