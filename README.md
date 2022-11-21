@@ -1,4 +1,4 @@
-# SampleWebApp
+# DevCoreApp
 This project is collection of the best practices structuring ASP.NET Core project. It based on **Consumer**->**Service**->**Provider** architecture described in series of blog [articles]( https://devinstance.net/blog/aspnet-core-introduction-to-the-clean-architecture).
 
 # Project Structure
