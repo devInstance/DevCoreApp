@@ -3,8 +3,8 @@
     <PropertyGroup>
         <TargetFramework>net5.0</TargetFramework>
         <Nullable>enable</Nullable>
-        <AssemblyName>DevInstance.SampleWebApp.Server.EmailProcessor.MailKit</AssemblyName>
-        <RootNamespace>DevInstance.SampleWebApp.Server.EmailProcessor.MailKit</RootNamespace>
+        <AssemblyName>DevInstance.DevCoreApp.Server.EmailProcessor.MailKit</AssemblyName>
+        <RootNamespace>DevInstance.DevCoreApp.Server.EmailProcessor.MailKit</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>

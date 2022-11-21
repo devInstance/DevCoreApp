@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DevInstance.SampleWebApp.Server.EmailProcessor.MailKit
+namespace DevInstance.DevCoreApp.Server.EmailProcessor.MailKit
 {
     public static class ConfigurationExtensions
     {

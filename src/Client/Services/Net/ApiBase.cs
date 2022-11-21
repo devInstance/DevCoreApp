@@ -1,6 +1,6 @@
 ﻿using System.Net.Http;
 
-namespace DevInstance.SampleWebApp.Client.Net
+namespace DevInstance.DevCoreApp.Client.Net
 {
     public class ApiBase
     {

@@ -16,7 +16,7 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
-    "DevInstance.SampleWebApp": {
+    "DevInstance.DevCoreApp": {
       "commandName": "Project",
       "dotnetRunMessages": "true",
       "launchBrowser": true,

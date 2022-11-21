@@ -2,8 +2,8 @@
 
     <PropertyGroup>
         <TargetFramework>.NETCoreApp,Version=v5.0</TargetFramework>
-        <AssemblyName>DevInstance.SampleWebApp.Server.Tests</AssemblyName>
-        <RootNamespace>DevInstance.SampleWebApp.Server.Tests</RootNamespace>
+        <AssemblyName>DevInstance.DevCoreApp.Server.Tests</AssemblyName>
+        <RootNamespace>DevInstance.DevCoreApp.Server.Tests</RootNamespace>
         <IsPackable>false</IsPackable>
     </PropertyGroup>
 

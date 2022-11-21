@@ -1,8 +1,8 @@
-﻿using DevInstance.SampleWebApp.Shared.Utils;
+﻿using DevInstance.DevCoreApp.Shared.Utils;
 using Moq;
 using System;
 
-namespace DevInstance.SampleWebApp.Shared.TestUtils
+namespace DevInstance.DevCoreApp.Shared.TestUtils
 {
     public class TimerProviderMock
     {

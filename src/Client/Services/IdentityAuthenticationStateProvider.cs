@@ -1,12 +1,12 @@
 ﻿using DevInstance.LogScope;
-using DevInstance.SampleWebApp.Shared.Model;
+using DevInstance.DevCoreApp.Shared.Model;
 using Microsoft.AspNetCore.Components.Authorization;
 using System.Linq;
 using System.Net.Http;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
-namespace DevInstance.SampleWebApp.Client.Services
+namespace DevInstance.DevCoreApp.Client.Services
 {
     public class IdentityAuthenticationStateProvider : AuthenticationStateProvider
     {

@@ -1,11 +1,11 @@
 ﻿using DevInstance.LogScope;
-using DevInstance.SampleWebApp.Server.Database.Core.Data;
-using DevInstance.SampleWebApp.Server.Database.Core.Data.Decorators;
-using DevInstance.SampleWebApp.Server.WebService.Indentity;
-using DevInstance.SampleWebApp.Server.WebService.Tools;
-using DevInstance.SampleWebApp.Shared.Model;
+using DevInstance.DevCoreApp.Server.Database.Core.Data;
+using DevInstance.DevCoreApp.Server.Database.Core.Data.Decorators;
+using DevInstance.DevCoreApp.Server.WebService.Indentity;
+using DevInstance.DevCoreApp.Server.WebService.Tools;
+using DevInstance.DevCoreApp.Shared.Model;
 
-namespace DevInstance.SampleWebApp.Server.Services
+namespace DevInstance.DevCoreApp.Server.Services
 {
     [AppService]
     public class UserProfileService : BaseService

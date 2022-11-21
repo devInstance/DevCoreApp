@@ -1,6 +1,6 @@
 {
-  "name": "DevInstance.SampleWebApp",
-  "short_name": "DevInstance.SampleWebApp",
+  "name": "DevInstance.DevCoreApp",
+  "short_name": "DevInstance.DevCoreApp",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#ffffff",

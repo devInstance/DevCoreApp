@@ -1,8 +1,8 @@
-﻿using DevInstance.SampleWebApp.Client.Net.Api;
-using DevInstance.SampleWebApp.Shared.Model;
+﻿using DevInstance.DevCoreApp.Client.Net.Api;
+using DevInstance.DevCoreApp.Shared.Model;
 using System.Threading.Tasks;
 
-namespace DevInstance.SampleWebApp.Client.Services
+namespace DevInstance.DevCoreApp.Client.Services
 {
     public class AuthorizationService
     {

@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace DevInstance.SampleWebApp.Client.Resources.UI.Pages.Authentication {
+namespace DevInstance.DevCoreApp.Client.Resources.UI.Pages.Authentication {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace DevInstance.SampleWebApp.Client.Resources.UI.Pages.Authentication {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("DevInstance.SampleWebApp.Client.Resources.UI.Pages.Authentication.Register", typeof(Register).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("DevInstance.DevCoreApp.Client.Resources.UI.Pages.Authentication.Register", typeof(Register).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;

@@ -1,10 +1,10 @@
-﻿using DevInstance.SampleWebApp.Server.Services;
-using DevInstance.SampleWebApp.Shared.Model;
+﻿using DevInstance.DevCoreApp.Server.Services;
+using DevInstance.DevCoreApp.Shared.Model;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace DevInstance.SampleWebApp.Server.Controllers
+namespace DevInstance.DevCoreApp.Server.Controllers
 {
     [Route("api/user/profile")]
     [ApiController]

@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace DevInstance.SampleWebApp.Server.Tests
+namespace DevInstance.DevCoreApp.Server.Tests
 {
     public class SignInResultMock : SignInResult
     {

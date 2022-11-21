@@ -7,7 +7,7 @@ using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace DevInstance.SampleWebApp.Client.Extensions
+namespace DevInstance.DevCoreApp.Client.Extensions
 {
     public static class WebAssemblyHostExtension
     {

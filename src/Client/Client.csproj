@@ -4,8 +4,8 @@
         <TargetFramework>net5.0</TargetFramework>
         <BlazorWebAssemblyLoadAllGlobalizationData>true</BlazorWebAssemblyLoadAllGlobalizationData>
         <ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
-        <AssemblyName>DevInstance.SampleWebApp.Client</AssemblyName>
-        <RootNamespace>DevInstance.SampleWebApp.Client</RootNamespace>
+        <AssemblyName>DevInstance.DevCoreApp.Client</AssemblyName>
+        <RootNamespace>DevInstance.DevCoreApp.Client</RootNamespace>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

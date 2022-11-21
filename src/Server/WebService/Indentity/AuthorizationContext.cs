@@ -1,12 +1,12 @@
-﻿using DevInstance.SampleWebApp.Server.Database.Core.Data;
-using DevInstance.SampleWebApp.Server.Database.Core.Models;
+﻿using DevInstance.DevCoreApp.Server.Database.Core.Data;
+using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using System;
 using System.Linq;
 using System.Security.Claims;
 
-namespace DevInstance.SampleWebApp.Server.WebService.Indentity
+namespace DevInstance.DevCoreApp.Server.WebService.Indentity
 {
     public class AuthorizationContext : IAuthorizationContext
     {

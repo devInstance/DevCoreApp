@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DevInstance.SampleWebApp.Shared.Utils
+namespace DevInstance.DevCoreApp.Shared.Utils
 {
     /// <summary>
     /// Transforms Guid into a case sensitive string representation

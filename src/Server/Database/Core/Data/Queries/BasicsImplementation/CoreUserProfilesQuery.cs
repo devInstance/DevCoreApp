@@ -1,8 +1,8 @@
 ﻿using DevInstance.LogScope;
-using DevInstance.SampleWebApp.Server.Database.Core;
-using DevInstance.SampleWebApp.Server.Database.Core.Data.Queries;
-using DevInstance.SampleWebApp.Server.Database.Core.Models;
-using DevInstance.SampleWebApp.Shared.Utils;
+using DevInstance.DevCoreApp.Server.Database.Core;
+using DevInstance.DevCoreApp.Server.Database.Core.Data.Queries;
+using DevInstance.DevCoreApp.Server.Database.Core.Models;
+using DevInstance.DevCoreApp.Shared.Utils;
 using System;
 using System.Linq;
 

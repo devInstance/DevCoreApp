@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Localization;
 using System.Globalization;
 
-namespace DevInstance.SampleWebApp.Client.Services
+namespace DevInstance.DevCoreApp.Client.Services
 {
     public class SettingsService : BaseService
     {

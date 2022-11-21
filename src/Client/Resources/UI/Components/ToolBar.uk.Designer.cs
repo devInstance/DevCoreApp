@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace DevInstance.SampleWebApp.Client.Resources.UI.Components {
+namespace DevInstance.DevCoreApp.Client.Resources.UI.Components {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace DevInstance.SampleWebApp.Client.Resources.UI.Components {
         public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("DevInstance.SampleWebApp.Client.Resources.UI.Components.ToolBar - Copy", typeof(ToolBar___Copy).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("DevInstance.DevCoreApp.Client.Resources.UI.Components.ToolBar - Copy", typeof(ToolBar___Copy).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;

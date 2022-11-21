@@ -1,4 +1,4 @@
-﻿using DevInstance.SampleWebApp.Server.Database.Core.Models;
+﻿using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DevInstance.SampleWebApp.Server.Database.Core
+namespace DevInstance.DevCoreApp.Server.Database.Core
 {
     public static class ConfigurationExtension
     {

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DevInstance.SampleWebApp.Server.EmailProcessor
+namespace DevInstance.DevCoreApp.Server.EmailProcessor
 {
     public interface IEmailMessage
     {

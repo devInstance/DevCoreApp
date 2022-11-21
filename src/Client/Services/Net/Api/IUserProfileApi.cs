@@ -1,10 +1,10 @@
-﻿using DevInstance.SampleWebApp.Shared.Model;
+﻿using DevInstance.DevCoreApp.Shared.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace DevInstance.SampleWebApp.Client.Net.Api
+namespace DevInstance.DevCoreApp.Client.Net.Api
 {
     public interface IUserProfileApi
     {

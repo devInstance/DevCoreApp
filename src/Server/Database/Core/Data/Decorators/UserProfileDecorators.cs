@@ -1,7 +1,7 @@
-﻿using DevInstance.SampleWebApp.Server.Database.Core.Models;
-using DevInstance.SampleWebApp.Shared.Model;
+﻿using DevInstance.DevCoreApp.Server.Database.Core.Models;
+using DevInstance.DevCoreApp.Shared.Model;
 
-namespace DevInstance.SampleWebApp.Server.Database.Core.Data.Decorators
+namespace DevInstance.DevCoreApp.Server.Database.Core.Data.Decorators
 {
     public static class UserProfileDecorators
     {

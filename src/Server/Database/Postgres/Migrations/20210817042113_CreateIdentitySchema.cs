@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
-namespace DevInstance.SampleWebApp.Server.Database.Postgres.Migrations
+namespace DevInstance.DevCoreApp.Server.Database.Postgres.Migrations
 {
     public partial class CreateIdentitySchema : Migration
     {

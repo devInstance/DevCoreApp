@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
 
-namespace DevInstance.SampleWebApp.Shared.Model
+namespace DevInstance.DevCoreApp.Shared.Model
 {
     public class RegisterParameters
     {

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace DevInstance.SampleWebApp.Client.UI.Components
+namespace DevInstance.DevCoreApp.Client.UI.Components
 {
     public partial class PageTitle
     {

@@ -1,7 +1,7 @@
 ﻿using DevInstance.LogScope;
-using DevInstance.SampleWebApp.Server.Database.Core;
-using DevInstance.SampleWebApp.Server.Database.Core.Models;
-using DevInstance.SampleWebApp.Shared.Utils;
+using DevInstance.DevCoreApp.Server.Database.Core;
+using DevInstance.DevCoreApp.Server.Database.Core.Models;
+using DevInstance.DevCoreApp.Shared.Utils;
 
 namespace NoCrast.Server.Database.Postgres.Data.Queries
 {

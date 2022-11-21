@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace DevInstance.SampleWebApp.Shared.Model
+namespace DevInstance.DevCoreApp.Shared.Model
 {
     public class UserInfoItem : ModelItem
     {

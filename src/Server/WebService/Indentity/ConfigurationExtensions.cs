@@ -1,5 +1,5 @@
-﻿using DevInstance.SampleWebApp.Server.Database.Core;
-using DevInstance.SampleWebApp.Server.Database.Core.Models;
+﻿using DevInstance.DevCoreApp.Server.Database.Core;
+using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -9,7 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace DevInstance.SampleWebApp.Server.WebService.Indentity
+namespace DevInstance.DevCoreApp.Server.WebService.Indentity
 {
     public static class ConfigurationExtensions
     {

@@ -1,11 +1,11 @@
 ﻿
 using DevInstance.LogScope;
-using DevInstance.SampleWebApp.Client.Services;
+using DevInstance.DevCoreApp.Client.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using System.Globalization;
 
-namespace DevInstance.SampleWebApp.Client.UI.Pages.Settings
+namespace DevInstance.DevCoreApp.Client.UI.Pages.Settings
 {
     public partial class SettingsIndex
     {

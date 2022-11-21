@@ -1,10 +1,10 @@
-﻿using DevInstance.SampleWebApp.Client.Net.Api;
-using DevInstance.SampleWebApp.Shared.Model;
+﻿using DevInstance.DevCoreApp.Client.Net.Api;
+using DevInstance.DevCoreApp.Shared.Model;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 
-namespace DevInstance.SampleWebApp.Client.Net
+namespace DevInstance.DevCoreApp.Client.Net
 {
     public class AuthorizationApi : ApiBase, IAuthorizationApi
     {
