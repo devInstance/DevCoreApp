@@ -1,20 +1,18 @@
 using DevInstance.LogScope.Extensions.MicrosoftLogger;
 using DevInstance.LogScope.Formatters;
-using DevInstance.SampleWebApp.Server.Database.Postgres;
-using DevInstance.SampleWebApp.Server.Database.SqlServer;
-using DevInstance.SampleWebApp.Server.EmailProcessor.MailKit;
-using DevInstance.SampleWebApp.Server.Services;
-using DevInstance.SampleWebApp.Server.WebService.Indentity;
-using DevInstance.SampleWebApp.Shared.Utils;
+using DevInstance.DevCoreApp.Server.Database.Postgres;
+using DevInstance.DevCoreApp.Server.Database.SqlServer;
+using DevInstance.DevCoreApp.Server.EmailProcessor.MailKit;
+using DevInstance.DevCoreApp.Server.WebService.Indentity;
 using Microsoft.AspNetCore.SpaServices.AngularCli;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using DevInstance.SampleWebApp.Server.WebService.Tools;
+using DevInstance.DevCoreApp.Server.WebService.Tools;
 
-namespace DevInstance.SampleWebApp.Server
+namespace DevInstance.DevCoreApp.Server
 {
     public class Startup
     {

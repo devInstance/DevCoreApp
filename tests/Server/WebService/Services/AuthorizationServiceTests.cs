@@ -1,18 +1,18 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using DevInstance.SampleWebApp.Shared.TestUtils;
-using DevInstance.SampleWebApp.Server.Tests;
-using DevInstance.SampleWebApp.Server.Database.Core.Data;
+using DevInstance.DevCoreApp.Shared.TestUtils;
+using DevInstance.DevCoreApp.Server.Tests;
+using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using Moq;
-using DevInstance.SampleWebApp.Server.EmailProcessor;
-using DevInstance.SampleWebApp.Shared.Model;
-using DevInstance.SampleWebApp.Server.Database.Core.Models;
-using DevInstance.SampleWebApp.Server.Database.Core.Data.Queries;
-using DevInstance.SampleWebApp.Server.Exceptions;
+using DevInstance.DevCoreApp.Server.EmailProcessor;
+using DevInstance.DevCoreApp.Shared.Model;
+using DevInstance.DevCoreApp.Server.Database.Core.Models;
+using DevInstance.DevCoreApp.Server.Database.Core.Data.Queries;
+using DevInstance.DevCoreApp.Server.Exceptions;
 using System.Threading.Tasks;
-using DevInstance.SampleWebApp.Server.WebService.Indentity;
+using DevInstance.DevCoreApp.Server.WebService.Indentity;
 using System.Security.Claims;
 
-namespace DevInstance.SampleWebApp.Server.Services.Tests
+namespace DevInstance.DevCoreApp.Server.Services.Tests
 {
     [TestClass()]
     public class AuthorizationServiceTests

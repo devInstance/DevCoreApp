@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace DevInstance.SampleWebApp.Server.WebService.Tools
+namespace DevInstance.DevCoreApp.Server.WebService.Tools
 {
     public static class ServiceConfigurationExtensions
     {

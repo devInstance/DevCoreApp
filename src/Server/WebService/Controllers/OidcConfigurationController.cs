@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.ApiAuthorization.IdentityServer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
-namespace DevInstance.SampleWebApp.Server.Controllers
+namespace DevInstance.DevCoreApp.Server.Controllers
 {
     public class OidcConfigurationController : Controller
     {

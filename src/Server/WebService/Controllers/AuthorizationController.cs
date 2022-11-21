@@ -1,12 +1,12 @@
-﻿using DevInstance.SampleWebApp.Server.Exceptions;
-using DevInstance.SampleWebApp.Server.Services;
-using DevInstance.SampleWebApp.Shared.Model;
+﻿using DevInstance.DevCoreApp.Server.Exceptions;
+using DevInstance.DevCoreApp.Server.Services;
+using DevInstance.DevCoreApp.Shared.Model;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 
-namespace DevInstance.SampleWebApp.Server.Controllers
+namespace DevInstance.DevCoreApp.Server.Controllers
 {
     [Route("api/user/account")]
     [ApiController]

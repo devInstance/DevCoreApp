@@ -1,9 +1,9 @@
-﻿using DevInstance.SampleWebApp.Server.Exceptions;
+﻿using DevInstance.DevCoreApp.Server.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
 
-namespace DevInstance.SampleWebApp.Server.Controllers
+namespace DevInstance.DevCoreApp.Server.Controllers
 {
     public delegate ActionResult<T> WebHandler<T>();
     public delegate Task<ActionResult<T>> WebHandlerAsync<T>();

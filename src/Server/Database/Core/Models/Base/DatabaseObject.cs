@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace DevInstance.SampleWebApp.Server.Database.Core.Models.Base
+namespace DevInstance.DevCoreApp.Server.Database.Core.Models.Base
 {
     /// <summary>
     /// The class for all the model objects that will be converted 
@@ -15,7 +15,7 @@ namespace DevInstance.SampleWebApp.Server.Database.Core.Models.Base
         /// <summary>
         /// Public id is exposed for the client. All Web APIs should
         /// use the public id instead of the PK from the database.
-        /// Please use <see cref="DevInstance.SampleWebApp.Shared.Utils.IdGenerator.New()"/> 
+        /// Please use <see cref="DevInstance.DevCoreApp.Shared.Utils.IdGenerator.New()"/> 
         /// to generate new value.
         /// </summary>
         [Required]

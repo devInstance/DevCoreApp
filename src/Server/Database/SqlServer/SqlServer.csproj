@@ -2,8 +2,8 @@
 
     <PropertyGroup>
         <TargetFramework>net5.0</TargetFramework>
-        <AssemblyName>DevInstance.SampleWebApp.Server.Database.SqlServer</AssemblyName>
-        <RootNamespace>DevInstance.SampleWebApp.Server.Database.SqlServer</RootNamespace>
+        <AssemblyName>DevInstance.DevCoreApp.Server.Database.SqlServer</AssemblyName>
+        <RootNamespace>DevInstance.DevCoreApp.Server.Database.SqlServer</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>

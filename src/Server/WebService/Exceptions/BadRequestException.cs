@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace DevInstance.SampleWebApp.Server.Exceptions
+namespace DevInstance.DevCoreApp.Server.Exceptions
 {
     public class BadRequestException : Exception
     {

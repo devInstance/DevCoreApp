@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace DevInstance.SampleWebApp.Shared.Model
+namespace DevInstance.DevCoreApp.Shared.Model
 {
     public class ModelItem
     {

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DevInstance.SampleWebApp.Server.Exceptions
+namespace DevInstance.DevCoreApp.Server.Exceptions
 {
     public class RecordNotFoundException : Exception
     {

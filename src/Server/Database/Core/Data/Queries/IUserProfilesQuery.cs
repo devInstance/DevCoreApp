@@ -1,8 +1,8 @@
-﻿using DevInstance.SampleWebApp.Server.Database.Core.Models;
+﻿using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using System;
 using System.Linq;
 
-namespace DevInstance.SampleWebApp.Server.Database.Core.Data.Queries
+namespace DevInstance.DevCoreApp.Server.Database.Core.Data.Queries
 {
     public interface IUserProfilesQuery : IModelQuery<UserProfile, IUserProfilesQuery>, IQSearchable<IUserProfilesQuery>
     {
