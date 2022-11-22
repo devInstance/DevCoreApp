@@ -52,11 +52,11 @@ private void ConfigureDatabase(IServiceCollection services)
 
 Migrations is own by the provider project. Run the following command in WebService project to create a migration:
 
-`SampleWebApp\src\Server\WebService> dotnet ef migrations add <Migration Name>  --project ..\Database\<Provider>`
+`DevCoreApp\src\Server\WebService> dotnet ef migrations add <Migration Name>  --project ..\Database\<Provider>`
 
 Example:
 
-`SampleWebApp\src\Server\WebService> dotnet ef migrations add CreateIdentitySchema --project ..\Database\Postgres`
+`DevCoreApp\src\Server\WebService> dotnet ef migrations add CreateIdentitySchema --project ..\Database\Postgres`
 
 Applying migration to the local development database is done by:
 
