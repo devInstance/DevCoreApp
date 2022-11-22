@@ -1,4 +1,4 @@
-// Sync with DevInstance.SampleWebApp.Shared.Model.WeatherForecast
+// Sync with DevInstance.DevCoreApp.Shared.Model.WeatherForecast
 
 export class WeatherForecast {
     date: string;

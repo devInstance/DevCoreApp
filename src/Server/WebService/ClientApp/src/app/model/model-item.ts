@@ -1,5 +1,5 @@
 
-// Sync with DevInstance.SampleWebApp.Shared.Model.ModelItem
+// Sync with DevInstance.DevCoreApp.Shared.Model.ModelItem
 export class ModelItem {
     id: string;
 }

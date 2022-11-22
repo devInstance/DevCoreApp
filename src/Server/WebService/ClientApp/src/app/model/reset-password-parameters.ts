@@ -1,5 +1,5 @@
 
-// Sync with DevInstance.SampleWebApp.Shared.Model.ResetPasswordParameters
+// Sync with DevInstance.DevCoreApp.Shared.Model.ResetPasswordParameters
 export class ResetPasswordParameters {
     password: string;
     confirmPassword: string;

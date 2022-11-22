@@ -1,5 +1,5 @@
 
-// Sync with DevInstance.SampleWebApp.Shared.Model.RegisterParameters
+// Sync with DevInstance.DevCoreApp.Shared.Model.RegisterParameters
 export class RegisterParameters {
     userName: string;
     password: string;
