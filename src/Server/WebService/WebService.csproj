@@ -75,7 +75,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\Shared\Shared.csproj" />
+        <ProjectReference Include="..\..\Shared\Model\Shared.Model.csproj" />
         <ProjectReference Include="..\Database\Postgres\Postgres.csproj" />
         <ProjectReference Include="..\Database\SqlServer\SqlServer.csproj" />
         <ProjectReference Include="..\Email\MailKit\EmailProcessor.MailKit.csproj" />
