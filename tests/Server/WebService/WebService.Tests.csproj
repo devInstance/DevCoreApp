@@ -15,7 +15,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\..\src\Server\WebService\Server.csproj" />
+      <ProjectReference Include="..\..\..\src\Server\WebService\WebService.csproj" />
+      <ProjectReference Include="..\..\Shared\TestUtils\TestUtils.csproj" />
     </ItemGroup>
 
 </Project>

@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
-    <AssemblyName>DevInstance.DevCoreApp.Shared</AssemblyName>
-    <RootNamespace>DevInstance.DevCoreApp.Shared</RootNamespace>
+    <AssemblyName>DevInstance.DevCoreApp.Shared.Model</AssemblyName>
+    <RootNamespace>DevInstance.DevCoreApp.Shared.Model</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
