@@ -31,7 +31,11 @@ namespace DevInstance.DevCoreApp.Server
         {
             services.AddTimeProvider();
 
-            services.AddMicrosoftScopeLogging(new DefaultFormattersOptions { ShowTimestamp = true, ShowThreadNumber = true });
+#if DEBUG
+            services.AddMicrosoftScopeLogging(DevInstance.LogScope.LogLevel.TRACE, "LScope", new DefaultFormattersOptions { ShowTimestamp = true, ShowThreadNumber = true });
+#else
+            services.AddMicrosoftScopeLogging(DevInstance.LogScope.LogLevel.NOLOG, "LScope");
+#endif
 
             AddDatabase(services);
 

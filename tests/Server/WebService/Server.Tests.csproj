@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>.NETCoreApp,Version=v5.0</TargetFramework>
+        <TargetFramework>net7.0</TargetFramework>
         <AssemblyName>DevInstance.DevCoreApp.Server.Tests</AssemblyName>
         <RootNamespace>DevInstance.DevCoreApp.Server.Tests</RootNamespace>
         <IsPackable>false</IsPackable>
@@ -16,7 +16,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\..\src\Server\WebService\Server.csproj" />
-        <ProjectReference Include="..\..\..\tests\Shared\NoCrast.TestUtils\TestUtils.csproj" />
+        <ProjectReference Include="..\..\Shared\TestUtils\TestUtils.csproj" />
     </ItemGroup>
 
 </Project>
