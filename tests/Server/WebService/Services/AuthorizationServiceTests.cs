@@ -326,7 +326,7 @@ namespace DevInstance.DevCoreApp.Server.Services.Tests
         public async Task ForgotPasswordSuccessTest()
         {
             Mock<IApplicationUserManager> userManagerMock = null;
-            Mock<IEmailSender> emailSender = null;
+            Mock<IEmailSender> emailSenderMock = null;
 
             var authorizationService =
                 SetupServiceMock((authContext, userManager, signinManagerMq, emailSender, mockRepository) =>
@@ -335,7 +335,7 @@ namespace DevInstance.DevCoreApp.Server.Services.Tests
                     userManagerMock.Setup(x => x.FindByEmailAsync(It.IsAny<string>())).ReturnsAsync(new ApplicationUser { UserName = "test@test.com" });
                     userManagerMock.Setup(x => x.GeneratePasswordResetTokenAsync(It.IsAny<ApplicationUser>()))
                                     .ReturnsAsync("ttttokenxxx");
-
+                    emailSenderMock = emailSender;
                     emailSender.Setup(x => x.SendAsync(It.IsAny<IEmailMessage>()));
                 });
 
@@ -346,7 +346,7 @@ namespace DevInstance.DevCoreApp.Server.Services.Tests
 
             userManagerMock.Verify(x => x.FindByEmailAsync(It.IsAny<string>()), Times.Once());
             userManagerMock.Verify(x => x.GeneratePasswordResetTokenAsync(It.IsAny<ApplicationUser>()), Times.Once());
-            emailSender.Verify(x => x.SendAsync(It.IsAny<IEmailMessage>()), Times.Once());
+            emailSenderMock.Verify(x => x.SendAsync(It.IsAny<IEmailMessage>()), Times.Once());
         }
 
         [TestMethod()]
