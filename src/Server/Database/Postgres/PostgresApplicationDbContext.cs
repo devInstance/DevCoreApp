@@ -1,15 +1,12 @@
 ﻿using DevInstance.DevCoreApp.Server.Database.Core;
-using IdentityServer4.EntityFramework.Options;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 
 namespace DevInstance.DevCoreApp.Server.Database.Postgres
 {
     internal class PostgresApplicationDbContext : ApplicationDbContext
     {
-        public PostgresApplicationDbContext(DbContextOptions options
-            /*,IOptions<OperationalStoreOptions> operationalStoreOptions*/)
-            : base(options/*, operationalStoreOptions*/)
+        public PostgresApplicationDbContext(DbContextOptions options)
+            : base(options)
         {
         }
 

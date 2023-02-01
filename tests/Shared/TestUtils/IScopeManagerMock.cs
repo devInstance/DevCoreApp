@@ -26,6 +26,8 @@ namespace DevInstance.DevCoreApp.Shared.TestUtils
 
         public LogLevel Level => throw new NotImplementedException();
 
+        public string Id => "id";
+
         public void Dispose()
         {
         }

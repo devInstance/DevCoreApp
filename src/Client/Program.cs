@@ -1,4 +1,3 @@
-using DevInstance.LogScope;
 using DevInstance.LogScope.Extensions;
 using DevInstance.LogScope.Formatters;
 using DevInstance.DevCoreApp.Client.Net.Api;
@@ -39,14 +38,13 @@ namespace DevInstance.DevCoreApp.Client
             builder.Services.AddScoped<IAuthorizationApi, AuthorizationApi>();
             builder.Services.AddScoped<IUserProfileApi, UserProfileApi>();
 
-            if(builder.HostEnvironment.IsDevelopment())
-            {
-                builder.Services.AddConsoleScopeLogging(LogLevel.INFO, new DefaultFormattersOptions { ShowTimestamp = true, ShowThreadNumber = true });
-            }
-            else
-            {
-                builder.Services.AddConsoleScopeLogging(LogLevel.ERROR);
-            }
+#if DEBUG
+            builder.Services.AddConsoleScopeLogging(LogScope.LogLevel.DEBUG,
+                new DefaultFormattersOptions { ShowTimestamp = true, ShowThreadNumber = true, ShowId = true });
+#else
+            builder.Services.AddConsoleScopeLogging(LogScope.LogLevel.NOLOG,
+               new DefaultFormattersOptions { ShowTimestamp = false, ShowThreadNumber = false, ShowId = false});
+#endif
 
             builder.Services.AddSingleton<ITimeProvider, TimeProvider>();
 
