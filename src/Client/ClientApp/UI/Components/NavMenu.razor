@@ -1,0 +1,69 @@
+﻿@inject IStringLocalizer<NavMenu> loc
+
+<div class="sidebar @NavContainerCssClass">
+    <div class="top-row pl-4 navbar navbar-dark" @onclick="ExpandSiderbar">
+        <a class="navbar-brand" href="">DevCoreApp</a>
+    </div>
+
+    <div>
+        <ul class="nav flex-column">
+            <li class="nav-group">
+                @loc["Pages"]
+            </li>
+            <li class="nav-item">
+                <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                    <i class="oi bi-house" aria-hidden="true"></i><span>@loc["Home"]</span>
+                </NavLink>
+            </li>
+            <li class="nav-item">
+                <NavLink class="nav-link" href="counter">
+                    <i class="oi bi-plus" aria-hidden="true"></i><span>@loc["Counter"]</span>
+                </NavLink>
+            </li>
+            <li class="nav-item">
+                <NavLink class="nav-link" href="fetchdata">
+                    <i class="oi bi-list-ul" aria-hidden="true"></i><span>@loc["Fetch data"]</span>
+                </NavLink>
+            </li>
+            <li class="nav-group">
+                @loc["Account"]
+            </li>
+            <li class="nav-item">
+                <NavLink class="nav-link" href="profile" Match="NavLinkMatch.All">
+                    <i class="oi bi-person" aria-hidden="true"></i><span>@loc["Profile"]</span>
+                </NavLink>
+            </li>
+            <li class="nav-item">
+                <NavLink class="nav-link" href="settings" Match="NavLinkMatch.All">
+                    <i class="oi bi-gear" aria-hidden="true"></i><span>@loc["Settings"]</span>
+                </NavLink>
+            </li>
+        </ul>
+    </div>
+
+</div>
+
+@inject IToolbarService ToolbarServ;
+
+
+@code {
+    private bool shrinkNavMenu = false;
+
+    private string NavContainerCssClass => shrinkNavMenu ? "shrink" : null;
+
+    protected async override Task OnInitializedAsync()
+    {
+        ToolbarServ.ShrinkSidebar += OnChange;
+    }
+
+    private void OnChange(object value)
+    {
+        shrinkNavMenu = (bool)value;
+        StateHasChanged();
+    }
+    private void ExpandSiderbar()
+    {
+        ToolbarServ.SetSidebar(false);
+    }
+
+}

@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net7.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<AssemblyName>DevInstance.DevCoreApp.Client.Services</AssemblyName>
+		<RootNamespace>DevInstance.DevCoreApp.Client.Services</RootNamespace>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="DevInstance.LogScope" Version="1.4.2" />
+	  <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="7.0.3" />
+	  <PackageReference Include="Microsoft.Extensions.Localization.Abstractions" Version="7.0.3" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\..\Shared\Model\Shared.Model.csproj" />
+	  <ProjectReference Include="..\..\Shared\Utils\Shared.Utils.csproj" />
+	  <ProjectReference Include="..\Client.Net\Client.Net.csproj" />
+	</ItemGroup>
+
+</Project>
