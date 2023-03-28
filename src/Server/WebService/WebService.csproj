@@ -5,14 +5,16 @@
         <UserSecretsId>DevInstance.DevCoreApp.Server-38988985-5AD0-4791-8BE5-DA7357ED66DF</UserSecretsId>
         <AssemblyName>DevInstance.DevCoreApp.Server.WebService</AssemblyName>
         <RootNamespace>DevInstance.DevCoreApp.Server.WebService</RootNamespace>
+        <Copyright>Copyright 2021-2023 DevInstance LLC</Copyright>
+        <PackageProjectUrl>https://devinstance.net/blog/aspnet-core-introduction-to-the-clean-architecture</PackageProjectUrl>
     </PropertyGroup>
 
     <ItemGroup>
 		<PackageReference Include="DevInstance.LogScope.Extensions.MicrosoftLogger" Version="1.0.1" />
-		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="7.0.3" />
-		<PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="7.0.3" />
-		<PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="7.0.3" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.3">
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="7.0.4" />
+		<PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="7.0.4" />
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="7.0.4" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.4">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
