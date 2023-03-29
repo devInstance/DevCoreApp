@@ -6,40 +6,45 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using DevInstance.DevCoreApp.Server.Services;
+using DevInstance.DevCoreApp.Server.WebService.Services;
+using Microsoft.AspNetCore.Http;
 
 namespace DevInstance.DevCoreApp.Server.Controllers
 {
+    /// <summary>
+    /// This an example how to add and structure web APIs
+    /// </summary>
     [Authorize]
     [ApiController]
-    [Route("[controller]")]
-    public class WeatherForecastController : ControllerBase
+    [Route("api/forecast")]
+    public class WeatherForecastController : BaseController
     {
-        private static readonly string[] Summaries = new[]
-        {
-            "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-        };
+        public WeatherForecastService Service { get; }
 
-        private readonly IScopeLog log;
-
-        public WeatherForecastController(IScopeManager logManager)
+        public WeatherForecastController(WeatherForecastService service)
         {
-            log = logManager.CreateLogger(this);
+            Service = service;
         }
 
+        /// <summary>
+        /// Returns a list of forecast
+        /// </summary>
+        /// <param name="top">max number of items to return (items per page)</param>
+        /// <param name="page">page index</param>
+        /// <param name="filter">query filters</param>
+        /// <param name="fields">included fields</param>
+        /// <param name="search">only items which contain this string</param>
+        /// <returns></returns>
         [HttpGet]
-        public IEnumerable<WeatherForecast> Get()
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public ActionResult<ModelList<WeatherForecast>> GetItems(int? top, int? page, int? filter, int? fields, string search = null)
         {
-            using(log.TraceScope())
+            return HandleWebRequest<ModelList<WeatherForecast>>(() =>
             {
-                var rng = new Random();
-                return Enumerable.Range(1, 5).Select(index => new WeatherForecast
-                {
-                    Date = DateTime.Now.AddDays(index),
-                    TemperatureC = rng.Next(-20, 55),
-                    Summary = Summaries[rng.Next(Summaries.Length)]
-                })
-                .ToArray();
-            }
+                return Ok(Service.GetItems(top, page, filter, fields, search));
+            });
         }
     }
 }

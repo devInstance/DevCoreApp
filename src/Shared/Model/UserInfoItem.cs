@@ -2,14 +2,13 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace DevInstance.DevCoreApp.Shared.Model
+namespace DevInstance.DevCoreApp.Shared.Model;
+
+public class UserInfoItem : ModelItem
 {
-    public class UserInfoItem : ModelItem
-    {
-        public bool IsAuthenticated { get; set; }
+    public bool IsAuthenticated { get; set; }
 
-        public string UserName { get; set; }
+    public string UserName { get; set; }
 
-        public Dictionary<string, string> ExposedClaims { get; set; }
-    }
+    public Dictionary<string, string> ExposedClaims { get; set; }
 }

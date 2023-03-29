@@ -101,5 +101,10 @@ namespace NoCrast.Server.Database.Postgres.Data.Queries
 
             return this;
         }
+
+        public IUserProfilesQuery Search(string search)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
