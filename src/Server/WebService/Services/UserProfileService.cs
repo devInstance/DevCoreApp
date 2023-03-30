@@ -4,6 +4,7 @@ using DevInstance.DevCoreApp.Server.Database.Core.Data.Decorators;
 using DevInstance.DevCoreApp.Server.WebService.Indentity;
 using DevInstance.DevCoreApp.Server.WebService.Tools;
 using DevInstance.DevCoreApp.Shared.Model;
+using DevInstance.DevCoreApp.Shared.Utils;
 
 namespace DevInstance.DevCoreApp.Server.Services
 {
@@ -11,9 +12,10 @@ namespace DevInstance.DevCoreApp.Server.Services
     public class UserProfileService : BaseService
     {
         public UserProfileService(IScopeManager logManager,
+                                  ITimeProvider timeProvider,
                                   IQueryRepository query,
-                                  IAuthorizationContext authorizationContext) 
-            : base(logManager, query, authorizationContext)
+                                  IAuthorizationContext authorizationContext)
+            : base(logManager, timeProvider, query, authorizationContext)
         {
 
         }

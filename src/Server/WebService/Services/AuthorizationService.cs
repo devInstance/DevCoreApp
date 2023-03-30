@@ -12,6 +12,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
+using DevInstance.DevCoreApp.Shared.Utils;
 
 namespace DevInstance.DevCoreApp.Server.Services
 {
@@ -23,12 +24,13 @@ namespace DevInstance.DevCoreApp.Server.Services
         protected IEmailSender EmailSender { get; }
 
         public AuthorizationService(IScopeManager logManager,
+                                    ITimeProvider timeProvider,
                                     IQueryRepository query,
                                     IApplicationUserManager um,
                                     IApplicationSignManager sm,
                                     IAuthorizationContext authorizationContext,
                                     IEmailSender emailSender)
-            : base(logManager, query, authorizationContext)
+            : base(logManager, timeProvider, query, authorizationContext)
         {
             signInManager = sm;
             EmailSender = emailSender;
