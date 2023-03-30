@@ -41,13 +41,13 @@ else
 }
 
 @code {
-    private WeatherForecast[] forecasts;
+    private WeatherForecastItem[] forecasts;
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
-            forecasts = await Http.GetFromJsonAsync<WeatherForecast[]>("WeatherForecast");
+            forecasts = await Http.GetFromJsonAsync<WeatherForecastItem[]>("WeatherForecast");
         }
         catch (AccessTokenNotAvailableException exception)
         {
