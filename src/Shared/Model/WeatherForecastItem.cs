@@ -4,7 +4,7 @@ using System.Text;
 
 namespace DevInstance.DevCoreApp.Shared.Model;
 
-public class WeatherForecast : EntityItem
+public class WeatherForecastItem : EntityItem
 {
     public DateTime Date { get; set; }
 

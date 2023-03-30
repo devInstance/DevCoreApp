@@ -1,50 +1,105 @@
 ﻿using DevInstance.DevCoreApp.Server.Database.Core.Data;
+using DevInstance.DevCoreApp.Server.Database.Core.Data.Decorators;
+using DevInstance.DevCoreApp.Server.Database.Core.Models;
+using DevInstance.DevCoreApp.Server.Exceptions;
 using DevInstance.DevCoreApp.Server.Services;
 using DevInstance.DevCoreApp.Server.WebService.Indentity;
 using DevInstance.DevCoreApp.Server.WebService.Tools;
 using DevInstance.DevCoreApp.Shared.Model;
+using DevInstance.DevCoreApp.Shared.Utils;
 using DevInstance.LogScope;
-using System.Linq;
 using System;
+using System.Linq;
 
 namespace DevInstance.DevCoreApp.Server.WebService.Services;
 
 [AppService]
 public class WeatherForecastService : BaseService
 {
-    private static readonly string[] Summaries = new[]
-    {
-        "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-    };
-
     private readonly IScopeLog log;
 
-    public WeatherForecastService(IScopeManager logManager, IQueryRepository query, IAuthorizationContext authorizationContext)
-        : base(logManager, query, authorizationContext)
+    public WeatherForecastService(IScopeManager logManager, ITimeProvider timeProvider, IQueryRepository query, IAuthorizationContext authorizationContext)
+        : base(logManager, timeProvider, query, authorizationContext)
     {
         log = logManager.CreateLogger(this);
     }
 
-    public ModelList<WeatherForecast> GetItems(int? top, int? page, int? filter, int? fields, string search)
+    public ModelList<WeatherForecastItem> GetItems(int? top, int? page, int? filter, int? fields, string search)
     {
         using (log.TraceScope())
         {
-            var rng = new Random();
-            var items = Enumerable.Range(1, 5).Select(index => new WeatherForecast
-            {
-                Date = DateTime.Now.AddDays(index),
-                TemperatureC = rng.Next(-20, 55),
-                Summary = Summaries[rng.Next(Summaries.Length)]
-            }).ToArray();
+            var coreQuery = Repository.GetWeatherForecastQuery(AuthorizationContext.CurrentProfile);
 
-            return new ModelList<WeatherForecast>
-            {
-                Count = items.Length,
-                TotalCount = items.Length,
-                Items = items,
-                Page = 0,
-                PagesCount = 1
-            };
+            coreQuery = ApplyFilters(coreQuery, filter, search);
+
+            var pagedQuery = coreQuery.Clone();
+            pagedQuery = ApplyPages(pagedQuery, top, page);
+
+            var list = pagedQuery.Select().ToView();
+
+            return CreateListPage(coreQuery.Select().Count(), list.ToArray(), top, page);
         }
+    }
+
+    private static void Validate(WeatherForecastItem item)
+    {
+        if (item.TemperatureC < -273 || String.IsNullOrWhiteSpace(item.Summary))
+        {
+            throw new BadRequestException();
+        }
+    }
+
+    public WeatherForecastItem Add(WeatherForecastItem item)
+    {
+        Validate(item);
+        
+        DateTime now = TimeProvider.CurrentTime;
+
+        var q = Repository.GetWeatherForecastQuery(AuthorizationContext.CurrentProfile);
+
+        var record = q.CreateNew().ToRecord(item);
+
+        q.Add(record);
+
+        return GetById(record.PublicId);
+    }
+
+
+    public WeatherForecastItem GetById(string id)
+    {
+        var record = GetRecordByPublicId(id);
+        return record.ToView();
+    }
+
+    private WeatherForecast GetRecordByPublicId(string id)
+    {
+        var q = Repository.GetWeatherForecastQuery(AuthorizationContext.CurrentProfile).ByPublicId(id);
+        var record = q.Select().FirstOrDefault();
+        if (record == null)
+        {
+            throw new RecordNotFoundException();
+        }
+
+        return record;
+    }
+
+    public WeatherForecastItem Remove(string id)
+    {
+        var q = Repository.GetWeatherForecastQuery(AuthorizationContext.CurrentProfile);
+        var record = GetRecordByPublicId(id);
+        
+        q.Remove(record);
+        
+        return record.ToView();
+    }
+
+    public WeatherForecastItem Update(string id, WeatherForecastItem project)
+    {
+        var q = Repository.GetWeatherForecastQuery(AuthorizationContext.CurrentProfile);
+        var record = GetRecordByPublicId(id);
+
+        q.Update(record.ToRecord(project));
+
+        return GetById(record.PublicId);
     }
 }

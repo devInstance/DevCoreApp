@@ -3,6 +3,7 @@ using System;
 using DevInstance.DevCoreApp.Server.Database.Postgres;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DevInstance.DevCoreApp.Server.Database.Postgres.Migrations
 {
     [DbContext(typeof(PostgresApplicationDbContext))]
-    partial class PostgresApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230330025630_WeatherForecast")]
+    partial class WeatherForecast
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

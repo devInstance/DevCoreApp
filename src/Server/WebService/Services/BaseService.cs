@@ -4,6 +4,7 @@ using DevInstance.DevCoreApp.Server.WebService.Indentity;
 using DevInstance.DevCoreApp.Shared.Model;
 using System;
 using DevInstance.DevCoreApp.Server.Database.Core.Data.Queries;
+using DevInstance.DevCoreApp.Shared.Utils;
 
 namespace DevInstance.DevCoreApp.Server.Services;
 
@@ -11,16 +12,19 @@ public abstract class BaseService
 {
     protected readonly IScopeLog log;
 
+    public ITimeProvider TimeProvider { get; }
     public IQueryRepository Repository { get; }
 
     public IAuthorizationContext AuthorizationContext { get; }
 
     public BaseService(IScopeManager logManager,
+                        ITimeProvider timeProvider,
                         IQueryRepository query,
                         IAuthorizationContext authorizationContext)
     {
         log = logManager.CreateLogger(this);
 
+        TimeProvider = timeProvider;
         Repository = query;
         AuthorizationContext = authorizationContext;
     }
