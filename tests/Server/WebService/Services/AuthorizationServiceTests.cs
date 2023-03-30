@@ -32,10 +32,12 @@ namespace DevInstance.DevCoreApp.Server.Services.Tests
             var signinManagerMq = ServerTestUtils.CreateSignManager(true);
             var emailSender = new Mock<IEmailSender>();
             var mockRepository = new Mock<IQueryRepository>();
+            var timeProvider = TimerProviderMock.CreateTimerProvider();
 
             onSetup(authContext, userManager, signinManagerMq, emailSender, mockRepository);
 
             return new AuthorizationService(log,
+                                            timeProvider,
                                             mockRepository.Object,
                                             userManager.Object,
                                             signinManagerMq.Object,
