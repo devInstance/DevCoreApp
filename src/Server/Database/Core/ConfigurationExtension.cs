@@ -7,21 +7,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DevInstance.DevCoreApp.Server.Database.Core
+namespace DevInstance.DevCoreApp.Server.Database.Core;
+
+public static class ConfigurationExtension
 {
-    public static class ConfigurationExtension
+    public static void ConfigureIdentityContext<T>(this IServiceCollection services) where T : ApplicationDbContext
     {
-        public static void ConfigureIdentityContext<T>(this IServiceCollection services) where T : ApplicationDbContext
-        {
-            //services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = false)
-            //    .AddEntityFrameworkStores<T>().AddDefaultTokenProviders();
-
-            //services.AddIdentityServer()
-            //    .AddApiAuthorization<ApplicationUser, T>();
-
-            services.AddIdentity<ApplicationUser, IdentityRole<Guid>>()
-                .AddEntityFrameworkStores<ApplicationDbContext>()
-                .AddDefaultTokenProviders();
-        }
+        services.AddIdentity<ApplicationUser, IdentityRole<Guid>>()
+            .AddEntityFrameworkStores<ApplicationDbContext>()
+            .AddDefaultTokenProviders();
     }
 }
