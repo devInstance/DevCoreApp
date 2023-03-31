@@ -10,8 +10,8 @@
 
 	<ItemGroup>
 	  <PackageReference Include="DevInstance.LogScope" Version="1.4.2" />
-	  <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="7.0.3" />
-	  <PackageReference Include="Microsoft.Extensions.Localization.Abstractions" Version="7.0.3" />
+	  <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="7.0.4" />
+	  <PackageReference Include="Microsoft.Extensions.Localization.Abstractions" Version="7.0.4" />
 	</ItemGroup>
 
 	<ItemGroup>
