@@ -6,10 +6,15 @@
         <ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
         <AssemblyName>DevInstance.DevCoreApp.Client</AssemblyName>
         <RootNamespace>DevInstance.DevCoreApp.Client</RootNamespace>
+        <Configurations>Debug;Release;NetApiMoqs;ServiceMoqs</Configurations>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
         <RunAOTCompilation>False</RunAOTCompilation>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ServiceMoqs|AnyCPU'">
+      <RunAOTCompilation>False</RunAOTCompilation>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -36,8 +41,14 @@
       <ProjectReference Include="..\..\Shared\Utils\Shared.Utils.csproj" />
       <ProjectReference Include="..\Client.Services\Client.Services.csproj" />
     </ItemGroup>
+	<ItemGroup Condition="'$(Configuration)'=='ServiceMoqs'">
+		<ProjectReference Include="..\..\..\test\Client\Client.ClientMocks\Client.ClientMocks.csproj" />
+	</ItemGroup>
+	<ItemGroup Condition="'$(Configuration)'=='NetApiMoqs'">
+		<ProjectReference Include="..\..\..\test\Client\Client.ClientMocks\Client.ClientMocks.csproj" />
+	</ItemGroup>
 
-    <ItemGroup>
+	<ItemGroup>
         <ServiceWorker Include="wwwroot\service-worker.js" PublishedContent="wwwroot\service-worker.published.js" />
     </ItemGroup>
 

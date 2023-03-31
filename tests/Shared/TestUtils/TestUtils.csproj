@@ -4,6 +4,7 @@
     <TargetFramework>net7.0</TargetFramework>
       <AssemblyName>DevInstance.DevCoreApp.Shared.TestUtils</AssemblyName>
       <RootNamespace>DevInstance.DevCoreApp.Shared.TestUtils</RootNamespace>
+      <Configurations>Debug;Release;NetApiMoqs;ServiceMoqs</Configurations>
   </PropertyGroup>
 
   <ItemGroup>

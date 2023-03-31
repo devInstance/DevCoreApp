@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using DevInstance.DevCoreApp.Client.Extensions;
 using DevInstance.DevCoreApp.Client.Services;
 using DevInstance.DevCoreApp.Client.Auth;
+using DevInstance.DevCoreApp.Client.Net;
 using Microsoft.AspNetCore.Components.Authorization;
 
 namespace DevInstance.DevCoreApp.Client;
@@ -44,7 +45,17 @@ public class Program
 
         builder.Services.AddSingleton<ITimeProvider, TimeProvider>();
 
+#if NETAPIMOQS
+            builder.Services.AddMoqNetApi();
+#else
+        builder.Services.AddNetApi();
+#endif
+
+#if SERVICEMOQS
+            builder.Services.AddMoqAppServices();
+#else
         builder.Services.AddAppServices();
+#endif
 
         var host = builder.Build();
 

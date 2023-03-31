@@ -7,6 +7,7 @@
         <RootNamespace>DevInstance.DevCoreApp.Server.WebService</RootNamespace>
         <Copyright>Copyright 2021-2023 DevInstance LLC</Copyright>
         <PackageProjectUrl>https://devinstance.net/blog/aspnet-core-introduction-to-the-clean-architecture</PackageProjectUrl>
+        <Configurations>Debug;Release;NetApiMoqs;ServiceMoqs</Configurations>
     </PropertyGroup>
 
     <ItemGroup>

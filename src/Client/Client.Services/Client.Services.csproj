@@ -6,6 +6,7 @@
 		<Nullable>enable</Nullable>
 		<AssemblyName>DevInstance.DevCoreApp.Client.Services</AssemblyName>
 		<RootNamespace>DevInstance.DevCoreApp.Client.Services</RootNamespace>
+		<Configurations>Debug;Release;NetApiMoqs;ServiceMoqs</Configurations>
 	</PropertyGroup>
 
 	<ItemGroup>

@@ -4,6 +4,7 @@
         <TargetFramework>net7.0</TargetFramework>
         <AssemblyName>DevInstance.DevCoreApp.Server.EmailProcessor.MailKit</AssemblyName>
         <RootNamespace>DevInstance.DevCoreApp.Server.EmailProcessor.MailKit</RootNamespace>
+        <Configurations>Debug;Release;NetApiMoqs;ServiceMoqs</Configurations>
     </PropertyGroup>
 
     <ItemGroup>

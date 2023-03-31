@@ -5,6 +5,7 @@
         <AssemblyName>DevInstance.DevCoreApp.Server.Tests</AssemblyName>
         <RootNamespace>DevInstance.DevCoreApp.Server.Tests</RootNamespace>
         <IsPackable>false</IsPackable>
+        <Configurations>Debug;Release;NetApiMoqs;ServiceMoqs</Configurations>
     </PropertyGroup>
 
     <ItemGroup>

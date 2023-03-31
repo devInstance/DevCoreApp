@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net7.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<AssemblyName>DevInstance.DevCoreApp.Client.ClientMocks</AssemblyName>
+		<RootNamespace>DevInstance.DevCoreApp.Client.ClientMocks</RootNamespace>
+		<Configurations>Debug;Release;NetApiMoqs;ServiceMoqs</Configurations>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\..\..\src\Client\Client.Net\Client.Net.csproj" />
+	  <ProjectReference Include="..\..\..\src\Client\Client.Services\Client.Services.csproj" />
+	  <ProjectReference Include="..\..\..\src\Shared\Model\Shared.Model.csproj" />
+	</ItemGroup>
+
+</Project>

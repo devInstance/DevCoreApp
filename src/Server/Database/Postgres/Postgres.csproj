@@ -4,6 +4,7 @@
     <TargetFramework>net7.0</TargetFramework>
     <AssemblyName>DevInstance.DevCoreApp.Server.Database.Postgres</AssemblyName>
     <RootNamespace>DevInstance.DevCoreApp.Server.Database.Postgres</RootNamespace>
+    <Configurations>Debug;Release;NetApiMoqs;ServiceMoqs</Configurations>
   </PropertyGroup>
 
   <ItemGroup>

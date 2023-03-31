@@ -4,6 +4,7 @@
     <TargetFramework>net7.0</TargetFramework>
     <AssemblyName>DevInstance.DevCoreApp.Shared.Model</AssemblyName>
     <RootNamespace>DevInstance.DevCoreApp.Shared.Model</RootNamespace>
+    <Configurations>Debug;Release;NetApiMoqs;ServiceMoqs</Configurations>
   </PropertyGroup>
 
   <ItemGroup>

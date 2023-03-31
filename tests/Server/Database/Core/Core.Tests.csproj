@@ -4,6 +4,8 @@
     <TargetFramework>net7.0</TargetFramework>
 
     <IsPackable>false</IsPackable>
+
+    <Configurations>Debug;Release;NetApiMoqs;ServiceMoqs</Configurations>
   </PropertyGroup>
 
   <ItemGroup>
