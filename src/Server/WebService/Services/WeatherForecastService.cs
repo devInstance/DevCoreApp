@@ -16,8 +16,6 @@ namespace DevInstance.DevCoreApp.Server.WebService.Services;
 [AppService]
 public class WeatherForecastService : BaseService
 {
-    private readonly IScopeLog log;
-
     public WeatherForecastService(IScopeManager logManager, ITimeProvider timeProvider, IQueryRepository query, IAuthorizationContext authorizationContext)
         : base(logManager, timeProvider, query, authorizationContext)
     {

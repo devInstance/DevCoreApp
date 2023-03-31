@@ -10,7 +10,7 @@ namespace DevInstance.DevCoreApp.Server.Services;
 
 public abstract class BaseService
 {
-    protected readonly IScopeLog log;
+    protected IScopeLog log;
 
     public ITimeProvider TimeProvider { get; }
     public IQueryRepository Repository { get; }
