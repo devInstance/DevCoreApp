@@ -55,6 +55,16 @@ public class IntFlags : List<Int32>
     {
         return (left.ToInt() & right) == 0;
     }
+
+    public override bool Equals(object obj)
+    {
+        return this.ToInt().Equals(obj);
+    }
+
+    public override int GetHashCode()
+    {
+        return base.GetHashCode();
+    }
 }
 
 public class ItemFields : IntFlags
