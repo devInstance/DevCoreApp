@@ -33,10 +33,12 @@ public abstract class BaseService
     {
         var pageIndex = 0;
         var totalPageCount = 1;
+        
         if (top.HasValue && top.Value > 0)
         {
             totalPageCount = (int)Math.Ceiling((double)totalItemsCount / (double)top.Value);
         }
+        
         if (page.HasValue && page.Value >= 0)
         {
             pageIndex = page.Value;
@@ -45,6 +47,7 @@ public abstract class BaseService
                 pageIndex = totalPageCount - 1;
             }
         }
+
         return new ModelList<T>()
         {
             TotalCount = totalItemsCount,
