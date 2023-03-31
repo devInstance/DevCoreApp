@@ -11,84 +11,88 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using DevInstance.DevCoreApp.Server.WebService.Tools;
 
-namespace DevInstance.DevCoreApp.Server
+namespace DevInstance.DevCoreApp.Server;
+
+public class Startup
 {
-    public class Startup
+    private const string PostgresProvider = "Postgres";
+    private const string SqlServerProvider = "SqlServer";
+
+    public Startup(IConfiguration configuration)
     {
-        private const string PostgresProvider = "Postgres";
-        private const string SqlServerProvider = "SqlServer";
+        Configuration = configuration;
+    }
 
-        public Startup(IConfiguration configuration)
-        {
-            Configuration = configuration;
-        }
+    public IConfiguration Configuration { get; }
 
-        public IConfiguration Configuration { get; }
-
-        // This method gets called by the runtime. Use this method to add services to the container.
-        // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
-        public void ConfigureServices(IServiceCollection services)
-        {
-            services.AddTimeProvider();
+    // This method gets called by the runtime. Use this method to add services to the container.
+    // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
+    public void ConfigureServices(IServiceCollection services)
+    {
+        services.AddTimeProvider();
 
 #if DEBUG
-            services.AddMicrosoftScopeLogging(DevInstance.LogScope.LogLevel.TRACE, "LScope", new DefaultFormattersOptions { ShowTimestamp = true, ShowThreadNumber = true });
+        services.AddMicrosoftScopeLogging(DevInstance.LogScope.LogLevel.TRACE, "LScope", new DefaultFormattersOptions { ShowTimestamp = true, ShowThreadNumber = true });
 #else
-            services.AddMicrosoftScopeLogging(DevInstance.LogScope.LogLevel.NOLOG, "LScope");
+        services.AddMicrosoftScopeLogging(DevInstance.LogScope.LogLevel.NOLOG, "LScope");
 #endif
 
-            AddDatabase(services);
+        AddDatabase(services);
 
-            services.AddIdentity();
+        services.AddIdentity();
 
-            services.AddMailKit(Configuration);
-            
-            services.AddAppServices();
+        services.AddMailKit(Configuration);
+        
+        services.AddAppServices();
 
-            services.AddControllers().AddNewtonsoftJson();
-        }
+        services.AddControllers().AddNewtonsoftJson();
 
-        private void AddDatabase(IServiceCollection services)
+        services.AddSwaggerGen();
+    }
+
+    private void AddDatabase(IServiceCollection services)
+    {
+        var provider = Configuration.GetSection("Database").GetValue(typeof(string), "Provider").ToString();
+
+        if (provider == PostgresProvider)
         {
-            var provider = Configuration.GetSection("Database").GetValue(typeof(string), "Provider").ToString();
-
-            if (provider == PostgresProvider)
-            {
-                services.ConfigurePostgresDatabase(Configuration);
-                services.ConfigurePostgresIdentityContext();
-            }
-            else if (provider == SqlServerProvider)
-            {
-                services.ConfigureSqlServerDatabase(Configuration);
-                services.ConfigureSqlServerIdentityContext();
-            }
-
+            services.ConfigurePostgresDatabase(Configuration);
+            services.ConfigurePostgresIdentityContext();
         }
-
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        else if (provider == SqlServerProvider)
         {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-                app.UseMigrationsEndPoint();
-            }
-            else
-            {
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-                app.UseHsts();
-            }
-
-            app.UseHttpsRedirection();
-
-            app.UseRouting();
-
-            app.UseAuthorization();
-
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllers();
-            });
+            services.ConfigureSqlServerDatabase(Configuration);
+            services.ConfigureSqlServerIdentityContext();
         }
+
+    }
+
+    // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+    {
+        if (env.IsDevelopment())
+        {
+            app.UseDeveloperExceptionPage();
+            app.UseMigrationsEndPoint();
+
+            app.UseSwagger();
+            app.UseSwaggerUI();
+        }
+        else
+        {
+            // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+            app.UseHsts();
+        }
+
+        app.UseHttpsRedirection();
+
+        app.UseRouting();
+
+        app.UseAuthorization();
+
+        app.UseEndpoints(endpoints =>
+        {
+            endpoints.MapControllers();
+        });
     }
 }
