@@ -12,111 +12,116 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using DevInstance.DevCoreApp.Server.WebService.Tools;
 
-namespace DevInstance.DevCoreApp.Server
+namespace DevInstance.DevCoreApp.Server;
+
+public class Startup
 {
-    public class Startup
+    private const string PostgresProvider = "Postgres";
+    private const string SqlServerProvider = "SqlServer";
+
+    public Startup(IConfiguration configuration)
     {
-        private const string PostgresProvider = "Postgres";
-        private const string SqlServerProvider = "SqlServer";
+        Configuration = configuration;
+    }
 
-        public Startup(IConfiguration configuration)
-        {
-            Configuration = configuration;
-        }
+    public IConfiguration Configuration { get; }
 
-        public IConfiguration Configuration { get; }
-
-        // This method gets called by the runtime. Use this method to add services to the container.
-        // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
-        public void ConfigureServices(IServiceCollection services)
-        {
-            services.AddTimeProvider();
+    // This method gets called by the runtime. Use this method to add services to the container.
+    // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
+    public void ConfigureServices(IServiceCollection services)
+    {
+        services.AddTimeProvider();
 
 #if DEBUG
-            services.AddMicrosoftScopeLogging(DevInstance.LogScope.LogLevel.TRACE, "LScope", new DefaultFormattersOptions { ShowTimestamp = true, ShowThreadNumber = true });
+        services.AddMicrosoftScopeLogging(DevInstance.LogScope.LogLevel.TRACE, "LScope", new DefaultFormattersOptions { ShowTimestamp = true, ShowThreadNumber = true });
 #else
-            services.AddMicrosoftScopeLogging(DevInstance.LogScope.LogLevel.NOLOG, "LScope");
+        services.AddMicrosoftScopeLogging(DevInstance.LogScope.LogLevel.NOLOG, "LScope");
 #endif
 
-            AddDatabase(services);
+        AddDatabase(services);
 
-            services.AddDatabaseDeveloperPageExceptionFilter();
+        services.AddDatabaseDeveloperPageExceptionFilter();
 
-            services.AddIdentity();
+        services.AddIdentity();
 
-            services.AddMailKit(Configuration);
-            
-            services.AddAppServices();
+        services.AddMailKit(Configuration);
 
-            services.AddControllersWithViews().AddNewtonsoftJson();
+        services.AddAppServices();
 
-            services.AddSpaStaticFiles(configuration =>
-            {
-                configuration.RootPath = "ClientApp/dist";
-            });
+        services.AddControllersWithViews().AddNewtonsoftJson();
+
+        services.AddSpaStaticFiles(configuration =>
+        {
+            configuration.RootPath = "ClientApp/dist";
+        });
+
+        services.AddSwaggerGen();
+    }
+
+    private void AddDatabase(IServiceCollection services)
+    {
+        var provider = Configuration.GetSection("Database").GetValue(typeof(string), "Provider").ToString();
+
+        if (provider == PostgresProvider)
+        {
+            services.ConfigurePostgresDatabase(Configuration);
+            services.ConfigurePostgresIdentityContext();
+        }
+        else if (provider == SqlServerProvider)
+        {
+            services.ConfigureSqlServerDatabase(Configuration);
+            services.ConfigureSqlServerIdentityContext();
         }
 
-        private void AddDatabase(IServiceCollection services)
-        {
-            var provider = Configuration.GetSection("Database").GetValue(typeof(string), "Provider").ToString();
+    }
 
-            if (provider == PostgresProvider)
-            {
-                services.ConfigurePostgresDatabase(Configuration);
-                services.ConfigurePostgresIdentityContext();
-            }
-            else if (provider == SqlServerProvider)
-            {
-                services.ConfigureSqlServerDatabase(Configuration);
-                services.ConfigureSqlServerIdentityContext();
-            }
+    // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+    {
+        if (env.IsDevelopment())
+        {
+            app.UseDeveloperExceptionPage();
+            app.UseMigrationsEndPoint();
+
+            app.UseSwagger();
+            app.UseSwaggerUI();
+        }
+        else
+        {
+            // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+            app.UseHsts();
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        app.UseHttpsRedirection();
+        app.UseStaticFiles();
+        if (!env.IsDevelopment())
         {
+            app.UseSpaStaticFiles();
+        }
+
+        app.UseRouting();
+
+        app.UseAuthentication();
+        app.UseAuthorization();
+
+        app.UseEndpoints(endpoints =>
+        {
+            endpoints.MapControllerRoute(
+                name: "default",
+                pattern: "{controller}/{action=Index}/{id?}");
+        });
+
+        app.UseSpa(spa =>
+        {
+            // To learn more about options for serving an Angular SPA from ASP.NET Core,
+            // see https://go.microsoft.com/fwlink/?linkid=864501
+
+            spa.Options.SourcePath = "ClientApp";
             if (env.IsDevelopment())
             {
-                app.UseDeveloperExceptionPage();
-                app.UseMigrationsEndPoint();
+                spa.UseAngularCliServer(npmScript: "start");
             }
-            else
-            {
-                //app.UseExceptionHandler("/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-                app.UseHsts();
-            }
-
-            app.UseHttpsRedirection();
-            app.UseStaticFiles();
-            if (!env.IsDevelopment())
-            {
-                app.UseSpaStaticFiles();
-            }
-
-            app.UseRouting();
-
-            app.UseAuthentication();
-            app.UseAuthorization();
-
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllerRoute(
-                    name: "default",
-                    pattern: "{controller}/{action=Index}/{id?}");
-            });
-
-            app.UseSpa(spa =>
-            {
-                // To learn more about options for serving an Angular SPA from ASP.NET Core,
-                // see https://go.microsoft.com/fwlink/?linkid=864501
-
-                spa.Options.SourcePath = "ClientApp";
-                if (env.IsDevelopment())
-                {
-                    spa.UseAngularCliServer(npmScript: "start");
-                }
-            });
-        }
+        });
     }
 }
+
