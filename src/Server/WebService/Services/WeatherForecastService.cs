@@ -93,12 +93,14 @@ public class WeatherForecastService : BaseService
         return record.ToView();
     }
 
-    public WeatherForecastItem Update(string id, WeatherForecastItem project)
+    public WeatherForecastItem Update(string id, WeatherForecastItem item)
     {
+        Validate(item);
+
         var q = Repository.GetWeatherForecastQuery(AuthorizationContext.CurrentProfile);
         var record = GetRecordByPublicId(id);
 
-        q.Update(record.ToRecord(project));
+        q.Update(record.ToRecord(item));
 
         return GetById(record.PublicId);
     }
