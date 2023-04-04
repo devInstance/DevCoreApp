@@ -1,58 +1,47 @@
 ﻿@page "/fetchdata"
-@using Microsoft.AspNetCore.Authorization
-@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
-@using DevInstance.DevCoreApp.Shared.Model
-@attribute [Authorize]
-@inject HttpClient Http
+@inherits NoCrastBasePage
+@inject IStringLocalizer<FetchData> loc;
 
-<h1>Weather forecast</h1>
+<h1>@loc["Weather forecast"]</h1>
 
-<WebPageTitle Value="Weather forecast" />
+<WebPageTitle Value="@loc["Weather forecast"]" />
 
-<p>This component demonstrates fetching data from the server.</p>
+<p>@loc["This component demonstrates fetching data from the server."]</p>
 
-@if (forecasts == null)
+@if (!InProgress)
 {
-    <p><em>Loading...</em></p>
+    <ErrorMessageBanner Message="@ErrorMessage" IsError="IsError"></ErrorMessageBanner>
+
+    @if (forecasts != null)
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th scope="col">@loc["Date"]</th>
+                    <th scope="col">@loc["Temp. (C)"]</th>
+                    <th scope="col">@loc["Temp. (F)"]</th>
+                    <th scope="col">@loc["Summary"]</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var forecast in forecasts.Items)
+                {
+                    <tr>
+                        <td>@forecast.Date.ToShortDateString()</td>
+                        <td>@forecast.TemperatureC</td>
+                        <td>@forecast.TemperatureF</td>
+                        <td>@forecast.Summary</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <DataPager PagesCount="@forecasts.PagesCount"
+                   SelectedPage="@forecasts.Page"
+                   OnPageChanged="@RequestDataAsync">
+        </DataPager>
+    }
 }
 else
 {
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Temp. (C)</th>
-                <th>Temp. (F)</th>
-                <th>Summary</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var forecast in forecasts)
-            {
-                <tr>
-                    <td>@forecast.Date.ToShortDateString()</td>
-                    <td>@forecast.TemperatureC</td>
-                    <td>@forecast.TemperatureF</td>
-                    <td>@forecast.Summary</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
-
-@code {
-    private WeatherForecastItem[] forecasts;
-
-    protected override async Task OnInitializedAsync()
-    {
-        try
-        {
-            forecasts = await Http.GetFromJsonAsync<WeatherForecastItem[]>("WeatherForecast");
-        }
-        catch (AccessTokenNotAvailableException exception)
-        {
-            exception.Redirect();
-        }
-    }
-
+    <PageProgress></PageProgress>
 }
