@@ -1,5 +1,5 @@
 ﻿@page "/fetchdata"
-@inherits NoCrastBasePage
+@inherits BasePage
 @inject IStringLocalizer<FetchData> loc;
 
 <h1>@loc["Weather forecast"]</h1>
@@ -8,6 +8,15 @@
 
 <p>@loc["This component demonstrates fetching data from the server."]</p>
 
+<button class="btn btn-primary"
+        data-bs-toggle="modal"
+        data-bs-target="#addForecastModal"
+        data-bs-keyboard="false"
+        data-bs-backdrop="static"
+        disabled="@InProgress"
+        @onclick="@(() => selectedForecast = null)">
+            @loc["Add New"]
+</button>
 @if (!InProgress)
 {
     <ErrorMessageBanner Message="@ErrorMessage" IsError="IsError"></ErrorMessageBanner>
@@ -17,6 +26,7 @@
         <table class="table table-striped">
             <thead>
                 <tr>
+                    <th scope="col"></th>
                     <th scope="col">@loc["Date"]</th>
                     <th scope="col">@loc["Temp. (C)"]</th>
                     <th scope="col">@loc["Temp. (F)"]</th>
@@ -27,7 +37,44 @@
                 @foreach (var forecast in forecasts.Items)
                 {
                     <tr>
-                        <td>@forecast.Date.ToShortDateString()</td>
+                        <td class="first-table-item text-nowrap">
+                            <div class="btn-group">
+                                <button type="button"
+                                        class="btn btn-default"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#addForecastModal"
+                                        data-bs-keyboard="false"
+                                        data-bs-backdrop="static"
+                                        title="@loc["Edit"]"
+                                        @onclick="@(() => selectedForecast = forecast)"
+                                        @onclick:preventDefault>
+                                    <span class="bi bi-pencil" aria-hidden="true"></span>
+                                </button>
+                                <button type="button" class="btn dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <span class="visually-hidden">Toggle Dropdown</span>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item" href="#"
+                                           data-bs-toggle="modal"
+                                           data-bs-target="#addForecastModal"
+                                           data-bs-keyboard="false"
+                                           data-bs-backdrop="static"
+                                           title="@loc["Edit"]"
+                                            @onclick="@(() => selectedForecast = forecast)"
+                                            @onclick:preventDefault>
+                                            <span class="bi bi-pen small-timer-button" aria-hidden="true"></span> @loc["Edit"]
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#addDeleteModal" @onclick="@(() => selectedForecast = forecast)" @onclick:preventDefault>
+                                            <span class="bi bi-trash small-timer-button" aria-hidden="true"></span> @loc["Delete"]
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </td>
+                        <td>@forecast.Date.ToLocalTime().ToShortDateString()</td>
                         <td>@forecast.TemperatureC</td>
                         <td>@forecast.TemperatureF</td>
                         <td>@forecast.Summary</td>
@@ -45,3 +92,5 @@ else
 {
     <PageProgress></PageProgress>
 }
+<NewForecastModal ForecastItem="selectedForecast"></NewForecastModal>
+<DeleteModalOverlay Delete="() => Remove(selectedForecast)"></DeleteModalOverlay>

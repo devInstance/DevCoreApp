@@ -1,4 +1,4 @@
-html, body {
+﻿html, body {
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
@@ -53,8 +53,7 @@ a, .btn-link {
   left: 50%;
   margin-left: -88px;
   margin-top: -24px;
-  -webkit-filter: grayscale(100%);
-  /* Safari 6.0 - 9.0 */
+  -webkit-filter: grayscale(100%); /* Safari 6.0 - 9.0 */
   filter: grayscale(100%);
 }
 
@@ -424,7 +423,6 @@ ul {
   .sidebar * {
     display: none;
   }
-
   .shrink {
     animation-duration: 0.5s;
     animation-name: slideout;
@@ -463,4 +461,7 @@ ul {
   transform: translate(-112px, 0px);
 }
 
-/*# sourceMappingURL=app.css.map */
+/* FetchData */
+.first-table-item {
+  width: 3rem;
+}

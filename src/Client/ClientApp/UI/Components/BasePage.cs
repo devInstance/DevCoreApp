@@ -7,7 +7,7 @@ using System.Timers;
 
 namespace DevInstance.DevCoreApp.Client.UI.Components;
 
-public class NoCrastBasePage : ComponentBase
+public class BasePage : ComponentBase
 {
     [Inject]
     protected IScopeManager ScopeManager { get; set; }
@@ -25,14 +25,14 @@ public class NoCrastBasePage : ComponentBase
     protected bool IsError { get; set; } = false;
     protected string ErrorMessage { get; set; } = "";
 
-    protected async Task<T> PerformServiceCallAsyncSuccessAsync<T>(PerformAsyncCallHandler<T> handler, Func<T, Task> successAsync, bool enableProgress = true)
+    protected async Task<T> PerformServiceCallAsyncSuccessAsync<T>(PerformAsyncCallHandler<T> handler, Func<T, Task> successAsync, Action<string> error = null, bool enableProgress = true)
     {
-        return await PerformServiceCallAsync(handler, null, null, successAsync, null, enableProgress);
+        return await PerformServiceCallAsync(handler, null, null, successAsync, error, enableProgress);
     }
 
-    protected async Task<T> PerformServiceCallAsync<T>(PerformAsyncCallHandler<T> handler, Action<T> success = null, bool enableProgress = true)
+    protected async Task<T> PerformServiceCallAsync<T>(PerformAsyncCallHandler<T> handler, Action<T> success = null, Action<string> error = null, bool enableProgress = true)
     {
-        return await PerformServiceCallAsync(handler, null, success, null, null, enableProgress);
+        return await PerformServiceCallAsync(handler, null, success, null, error, enableProgress);
     }
 
     /// <summary>

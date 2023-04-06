@@ -22,6 +22,17 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <Content Remove="compilerconfig.json" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Include="compilerconfig.json" />
+      <None Include="wwwroot\css\site.css" />
+      <None Include="wwwroot\css\site.min.css" />
+      <None Include="wwwroot\css\site.scss" />
+    </ItemGroup>
+
+    <ItemGroup>
         <PackageReference Include="DevInstance.LogScope.NET" Version="1.4.2" />
         <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="7.0.4" />
         <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="7.0.4" PrivateAssets="all" />
