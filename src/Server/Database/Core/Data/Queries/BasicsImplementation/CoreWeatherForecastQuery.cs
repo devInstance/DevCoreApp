@@ -26,6 +26,7 @@ public class CoreWeatherForecastQuery : CoreBaseQuery, IWeatherForecastQuery
                                      ApplicationDbContext dB,
                                      UserProfile currentProfile) 
         : this(from ts in dB.WeatherForecasts
+               orderby ts.Date descending
                select ts, logManager, timeProvider, dB, currentProfile)
     {
 
