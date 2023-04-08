@@ -1,27 +1,28 @@
-# Overview
+# Database Providers
 
-The database layer has been divided into "Core" and "Provider". "Core" contains all the interface and the common logic and is independent of specific database engine. "Provider" should implement the interfaces and add the database specific code including migrations.
+The database layer is divided into "Core" and "Provider". "Core" contains all the interfaces and common logic, and is independent of any specific database engine. "Provider" should implement the interfaces and add the database-specific code, including migrations.
 
-# Core
+## Core
 
-Core is structured in the following way:
-- **Data:** contains logic and interface needed to realize queries. IQueryRepository interfaces define queries. Every query spouse to encapsulate actions that an be performed against the specific object type. For instance, “Emplyee” table can have Select, Add, Update, Delete methods. They all can be declared as IEmplyeeQuery. Additionally, IEmployee query can inherit IModelQuery or other common interfaces from Base.
-- **Models:** is the namespace for database model objects
-- **ApplicationDbContext.cs:** database context. It is an abstract class and should be implemented by a specific context in the provider rather than used directly 
-- **ConfigurationExtensions.cs:** generic methods that encapsulates configuring code (usually called in Startup.cs)
+Core is structured as follows:
 
-# Provider
+- **Data:** Contains logic and interfaces needed to execute queries. The IQueryRepository interfaces define queries. Each query is meant to encapsulate actions that can be performed against a specific object type. For example, the "Employee" table can have Select, Add, Update, and Delete methods. They can all be declared as IEmployeeQuery. Additionally, IEmployee query can inherit IModelQuery or other common interfaces from Base.
+- **Models:** This namespace is for database model objects.
+- **ApplicationDbContext.cs:** Database context. It is an abstract class and should be implemented by a specific context in the provider rather than used directly.
+- **ConfigurationExtensions.cs:** Generic methods that encapsulate configuring code (usually called in Startup.cs).
 
-Provider implements a database engine specific logic. There are two providers in this project as of right now: Postgres and SqlServer. The structure is the similar to the code. Every provider should:
+## Provider
 
-1. Override or implement database context;
+The Provider implements database engine-specific logic. There are two providers in this project as of now: Postgres and SqlServer. The structure is similar to the Core. Every provider should:
+
+1. Override or implement the database context;
 2. Implement interfaces in the Queries namespace;
 3. Provide migrations (see Migrations section below);
-4. Provide configuration extensions;
+4. Provide configuration extensions.
 
-# Configuration
+## Configuration
 
-The provider configuration is happening in the server project. Depending on the project itself, developer may choose to support single or multiple providers. For multiple configurations Startup.cs has already the code need to support the provider selection. In this case the appsettings.json should have the following configuration:
+The provider configuration takes place in the server project. Depending on the project itself, developers may choose to support a single or multiple providers. For multiple configurations, Startup.cs already has the code needed to support provider selection. In this case, appsettings.json should have the following configuration:
 
 `
     "Database": {
@@ -34,10 +35,11 @@ The provider configuration is happening in the server project. Depending on the 
     },
 `
 
-In case the only one provider is supported the configuration can be simplified:
-1. Remove all the references to the provider from WebService project but one which will be used;
-2. appsettings.json can be change to support only one connection string
-3. In Startup.cs configuring database can be simplified:
+In case only one provider is supported, the configuration can be simplified:
+
+1. Remove all references to the provider from the WebService project except for the one that will be used;
+2. Modify appsettings.json to support only one connection string;
+3. Simplify configuring the database in Startup.cs:
 
 `
 //Configuring Postgres
@@ -48,9 +50,10 @@ private void ConfigureDatabase(IServiceCollection services)
     services.ConfigurePostgresIdentityContext();
 }
 `
-# Migrations
 
-Migrations is own by the provider project. Run the following command in WebService project to create a migration:
+## Migrations
+
+Migrations are owned by the provider project. Run the following command in the WebService project to create a migration:
 
 `DevCoreApp\src\Server\WebService> dotnet ef migrations add <Migration Name>  --project ..\Database\<Provider>`
 
@@ -58,11 +61,11 @@ Example:
 
 `DevCoreApp\src\Server\WebService> dotnet ef migrations add CreateIdentitySchema --project ..\Database\Postgres`
 
-Applying migration to the local development database is done by:
+To apply a migration to the local development database, use:
 
 `dotnet ef database update`
 
-Production deployment can be done by running a script. The production script is usually stored in deployment/sql/<provider> folder and should have a full name of the migration. The script generation is done by:
+Production deployment can be done by running a script. The production script is usually stored in the deployment/sql/<provider> folder and should have the full name of the migration. Generate the script with:
 
 `dotnet ef migrations script  --project ..\Database\<provider> > ..\..\..\deployment\sql\<provider>\<migration>.sql`
 
@@ -70,7 +73,7 @@ Example:
 
 `dotnet ef migrations script  --project ..\Database\Postgres\ > ..\..\..\deployment\sql\postgres\20210728041133_CreateIdentitySchema.sql`
 
-In case you are getting "Command dotnet ef not found", please install EF tool:
+If you encounter the "Command dotnet ef not found" error, please install the EF tool:
 
 `dotnet tool install --global dotnet-ef`
 
