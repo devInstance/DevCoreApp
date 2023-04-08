@@ -16,30 +16,15 @@ DevCoreApp is a living codebase. It contains bugs, and some design decisions may
 
 # Project Structure
 
-This git repository has three branches: 
--	**web-api-app**:  Typical Web API project with no HTML rendering and any SPA client support.
--	**blazor-app**: Web API + Blazor application.
--	**angular-app**: Web API + Angular application.
-
-The ASP.NET Core project (server side) is almost the same for all three branches.
+This Git repository has three branches: 
+-	**web-api-app**: A typical Web API project without HTML rendering or SPA client support.
+-	**blazor-app**: A combination of Web API and Blazor application.
+-	**angular-app**: A combination of Web API and Angular application.
 
 The repository organized in the following way:
--	```/deployment```: any artifacts needed for production deployment including sql scripts
--	```/src```: source code
-  -	```/src/Server```: code that runs one server side
-    - ```/src/Server/Database```: database providers. Please see [Database ReadMe]( /src/Server/Database#readme)
-    - ```/src/Server/Email```: Email provider(s)
-    - ```/src/Server/WebService```: Web App project
-  - ```/src/Shared```: shared code between client and server, common utilities, shared models
-  - ```/src/Client``` (blazor-app only): Code that executes on the client side
--	```/tests```: Collection of unit tests. The structure is the same as “src”
-
-# Notes
-
-Please refer to the series of articles dedicated this sample app:
-
--	[Introduction to the clean architecture](https://devinstance.net/blog/aspnet-core-introduction-to-the-clean-architecture)
-
--	[Web API and Services](https://devinstance.net/blog/aspnet-core-web-api-and-services)
-
--	[Designing and implementing providers for SQLServer and PostgreSQL](https://devinstance.net/blog/aspnet-core-providers-for-sqlserver-and-postgresql)
+-	```/deployment```: Contains artifacts needed for production deployment, including SQL scripts.
+-	```/src```: Contains source code.
+  -	```/src/Server```: Contains code that runs on the server side. Please refer to the [Server's ReadMe](/src/Server#readme).
+  - ```/src/Shared```: Holds shared code between client and server, common utilities, and shared models.
+  - ```/src/Client``` (blazor-app only): Contains code that executes on the client side.
+-	```/tests```: A collection of unit tests with a structure that mirrors the "src" folder.
