@@ -5,13 +5,13 @@ The typical .NET Core Web API project in Visual Studio contains a "Controllers" 
 
 As development progresses, controllers can grow to an enormous size. They might directly call EF code, execute queries, send emails, etc. Moving reusable code to a "BaseController" that every controller can inherit from may help, but this approach could complicate providing sufficient unit testing coverage (if any). This is when the following structure comes to the rescue:
 
-• /src/Server/Database: Includes database providers. Please refer to the [Database ReadMe](/src/Server/Database#readme).
-• /src/Server/Email: Contains email provider(s).
-• /src/Server/WebService: Houses the Web App project.
-• /src/Server/WebService/Controller: Contains controllers implementing the APIs.
-• /src/Server/WebService/Services: Contains services (see more about the purpose of services below).
-• /src/Server/WebService/Authentication: Contains authentication and authorization logic.
-• /src/Server/WebService/Tools: Includes a set of classes to support the framework.
+- ```/src/Server/Database```: Includes database providers. Please refer to the [Database ReadMe](/src/Server/Database#readme).
+- ```/src/Server/Email```: Contains email provider(s).
+- ```/src/Server/WebService```: Houses the Web App project.
+- ```/src/Server/WebService/Controller```: Contains controllers implementing the APIs.
+- ```/src/Server/WebService/Services```: Contains services (see more about the purpose of services below).
+- ```/src/Server/WebService/Authentication```: Contains authentication and authorization logic.
+- ```/src/Server/WebService/Tools```: Includes a set of classes to support the framework.
 
 ## Controllers
 
