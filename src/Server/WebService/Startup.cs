@@ -3,7 +3,7 @@ using DevInstance.LogScope.Formatters;
 using DevInstance.DevCoreApp.Server.Database.Postgres;
 using DevInstance.DevCoreApp.Server.Database.SqlServer;
 using DevInstance.DevCoreApp.Server.EmailProcessor.MailKit;
-using DevInstance.DevCoreApp.Server.WebService.Indentity;
+using DevInstance.DevCoreApp.Server.WebService.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;

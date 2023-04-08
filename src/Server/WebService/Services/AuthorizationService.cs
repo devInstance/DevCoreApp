@@ -4,7 +4,7 @@ using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using DevInstance.DevCoreApp.Server.EmailProcessor;
 using DevInstance.DevCoreApp.Server.EmailProcessor.Templates;
 using DevInstance.DevCoreApp.Server.Exceptions;
-using DevInstance.DevCoreApp.Server.WebService.Indentity;
+using DevInstance.DevCoreApp.Server.WebService.Authentication;
 using DevInstance.DevCoreApp.Server.WebService.Tools;
 using DevInstance.DevCoreApp.Shared.Model;
 using Microsoft.AspNetCore.Identity;
