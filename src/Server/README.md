@@ -26,6 +26,7 @@ A Service should follow the single responsibility pattern. It should not fall in
 A typical service is located in the "Services" folder of the project. It refers to the "Tools" namespace for some basic tools for service configuration. Potentially, tools and all or some of the services can be moved into a separate assembly.
 
 ## Providers
+A provider is responsible for low-level data handling operations, such as SQL or LINQ queries, working with files, network requests, or sending emails. Providers offer an abstraction (a set of interfaces) and should only be accessed by services via these interfaces, rather than directly. The dependency hierarchy flows from top to bottom, with the controller dependent on the service and the service dependent on the provider. As a result, providers should be the most stable components, and any changes to them should be made with extra consideration. Conversely, controllers can be updated as frequently as needed.
 
 The sample app currently has several providers:
 
