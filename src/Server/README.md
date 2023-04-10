@@ -29,6 +29,6 @@ A typical service is located in the "Services" folder of the project. It refers 
 
 The sample app currently has several providers:
 
-• Identity and Authentication: A set of interfaces implementing user and password validation and management. Interface declarations and implementations reside in the "Authentication" folder of the project. Potentially, it can be moved to a separate assembly if the authentication process gets more complicated.
-• Email provider: A set of interfaces for composing and sending emails wrapped into a separate assembly called "EmailProcessor." There is an implementation based on MailKit.
-• Database providers: Please see more in the [Database ReadMe](/src/Server/Database#readme).
+- **Identity and Authentication**: A set of interfaces implementing user and password validation and management. Interface declarations and implementations reside in the "Authentication" folder of the project. Potentially, it can be moved to a separate assembly if the authentication process gets more complicated.
+- **Email provider**: A set of interfaces for composing and sending emails wrapped into a separate assembly called "EmailProcessor." There is an implementation based on MailKit.
+- **Database providers**: Please see more in the [Database ReadMe](/src/Server/Database#readme).
