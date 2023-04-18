@@ -51,8 +51,6 @@ public class WeatherForecastService : BaseService
     {
         Validate(item);
         
-        DateTime now = TimeProvider.CurrentTime;
-
         var q = Repository.GetWeatherForecastQuery(AuthorizationContext.CurrentProfile);
 
         var record = q.CreateNew().ToRecord(item);
