@@ -67,7 +67,7 @@ public class WeatherForecastServiceTests
         var date = DateTime.Now;
 
         var mockSelect = new Mock<IWeatherForecastQuery>();
-        var authorizationService =
+        var service =
         SetupServiceMock((mockRepository) =>
         {
             WeatherForecast[] data = { new WeatherForecast { Id = id, PublicId = publicId, CreateDate = date, UpdateDate = date }, };
@@ -87,7 +87,7 @@ public class WeatherForecastServiceTests
             TemperatureC = 32,
         };
 
-        var result = authorizationService.Add(item);
+        var result = service.Add(item);
 
         Assert.IsNotNull(result);
         Assert.AreEqual("Test", result.Summary);
@@ -107,7 +107,7 @@ public class WeatherForecastServiceTests
         string publicId = "testid";
 
         var mockSelect = new Mock<IWeatherForecastQuery>();
-        var authorizationService =
+        var service =
         SetupServiceMock((mockRepository) =>
         {
             WeatherForecast[] data = { new WeatherForecast { Id = id,
@@ -124,7 +124,7 @@ public class WeatherForecastServiceTests
             mockRepository.Setup(x => x.GetWeatherForecastQuery(It.IsAny<UserProfile>())).Returns(mockSelect.Object);
         });
 
-        var result = authorizationService.GetById(publicId);
+        var result = service.GetById(publicId);
 
         Assert.IsNotNull(result);
         Assert.AreEqual(publicId, result.Id);
@@ -143,7 +143,7 @@ public class WeatherForecastServiceTests
         string publicId = "testid";
 
         var mockSelect = new Mock<IWeatherForecastQuery>();
-        var authorizationService =
+        var service =
         SetupServiceMock((mockRepository) =>
         {
             WeatherForecast[] data = { };
@@ -155,7 +155,7 @@ public class WeatherForecastServiceTests
             mockRepository.Setup(x => x.GetWeatherForecastQuery(It.IsAny<UserProfile>())).Returns(mockSelect.Object);
         });
 
-        Assert.ThrowsException<RecordNotFoundException>(() => authorizationService.GetById(publicId));
+        Assert.ThrowsException<RecordNotFoundException>(() => service.GetById(publicId));
     }
 
     [TestMethod()]
@@ -166,7 +166,7 @@ public class WeatherForecastServiceTests
         var date = DateTime.Now;
 
         var mockSelect = new Mock<IWeatherForecastQuery>();
-        var authorizationService =
+        var service =
         SetupServiceMock((mockRepository) =>
         {
             WeatherForecast[] data = { new WeatherForecast { Id = id, PublicId = publicId, CreateDate = date, UpdateDate = date }, };
@@ -184,7 +184,7 @@ public class WeatherForecastServiceTests
             TemperatureC = 32,
         };
 
-        var result = authorizationService.Update(publicId, item);
+        var result = service.Update(publicId, item);
 
         Assert.IsNotNull(result);
         Assert.AreEqual("Test", result.Summary);
@@ -204,7 +204,7 @@ public class WeatherForecastServiceTests
         var date = DateTime.Now;
 
         var mockSelect = new Mock<IWeatherForecastQuery>();
-        var authorizationService =
+        var service =
         SetupServiceMock((mockRepository) =>
         {
             WeatherForecast[] data = { new WeatherForecast { Id = id,
@@ -227,7 +227,7 @@ public class WeatherForecastServiceTests
             TemperatureC = 32,
         };
 
-        var result = authorizationService.Remove(publicId);
+        var result = service.Remove(publicId);
 
         Assert.IsNotNull(result);
         Assert.AreEqual("Test", result.Summary);
