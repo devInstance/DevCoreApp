@@ -53,10 +53,10 @@
       <ProjectReference Include="..\Client.Services\Client.Services.csproj" />
     </ItemGroup>
 	<ItemGroup Condition="'$(Configuration)'=='ServiceMoqs'">
-		<ProjectReference Include="..\..\..\test\Client\Client.ClientMocks\Client.ClientMocks.csproj" />
+		<ProjectReference Include="..\..\..\tests\Client\Client.ClientMocks\Client.ClientMocks.csproj" />
 	</ItemGroup>
 	<ItemGroup Condition="'$(Configuration)'=='NetApiMoqs'">
-		<ProjectReference Include="..\..\..\test\Client\Client.ClientMocks\Client.ClientMocks.csproj" />
+		<ProjectReference Include="..\..\..\tests\Client\Client.ClientMocks\Client.ClientMocks.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

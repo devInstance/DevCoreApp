@@ -46,13 +46,13 @@ public class Program
         builder.Services.AddSingleton<ITimeProvider, TimeProvider>();
 
 #if NETAPIMOQS
-            builder.Services.AddMoqNetApi();
+        builder.Services.AddMoqNetApi();
 #else
         builder.Services.AddNetApi();
 #endif
 
 #if SERVICEMOQS
-            builder.Services.AddMoqAppServices();
+        builder.Services.AddMoqAppServices();
 #else
         builder.Services.AddAppServices();
 #endif

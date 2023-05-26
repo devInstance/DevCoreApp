@@ -1,17 +1,18 @@
 ﻿using DevInstance.DevCoreApp.Client.Services.Api;
-using DevInstance.DevCoreApp.Client.Services;
 using Microsoft.Extensions.DependencyInjection;
 using DevInstance.DevCoreApp.Client.Net.Api;
 using DevInstance.DevCoreApp.Client.Net;
 using DevInstance.DevCoreApp.Client.Net.ServicesMocks;
+using DevInstance.DevCoreApp.Client.ClientMocks.ServicesMocks;
 
-namespace DevInstance.DevCoreApp.Client.ClientMocks;
+namespace DevInstance.DevCoreApp.Client.Services;
 
 public static class ServiceExtensions
 {
     public static IServiceCollection AddMoqAppServices(this IServiceCollection services)
     {
-        services.AddScoped<IAuthorizationService, AuthorizationService>();
+        services.AddScoped<IAuthorizationService, AuthorizationServiceMock>();
+
         services.AddScoped<IAccountService, AccountService>();
         services.AddScoped<IToolbarService, ToolbarService>();
         services.AddScoped<ISettingsService, SettingsService>();
