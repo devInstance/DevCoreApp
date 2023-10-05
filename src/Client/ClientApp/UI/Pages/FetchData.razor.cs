@@ -1,7 +1,6 @@
 ﻿using DevInstance.DevCoreApp.Client.Services.Api;
 using DevInstance.DevCoreApp.Shared.Model;
 using Microsoft.AspNetCore.Components;
-using System;
 using System.Threading.Tasks;
 
 namespace DevInstance.DevCoreApp.Client.UI.Pages;
@@ -31,11 +30,11 @@ public partial class FetchData
 
     protected async Task RequestDataAsync(int page)
     {
-        await PerformServiceCallAsync(() => Service.GetItemsAsync(PageSize, page, null, null, null), (a) => { forecasts = a; });
+        await ServiceCallAsync(() => Service.GetItemsAsync(PageSize, page, null, null, null), (a) => { forecasts = a; });
     }
 
     private async Task Remove(WeatherForecastItem item)
     {
-        await PerformServiceCallAsyncSuccessAsync(() => Service.RemoveAsync(item), async (a) => { await RequestDataAsync(forecasts.Page); });
+        await ServiceCallAsync(() => Service.RemoveAsync(item), null, async (a) => { await RequestDataAsync(forecasts.Page); });
     }
 }

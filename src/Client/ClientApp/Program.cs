@@ -12,6 +12,7 @@ using DevInstance.DevCoreApp.Client.Services;
 using DevInstance.DevCoreApp.Client.Auth;
 using DevInstance.DevCoreApp.Client.Net;
 using Microsoft.AspNetCore.Components.Authorization;
+using DevInstance.DevCoreApp.Client.Services.Utils;
 
 namespace DevInstance.DevCoreApp.Client;
 
@@ -42,6 +43,8 @@ public class Program
         builder.Services.AddScoped<IdentityAuthenticationStateProvider>();
 
         builder.Services.AddApiAuthorization();
+
+        builder.Services.AddScoped<LastRequestReplayAgent>();
 
         builder.Services.AddSingleton<ITimeProvider, TimeProvider>();
 

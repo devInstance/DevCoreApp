@@ -63,13 +63,14 @@ public partial class NewForecastModal
     {
         using (var l = log.TraceScope())
         {
-            await PerformServiceCallAsyncSuccessAsync(() => Service.AddNewAsync(
+            await ServiceCallAsync(() => Service.AddNewAsync(
                 new WeatherForecastItem
                 {
                     TemperatureC = Temperature,
                     Date = Date.ToUniversalTime(),
                     Summary = Summary
                 }),
+                null,
                 async (a) =>
                 {
                     await OnCloseAsync();

@@ -1,0 +1,37 @@
+﻿@inject IStringLocalizer<LoginModalOverlay> baseloc
+
+<div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
+    <EditForm OnValidSubmit="OnSubmit" Model="loginParameters">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addProjectModalLabel">@baseloc["Login"]</h5>
+                </div>
+                <div class="modal-body">
+                    <DataAnnotationsValidator />
+                    <label for="inputUsername" class="sr-only">@baseloc["User Name"]</label>
+                    <InputText id="inputUsername" class="form-control" @bind-Value="loginParameters.UserName" autofocus placeholder="@baseloc["User Name"]" />
+                    <ValidationMessage For="@(() => loginParameters.UserName)" />
+
+                    <label for="inputPassword" class="sr-only">@baseloc["Password"]</label>
+                    <InputText type="password" id="inputPassword" class="form-control" placeholder="@baseloc["Password"]" @bind-Value="loginParameters.Password" />
+                    <ValidationMessage For="@(() => loginParameters.Password)" />
+
+                    <div class="form-check m-3">
+                        <InputCheckbox id="inputRememberMe" class="form-check-input" @bind-Value="@loginParameters.RememberMe" />
+                        <label class="form-check-label" for="inputRememberMe">@baseloc["Remember Me"]</label>
+                    </div>
+
+                    @if (!String.IsNullOrEmpty(@Error))
+                    {
+                        <label class="text-danger">@Error</label>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-lg btn-primary btn-block" data-bs-dismiss="modal" type="submit">@baseloc["Sign in"]</button>
+                    <button class="btn btn-lg btn-secondary btn-block" data-bs-dismiss="modal" @onclick="OnForgotPassword">@baseloc["Forgot password"]</button>
+                </div>
+            </div>
+        </div>
+    </EditForm>
+</div>
