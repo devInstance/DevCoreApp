@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace DevInstance.DevCoreApp.Client.Services;
 
-public class AuthorizationService : IAuthorizationService
+public class AuthorizationService : BaseService, IAuthorizationService
 {
     protected IAuthorizationApi Api { get; }
 
@@ -16,36 +16,36 @@ public class AuthorizationService : IAuthorizationService
         Api = api;
     }
 
-    public Task RegisterAsync(RegisterParameters registerParameters)
+    public async Task RegisterAsync(RegisterParameters registerParameters)
     {
-        return Api.RegisterAsync(registerParameters);
+        await Api.RegisterAsync(registerParameters);
     }
 
-    public Task LoginAsync(LoginParameters loginParameters)
+    public async Task LoginAsync(LoginParameters loginParameters)
     {
-        return Api.LoginAsync(loginParameters);
+        await Api.LoginAsync(loginParameters);
     }
 
-    public Task ChangePasswordAsync(ChangePasswordParameters chngParameters)
+    public async Task ChangePasswordAsync(ChangePasswordParameters chngParameters)
     {
-        return Api.ChangePasswordAsync(chngParameters);
+        await Api.ChangePasswordAsync(chngParameters);
     }
 
-    public Task ForgotPasswordAsync(ForgotPasswordParameters forgotParameters)
+    public async Task ForgotPasswordAsync(ForgotPasswordParameters forgotParameters)
     {
-        return Api.ForgotPasswordAsync(forgotParameters);
+        await Api.ForgotPasswordAsync(forgotParameters);
     }
 
-    public Task ResetPasswordAsync(ResetPasswordParameters resetPassswordParameters)
+    public async Task ResetPasswordAsync(ResetPasswordParameters resetPassswordParameters)
     {
-        return Api.ResetPasswordAsync(resetPassswordParameters);
+        await Api.ResetPasswordAsync(resetPassswordParameters);
     }
 
-    public Task LogoutAsync()
+    public async Task LogoutAsync()
     {
         var result = Api.LogoutAsync();
         CurrentUser = null;
-        return result;
+        await result;
     }
 
     public async Task<bool> DeleteAsync()

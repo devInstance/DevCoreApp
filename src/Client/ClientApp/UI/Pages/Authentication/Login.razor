@@ -3,8 +3,6 @@
 @inject IStringLocalizer<Login> baseloc;
 
 @layout LoginLayout
-@inject NavigationManager navigationManager
-@inject IdentityAuthenticationStateProvider authStateProvider
 
 <WebPageTitle Value="@baseloc["LoginLabel"]"></WebPageTitle>
 
@@ -39,22 +37,3 @@
     <h6 class="font-weight-normal text-center">@baseloc["Forgot password"]</h6>
 </NavLink>
 
-@code{
-    LoginParameters loginParameters { get; set; } = new LoginParameters();
-
-    string error { get; set; }
-
-    async Task OnSubmit()
-    {
-        error = null;
-        try
-        {
-            await authStateProvider.LoginAsync(loginParameters);
-            navigationManager.NavigateTo("");
-        }
-        catch (Exception ex)
-        {
-            error = ex.Message;
-        }
-    }
-}
