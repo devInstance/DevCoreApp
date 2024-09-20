@@ -1,0 +1,109 @@
+﻿@page "/client/weather"
+@rendermode InteractiveWebAssembly
+@inherits BasePage
+
+@inject IStringLocalizer<ClientWeather> loc;
+
+<PageTitle>@loc["Weather"]</PageTitle>
+
+<h3>@loc["Weather"]</h3>
+
+<p>@loc["This component demonstrates client rendering page fetching data from the server using REST API."]</p>
+
+<button class="btn btn-primary"
+        data-bs-toggle="modal"
+        data-bs-target="#addForecastModal"
+        data-bs-keyboard="false"
+        data-bs-backdrop="static"
+        disabled="@InProgress"
+        @onclick="@(() => selectedForecast = null)">
+            @loc["Add New"]
+</button>
+@if (!InProgress)
+{
+    <ErrorMessageBanner Message="@ErrorMessage" IsError="IsError"></ErrorMessageBanner>
+
+    @if (forecasts != null)
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th scope="col"></th>
+                    <th scope="col">
+                        <span>@loc["Date"]</span>
+                        <button class="btn btn-link" @onclick="@(() => SortBy("Date"))"><i class="bi bi-caret-down-fill"></i></button>
+                    </th>
+                    <th scope="col">
+                        <span>@loc["Temp. (C)"]</span>
+                        <button class="btn btn-link" @onclick="@(() => SortBy("Temperature"))"><i class="bi bi-caret-down"></i></button>
+                    </th>
+                    <th scope="col">
+                        <span>@loc["Temp. (F)"]</span>
+                    </th>
+                    <th scope="col">
+                        <span>@loc["Summary"]</span>
+                        <button class="btn btn-link" @onclick="@(() => SortBy("Summary"))"><i class="bi bi-caret-down"></i></button>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var forecast in forecasts.Items)
+                {
+                    <tr>
+                        <td class="first-table-item text-nowrap">
+                            <div class="btn-group">
+                                <button type="button"
+                                        class="btn btn-default"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#addForecastModal"
+                                        data-bs-keyboard="false"
+                                        data-bs-backdrop="static"
+                                        title="@loc["Edit"]"
+                                        @onclick="@(() => selectedForecast = forecast)"
+                                        @onclick:preventDefault>
+                                    <span class="bi bi-pencil" aria-hidden="true"></span>
+                                </button>
+                                <button type="button" class="btn dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <span class="visually-hidden">Toggle Dropdown</span>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item" href="#"
+                                           data-bs-toggle="modal"
+                                           data-bs-target="#addForecastModal"
+                                           data-bs-keyboard="false"
+                                           data-bs-backdrop="static"
+                                           title="@loc["Edit"]"
+                                            @onclick="@(() => selectedForecast = forecast)"
+                                            @onclick:preventDefault>
+                                            <span class="bi bi-pen small-timer-button" aria-hidden="true"></span> @loc["Edit"]
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#addDeleteModal" @onclick="@(() => selectedForecast = forecast)" @onclick:preventDefault>
+                                            <span class="bi bi-trash small-timer-button" aria-hidden="true"></span> @loc["Delete"]
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </td>
+                        <td>@forecast.Date.ToLocalTime().ToShortDateString()</td>
+                        <td>@forecast.TemperatureC</td>
+                        <td>@forecast.TemperatureF</td>
+                        <td>@forecast.Summary</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <DataPager PagesCount="@forecasts.PagesCount"
+                   SelectedPage="@forecasts.Page"
+                   OnPageChanged="@RequestDataAsync">
+        </DataPager>
+    }
+}
+else
+{
+    <PageProgress></PageProgress>
+}
+<NewForecastModal ForecastItem="selectedForecast"></NewForecastModal>
+<DeleteModalOverlay Delete="() => Remove(selectedForecast)"></DeleteModalOverlay>

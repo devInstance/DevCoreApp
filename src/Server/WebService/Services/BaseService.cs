@@ -1,10 +1,10 @@
 ﻿using DevInstance.LogScope;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
-using DevInstance.DevCoreApp.Server.WebService.Authentication;
 using DevInstance.DevCoreApp.Shared.Model;
 using System;
 using DevInstance.DevCoreApp.Server.Database.Core.Data.Queries;
 using DevInstance.DevCoreApp.Shared.Utils;
+using DevInstance.DevCoreApp.Server.WebService.Authentication;
 
 namespace DevInstance.DevCoreApp.Server.Services;
 

@@ -10,7 +10,7 @@ namespace DevInstance.DevCoreApp.Server.WebService.Tools
     {
         public static void AddTimeProvider(this IServiceCollection services)
         {
-            services.AddSingleton<ITimeProvider, TimeProvider>();
+            services.AddSingleton<ITimeProvider, Shared.Utils.TimeProvider>();//TODO: migrate to a new .NET8 TimeProvider
         }
     }
 }

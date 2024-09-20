@@ -7,7 +7,7 @@ namespace DevInstance.DevCoreApp.Server.WebService.Authentication;
 
 public static class ConfigurationExtensions
 {
-    public static void AddIdentity(this IServiceCollection services)
+    public static void AddAppIdentity(this IServiceCollection services)
     {
         services.AddHttpContextAccessor();
         services.AddScoped<IAuthorizationContext, AuthorizationContext>();

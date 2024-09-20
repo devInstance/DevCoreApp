@@ -1,11 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net7.0</TargetFramework>
+		<TargetFramework>net8.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<AssemblyName>DevInstance.DevCoreApp.Shared.Utils</AssemblyName>
 		<RootNamespace>DevInstance.DevCoreApp.Shared.Utils</RootNamespace>
 		<Nullable>enable</Nullable>
+		<Configurations>Debug;Release;NetApiMoqs;ServiceMoqs</Configurations>
 	</PropertyGroup>
 
 </Project>
