@@ -7,7 +7,7 @@ namespace DevInstance.DevCoreApp.Server.WebService.Tools
 {
     public static class ServiceConfigurationExtensions
     {
-        public static void AddServerAppServices(this IServiceCollection services)
+        public static void AddAppServices(this IServiceCollection services)
         {
             foreach (var type in GetTypesWithHelpAttribute(Assembly.GetCallingAssembly()))
             {

@@ -7,6 +7,6 @@ public class ModelItem
     /// <summary>
     /// Public id of the object assigned by server
     /// </summary>
-    //[Required]
+    [Required]
     public string Id { get; set; }
 }

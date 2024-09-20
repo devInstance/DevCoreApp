@@ -1,12 +1,9 @@
 ﻿using DevInstance.DevCoreApp.Server.Database.Core;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
-using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using DevInstance.DevCoreApp.Server.Database.Postgres.Data;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System;
 
 namespace DevInstance.DevCoreApp.Server.Database.Postgres
 {
@@ -27,6 +24,5 @@ namespace DevInstance.DevCoreApp.Server.Database.Postgres
         {
             services.ConfigureIdentityContext<PostgresApplicationDbContext>();
         }
-
     }
 }

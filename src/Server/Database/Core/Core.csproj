@@ -1,28 +1,31 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-	<PropertyGroup>
-		<OutputType>Library</OutputType>
-		<TargetFramework>net8.0</TargetFramework>
-		<AssemblyName>DevInstance.DevCoreApp.Server.Database.Core</AssemblyName>
-		<RootNamespace>DevInstance.DevCoreApp.Server.Database.Core</RootNamespace>
-		<ApplicationIcon />
-		<StartupObject />
-		<Configurations>Debug;Release;NetApiMoqs;ServiceMoqs</Configurations>
-	</PropertyGroup>
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net7.0</TargetFramework>
+    <AssemblyName>DevInstance.DevCoreApp.Server.Database.Core</AssemblyName>
+    <RootNamespace>DevInstance.DevCoreApp.Server.Database.Core</RootNamespace>
+    <ApplicationIcon />
+    <StartupObject />
+  </PropertyGroup>
 
-	<ItemGroup>
-		<PackageReference Include="DevInstance.LogScope" Version="1.4.2" />
-		<PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="8.0.8" />
-		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.8" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.8" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.8" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.8" />
-		<PackageReference Include="Microsoft.Extensions.Identity.Core" Version="8.0.8" />
-	</ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="DevInstance.LogScope" Version="1.4.2" />
+    <PackageReference Include="Microsoft.AspNetCore.ApiAuthorization.IdentityServer" Version="7.0.4" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.4">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.4" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.4">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
 
-	<ItemGroup>
-		<ProjectReference Include="..\..\..\Shared\Model\Shared.Model.csproj" />
-		<ProjectReference Include="..\..\..\Shared\Utils\Shared.Utils.csproj" />
-	</ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Shared\Model\Shared.Model.csproj" />
+    <ProjectReference Include="..\..\..\Shared\Utils\Shared.Utils.csproj" />
+  </ItemGroup>
 
 </Project>

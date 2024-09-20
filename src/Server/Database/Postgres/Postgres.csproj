@@ -1,27 +1,21 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <AssemblyName>DevInstance.DevCoreApp.Server.Database.Postgres</AssemblyName>
     <RootNamespace>DevInstance.DevCoreApp.Server.Database.Postgres</RootNamespace>
-    <Configurations>Debug;Release;NetApiMoqs;ServiceMoqs</Configurations>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Data\Queries\**" />
-    <EmbeddedResource Remove="Data\Queries\**" />
-    <None Remove="Data\Queries\**" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <Folder Include="Data\Queries\" />
     <Folder Include="Migrations\" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="8.0.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.2" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.4" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="7.0.1" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.3" />
   </ItemGroup>
 
   <ItemGroup>
