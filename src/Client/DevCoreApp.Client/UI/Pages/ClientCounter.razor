@@ -1,0 +1,21 @@
+﻿@page "/client/counter"
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender:false))
+
+@inject IStringLocalizer<ClientCounter> loc;
+
+<PageTitle>@loc["Counter on Client"]</PageTitle>
+
+<h1>@loc["Counter on Client"]</h1>
+
+<p role="status">@String.Format(@loc["Current count: {0}"], @currentCount)</p>
+
+<button class="btn btn-primary" @onclick="IncrementCount">@loc["Click me"]</button>
+
+@code {
+    private int currentCount = 0;
+
+    private void IncrementCount()
+    {
+        currentCount++;
+    }
+}

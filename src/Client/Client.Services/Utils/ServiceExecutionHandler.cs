@@ -107,7 +107,7 @@ public class ServiceExecutionHandler
                 basePage.ErrorMessage = errorMessage;
 
                 //If session has expired we show the login popup and try request again
-                if (!res.IsAuthorized)
+                if (LoginHandler != null && !res.IsAuthorized)
                 {
                     LoginHandler.LastRequestReplay = async (i) => { await ExecuteAsync(); };
 

@@ -1,5 +1,6 @@
 ﻿namespace DevInstance.DevCoreApp.Client.Services.Utils;
 
+//TODO: deprecate
 public class LastRequestReplayAgent
 {
     public Func<int, Task>? LastRequestReplay { get; set; }

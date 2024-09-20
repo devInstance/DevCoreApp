@@ -1,16 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net7.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <AssemblyName>DevInstance.DevCoreApp.Server.EmailProcessor.MailKit</AssemblyName>
         <RootNamespace>DevInstance.DevCoreApp.Server.EmailProcessor.MailKit</RootNamespace>
         <Configurations>Debug;Release;NetApiMoqs;ServiceMoqs</Configurations>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="MailKit" Version="3.6.0" />
-        <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="7.0.0" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
+        <PackageReference Include="MailKit" Version="4.7.1.1" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="8.0.0" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.1" />
     </ItemGroup>
 
     <ItemGroup>

@@ -1,5 +1,6 @@
 ﻿using DevInstance.DevCoreApp.Client.Net.Api;
 using DevInstance.DevCoreApp.Shared.Model;
+using Microsoft.AspNetCore.Components;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +11,7 @@ namespace DevInstance.DevCoreApp.Client.Net
 {
     public class WeatherForecastApi : CRUDApi<WeatherForecastItem>, IWeatherForecastApi
     {
-        public WeatherForecastApi(HttpClient http) : base(http, "api/forecast")
+        public WeatherForecastApi(HttpClient http, NavigationManager navigationManager) : base(http, navigationManager, "api/forecast")
         {
         }
     }

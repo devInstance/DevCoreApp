@@ -7,7 +7,6 @@ public static class ServiceExtensions
 {
     public static IServiceCollection AddAppServices(this IServiceCollection services)
     {
-        services.AddScoped<IAuthorizationService, AuthorizationService>();
         services.AddScoped<IAccountService, AccountService>();
         services.AddScoped<IToolbarService, ToolbarService>();
         services.AddScoped<ISettingsService, SettingsService>();

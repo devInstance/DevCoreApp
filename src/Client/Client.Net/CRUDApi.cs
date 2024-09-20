@@ -1,6 +1,7 @@
 ﻿using DevInstance.DevCoreApp.Client.Net.Api;
 using DevInstance.DevCoreApp.Client.Net.Utils;
 using DevInstance.DevCoreApp.Shared.Model;
+using Microsoft.AspNetCore.Components;
 using System.Net.Http.Json;
 
 namespace DevInstance.DevCoreApp.Client.Net;
@@ -9,7 +10,7 @@ public class CRUDApi<T> : ApiBase, ICRUDApi<T> where T : ModelItem
 {
     public string Controller { get; set; }
 
-    public CRUDApi(HttpClient http, string controller) : base(http)
+    public CRUDApi(HttpClient http, NavigationManager navigationManager, string controller) : base(http, navigationManager)
     {
         Controller = controller;
     }

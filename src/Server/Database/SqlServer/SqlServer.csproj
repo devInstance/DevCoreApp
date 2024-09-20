@@ -1,26 +1,31 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net7.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <AssemblyName>DevInstance.DevCoreApp.Server.Database.SqlServer</AssemblyName>
         <RootNamespace>DevInstance.DevCoreApp.Server.Database.SqlServer</RootNamespace>
         <Configurations>Debug;Release;NetApiMoqs;ServiceMoqs</Configurations>
     </PropertyGroup>
 
     <ItemGroup>
+      <Compile Remove="Data\Queries\**" />
+      <EmbeddedResource Remove="Data\Queries\**" />
+      <None Remove="Data\Queries\**" />
+    </ItemGroup>
+
+    <ItemGroup>
         <ProjectReference Include="..\Core\Core.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.4" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.4">
+        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.8" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.8">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Data\Queries\" />
       <Folder Include="Migrations\" />
     </ItemGroup>
 

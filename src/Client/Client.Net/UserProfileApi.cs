@@ -1,5 +1,6 @@
 ﻿using DevInstance.DevCoreApp.Client.Net.Api;
 using DevInstance.DevCoreApp.Shared.Model;
+using Microsoft.AspNetCore.Components;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
@@ -10,7 +11,7 @@ public class UserProfileApi : ApiBase, IUserProfileApi
 {
     private const string Controller = "api/user/profile/";
 
-    public UserProfileApi(HttpClient http) : base(http)
+    public UserProfileApi(HttpClient http, NavigationManager navigationManager) : base(http, navigationManager)
     {
     }
 

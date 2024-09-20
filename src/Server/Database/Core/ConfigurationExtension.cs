@@ -13,8 +13,10 @@ public static class ConfigurationExtension
 {
     public static void ConfigureIdentityContext<T>(this IServiceCollection services) where T : ApplicationDbContext
     {
-        services.AddIdentity<ApplicationUser, IdentityRole<Guid>>()
-            .AddEntityFrameworkStores<ApplicationDbContext>()
+        services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
+            .AddRoles<IdentityRole<Guid>>()
+            .AddEntityFrameworkStores<T>()
+            .AddSignInManager()
             .AddDefaultTokenProviders();
     }
 }
