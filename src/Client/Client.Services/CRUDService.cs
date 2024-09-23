@@ -1,6 +1,7 @@
-﻿using DevInstance.DevCoreApp.Client.Net.Api;
-using DevInstance.DevCoreApp.Client.Services.Api;
+﻿using DevInstance.DevCoreApp.Client.Services.Api;
 using DevInstance.DevCoreApp.Shared.Model;
+using DevInstance.BlazorUtils.Http;
+using DevInstance.BlazorUtils.Services;
 
 namespace DevInstance.DevCoreApp.Client.Services;
 

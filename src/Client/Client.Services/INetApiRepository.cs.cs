@@ -1,4 +1,5 @@
 ﻿using DevInstance.DevCoreApp.Shared.Model;
+using DevInstance.BlazorUtils.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +8,8 @@ using System.Threading.Tasks;
 
 namespace DevInstance.DevCoreApp.Client.Net.Api
 {
-    public interface IWeatherForecastApi : ICRUDApi<WeatherForecastItem>
+    public interface INetApiRepository
     {
+        IApiContext<WeatherForecastItem> GetWeatherForecastApi();
     }
 }

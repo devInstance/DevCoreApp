@@ -1,4 +1,4 @@
-﻿namespace DevInstance.DevCoreApp.Client.Services;
+﻿namespace DevInstance.BlazorUtils.Services;
 
 public class ServiceActionResult<T>
 {

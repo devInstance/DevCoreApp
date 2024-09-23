@@ -1,10 +1,6 @@
-﻿using DevInstance.DevCoreApp.Client.Services;
-using DevInstance.DevCoreApp.Client.Services.Utils;
+﻿using DevInstance.BlazorUtils.Services;
 using DevInstance.LogScope;
 using Microsoft.AspNetCore.Components;
-using Microsoft.JSInterop;
-using System;
-using System.Threading.Tasks;
 
 namespace DevInstance.DevCoreApp.Client.UI.Components;
 
@@ -27,7 +23,7 @@ public class BasePage : ComponentBase, IServiceExecutionHost
 
     protected ServiceExecutionHandler BeginServiceCall()
     {
-        return new ServiceExecutionHandler(log, this, null);
+        return new ServiceExecutionHandler(log, this);
     }
 
     //TODO: deprecate

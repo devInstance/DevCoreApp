@@ -1,13 +1,12 @@
-﻿using DevInstance.DevCoreApp.Shared.Model;
-using System.Text;
+﻿using System.Text;
 
-namespace DevInstance.DevCoreApp.Client.Net.Utils;
+namespace DevInstance.BlazorUtils.Http;
 
 public class ApiUrlBuilder
 {
     StringBuilder result;
 
-    protected Dictionary<string, object> _filters = new Dictionary<string, object>();
+    protected Dictionary<string, object> _queryParameters = new Dictionary<string, object>();
     protected List<string> _path = new List<string>();
 
     private ApiUrlBuilder(string controller)
@@ -15,7 +14,7 @@ public class ApiUrlBuilder
         result = new StringBuilder(controller);
     }
 
-    public static ApiUrlBuilder Create(string controller) 
+    public static ApiUrlBuilder Create(string controller)
     {
         return new ApiUrlBuilder(controller);
     }
@@ -24,7 +23,7 @@ public class ApiUrlBuilder
     {
         if (value != null)
         {
-            _filters.Add(name, value);
+            _queryParameters.Add(name, value);
         }
         return this;
     }
@@ -38,35 +37,6 @@ public class ApiUrlBuilder
         return this;
     }
 
-    public ApiUrlBuilder List(int? top, int? page, ItemFilters? filter, ItemQueries? query, ItemFields? fields)
-    {
-        if (top.HasValue)
-        {
-            Query("top", top);
-        }
-        if (page.HasValue)
-        {
-            Query("page", page);
-        }
-        if (filter != null)
-        {
-            Query("filter", filter);
-        }
-        if (fields != null)
-        {
-            Query("fields", fields);
-        }
-        if (query != null)
-        {
-            foreach (var item in query)
-            {
-                Query(item.Key, item.Value);
-            }
-        }
-
-        return this;
-    }
-
     public override string ToString()
     {
         foreach (var item in _path)
@@ -75,7 +45,7 @@ public class ApiUrlBuilder
         }
 
         bool hasQuery = false;
-        foreach (var pair in _filters)
+        foreach (var pair in _queryParameters)
         {
             if (hasQuery)
             {

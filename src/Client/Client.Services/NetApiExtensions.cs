@@ -9,9 +9,6 @@ public static class NetApiExtensions
     {
         service.AddScoped<INetApiRepository, NetApiRepository>();
 
-        service.AddScoped<IUserProfileApi, UserProfileApi>();
-        service.AddScoped<IWeatherForecastApi, WeatherForecastApi>();
-
         return service;
     }
 }

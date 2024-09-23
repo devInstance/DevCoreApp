@@ -1,7 +1,7 @@
 ﻿using DevInstance.LogScope;
 using System.Net;
 
-namespace DevInstance.DevCoreApp.Client.Services;
+namespace DevInstance.BlazorUtils.Services;
 
 public delegate void ResultHandler<T>(T result);
 
