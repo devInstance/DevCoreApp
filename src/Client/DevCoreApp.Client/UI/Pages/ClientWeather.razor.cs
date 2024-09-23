@@ -7,13 +7,15 @@ namespace DevInstance.DevCoreApp.Client.UI.Pages;
 public partial class ClientWeather
 {
     [Inject]
-    IWeatherForecastService Service { get; set; }
+    private IWeatherForecastService Service { get; set; }
 
     private const int PageSize = 15;
 
     private ModelList<WeatherForecastItem> forecasts;
 
     private WeatherForecastItem selectedForecast;
+    private WeatherForecastFields selectedSortBy;
+    private bool selectedIsAsc = true;
 
     protected override async Task OnInitializedAsync()
     {
@@ -37,8 +39,21 @@ public partial class ClientWeather
         await ServiceCallAsync(() => Service.RemoveAsync(item), null, async (a) => { await RequestDataAsync(forecasts.Page); });
     }
 
-    private async Task SortBy(string sortBy)
+    private async Task SortBy(WeatherForecastFields sortBy)
     {
-        await ServiceCallAsync(() => Service.GetItemsAsync(PageSize, forecasts?.Page ?? 0, null, null, null), (a) => { forecasts = a; });
+        await ServiceCallAsync(
+            () => Service.GetItemsAsync(PageSize, forecasts?.Page ?? 0, sortBy, !selectedIsAsc, null), 
+            (a) => { 
+                forecasts = a;
+                if(selectedSortBy != sortBy)
+                {
+                    selectedIsAsc = true;
+                }
+                else
+                {
+                    selectedIsAsc = !selectedIsAsc;
+                }
+                selectedSortBy = sortBy;
+            });
     }
 }

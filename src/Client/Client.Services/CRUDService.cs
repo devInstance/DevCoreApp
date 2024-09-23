@@ -6,31 +6,23 @@ namespace DevInstance.DevCoreApp.Client.Services;
 
 public class CRUDService<T> : BaseService, ICRUDService<T> where T : ModelItem
 {
-    ICRUDApi<T> CRUDApi { get; set; }
+    IApiContext<T> Api { get; set; }
 
-    public CRUDService(ICRUDApi<T> cRUDApi) 
+    public CRUDService(IApiContext<T> api) 
     {
-        CRUDApi = cRUDApi;
+        Api = api;
     }
 
     public event DataUpdate<T> OnDataUpdate;
-
-    public async Task<ServiceActionResult<ModelList<T>?>> GetItemsAsync(int? top, int? page, ItemFilters? filter, ItemFields? fields, string? search)
-    {
-        return await HandleWebApiCallAsync(
-            async () =>
-            {
-                return await CRUDApi.GetItemsAsync(top, page, filter, new ItemQueries { { ItemQuery.Search, search } }, fields);
-            }
-        );
-    }
 
     public async Task<ServiceActionResult<T?>> GetAsync(string id)
     {
         return await HandleWebApiCallAsync(
             async () =>
             {
-                return await CRUDApi.GetAsync(id, new ItemFields { ItemField.All });
+                var api = Api.Get(id);
+
+                return await api.ExecuteAsync();
             }
         );
     }
@@ -45,7 +37,7 @@ public class CRUDService<T> : BaseService, ICRUDService<T> where T : ModelItem
         return await HandleWebApiCallAsync(
             async () =>
             {
-                var response = await CRUDApi.AddAsync(item);
+                var response = await Api.Post(item).ExecuteAsync();
                 if (response != null)
                 {
                     OnDataUpdate?.Invoke(response);
@@ -60,7 +52,7 @@ public class CRUDService<T> : BaseService, ICRUDService<T> where T : ModelItem
         return await HandleWebApiCallAsync(
             async () =>
             {
-                var response = await CRUDApi.UpdateAsync(item.Id, item);
+                var response = await Api.Put(item.Id, item).ExecuteAsync();
                 if (response != null)
                 {
                     OnDataUpdate?.Invoke(response);
@@ -75,7 +67,7 @@ public class CRUDService<T> : BaseService, ICRUDService<T> where T : ModelItem
         return await HandleWebApiCallAsync(
             async () =>
             {
-                var response = await CRUDApi.RemoveAsync(item.Id);
+                var response = await Api.Delete(item.Id).ExecuteAsync();
                 if (response != null)
                 {
                     OnDataUpdate?.Invoke(default(T));

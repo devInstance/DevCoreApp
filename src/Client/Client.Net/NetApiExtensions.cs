@@ -7,6 +7,8 @@ public static class NetApiExtensions
 {
     public static IServiceCollection AddNetApi(this IServiceCollection service)
     {
+        service.AddScoped<INetApiRepository, NetApiRepository>();
+
         service.AddScoped<IUserProfileApi, UserProfileApi>();
         service.AddScoped<IWeatherForecastApi, WeatherForecastApi>();
 

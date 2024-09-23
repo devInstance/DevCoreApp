@@ -1,4 +1,5 @@
 ﻿@page "/client/weather"
+@using DevInstance.DevCoreApp.Client.Services.Api
 @rendermode InteractiveWebAssembly
 @inherits BasePage
 
@@ -31,18 +32,66 @@
                     <th scope="col"></th>
                     <th scope="col">
                         <span>@loc["Date"]</span>
-                        <button class="btn btn-link" @onclick="@(() => SortBy("Date"))"><i class="bi bi-caret-down-fill"></i></button>
+                        <button class="btn btn-link" @onclick="@(() => SortBy(WeatherForecastFields.Date))">
+                            @if (selectedSortBy == WeatherForecastFields.Date)
+                            {
+                                if (selectedIsAsc)
+                                {
+                                    <i class="bi bi-caret-down-fill"></i>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-caret-up-fill"></i>
+                                }
+                            }
+                            else
+                            {
+                                <i class="bi bi-caret-down"></i>
+                            }
+                        </button>
                     </th>
                     <th scope="col">
                         <span>@loc["Temp. (C)"]</span>
-                        <button class="btn btn-link" @onclick="@(() => SortBy("Temperature"))"><i class="bi bi-caret-down"></i></button>
+                        <button class="btn btn-link" @onclick="@(() => SortBy(WeatherForecastFields.Temperature))">
+                            @if (selectedSortBy == WeatherForecastFields.Temperature)
+                            {
+                                if (selectedIsAsc)
+                                {
+                                    <i class="bi bi-caret-down-fill"></i>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-caret-up-fill"></i>
+                                }
+                            }
+                            else
+                            {
+                                <i class="bi bi-caret-down"></i>
+                            }
+                        </button>
                     </th>
                     <th scope="col">
                         <span>@loc["Temp. (F)"]</span>
                     </th>
                     <th scope="col">
                         <span>@loc["Summary"]</span>
-                        <button class="btn btn-link" @onclick="@(() => SortBy("Summary"))"><i class="bi bi-caret-down"></i></button>
+                        <button class="btn btn-link" @onclick="@(() => SortBy(WeatherForecastFields.Summary))">
+                            @if (selectedSortBy == WeatherForecastFields.Summary)
+                            {
+                                if (selectedIsAsc)
+                                {
+                                    <i class="bi bi-caret-down-fill"></i>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-caret-up-fill"></i>
+                                }
+                            }
+                            else
+                            {
+                                <i class="bi bi-caret-down"></i>
+                            }
+                        </button>
                     </th>
                 </tr>
             </thead>

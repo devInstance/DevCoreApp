@@ -60,12 +60,14 @@ namespace DevInstance.DevCoreApp
 
             AddDatabase(builder.Services, builder.Configuration);
 
+#if DEBUG
             builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+#endif
 
             builder.Services.AddAppIdentity();
 
             builder.Services.AddServerAppServices();
-            builder.Services.AddControllers();/*.AddNewtonsoftJson();*/
+            builder.Services.AddControllers();
 
             builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
             builder.Services.AddLocalization();
@@ -80,6 +82,7 @@ namespace DevInstance.DevCoreApp
             {
                 app.UseWebAssemblyDebugging();
                 app.UseMigrationsEndPoint();
+                app.UseDeveloperExceptionPage();
             }
             else
             {

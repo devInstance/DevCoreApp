@@ -8,7 +8,7 @@ public interface ICRUDService<T> where T : ModelItem
 {
     event DataUpdate<T> OnDataUpdate;
 
-    Task<ServiceActionResult<ModelList<T>?>> GetItemsAsync(int? top, int? page, ItemFilters? filters, ItemFields? fields, string? search);
+    //Task<ServiceActionResult<ModelList<T>?>> GetItemsAsync(int? top, int? page, ItemFilters? filters, ItemFields? fields, string? search);
 
     Task<ServiceActionResult<T?>> GetAsync(string id);
     
