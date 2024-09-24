@@ -4,20 +4,20 @@
     <nav aria-label="Pages">
         <ul class="pagination">
             <li class="page-item">
-                <a class="page-link" href="#" aria-label="Previous" @onclick:preventDefault @onclick="@(() => ChangePage(SelectedPage - 1))">
+                <button class="page-link" aria-label="Previous" @onclick="@(() => ChangePage(SelectedPage - 1))">
                     <span aria-hidden="true">&laquo;</span>
-                </a>
+                </button>
             </li>
             @foreach (var p in PageRange)
             {
                 <li class="@(p == SelectedPage ? "page-item active" : "page-item")">
-                    <a class="page-link" href="#" @onclick:preventDefault @onclick="@(() => ChangePage(p))">@((p + 1).ToString())</a>
+                    <button class="page-link" @onclick="@(() => ChangePage(p))">@((p + 1).ToString())</button>
                 </li>
             }
             <li class="page-item">
-                <a class="page-link" href="#" aria-label="Next" @onclick:preventDefault @onclick="@(() => ChangePage(SelectedPage + 1))">
+                <button class="page-link" aria-label="Next" @onclick="@(() => ChangePage(SelectedPage + 1))">
                     <span aria-hidden="true">&raquo;</span>
-                </a>
+                </button>
             </li>
         </ul>
     </nav>
