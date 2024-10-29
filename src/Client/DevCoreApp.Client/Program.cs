@@ -16,10 +16,6 @@ namespace DevInstance.DevCoreApp.Client
         {
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
-            builder.Services.AddAuthorizationCore();
-            builder.Services.AddCascadingAuthenticationState();
-            builder.Services.AddSingleton<AuthenticationStateProvider, PersistentAuthenticationStateProvider>();
-
             builder.Services.AddLocalization();
 
 #if DEBUG
@@ -31,6 +27,8 @@ namespace DevInstance.DevCoreApp.Client
 #endif
 
             builder.Services.AddSingleton<ITimeProvider, Shared.Utils.TimeProvider>();
+
+            builder.Services.AddAuthorizationCore();
 
             ClientRegistry.Register(builder.Services);
             await builder.Build().RunAsync();
@@ -44,7 +42,14 @@ namespace DevInstance.DevCoreApp.Client
     {
         public static void Register(IServiceCollection services)
         {
+            services.AddCascadingAuthenticationState();
+            services.AddScoped<AuthenticationStateProvider, PersistentAuthenticationStateProvider>();
+
+            services.AddConsoleScopeLogging(LogScope.LogLevel.TRACE,
+                new DefaultFormattersOptions { ShowTimestamp = true, ShowThreadNumber = true, ShowId = true });
+
             services.AddHttpClient("DevInstance.DevCoreApp.ServerAPI"/*, client => client.BaseAddress = new Uri(host)*/);
+
             // Supply HttpClient instances that include access tokens when making requests to the server project
             services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("DevInstance.DevCoreApp.ServerAPI"));
 

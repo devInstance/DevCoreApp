@@ -1,6 +1,6 @@
 ﻿@page "/client/weather"
 @using DevInstance.DevCoreApp.Client.Services.Api
-@rendermode InteractiveWebAssembly
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender:false))
 @inherits BasePage
 
 @inject IStringLocalizer<ClientWeather> loc;

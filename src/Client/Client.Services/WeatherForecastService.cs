@@ -3,6 +3,7 @@ using DevInstance.DevCoreApp.Client.Net.Api;
 using DevInstance.DevCoreApp.Client.Services.Api;
 using DevInstance.DevCoreApp.Shared.Model;
 using DevInstance.BlazorUtils.Services;
+using DevInstance.LogScope;
 
 namespace DevInstance.DevCoreApp.Client.Services;
 
@@ -10,9 +11,10 @@ public class WeatherForecastService : CRUDService<WeatherForecastItem>, IWeather
 {
     private INetApiRepository Api { get; }
 
-    public WeatherForecastService(INetApiRepository api) 
+    public WeatherForecastService(INetApiRepository api, IScopeManager lp) 
         : base(api.GetWeatherForecastApi())
     {
+        Log = lp.CreateLogger(this);
         Api = api;
     }
 

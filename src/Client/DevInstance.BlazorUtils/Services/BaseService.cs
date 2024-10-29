@@ -13,41 +13,46 @@ public class BaseService
 
     protected async Task<ServiceActionResult<T>> HandleWebApiCallAsync<T>(WebApiHandlerAsync<T> handler)
     {
-        try
+        using (var l = Log.TraceScope("BaseService").TraceScope())
         {
-            return new ServiceActionResult<T>
+            try
             {
-                Result = await handler(),
-                Success = true,
-                IsAuthorized = true,
-            };
-        }
-        catch (HttpRequestException ex)
-        {
-            return new ServiceActionResult<T>
-            {
-                Success = false,
-                Errors = new ServiceActionError[]
+                return new ServiceActionResult<T>
                 {
+                    Result = await handler(),
+                    Success = true,
+                    IsAuthorized = true,
+                };
+            }
+            catch (HttpRequestException ex)
+            {
+                l.E(ex);
+                return new ServiceActionResult<T>
+                {
+                    Success = false,
+                    Errors = new ServiceActionError[]
+                    {
                     new ServiceActionError
                     {
                         //TODO: figure out how to deliver field name for the conflict
                         Message = ex.Message
                     }
-                },
-                IsAuthorized = !(ex.StatusCode == HttpStatusCode.Unauthorized),
-                Result = default(T)!
-            };
+                    },
+                    IsAuthorized = !(ex.StatusCode == HttpStatusCode.Unauthorized),
+                    Result = default(T)!
+                };
 
-        }
-        catch (Exception ex)
-        {
-            return new ServiceActionResult<T>
+            }
+            catch (Exception ex)
             {
-                Success = false,
-                Errors = new ServiceActionError[] { new ServiceActionError { Message = ex.Message } },
-                Result = default(T)!
-            };
+                l.E(ex);
+                return new ServiceActionResult<T>
+                {
+                    Success = false,
+                    Errors = new ServiceActionError[] { new ServiceActionError { Message = ex.Message } },
+                    Result = default(T)!
+                };
+            }
         }
     }
 }

@@ -6,5 +6,6 @@ public interface IServiceExecutionHost
     bool IsError { get; set; }
     bool InProgress { get; set; }
 
+    void ShowLogin();
     void StateHasChanged();
 }

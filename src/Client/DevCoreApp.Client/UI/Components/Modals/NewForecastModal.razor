@@ -1,6 +1,6 @@
 ﻿@inherits BasePage
-
 @inject IStringLocalizer<NewForecastModal> loc
+
 
 <div class="modal fade" id="addForecastModal" tabindex="-1" aria-labelledby="addForecastModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -10,6 +10,7 @@
                 <button type="button" class="btn-close" disabled="@InProgress" aria-label="@loc["Close"]" @onclick="OnCloseAsync"></button>
             </div>
             <div class="modal-body">
+                <ErrorMessageBanner Message="@ErrorMessage" IsError="IsError"></ErrorMessageBanner>
                 <div class="mb-3">
                     <input type="date" class="form-control" disabled="@InProgress" placeholder="@loc["Date"]" aria-label="@loc["Date"]" @bind="Date" />
                 </div>

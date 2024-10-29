@@ -55,6 +55,7 @@ public class ServiceExecutionHandler
         {
             if (enableProgress)
             {
+                //TODO: move progress to ExecuteAsync
                 basePage.InProgress = true;
                 basePage.StateHasChanged();
             }
@@ -76,7 +77,8 @@ public class ServiceExecutionHandler
                 res = new ServiceActionResult<T>
                 {
                     Errors = new ServiceActionError[] { new ServiceActionError { Message = ex.Message } },
-                    Success = false
+                    Success = false,
+                    IsAuthorized = true
                 };
             }
 
@@ -97,7 +99,7 @@ public class ServiceExecutionHandler
                 var errorMessage = "";
                 foreach (var errm in res.Errors)
                 {
-                    errorMessage += errm;
+                    errorMessage += errm.Message;
                 }
                 l.W(errorMessage);
                 basePage.ErrorMessage = errorMessage;
@@ -105,9 +107,9 @@ public class ServiceExecutionHandler
                 //If session has expired we redirect to the login page
                 if (!res.IsAuthorized)
                 {
-                    //TODO: Redirect to login page
                     basePage.InProgress = false;
                     basePage.StateHasChanged();
+                    basePage.ShowLogin();
                     return false;
                 }
                 else if (error != null)

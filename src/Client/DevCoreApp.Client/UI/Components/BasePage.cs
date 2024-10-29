@@ -9,6 +9,8 @@ public class BasePage : ComponentBase, IServiceExecutionHost
     [Inject]
     protected IScopeManager ScopeManager { get; set; }
 
+    [Inject]
+    NavigationManager NavigationManager { get; set; }
 
     private IScopeLog log;
 
@@ -26,10 +28,9 @@ public class BasePage : ComponentBase, IServiceExecutionHost
         return new ServiceExecutionHandler(log, this);
     }
 
-    //TODO: deprecate
-    public async Task ShowLoginModalAsync()
+    public void ShowLogin()
     {
-        //TODO: redirect to login page
+        NavigationManager.NavigateTo($"account/login?returnUrl={Uri.EscapeDataString(NavigationManager.Uri)}");
     }
 
     protected async Task ServiceCallAsync<T>(PerformAsyncCallHandler<T> handler, Action<T> success = null, Func<T, Task> sucessAsync = null, Action<ServiceActionError[]> error = null, Action before = null, bool enableProgress = true)

@@ -67,11 +67,23 @@ internal class HttpApiContext<T> : IApiContext<T>
             case ApiMethod.Get:
                 return await Http.GetFromJsonAsync<T>(url);
             case ApiMethod.Post:
-                return await Http.PostAsJsonAsync(url, payload).Result.Content.ReadFromJsonAsync<T>();
+            {
+                var result = await Http.PostAsJsonAsync(url, payload);
+                result.EnsureSuccessStatusCode();
+                return await result.Content.ReadFromJsonAsync<T>();
+            }
             case ApiMethod.Put:
-                return await Http.PutAsJsonAsync(url, payload).Result.Content.ReadFromJsonAsync<T>();
+            {
+                var result = await Http.PutAsJsonAsync(url, payload);
+                result.EnsureSuccessStatusCode();
+                return await result.Content.ReadFromJsonAsync<T>();
+            }
             case ApiMethod.Delete:
-                return await Http.DeleteAsync(url).Result.Content.ReadFromJsonAsync<T>();
+            {
+                var result = await Http.DeleteAsync(url);
+                result.EnsureSuccessStatusCode();
+                return await result.Content.ReadFromJsonAsync<T>();
+            }
             default:
                 return default;
         }

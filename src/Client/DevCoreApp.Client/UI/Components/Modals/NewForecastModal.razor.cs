@@ -35,6 +35,7 @@ public partial class NewForecastModal
         Temperature = 0;
         Date = DateTime.Now;
         Summary = "";
+        ErrorMessage = "";
     }
 
     protected override void OnInitialized()
