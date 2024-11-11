@@ -21,9 +21,6 @@ public partial class ClientWeather
     private ModelList<WeatherForecastItem> forecasts;
 
     private WeatherForecastItem selectedForecast;
-    private WeatherForecastFields selectedSortBy = WeatherForecastFields.Date;
-    private bool selectedIsAsc = true;
-
    
     protected override async Task OnInitializedAsync()
     {
@@ -53,22 +50,12 @@ public partial class ClientWeather
         await ServiceCallAsync(() => Service.RemoveAsync(item), null, async (a) => { await RequestDataAsync(forecasts.Page); });
     }
 
-    private async Task SortBy(WeatherForecastFields sortBy)
+    private async Task SortBy(WeatherForecastFields sortBy, bool isAsc)
     {
-        if (selectedSortBy != sortBy)
-        {
-            selectedIsAsc = true;
-        }
-        else
-        {
-            selectedIsAsc = !selectedIsAsc;
-        }
-
         await ServiceCallAsync(
-            () => Service.GetItemsAsync(PageSize, forecasts?.Page ?? 0, sortBy, selectedIsAsc, null), 
+            () => Service.GetItemsAsync(PageSize, forecasts?.Page ?? 0, sortBy, isAsc, null), 
             (a) => { 
                 forecasts = a;
-                selectedSortBy = sortBy;
             });
     }
 }

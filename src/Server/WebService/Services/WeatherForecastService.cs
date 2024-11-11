@@ -4,8 +4,6 @@ using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using DevInstance.DevCoreApp.Server.Exceptions;
 using DevInstance.DevCoreApp.Server.Services;
 using DevInstance.DevCoreApp.Server.WebService.Authentication;
-
-//using DevInstance.DevCoreApp.Server.WebService.Authentication;
 using DevInstance.DevCoreApp.Server.WebService.Tools;
 using DevInstance.DevCoreApp.Shared.Model;
 using DevInstance.DevCoreApp.Shared.Utils;
@@ -24,20 +22,22 @@ public class WeatherForecastService : BaseService
         log = logManager.CreateLogger(this);
     }
 
-    public ModelList<WeatherForecastItem> GetItems(int? top, int? page, int? filter, int? fields, string search)
+    public ModelList<WeatherForecastItem> GetItems(int? top, int? page, string? sortBy, bool? isAsc, int? filter, int? fields, string? search)
     {
         using (log.TraceScope())
         {
             var coreQuery = Repository.GetWeatherForecastQuery(AuthorizationContext.CurrentProfile);
+            var result = CreateList<WeatherForecastItem>();
 
-            coreQuery = ApplyFilters(coreQuery, filter, search);
+            coreQuery = ApplyFilters(result, coreQuery, filter, search);
 
             var pagedQuery = coreQuery.Clone();
             pagedQuery = ApplyPages(pagedQuery, top, page);
+            pagedQuery = ApplySorting(result, pagedQuery, sortBy, isAsc);
 
             var list = pagedQuery.Select().ToView();
 
-            return CreateListPage(coreQuery.Select().Count(), list.ToArray(), top, page);
+            return ApplyItems(result, coreQuery.Select().Count(), list.ToArray(), top, page);
         }
     }
 

@@ -12,6 +12,12 @@ public class CoreWeatherForecastQuery : CoreBaseQuery, IWeatherForecastQuery
 {
     private IQueryable<WeatherForecast> currentQuery;
 
+    private string sortedBy;
+    public string SortedBy => sortedBy;
+
+    private bool isAsc;
+    public bool IsAsc => isAsc;
+
     private CoreWeatherForecastQuery(IQueryable<WeatherForecast> q, IScopeManager logManager,
                          ITimeProvider timeProvider,
                          ApplicationDbContext dB,
@@ -24,7 +30,7 @@ public class CoreWeatherForecastQuery : CoreBaseQuery, IWeatherForecastQuery
     public CoreWeatherForecastQuery(IScopeManager logManager,
                                      ITimeProvider timeProvider,
                                      ApplicationDbContext dB,
-                                     UserProfile currentProfile) 
+                                     UserProfile currentProfile)
         : this(from ts in dB.WeatherForecasts
                orderby ts.Date descending
                select ts, logManager, timeProvider, dB, currentProfile)
@@ -102,6 +108,45 @@ public class CoreWeatherForecastQuery : CoreBaseQuery, IWeatherForecastQuery
     public IWeatherForecastQuery Take(int value)
     {
         currentQuery = currentQuery.Take(value);
+        return this;
+    }
+
+    public IWeatherForecastQuery SortBy(string column, bool isAsc)
+    {
+        Func<WeatherForecast, Object> orderByFunc = null;
+
+        if (String.Compare(column, "Temperature", true) == 0)
+        {
+            orderByFunc = item => item.Temperature;
+            sortedBy = "Temperature";
+        }
+        else if (String.Compare(column, "Date", true) == 0)
+        {
+            orderByFunc = item => item.Date;
+            sortedBy = "Date";
+        }
+        else if (String.Compare(column, "Summary", true) == 0)
+        {
+            orderByFunc = item => item.Summary;
+            sortedBy = "Summary";
+        }
+
+        if (orderByFunc == null)
+        {
+            throw new ArgumentException("Invalid column name");
+        }
+
+        if (isAsc)
+        {
+            currentQuery = currentQuery.OrderBy(orderByFunc).AsQueryable();
+            this.isAsc = isAsc;
+        }
+        else
+        {
+            currentQuery = currentQuery.OrderByDescending(orderByFunc).AsQueryable();
+            this.isAsc = isAsc;
+        }
+
         return this;
     }
 }

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace DevInstance.DevCoreApp.Shared.Model;
+﻿namespace DevInstance.DevCoreApp.Shared.Model;
 
 public class ModelList<T>
 {
@@ -22,6 +18,27 @@ public class ModelList<T>
     /// Count of item on in selected time range
     /// </summary>
     public int Count { get; set; }
+    /// <summary>
+    /// Column name to sort by
+    /// </summary>
+    public string SortBy { get; set; }
+    /// <summary>
+    /// If true - sort in ascending order
+    /// </summary>
+    public bool IsAsc { get; set; }
+    /// <summary>
+    /// Search string
+    /// </summary>
+    public string Search { get; set; }
+    /// <summary>
+    /// Filter value
+    /// </summary>
+    public int Filter { get; set; }
+    /// <summary>
+    /// Fields to include in response
+    /// </summary>
+    public int Fields { get; set; }
+
     /// <summary>
     /// Array of items
     /// </summary>

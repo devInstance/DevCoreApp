@@ -32,10 +32,10 @@
                     <th scope="col"></th>
                     <th scope="col">
                         <span>@loc["Date"]</span>
-                        <button class="btn btn-link" @onclick="@(() => SortBy(WeatherForecastFields.Date))">
-                            @if (selectedSortBy == WeatherForecastFields.Date)
+                        <button class="btn btn-link" @onclick="@(() => SortBy(WeatherForecastFields.Date, !forecasts?.IsAsc ?? true))">
+                            @if (forecasts?.SortBy.FromFieldName() == WeatherForecastFields.Date)
                             {
-                                if (selectedIsAsc)
+                                if (forecasts.IsAsc)
                                 {
                                     <i class="bi bi-caret-down-fill"></i>
                                 }
@@ -52,10 +52,10 @@
                     </th>
                     <th scope="col">
                         <span>@loc["Temp. (C)"]</span>
-                        <button class="btn btn-link" @onclick="@(() => SortBy(WeatherForecastFields.Temperature))">
-                            @if (selectedSortBy == WeatherForecastFields.Temperature)
+                        <button class="btn btn-link" @onclick="@(() => SortBy(WeatherForecastFields.Temperature, !forecasts?.IsAsc ?? true))">
+                            @if (forecasts?.SortBy.FromFieldName() == WeatherForecastFields.Temperature)
                             {
-                                if (selectedIsAsc)
+                                if (forecasts.IsAsc)
                                 {
                                     <i class="bi bi-caret-down-fill"></i>
                                 }
@@ -75,10 +75,10 @@
                     </th>
                     <th scope="col">
                         <span>@loc["Summary"]</span>
-                        <button class="btn btn-link" @onclick="@(() => SortBy(WeatherForecastFields.Summary))">
-                            @if (selectedSortBy == WeatherForecastFields.Summary)
+                        <button class="btn btn-link" @onclick="@(() => SortBy(WeatherForecastFields.Summary, !forecasts?.IsAsc ?? true))">
+                            @if (forecasts?.SortBy.FromFieldName() == WeatherForecastFields.Summary)
                             {
-                                if (selectedIsAsc)
+                                if (forecasts.IsAsc)
                                 {
                                     <i class="bi bi-caret-down-fill"></i>
                                 }

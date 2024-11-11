@@ -29,16 +29,28 @@ public abstract class BaseService
         AuthorizationContext = authorizationContext;
     }
 
-    protected static ModelList<T> CreateListPage<T>(int totalItemsCount, T[] items, int? top, int? page)
+    protected static ModelList<T> CreateList<T>()
+    {
+        return new ModelList<T>()
+        {
+            TotalCount = 0,
+            Count = 0,
+            PagesCount = 0,
+            Page = 0,
+            Items = new T[0]
+        };
+    }
+
+    protected static ModelList<T> ApplyItems<T>(ModelList<T> list, int totalItemsCount, T[] items, int? top, int? page)
     {
         var pageIndex = 0;
         var totalPageCount = 1;
-        
+
         if (top.HasValue && top.Value > 0)
         {
             totalPageCount = (int)Math.Ceiling((double)totalItemsCount / (double)top.Value);
         }
-        
+
         if (page.HasValue && page.Value >= 0)
         {
             pageIndex = page.Value;
@@ -48,14 +60,13 @@ public abstract class BaseService
             }
         }
 
-        return new ModelList<T>()
-        {
-            TotalCount = totalItemsCount,
-            Count = items.Length,
-            PagesCount = totalPageCount,
-            Page = pageIndex,
-            Items = items
-        };
+        list.TotalCount = totalItemsCount;
+        list.Count = items.Length;
+        list.PagesCount = totalPageCount;
+        list.Page = pageIndex;
+        list.Items = items;
+
+        return list;
     }
 
     protected static T ApplyPages<T>(T q, int? top, int? page) where T : IQPageable<T>
@@ -72,7 +83,7 @@ public abstract class BaseService
         return q;
     }
 
-    protected static T ApplyFilters<T>(T coreQuery, int? filter, string search) where T : IQSearchable<T>
+    protected static T ApplyFilters<T, M>(ModelList<M> list, T q, int? filter, string? search) where T : IQSearchable<T>
     {
         if (filter != null)
         {
@@ -83,10 +94,30 @@ public abstract class BaseService
 
         if (!String.IsNullOrEmpty(search))
         {
-            coreQuery = coreQuery.Search(search);
+            q = q.Search(search);
+            list.Search = search;
         }
 
-        return coreQuery;
+        return q;
+    }
+
+    protected static T ApplySorting<T, M>(ModelList<M> list, T q, string? sortBy, bool? isAsc) where T : IQSortable<T>
+    {
+        if (!string.IsNullOrEmpty(sortBy))
+        {
+            try
+            {
+                q = q.SortBy(sortBy, isAsc ?? true);
+                list.SortBy = sortBy;
+                list.IsAsc = isAsc ?? true;
+            }
+            catch (ArgumentException)
+            {
+                // ignore
+            }
+        }
+
+        return q;
     }
 
 }

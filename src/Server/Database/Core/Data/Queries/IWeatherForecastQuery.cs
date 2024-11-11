@@ -6,7 +6,8 @@ namespace DevInstance.DevCoreApp.Server.Database.Core.Data.Queries;
 
 public interface IWeatherForecastQuery : IModelQuery<WeatherForecast, IWeatherForecastQuery>, 
                                         IQSearchable<IWeatherForecastQuery>,
-                                        IQPageable<IWeatherForecastQuery>
+                                        IQPageable<IWeatherForecastQuery>,
+                                        IQSortable<IWeatherForecastQuery>
 {
     IQueryable<WeatherForecast> Select();
 }

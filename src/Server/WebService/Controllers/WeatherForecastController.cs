@@ -37,13 +37,14 @@ public class WeatherForecastController : BaseController
     /// <returns></returns>
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public ActionResult<ModelList<WeatherForecastItem>> GetItems(int? top, int? page, int? filter, int? fields, string search = null)
+    public ActionResult<ModelList<WeatherForecastItem>> GetItems(int? top, int? page, string? sortBy, bool? asc, int? filter, int? fields, string? search)
     {
         return HandleWebRequest<ModelList<WeatherForecastItem>>(() =>
         {
-            return Ok(Service.GetItems(top, page, filter, fields, search));
+            return Ok(Service.GetItems(top, page, sortBy, asc, filter, fields, search));
         });
     }
+
     /// <summary>
     /// Return single item by id
     /// </summary>

@@ -2,13 +2,12 @@
 using System;
 using System.Linq;
 
-namespace DevInstance.DevCoreApp.Server.Database.Core.Data.Queries
-{
-    public interface IUserProfilesQuery : IModelQuery<UserProfile, IUserProfilesQuery>, IQSearchable<IUserProfilesQuery>
-    {
-        IQueryable<UserProfile> Select();
+namespace DevInstance.DevCoreApp.Server.Database.Core.Data.Queries;
 
-        IUserProfilesQuery ByName(string name);
-        IUserProfilesQuery ByApplicationUserId(Guid id);
-    }
+public interface IUserProfilesQuery : IModelQuery<UserProfile, IUserProfilesQuery>, IQSearchable<IUserProfilesQuery>
+{
+    IQueryable<UserProfile> Select();
+
+    IUserProfilesQuery ByName(string name);
+    IUserProfilesQuery ByApplicationUserId(Guid id);
 }
