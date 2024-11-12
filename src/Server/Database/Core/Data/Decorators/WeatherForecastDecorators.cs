@@ -1,7 +1,9 @@
 ﻿using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using DevInstance.DevCoreApp.Shared.Model;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace DevInstance.DevCoreApp.Server.Database.Core.Data.Decorators;
 
@@ -24,9 +26,9 @@ public static class WeatherForecastDecorators
         };
     }
 
-    public static List<WeatherForecastItem> ToView(this IQueryable<WeatherForecast> query)
+    public static async Task<List<WeatherForecastItem>> ToViewAsync(this IQueryable<WeatherForecast> query)
     {
-        return (from inv in query select inv.ToView()).ToList();
+        return await (from inv in query select inv.ToView()).ToListAsync();
     }
 
     public static WeatherForecast ToRecord(this WeatherForecast record, WeatherForecastItem item)

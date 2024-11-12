@@ -33,12 +33,12 @@ namespace DevInstance.DevCoreApp.Server.Controllers
         [HttpPut]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public ActionResult<UserProfileItem> UpdateProfile([FromBody] UserProfileItem newProfile)
+        public async Task<ActionResult<UserProfileItem>> UpdateProfileAsync([FromBody] UserProfileItem newProfile)
         {
-            return HandleWebRequest((WebHandler<UserProfileItem>)(() =>
+            return await HandleWebRequestAsync<UserProfileItem>(async () =>
             {
-                return Ok(Service.Update(newProfile));
-            }));
+                return Ok(await Service.UpdateAsync(newProfile));
+            });
         }
     }
 }

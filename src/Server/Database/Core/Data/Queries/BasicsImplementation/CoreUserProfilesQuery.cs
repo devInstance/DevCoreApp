@@ -5,6 +5,7 @@ using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using DevInstance.DevCoreApp.Shared.Utils;
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace NoCrast.Server.Database.Postgres.Data.Queries
 {
@@ -31,10 +32,10 @@ namespace NoCrast.Server.Database.Postgres.Data.Queries
 
         }
 
-        public void Add(UserProfile record)
+        public async Task AddAsync(UserProfile record)
         {
             DB.UserProfiles.Add(record);
-            DB.SaveChanges();
+            await DB.SaveChangesAsync();
         }
 
         public IUserProfilesQuery ByName(string name)
@@ -73,10 +74,10 @@ namespace NoCrast.Server.Database.Postgres.Data.Queries
             };
         }
 
-        public void Remove(UserProfile record)
+        public async Task RemoveAsync(UserProfile record)
         {
             DB.UserProfiles.Remove(record);
-            DB.SaveChanges();
+            await DB.SaveChangesAsync();
         }
 
         public IQueryable<UserProfile> Select()
@@ -84,13 +85,13 @@ namespace NoCrast.Server.Database.Postgres.Data.Queries
             return (from pr in currentQuery select pr);
         }
 
-        public void Update(UserProfile record)
+        public async Task UpdateAsync(UserProfile record)
         {
             DateTime now = TimeProvider.CurrentTime;
 
             record.UpdateDate = now;
             DB.UserProfiles.Update(record);
-            DB.SaveChanges();
+            await DB.SaveChangesAsync();
         }
 
         public IUserProfilesQuery ByApplicationUserId(Guid id)

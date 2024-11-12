@@ -5,6 +5,7 @@ using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using DevInstance.DevCoreApp.Shared.Utils;
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace NoCrast.Server.Database.Postgres.Data.Queries;
 
@@ -38,10 +39,10 @@ public class CoreWeatherForecastQuery : CoreBaseQuery, IWeatherForecastQuery
 
     }
 
-    public void Add(WeatherForecast record)
+    public async Task AddAsync(WeatherForecast record)
     {
         DB.WeatherForecasts.Add(record);
-        DB.SaveChanges();
+        await DB.SaveChangesAsync();
     }
 
     public IWeatherForecastQuery ByPublicId(string id)
@@ -73,10 +74,10 @@ public class CoreWeatherForecastQuery : CoreBaseQuery, IWeatherForecastQuery
         };
     }
 
-    public void Remove(WeatherForecast record)
+    public async Task RemoveAsync(WeatherForecast record)
     {
         DB.WeatherForecasts.Remove(record);
-        DB.SaveChanges();
+        await DB.SaveChangesAsync();
     }
 
     public IQueryable<WeatherForecast> Select()
@@ -84,14 +85,14 @@ public class CoreWeatherForecastQuery : CoreBaseQuery, IWeatherForecastQuery
         return (from pr in currentQuery select pr);
     }
 
-    public void Update(WeatherForecast record)
+    public async Task UpdateAsync(WeatherForecast record)
     {
         DateTime now = TimeProvider.CurrentTime;
 
         record.UpdateDate = now;
         record.UpdatedBy = CurrentProfile;
         DB.WeatherForecasts.Update(record);
-        DB.SaveChanges();
+        await DB.SaveChangesAsync();
     }
 
     public IWeatherForecastQuery Search(string search)
@@ -113,38 +114,58 @@ public class CoreWeatherForecastQuery : CoreBaseQuery, IWeatherForecastQuery
 
     public IWeatherForecastQuery SortBy(string column, bool isAsc)
     {
-        Func<WeatherForecast, Object> orderByFunc = null;
-
+        this.isAsc = isAsc;
         if (String.Compare(column, "Temperature", true) == 0)
         {
-            orderByFunc = item => item.Temperature;
+            if (isAsc)
+            {
+                currentQuery = (from ts in currentQuery
+                                orderby ts.Temperature
+                                select ts);
+            }
+            else
+            {
+                currentQuery = (from ts in currentQuery
+                                orderby ts.Temperature descending
+                                select ts);
+            }
             sortedBy = "Temperature";
         }
         else if (String.Compare(column, "Date", true) == 0)
         {
-            orderByFunc = item => item.Date;
+            if (isAsc)
+            {
+                currentQuery = (from ts in currentQuery
+                                orderby ts.Date
+                                select ts);
+            }
+            else
+            {
+                currentQuery = (from ts in currentQuery
+                                orderby ts.Date descending
+                                select ts);
+            }
             sortedBy = "Date";
         }
         else if (String.Compare(column, "Summary", true) == 0)
         {
-            orderByFunc = item => item.Summary;
+            if (isAsc)
+            {
+                currentQuery = (from ts in currentQuery
+                                orderby ts.Summary
+                                select ts);
+            }
+            else
+            {
+                currentQuery = (from ts in currentQuery
+                                orderby ts.Summary descending
+                                select ts);
+            }
             sortedBy = "Summary";
-        }
-
-        if (orderByFunc == null)
-        {
-            throw new ArgumentException("Invalid column name");
-        }
-
-        if (isAsc)
-        {
-            currentQuery = currentQuery.OrderBy(orderByFunc).AsQueryable();
-            this.isAsc = isAsc;
         }
         else
         {
-            currentQuery = currentQuery.OrderByDescending(orderByFunc).AsQueryable();
-            this.isAsc = isAsc;
+            throw new ArgumentException("Invalid column name");
         }
 
         return this;

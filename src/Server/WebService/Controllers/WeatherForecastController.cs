@@ -37,11 +37,11 @@ public class WeatherForecastController : BaseController
     /// <returns></returns>
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public ActionResult<ModelList<WeatherForecastItem>> GetItems(int? top, int? page, string? sortBy, bool? asc, int? filter, int? fields, string? search)
+    public async Task<ActionResult<ModelList<WeatherForecastItem>>> GetItemsAsync(int? top, int? page, string? sortBy, bool? asc, int? filter, int? fields, string? search)
     {
-        return HandleWebRequest<ModelList<WeatherForecastItem>>(() =>
+        return await HandleWebRequestAsync<ModelList<WeatherForecastItem>>(async () =>
         {
-            return Ok(Service.GetItems(top, page, sortBy, asc, filter, fields, search));
+            return Ok(await Service.GetItemsAsync(top, page, sortBy, asc, filter, fields, search));
         });
     }
 
@@ -54,12 +54,12 @@ public class WeatherForecastController : BaseController
     [Route("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public ActionResult<WeatherForecastItem> GetById(string id)
+    public async Task<ActionResult<WeatherForecastItem>> GetByIdAsync(string id)
     {
-        return HandleWebRequest((WebHandler<WeatherForecastItem>)(() =>
+        return await HandleWebRequestAsync<WeatherForecastItem>(async () =>
         {
-            return Ok(Service.GetById(id));
-        }));
+            return Ok(await Service.GetByIdAsync(id));
+        });
     }
     /// <summary>
     /// Adds new record the database
@@ -70,11 +70,11 @@ public class WeatherForecastController : BaseController
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public ActionResult<WeatherForecastItem> Add(WeatherForecastItem item)
+    public async Task<ActionResult<WeatherForecastItem>> AddAsync(WeatherForecastItem item)
     {
-        return HandleWebRequest<WeatherForecastItem>(() =>
+        return await HandleWebRequestAsync<WeatherForecastItem>(async () =>
         {
-            return Ok(Service.Add(item));
+            return Ok(await Service.AddAsync(item));
         });
     }
     /// <summary>
@@ -89,11 +89,11 @@ public class WeatherForecastController : BaseController
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public ActionResult<WeatherForecastItem> Update(string id, [FromBody] WeatherForecastItem item)
+    public async Task<ActionResult<WeatherForecastItem>> UpdateAsync(string id, [FromBody] WeatherForecastItem item)
     {
-        return HandleWebRequest<WeatherForecastItem>(() =>
+        return await HandleWebRequestAsync<WeatherForecastItem>(async () =>
         {
-            return Ok(Service.Update(id, item));
+            return Ok(await Service.UpdateAsync(id, item));
         });
     }
     /// <summary>
@@ -107,11 +107,11 @@ public class WeatherForecastController : BaseController
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public ActionResult<WeatherForecastItem> Remove(string id)
+    public async Task<ActionResult<WeatherForecastItem>> RemoveAsync(string id)
     {
-        return HandleWebRequest<WeatherForecastItem>(() =>
+        return await HandleWebRequestAsync<WeatherForecastItem>(async () =>
         {
-            return Ok(Service.Remove(id));
+            return Ok(await Service.RemoveAsync(id));
         });
     }
 }

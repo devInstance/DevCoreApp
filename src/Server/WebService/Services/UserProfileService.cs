@@ -25,11 +25,11 @@ namespace DevInstance.DevCoreApp.Server.Services
             return AuthorizationContext.CurrentProfile.ToView();
         }
 
-        public UserProfileItem Update(UserProfileItem newProfile)
+        public async Task<UserProfileItem> UpdateAsync(UserProfileItem newProfile)
         {
             var profile = AuthorizationContext.CurrentProfile;
             profile.Name = newProfile.Name;
-            Repository.GetUserProfilesQuery(AuthorizationContext.CurrentProfile).Update(profile);
+            await Repository.GetUserProfilesQuery(AuthorizationContext.CurrentProfile).UpdateAsync(profile);
 
             return profile.ToView();
         }

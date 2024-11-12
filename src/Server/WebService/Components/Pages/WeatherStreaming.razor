@@ -1,0 +1,53 @@
+﻿@page "/server/weather"
+@attribute [StreamRendering]
+
+@inject IStringLocalizer<WeatherStreaming> loc;
+
+<PageTitle>@loc["Weather"]</PageTitle>
+
+<h1>@loc["Weather"]</h1>
+
+<p>@loc["This component demonstrates server-side stream rendering"]</p>
+//TODO: imlement url based paging
+
+@if (forecasts == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Temp. (C)</th>
+                <th>Temp. (F)</th>
+                <th>Summary</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var forecast in forecasts.Items)
+            {
+                <tr>
+                    <td>@forecast.Date.ToShortDateString()</td>
+                    <td>@forecast.TemperatureC</td>
+                    <td>@forecast.TemperatureF</td>
+                    <td>@forecast.Summary</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    [Inject]
+    WeatherForecastService Service { get; set; }
+
+    private ModelList<WeatherForecastItem>? forecasts;
+
+    protected override async Task OnInitializedAsync()
+    {
+        forecasts = await Service.GetItemsAsync(null, null, null, null, null, null, null);
+
+    }
+}

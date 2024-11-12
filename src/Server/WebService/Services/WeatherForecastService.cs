@@ -8,6 +8,7 @@ using DevInstance.DevCoreApp.Server.WebService.Tools;
 using DevInstance.DevCoreApp.Shared.Model;
 using DevInstance.DevCoreApp.Shared.Utils;
 using DevInstance.LogScope;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
 
@@ -22,7 +23,7 @@ public class WeatherForecastService : BaseService
         log = logManager.CreateLogger(this);
     }
 
-    public ModelList<WeatherForecastItem> GetItems(int? top, int? page, string? sortBy, bool? isAsc, int? filter, int? fields, string? search)
+    public async Task<ModelList<WeatherForecastItem>> GetItemsAsync(int? top, int? page, string? sortBy, bool? isAsc, int? filter, int? fields, string? search)
     {
         using (log.TraceScope())
         {
@@ -35,9 +36,9 @@ public class WeatherForecastService : BaseService
             pagedQuery = ApplyPages(pagedQuery, top, page);
             pagedQuery = ApplySorting(result, pagedQuery, sortBy, isAsc);
 
-            var list = pagedQuery.Select().ToView();
+            var list = await pagedQuery.Select().ToViewAsync();
 
-            return ApplyItems(result, coreQuery.Select().Count(), list.ToArray(), top, page);
+            return ApplyItems(result, await coreQuery.Select().CountAsync(), list.ToArray(), top, page);
         }
     }
 
@@ -49,7 +50,7 @@ public class WeatherForecastService : BaseService
         }
     }
 
-    public WeatherForecastItem Add(WeatherForecastItem item)
+    public async Task<WeatherForecastItem> AddAsync(WeatherForecastItem item)
     {
         Validate(item);
 
@@ -57,22 +58,21 @@ public class WeatherForecastService : BaseService
 
         var record = q.CreateNew().ToRecord(item);
 
-        q.Add(record);
+        await q.AddAsync(record);
 
-        return GetById(record.PublicId);
+        return await GetByIdAsync(record.PublicId);
     }
 
 
-    public WeatherForecastItem GetById(string id)
+    public async Task<WeatherForecastItem> GetByIdAsync(string id)
     {
-        var record = GetRecordByPublicId(id);
-        return record.ToView();
+        return (await GetRecordByPublicIdAsync(id)).ToView();
     }
 
-    private WeatherForecast GetRecordByPublicId(string id)
+    private async Task<WeatherForecast> GetRecordByPublicIdAsync(string id)
     {
         var q = Repository.GetWeatherForecastQuery(AuthorizationContext.CurrentProfile).ByPublicId(id);
-        var record = q.Select().FirstOrDefault();
+        var record = await q.Select().FirstOrDefaultAsync();
         if (record == null)
         {
             throw new RecordNotFoundException();
@@ -81,25 +81,25 @@ public class WeatherForecastService : BaseService
         return record;
     }
 
-    public WeatherForecastItem Remove(string id)
+    public async Task<WeatherForecastItem> RemoveAsync(string id)
     {
         var q = Repository.GetWeatherForecastQuery(AuthorizationContext.CurrentProfile);
-        var record = GetRecordByPublicId(id);
+        var record = await GetRecordByPublicIdAsync(id);
 
-        q.Remove(record);
+        await q.RemoveAsync(record);
 
         return record.ToView();
     }
 
-    public WeatherForecastItem Update(string id, WeatherForecastItem item)
+    public async Task<WeatherForecastItem> UpdateAsync(string id, WeatherForecastItem item)
     {
         Validate(item);
 
         var q = Repository.GetWeatherForecastQuery(AuthorizationContext.CurrentProfile);
-        var record = GetRecordByPublicId(id);
+        var record = await GetRecordByPublicIdAsync(id);
 
-        q.Update(record.ToRecord(item));
+        await q.UpdateAsync(record.ToRecord(item));
 
-        return GetById(record.PublicId);
+        return await GetByIdAsync(record.PublicId);
     }
 }

@@ -1,15 +1,15 @@
 ﻿@page "/client/weather"
 @using DevInstance.DevCoreApp.Client.Services.Api
-@rendermode @(new InteractiveWebAssemblyRenderMode(prerender:false))
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender:true))
 @inherits BasePage
 
 @inject IStringLocalizer<ClientWeather> loc;
 
-<PageTitle>@loc["Weather"]</PageTitle>
+<PageTitle>@loc["Weather (WASM)"]</PageTitle>
 
-<h3>@loc["Weather"]</h3>
+<h3>@loc["Weather (WASM)"]</h3>
 
-<p>@loc["This component demonstrates client rendering page fetching data from the server using REST API."]</p>
+<p>@loc["This component demonstrates client-side rendering (InteractiveWebAssemblyRenderMode), fetching data from the server using a REST API."]</p>
 
 <button class="btn btn-primary"
         data-bs-toggle="modal"
@@ -18,7 +18,7 @@
         data-bs-backdrop="static"
         disabled="@InProgress"
         @onclick="@(() => selectedForecast = null)">
-            @loc["Add New"]
+    @loc["Add New"]
 </button>
 @if (!InProgress)
 {
@@ -31,67 +31,28 @@
                 <tr>
                     <th scope="col"></th>
                     <th scope="col">
-                        <span>@loc["Date"]</span>
-                        <button class="btn btn-link" @onclick="@(() => SortBy(WeatherForecastFields.Date, !forecasts?.IsAsc ?? true))">
-                            @if (forecasts?.SortBy.FromFieldName() == WeatherForecastFields.Date)
-                            {
-                                if (forecasts.IsAsc)
-                                {
-                                    <i class="bi bi-caret-down-fill"></i>
-                                }
-                                else
-                                {
-                                    <i class="bi bi-caret-up-fill"></i>
-                                }
-                            }
-                            else
-                            {
-                                <i class="bi bi-caret-down"></i>
-                            }
-                        </button>
+                        <SortableHeader Label="@loc["Date"]"
+                                        SortField="WeatherForecastFields.Date"
+                                        IsSorted="forecasts?.SortBy.FromFieldName() == WeatherForecastFields.Date"
+                                        IsAsc="forecasts?.IsAsc ?? true"
+                                        OnSort="@(() => SortBy(WeatherForecastFields.Date, !forecasts?.IsAsc ?? true))" />
                     </th>
                     <th scope="col">
-                        <span>@loc["Temp. (C)"]</span>
-                        <button class="btn btn-link" @onclick="@(() => SortBy(WeatherForecastFields.Temperature, !forecasts?.IsAsc ?? true))">
-                            @if (forecasts?.SortBy.FromFieldName() == WeatherForecastFields.Temperature)
-                            {
-                                if (forecasts.IsAsc)
-                                {
-                                    <i class="bi bi-caret-down-fill"></i>
-                                }
-                                else
-                                {
-                                    <i class="bi bi-caret-up-fill"></i>
-                                }
-                            }
-                            else
-                            {
-                                <i class="bi bi-caret-down"></i>
-                            }
-                        </button>
+                        <SortableHeader Label="@loc["Temp. (C)"]"
+                                        SortField="WeatherForecastFields.Date"
+                                        IsSorted="forecasts?.SortBy.FromFieldName() == WeatherForecastFields.Temperature"
+                                        IsAsc="forecasts?.IsAsc ?? true"
+                                        OnSort="@(() => SortBy(WeatherForecastFields.Temperature, !forecasts?.IsAsc ?? true))" />
                     </th>
                     <th scope="col">
                         <span>@loc["Temp. (F)"]</span>
                     </th>
                     <th scope="col">
-                        <span>@loc["Summary"]</span>
-                        <button class="btn btn-link" @onclick="@(() => SortBy(WeatherForecastFields.Summary, !forecasts?.IsAsc ?? true))">
-                            @if (forecasts?.SortBy.FromFieldName() == WeatherForecastFields.Summary)
-                            {
-                                if (forecasts.IsAsc)
-                                {
-                                    <i class="bi bi-caret-down-fill"></i>
-                                }
-                                else
-                                {
-                                    <i class="bi bi-caret-up-fill"></i>
-                                }
-                            }
-                            else
-                            {
-                                <i class="bi bi-caret-down"></i>
-                            }
-                        </button>
+                        <SortableHeader Label="@loc["Summary"]"
+                                        SortField="WeatherForecastFields.Date"
+                                        IsSorted="forecasts?.SortBy.FromFieldName() == WeatherForecastFields.Summary"
+                                        IsAsc="forecasts?.IsAsc ?? true"
+                                        OnSort="@(() => SortBy(WeatherForecastFields.Summary, !forecasts?.IsAsc ?? true))" />
                     </th>
                 </tr>
             </thead>
@@ -109,7 +70,7 @@
                                         data-bs-backdrop="static"
                                         title="@loc["Edit"]"
                                         @onclick="@(() => selectedForecast = forecast)"
-                                        @onclick:preventDefault>
+                                @onclick:preventDefault>
                                     <span class="bi bi-pencil" aria-hidden="true"></span>
                                 </button>
                                 <button type="button" class="btn dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
@@ -123,8 +84,8 @@
                                            data-bs-keyboard="false"
                                            data-bs-backdrop="static"
                                            title="@loc["Edit"]"
-                                            @onclick="@(() => selectedForecast = forecast)"
-                                            @onclick:preventDefault>
+                                           @onclick="@(() => selectedForecast = forecast)"
+                                        @onclick:preventDefault>
                                             <span class="bi bi-pen small-timer-button" aria-hidden="true"></span> @loc["Edit"]
                                         </a>
                                     </li>
