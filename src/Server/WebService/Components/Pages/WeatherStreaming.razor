@@ -98,7 +98,8 @@ else
     </table>
     <DataPager PagesCount="@forecasts.PagesCount"
                SelectedPage="@forecasts.Page"
-               OnPageChanged="@RequestDataAsync">
+               OnPageChanged="@RequestDataAsync"
+               UrlTemplate="/server/weather?page={0}">
     </DataPager>
 }
 
