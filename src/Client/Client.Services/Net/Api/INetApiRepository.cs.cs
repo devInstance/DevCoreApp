@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DevInstance.DevCoreApp.Client.Net.Api
+namespace DevInstance.DevCoreApp.Client.Services.Net.Api
 {
     public interface INetApiRepository
     {

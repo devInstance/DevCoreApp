@@ -1,5 +1,3 @@
-using DevInstance.DevCoreApp.Client.Services;
-using DevInstance.DevCoreApp.Client.Services.Api;
 using DevInstance.DevCoreApp.Components.Account;
 
 //TODO: migrate to view-model
@@ -7,12 +5,10 @@ using DevInstance.DevCoreApp.Server.Database.Core.Models;
 
 using DevInstance.DevCoreApp.Server.WebService.Components;
 using DevInstance.DevCoreApp.Server.WebService.Tools;
-using DevInstance.DevCoreApp.Shared.Utils;
 using DevInstance.LogScope.Extensions.MicrosoftLogger;
 using DevInstance.LogScope.Formatters;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using DevInstance.DevCoreApp.Server.Database.Postgres;
 using DevInstance.DevCoreApp.Server.Database.SqlServer;
 using DevInstance.DevCoreApp.Server.WebService.Authentication;

@@ -1,4 +1,4 @@
-﻿using DevInstance.DevCoreApp.Client.Services.Api;
+﻿using DevInstance.DevCoreApp.Shared.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DevInstance.DevCoreApp.Client.Services;

@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<AssemblyName>DevInstance.DevCoreApp.Shared.Services</AssemblyName>
+		<RootNamespace>DevInstance.DevCoreApp.Shared.Services</RootNamespace>
+		<Configurations>Debug;Release;NetApiMoqs;ServiceMoqs</Configurations>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\Client\DevInstance.BlazorUtils\DevInstance.BlazorUtils.csproj" />
+	</ItemGroup>
+
+</Project>

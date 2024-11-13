@@ -1,10 +1,8 @@
-﻿using DevInstance.DevCoreApp.Client.Services.Api;
-using DevInstance.DevCoreApp.Shared.Model;
+﻿using DevInstance.DevCoreApp.Shared.Model;
+using DevInstance.DevCoreApp.Shared.Services;
 using DevInstance.LogScope;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
-using System;
-using System.Threading.Tasks;
 
 namespace DevInstance.DevCoreApp.Client.UI.Components.Modals;
 

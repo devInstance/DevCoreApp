@@ -1,4 +1,4 @@
-﻿using DevInstance.DevCoreApp.Client.Services.Api;
+﻿using DevInstance.DevCoreApp.Shared.Services;
 using DevInstance.LogScope;
 
 namespace DevInstance.DevCoreApp.Client.Services;

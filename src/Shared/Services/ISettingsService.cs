@@ -1,7 +1,6 @@
-﻿using Microsoft.Extensions.Localization;
-using System.Globalization;
+﻿using System.Globalization;
 
-namespace DevInstance.DevCoreApp.Client.Services.Api;
+namespace DevInstance.DevCoreApp.Shared.Services;
 
 public class SettingsLanguageItem
 {

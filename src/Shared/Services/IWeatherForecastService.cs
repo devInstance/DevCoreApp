@@ -1,7 +1,8 @@
-﻿using DevInstance.DevCoreApp.Shared.Model;
+﻿
 using DevInstance.BlazorUtils.Services;
+using DevInstance.DevCoreApp.Shared.Model;
 
-namespace DevInstance.DevCoreApp.Client.Services.Api;
+namespace DevInstance.DevCoreApp.Shared.Services;
 
 public enum WeatherForecastFields
 {

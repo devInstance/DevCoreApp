@@ -1,7 +1,7 @@
 ﻿using DevInstance.DevCoreApp.Shared.Model;
 using DevInstance.BlazorUtils.Services;
 
-namespace DevInstance.DevCoreApp.Client.Services.Api;
+namespace DevInstance.DevCoreApp.Shared.Services;
 
 public delegate Task DataUpdate<T>(T item);
 

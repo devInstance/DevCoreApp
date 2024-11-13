@@ -1,7 +1,7 @@
-﻿using DevInstance.DevCoreApp.Client.Services.Api;
-using DevInstance.BlazorUtils.Services;
+﻿using DevInstance.BlazorUtils.Services;
 using Microsoft.Extensions.Localization;
 using System.Globalization;
+using DevInstance.DevCoreApp.Shared.Services;
 
 namespace DevInstance.DevCoreApp.Client.Services;
 

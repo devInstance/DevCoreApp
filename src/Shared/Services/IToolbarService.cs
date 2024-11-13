@@ -1,6 +1,4 @@
-﻿using DevInstance.LogScope;
-
-namespace DevInstance.DevCoreApp.Client.Services.Api;
+﻿namespace DevInstance.DevCoreApp.Shared.Services;
 
 public delegate void ToolbarEventHandler(object value);
 

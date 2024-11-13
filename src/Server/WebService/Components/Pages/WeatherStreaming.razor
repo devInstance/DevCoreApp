@@ -1,14 +1,14 @@
 ﻿@page "/server/weather"
 @attribute [StreamRendering]
+@inherits BasePage
 
 @inject IStringLocalizer<WeatherStreaming> loc;
 
-<PageTitle>@loc["Weather"]</PageTitle>
+<PageTitle>@loc["Weather (Streaming)"]</PageTitle>
 
-<h1>@loc["Weather"]</h1>
+<h1>@loc["Weather (Streaming)"]</h1>
 
 <p>@loc["This component demonstrates server-side stream rendering"]</p>
-//TODO: imlement url based paging
 
 @if (forecasts == null)
 {
@@ -16,19 +16,78 @@
 }
 else
 {
-    <table class="table">
+    <table class="table table-striped">
         <thead>
             <tr>
-                <th>Date</th>
-                <th>Temp. (C)</th>
-                <th>Temp. (F)</th>
-                <th>Summary</th>
+                <th scope="col"></th>
+                <th scope="col">
+                    <SortableHeader Label="@loc["Date"]"
+                                    SortField="WeatherForecastFields.Date"
+                                    IsSorted="forecasts?.SortBy.FromFieldName() == WeatherForecastFields.Date"
+                                    IsAsc="forecasts?.IsAsc ?? true"
+                                    OnSort="@(() => SortBy(WeatherForecastFields.Date, !forecasts?.IsAsc ?? true))" />
+                </th>
+                <th scope="col">
+                    <SortableHeader Label="@loc["Temp. (C)"]"
+                                    SortField="WeatherForecastFields.Date"
+                                    IsSorted="forecasts?.SortBy.FromFieldName() == WeatherForecastFields.Temperature"
+                                    IsAsc="forecasts?.IsAsc ?? true"
+                                    OnSort="@(() => SortBy(WeatherForecastFields.Temperature, !forecasts?.IsAsc ?? true))" />
+                </th>
+                <th scope="col">
+                    <span>@loc["Temp. (F)"]</span>
+                </th>
+                <th scope="col">
+                    <SortableHeader Label="@loc["Summary"]"
+                                    SortField="WeatherForecastFields.Date"
+                                    IsSorted="forecasts?.SortBy.FromFieldName() == WeatherForecastFields.Summary"
+                                    IsAsc="forecasts?.IsAsc ?? true"
+                                    OnSort="@(() => SortBy(WeatherForecastFields.Summary, !forecasts?.IsAsc ?? true))" />
+                </th>
             </tr>
         </thead>
         <tbody>
             @foreach (var forecast in forecasts.Items)
             {
                 <tr>
+                    <td class="first-table-item text-nowrap">
+                        <div class="btn-group">
+                            <button type="button"
+                                    class="btn btn-default"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#addForecastModal"
+                                    data-bs-keyboard="false"
+                                    data-bs-backdrop="static"
+                                    title="@loc["Edit"]"
+                                    @onclick="@(() => selectedForecast = forecast)"
+                            @onclick:preventDefault>
+                                <span class="bi bi-pencil" aria-hidden="true"></span>
+                            </button>
+                            <button type="button" class="btn dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                                <span class="visually-hidden">Toggle Dropdown</span>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" href="#"
+                                       data-bs-toggle="modal"
+                                       data-bs-target="#addForecastModal"
+                                       data-bs-keyboard="false"
+                                       data-bs-backdrop="static"
+                                       title="@loc["Edit"]"
+                                       @onclick="@(() => selectedForecast = forecast)"
+                                    @onclick:preventDefault>
+                                        <span class="bi bi-pen small-timer-button" aria-hidden="true"></span> @loc["Edit"]
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#addDeleteModal" @onclick="@(() => selectedForecast = forecast)" @onclick:preventDefault>
+                                        <span class="bi bi-trash small-timer-button" aria-hidden="true"></span> @loc["Delete"]
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </td>
+
                     <td>@forecast.Date.ToShortDateString()</td>
                     <td>@forecast.TemperatureC</td>
                     <td>@forecast.TemperatureF</td>
@@ -37,17 +96,59 @@ else
             }
         </tbody>
     </table>
+    <DataPager PagesCount="@forecasts.PagesCount"
+               SelectedPage="@forecasts.Page"
+               OnPageChanged="@RequestDataAsync">
+    </DataPager>
 }
 
 @code {
     [Inject]
-    WeatherForecastService Service { get; set; }
+    IWeatherForecastService Service { get; set; }
+
+    private const int PageSize = 15;
 
     private ModelList<WeatherForecastItem>? forecasts;
 
+    private IScopeLog log;
+
+    private WeatherForecastItem selectedForecast;
+
     protected override async Task OnInitializedAsync()
     {
-        forecasts = await Service.GetItemsAsync(null, null, null, null, null, null, null);
+        log = ScopeManager.CreateLogger(this);
+        using (var scope = log.TraceScope())
+        {
+            await RequestDataAsync(0);
+            Service.OnDataUpdate += Service_OnDataUpdate;
+        }
+    }
 
+    private async Task Service_OnDataUpdate(WeatherForecastItem item)
+    {
+        using (var scope = log.TraceScope())
+        {
+            await RequestDataAsync(0);
+        }
+    }
+
+    protected async Task RequestDataAsync(int page)
+    {
+        await ServiceCallAsync(() => Service.GetItemsAsync(PageSize, page, null, null, null), (a) => { forecasts = a; });
+    }
+
+    private async Task Remove(WeatherForecastItem item)
+    {
+        await ServiceCallAsync(() => Service.RemoveAsync(item), null, async (a) => { await RequestDataAsync(forecasts.Page); });
+    }
+
+    private async Task SortBy(WeatherForecastFields sortBy, bool isAsc)
+    {
+        await ServiceCallAsync(
+            () => Service.GetItemsAsync(PageSize, forecasts?.Page ?? 0, sortBy, isAsc, null),
+            (a) =>
+            {
+                forecasts = a;
+            });
     }
 }

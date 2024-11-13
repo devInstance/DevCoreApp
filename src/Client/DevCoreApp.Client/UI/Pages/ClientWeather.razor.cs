@@ -1,8 +1,7 @@
-﻿using DevInstance.DevCoreApp.Client.Services.Api;
-using DevInstance.DevCoreApp.Shared.Model;
+﻿using DevInstance.DevCoreApp.Shared.Model;
+using DevInstance.DevCoreApp.Shared.Services;
 using DevInstance.LogScope;
 using Microsoft.AspNetCore.Components;
-using System.Net.Http;
 
 namespace DevInstance.DevCoreApp.Client.UI.Pages;
 
