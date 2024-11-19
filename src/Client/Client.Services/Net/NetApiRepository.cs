@@ -2,21 +2,23 @@
 using DevInstance.BlazorUtils.Http;
 using Microsoft.AspNetCore.Components;
 using DevInstance.DevCoreApp.Client.Services.Net.Api;
+using System.Net.Http;
 
 namespace DevInstance.DevCoreApp.Client.Services.Net;
 
 public class NetApiRepository : INetApiRepository
 {
-    private HttpClient httpClient;
+    private readonly IHttpClientFactory httpFactory;
 
-    public NetApiRepository(HttpClient http, NavigationManager navigationManager)
+    public NetApiRepository(IHttpClientFactory factory, NavigationManager navigationManager)
     {
-        httpClient = http;
-        httpClient.BaseAddress = new Uri(navigationManager.BaseUri);
+        httpFactory = factory;
+        //httpFactory.BaseAddress = new Uri(navigationManager.BaseUri);
     }
 
+    HttpClient HttpClient => httpFactory.CreateClient("DevInstance.DevCoreApp.ServerAPI");
     public IApiContext<WeatherForecastItem> GetWeatherForecastApi()
     {
-        return HttpApiContextFactory.Create<WeatherForecastItem>(httpClient, "api/forecast");
+        return HttpApiContextFactory.Create<WeatherForecastItem>(HttpClient, "api/forecast");
     }
 }

@@ -27,8 +27,17 @@ internal class Program
         builder.Services.AddSingleton<ITimeProvider, Shared.Utils.TimeProvider>();
 
         builder.Services.AddAuthorizationCore();
+        builder.Services.AddCascadingAuthenticationState();
+        builder.Services.AddScoped<AuthenticationStateProvider, PersistentAuthenticationStateProvider>();
+
+        // Read this for configuring HTTP client behavior for your specific use case: https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/http/httpclient-guidelines
+        builder.Services.AddHttpClient("DevInstance.DevCoreApp.ServerAPI", client => client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress));
+
+        builder.Services.AddNetApi();
+        builder.Services.AddAppServices();
 
         ClientRegistry.Register(builder.Services);
+
         await builder.Build().RunAsync();
     }
 }
@@ -40,18 +49,6 @@ public class ClientRegistry
 {
     public static void Register(IServiceCollection services)
     {
-        services.AddCascadingAuthenticationState();
-        services.AddScoped<AuthenticationStateProvider, PersistentAuthenticationStateProvider>();
 
-        services.AddConsoleScopeLogging(LogScope.LogLevel.TRACE,
-            new DefaultFormattersOptions { ShowTimestamp = true, ShowThreadNumber = true, ShowId = true });
-
-        services.AddHttpClient("DevInstance.DevCoreApp.ServerAPI"/*, client => client.BaseAddress = new Uri(host)*/);
-
-        // Supply HttpClient instances that include access tokens when making requests to the server project
-        services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("DevInstance.DevCoreApp.ServerAPI"));
-
-        services.AddAppServices();
-        services.AddNetApi();
     }
 }

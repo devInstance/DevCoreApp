@@ -1,5 +1,7 @@
 ﻿@page "/client/weather"
-@rendermode @(new InteractiveWebAssemblyRenderMode(prerender:true))
+
+@* we cannot use prerender if the IWeatherForecastService is not registered in the DI container in the server application *@
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender:false))
 @inherits BasePage
 
 @inject IStringLocalizer<ClientWeather> loc;
