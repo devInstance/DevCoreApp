@@ -3,6 +3,7 @@ using DevInstance.BlazorUtils.Services;
 using DevInstance.LogScope;
 using DevInstance.DevCoreApp.Client.Services.Net.Api;
 using DevInstance.DevCoreApp.Shared.Services;
+using DevInstance.BlazorUtils.Services.Wasm;
 
 namespace DevInstance.DevCoreApp.Client.Services;
 
@@ -19,25 +20,28 @@ public class WeatherForecastService : CRUDService<WeatherForecastItem>, IWeather
 
     public async Task<ServiceActionResult<ModelList<WeatherForecastItem>?>> GetItemsAsync(int? top, int? page, WeatherForecastFields? sortBy, bool? isAsc, string? search)
     {
-        return await HandleWebApiCallAsync(
-            async () =>
-            {
-                var api = Api.GetWeatherForecastApi().Get();
-                if(top.HasValue)
+        using (var log = Log.TraceScope())
+        {
+            return await ServiceUtils.HandleWebApiCallAsync(log,
+                async (l) =>
                 {
-                    api = api.Top(top.Value);
-                }
-                if (page.HasValue)
-                {
-                    api = api.Page(page.Value);
-                }
-                if (sortBy.HasValue)
-                {
-                    api = api.Sort(sortBy.Value.ToString(), isAsc ?? true);
-                }
+                    var api = Api.GetWeatherForecastApi().Get();
+                    if (top.HasValue)
+                    {
+                        api = api.Top(top.Value);
+                    }
+                    if (page.HasValue)
+                    {
+                        api = api.Page(page.Value);
+                    }
+                    if (sortBy.HasValue)
+                    {
+                        api = api.Sort(sortBy.Value.ToString(), isAsc ?? true);
+                    }
 
-                return await api.ListAsync();
-            }
-        );
+                    return await api.ListAsync();
+                }
+            );
+        }
     }
 }

@@ -5,21 +5,20 @@ namespace DevInstance.BlazorUtils.Services.Wasm;
 
 public delegate void ResultHandler<T>(T result);
 
-public class ServiceBase
+//TODO: make it utils as for server. move the base service to the client project
+public static class ServiceUtils
 {
-    public IScopeLog? Log { get; protected set; } = null;
+    public delegate Task<T> WebApiHandlerAsync<T>(IScopeLog log);
 
-    public delegate Task<T> WebApiHandlerAsync<T>();
-
-    protected async Task<ServiceActionResult<T>> HandleWebApiCallAsync<T>(WebApiHandlerAsync<T> handler)
+    public static async Task<ServiceActionResult<T>> HandleWebApiCallAsync<T>(IScopeLog log, WebApiHandlerAsync<T> handler)
     {
-        using (var l = Log.TraceScope("ServiceBase").TraceScope())
+        using (var l = log.TraceScope("ServiceUtils").TraceScope())
         {
             try
             {
                 return new ServiceActionResult<T>
                 {
-                    Result = await handler(),
+                    Result = await handler(l),
                     Success = true,
                     IsAuthorized = true,
                 };

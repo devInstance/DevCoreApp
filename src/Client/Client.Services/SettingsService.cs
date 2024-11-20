@@ -5,7 +5,7 @@ using DevInstance.BlazorUtils.Services.Wasm;
 
 namespace DevInstance.DevCoreApp.Client.Services;
 
-public class SettingsService : ServiceBase, ISettingsService
+public class SettingsService : BaseService, ISettingsService
 {
     SettingsLanguageItem[] supportedLanguages;
 
