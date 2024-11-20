@@ -1,7 +1,6 @@
-﻿using DevInstance.DevCoreApp.Server.Services;
+﻿using DevInstance.DevCoreApp.Server.WebService.Services;
 using DevInstance.DevCoreApp.Shared.Model;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DevInstance.DevCoreApp.Server.Controllers

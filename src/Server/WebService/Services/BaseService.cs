@@ -6,7 +6,7 @@ using DevInstance.DevCoreApp.Server.Database.Core.Data.Queries;
 using DevInstance.DevCoreApp.Shared.Utils;
 using DevInstance.DevCoreApp.Server.WebService.Authentication;
 
-namespace DevInstance.DevCoreApp.Server.Services;
+namespace DevInstance.DevCoreApp.Server.WebService.Services;
 
 public abstract class BaseService
 {

@@ -1,14 +1,7 @@
-﻿using DevInstance.LogScope;
-using DevInstance.DevCoreApp.Shared.Model;
+﻿using DevInstance.DevCoreApp.Shared.Model;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using DevInstance.DevCoreApp.Server.Services;
 using DevInstance.DevCoreApp.Server.WebService.Services;
-using Microsoft.AspNetCore.Http;
 
 namespace DevInstance.DevCoreApp.Server.Controllers;
 

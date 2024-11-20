@@ -1,11 +1,11 @@
 ﻿using DevInstance.LogScope;
 using System.Net;
 
-namespace DevInstance.BlazorUtils.Services;
+namespace DevInstance.BlazorUtils.Services.Wasm;
 
 public delegate void ResultHandler<T>(T result);
 
-public class BaseService
+public class ServiceBase
 {
     public IScopeLog? Log { get; protected set; } = null;
 
@@ -13,7 +13,7 @@ public class BaseService
 
     protected async Task<ServiceActionResult<T>> HandleWebApiCallAsync<T>(WebApiHandlerAsync<T> handler)
     {
-        using (var l = Log.TraceScope("BaseService").TraceScope())
+        using (var l = Log.TraceScope("ServiceBase").TraceScope())
         {
             try
             {
@@ -39,7 +39,7 @@ public class BaseService
                     }
                     },
                     IsAuthorized = !(ex.StatusCode == HttpStatusCode.Unauthorized),
-                    Result = default(T)!
+                    Result = default!
                 };
 
             }
@@ -50,7 +50,7 @@ public class BaseService
                 {
                     Success = false,
                     Errors = new ServiceActionError[] { new ServiceActionError { Message = ex.Message } },
-                    Result = default(T)!
+                    Result = default!
                 };
             }
         }

@@ -12,6 +12,8 @@ using Microsoft.AspNetCore.Identity;
 using DevInstance.DevCoreApp.Server.Database.Postgres;
 using DevInstance.DevCoreApp.Server.Database.SqlServer;
 using DevInstance.DevCoreApp.Server.WebService.Authentication;
+using DevInstance.DevCoreApp.Shared.Services;
+using DevInstance.DevCoreApp.Server.WebService.Services;
 
 namespace DevInstance.DevCoreApp
 {
@@ -62,6 +64,7 @@ namespace DevInstance.DevCoreApp
 
             builder.Services.AddAppIdentity();
 
+            builder.Services.AddScoped<IWeatherForecastService, WeatherForecastService>();
             builder.Services.AddServerAppServices();
             builder.Services.AddControllers();
 

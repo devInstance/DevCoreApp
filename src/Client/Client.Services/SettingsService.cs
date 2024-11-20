@@ -1,11 +1,11 @@
-﻿using DevInstance.BlazorUtils.Services;
-using Microsoft.Extensions.Localization;
+﻿using Microsoft.Extensions.Localization;
 using System.Globalization;
 using DevInstance.DevCoreApp.Shared.Services;
+using DevInstance.BlazorUtils.Services.Wasm;
 
 namespace DevInstance.DevCoreApp.Client.Services;
 
-public class SettingsService : BaseService, ISettingsService
+public class SettingsService : ServiceBase, ISettingsService
 {
     SettingsLanguageItem[] supportedLanguages;
 

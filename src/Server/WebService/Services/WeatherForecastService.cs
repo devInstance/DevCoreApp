@@ -1,21 +1,21 @@
-﻿using DevInstance.DevCoreApp.Server.Database.Core.Data;
+﻿using DevInstance.BlazorUtils.Services;
+using DevInstance.BlazorUtils.Services.Server;
+using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Server.Database.Core.Data.Decorators;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using DevInstance.DevCoreApp.Server.Exceptions;
-using DevInstance.DevCoreApp.Server.Services;
 using DevInstance.DevCoreApp.Server.WebService.Authentication;
 using DevInstance.DevCoreApp.Server.WebService.Tools;
 using DevInstance.DevCoreApp.Shared.Model;
+using DevInstance.DevCoreApp.Shared.Services;
 using DevInstance.DevCoreApp.Shared.Utils;
 using DevInstance.LogScope;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Linq;
 
 namespace DevInstance.DevCoreApp.Server.WebService.Services;
 
 [AppService]
-public class WeatherForecastService : BaseService
+public class WeatherForecastService : BaseService, IWeatherForecastService
 {
     public WeatherForecastService(IScopeManager logManager, ITimeProvider timeProvider, IQueryRepository query, IAuthorizationContext authorizationContext)
         : base(logManager, timeProvider, query, authorizationContext)
@@ -23,7 +23,9 @@ public class WeatherForecastService : BaseService
         log = logManager.CreateLogger(this);
     }
 
-    public async Task<ModelList<WeatherForecastItem>> GetItemsAsync(int? top, int? page, string? sortBy, bool? isAsc, int? filter, int? fields, string? search)
+    public event DataUpdate<WeatherForecastItem> OnDataUpdate;
+
+    public async Task<ModelList<WeatherForecastItem>?> GetItemsAsync(int? top, int? page, string? sortBy, bool? isAsc, int? filter, int? fields, string? search)
     {
         using (log.TraceScope())
         {
@@ -39,6 +41,19 @@ public class WeatherForecastService : BaseService
             var list = await pagedQuery.Select().ToViewAsync();
 
             return ApplyItems(result, await coreQuery.Select().CountAsync(), list.ToArray(), top, page);
+        }
+    }
+
+    public async Task<ServiceActionResult<ModelList<WeatherForecastItem>?>> GetItemsAsync(int? top, int? page, WeatherForecastFields? sortBy, bool? isAsc, string? search)
+    {
+        using (log.TraceScope())
+        {
+            return await ServiceUtils.HandleServiceCallAsync(log,
+                async (l) =>
+                {
+                    return await GetItemsAsync(top, page, sortBy?.ToFieldName(), isAsc, null, null, search);
+                }
+            );
         }
     }
 
@@ -101,5 +116,25 @@ public class WeatherForecastService : BaseService
         await q.UpdateAsync(record.ToRecord(item));
 
         return await GetByIdAsync(record.PublicId);
+    }
+
+    public Task<BlazorUtils.Services.ServiceActionResult<WeatherForecastItem?>> GetAsync(string id)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<BlazorUtils.Services.ServiceActionResult<WeatherForecastItem?>> AddNewAsync(WeatherForecastItem item)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<BlazorUtils.Services.ServiceActionResult<WeatherForecastItem?>> UpdateAsync(WeatherForecastItem item)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<BlazorUtils.Services.ServiceActionResult<bool>> RemoveAsync(WeatherForecastItem item)
+    {
+        throw new NotImplementedException();
     }
 }

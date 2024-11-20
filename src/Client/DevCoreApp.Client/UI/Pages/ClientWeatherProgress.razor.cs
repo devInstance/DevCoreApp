@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Components;
 
 namespace DevInstance.DevCoreApp.Client.UI.Pages;
 
-public partial class ClientWeather
+public partial class ClientWeatherProgress
 {
     [Inject]
     protected IScopeManager ScopeManager { get; set; }

@@ -6,32 +6,31 @@ using DevInstance.DevCoreApp.Server.WebService.Tools;
 using DevInstance.DevCoreApp.Shared.Model;
 using DevInstance.DevCoreApp.Shared.Utils;
 
-namespace DevInstance.DevCoreApp.Server.Services
+namespace DevInstance.DevCoreApp.Server.WebService.Services;
+
+[AppService]
+public class UserProfileService : BaseService
 {
-    [AppService]
-    public class UserProfileService : BaseService
+    public UserProfileService(IScopeManager logManager,
+                              ITimeProvider timeProvider,
+                              IQueryRepository query,
+                              IAuthorizationContext authorizationContext)
+        : base(logManager, timeProvider, query, authorizationContext)
     {
-        public UserProfileService(IScopeManager logManager,
-                                  ITimeProvider timeProvider,
-                                  IQueryRepository query,
-                                  IAuthorizationContext authorizationContext)
-            : base(logManager, timeProvider, query, authorizationContext)
-        {
 
-        }
+    }
 
-        public UserProfileItem Get()
-        {
-            return AuthorizationContext.CurrentProfile.ToView();
-        }
+    public UserProfileItem Get()
+    {
+        return AuthorizationContext.CurrentProfile.ToView();
+    }
 
-        public async Task<UserProfileItem> UpdateAsync(UserProfileItem newProfile)
-        {
-            var profile = AuthorizationContext.CurrentProfile;
-            profile.Name = newProfile.Name;
-            await Repository.GetUserProfilesQuery(AuthorizationContext.CurrentProfile).UpdateAsync(profile);
+    public async Task<UserProfileItem> UpdateAsync(UserProfileItem newProfile)
+    {
+        var profile = AuthorizationContext.CurrentProfile;
+        profile.Name = newProfile.Name;
+        await Repository.GetUserProfilesQuery(AuthorizationContext.CurrentProfile).UpdateAsync(profile);
 
-            return profile.ToView();
-        }
+        return profile.ToView();
     }
 }

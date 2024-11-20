@@ -2,10 +2,11 @@
 using DevInstance.BlazorUtils.Http;
 using DevInstance.BlazorUtils.Services;
 using DevInstance.DevCoreApp.Shared.Services;
+using DevInstance.BlazorUtils.Services.Wasm;
 
 namespace DevInstance.DevCoreApp.Client.Services;
 
-public class CRUDService<T> : BaseService, ICRUDService<T> where T : ModelItem
+public class CRUDService<T> : ServiceBase, ICRUDService<T> where T : ModelItem
 {
     IApiContext<T> Api { get; set; }
 

@@ -1,17 +1,17 @@
-﻿@page "/client/weather"
+﻿@page "/client/weather-loading"
 
-@* we cannot use prerender if the IWeatherForecastService is not registered in the DI container in the server application *@
-@rendermode @(new InteractiveWebAssemblyRenderMode(prerender:false))
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender:true))
 @inherits BasePage
 
-@inject IStringLocalizer<ClientWeather> loc;
+@inject IStringLocalizer<ClientWeatherProgress> loc;
 
 <PageTitle>@loc["Weather (WASM)"]</PageTitle>
 
 <h3>@loc["Weather (WASM)"]</h3>
 
-<p>@loc["This component demonstrates client-side rendering (InteractiveWebAssemblyRenderMode), fetching data from the server using a REST API."]</p>
+<p>@loc["This component demonstrates client-side rendering (InteractiveWebAssemblyRenderMode) with the initial WASM loading progress, fetching data from the server using a REST API."]</p>
 
+<LoadingProgress>
 <button class="btn btn-primary"
         data-bs-toggle="modal"
         data-bs-target="#addForecastModal"
@@ -116,5 +116,7 @@ else
 {
     <PageProgress></PageProgress>
 }
+</LoadingProgress>
+
 <NewForecastModal ForecastItem="selectedForecast"></NewForecastModal>
 <DeleteModalOverlay Delete="() => Remove(selectedForecast)"></DeleteModalOverlay>
