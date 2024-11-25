@@ -3,9 +3,11 @@
 
 @inject IStringLocalizer<Counter> loc;
 
-<PageTitle>Counter on server</PageTitle>
+<PageTitle>@loc["Counter on server"]</PageTitle>
 
-<h1>@loc["Counter (InteractiveServer)"]</h1>
+<h1>@loc["Counter (InteractiveServer mode)"]</h1>
+
+<p>@(new MarkupString(loc["This is an example of the page rendered using <code>@rendermode InteractiveServer</code>"]))</p>
 
 <p role="status">@loc["Current count:"] @currentCount</p>
 

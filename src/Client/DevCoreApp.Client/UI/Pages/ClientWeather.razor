@@ -1,17 +1,16 @@
-﻿@page "/client/weather-loading"
+﻿@page "/client/weather"
 
 @rendermode @(new InteractiveWebAssemblyRenderMode(prerender:true))
 @inherits BasePage
 
-@inject IStringLocalizer<ClientWeatherProgress> loc;
+@inject IStringLocalizer<ClientWeather> loc;
 
 <PageTitle>@loc["Weather (WASM)"]</PageTitle>
 
 <h3>@loc["Weather (WASM)"]</h3>
 
-<p>@loc["This component demonstrates client-side rendering (InteractiveWebAssemblyRenderMode) with the initial WASM loading progress, fetching data from the server using a REST API."]</p>
+<p>@loc["This component demonstrates client-side rendering with server side pre-render (InteractiveWebAssemblyRenderMode(prerender:true)), fetching data from the server using a Server side service and REST API."]</p>
 
-<LoadingProgress>
 <button class="btn btn-primary"
         data-bs-toggle="modal"
         data-bs-target="#addForecastModal"
@@ -116,7 +115,6 @@ else
 {
     <PageProgress></PageProgress>
 }
-</LoadingProgress>
 
 <NewForecastModal ForecastItem="selectedForecast"></NewForecastModal>
 <DeleteModalOverlay Delete="() => Remove(selectedForecast)"></DeleteModalOverlay>

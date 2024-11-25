@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Components;
 
 namespace DevInstance.DevCoreApp.Client.UI.Pages;
 
-public partial class ClientWeatherPrerender
+public partial class ClientWeather
 {
     [Inject]
     protected IScopeManager ScopeManager { get; set; }

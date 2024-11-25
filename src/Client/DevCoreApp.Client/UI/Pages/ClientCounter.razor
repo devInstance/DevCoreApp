@@ -5,8 +5,10 @@
 
 <PageTitle>@loc["Counter on Client"]</PageTitle>
 
-<h1>@loc["Counter on Client"]</h1>
+<h1>@loc["Counter in WASM"]</h1>
 
+<p>@(new MarkupString(loc["This is an example of the page rendered using <code>@rendermode @(new InteractiveWebAssemblyRenderMode(prerender:true))</code>"]))</p>
+<p>@(new MarkupString(loc["You may notice an issue with pre-rendering in this component very first time. The 'Click me' button is not immediately responsive. This is because the 'first version' or pre-rendered page comes from the server and doesn't have interactivity enabled. It takes some time to replace it with the fully functional and interactive version rendered by WASM."]))</p>
 <p role="status">@String.Format(@loc["Current count: {0}"], @currentCount)</p>
 
 <button class="btn btn-primary" @onclick="IncrementCount">@loc["Click me"]</button>
