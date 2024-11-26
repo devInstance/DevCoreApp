@@ -1,5 +1,5 @@
 ﻿using DevInstance.DevCoreApp.Shared.Model;
-using DevInstance.BlazorUtils.Http;
+using DevInstance.BlazorToolkit.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;

@@ -1,6 +1,6 @@
 ﻿using DevInstance.LogScope;
 
-namespace DevInstance.BlazorUtils.Services.Server
+namespace DevInstance.BlazorToolkit.Services.Server
 {
     public static class ServiceUtils
     {

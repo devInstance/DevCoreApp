@@ -1,9 +1,9 @@
 ﻿using DevInstance.DevCoreApp.Shared.Model;
-using DevInstance.BlazorUtils.Services;
+using DevInstance.BlazorToolkit.Services;
 using DevInstance.LogScope;
 using DevInstance.DevCoreApp.Client.Services.Net.Api;
 using DevInstance.DevCoreApp.Shared.Services;
-using DevInstance.BlazorUtils.Services.Wasm;
+using DevInstance.BlazorToolkit.Services.Wasm;
 
 namespace DevInstance.DevCoreApp.Client.Services;
 

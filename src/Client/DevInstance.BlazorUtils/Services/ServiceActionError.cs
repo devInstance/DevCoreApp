@@ -1,4 +1,4 @@
-﻿namespace DevInstance.BlazorUtils.Services;
+﻿namespace DevInstance.BlazorToolkit.Services;
 
 public class ServiceActionError
 {

@@ -1,6 +1,6 @@
 ﻿using DevInstance.DevCoreApp.Shared.Model;
 
-namespace DevInstance.BlazorUtils.Http;
+namespace DevInstance.BlazorToolkit.Http;
 
 public interface IApiContext<T>
 {

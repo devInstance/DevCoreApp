@@ -1,5 +1,5 @@
 ﻿using DevInstance.DevCoreApp.Shared.Model;
-using DevInstance.BlazorUtils.Http;
+using DevInstance.BlazorToolkit.Http;
 using Microsoft.AspNetCore.Components;
 using DevInstance.DevCoreApp.Client.Services.Net.Api;
 using System.Net.Http;

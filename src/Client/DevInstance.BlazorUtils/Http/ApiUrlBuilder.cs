@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace DevInstance.BlazorUtils.Http;
+namespace DevInstance.BlazorToolkit.Http;
 
 public class ApiUrlBuilder
 {

@@ -1,4 +1,4 @@
-﻿namespace DevInstance.BlazorUtils.Http;
+﻿namespace DevInstance.BlazorToolkit.Http;
 
 public class HttpApiContextFactory
 {

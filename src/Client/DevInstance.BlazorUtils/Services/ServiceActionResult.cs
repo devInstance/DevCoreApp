@@ -1,5 +1,9 @@
-﻿namespace DevInstance.BlazorUtils.Services;
+﻿namespace DevInstance.BlazorToolkit.Services;
 
+/// <summary>
+/// Class to hold the result of the service action
+/// </summary>
+/// <typeparam name="T"></typeparam>
 public class ServiceActionResult<T>
 {
     public T? Result { get; set; }

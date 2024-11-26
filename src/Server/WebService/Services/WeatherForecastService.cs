@@ -1,5 +1,5 @@
-﻿using DevInstance.BlazorUtils.Services;
-using DevInstance.BlazorUtils.Services.Server;
+﻿using DevInstance.BlazorToolkit.Services;
+using DevInstance.BlazorToolkit.Services.Server;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Server.Database.Core.Data.Decorators;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
@@ -118,22 +118,22 @@ public class WeatherForecastService : BaseService, IWeatherForecastService
         return await GetByIdAsync(record.PublicId);
     }
 
-    public Task<BlazorUtils.Services.ServiceActionResult<WeatherForecastItem?>> GetAsync(string id)
+    public Task<BlazorToolkit.Services.ServiceActionResult<WeatherForecastItem?>> GetAsync(string id)
     {
         throw new NotImplementedException();
     }
 
-    public Task<BlazorUtils.Services.ServiceActionResult<WeatherForecastItem?>> AddNewAsync(WeatherForecastItem item)
+    public Task<BlazorToolkit.Services.ServiceActionResult<WeatherForecastItem?>> AddNewAsync(WeatherForecastItem item)
     {
         throw new NotImplementedException();
     }
 
-    public Task<BlazorUtils.Services.ServiceActionResult<WeatherForecastItem?>> UpdateAsync(WeatherForecastItem item)
+    public Task<BlazorToolkit.Services.ServiceActionResult<WeatherForecastItem?>> UpdateAsync(WeatherForecastItem item)
     {
         throw new NotImplementedException();
     }
 
-    public Task<BlazorUtils.Services.ServiceActionResult<bool>> RemoveAsync(WeatherForecastItem item)
+    public Task<BlazorToolkit.Services.ServiceActionResult<bool>> RemoveAsync(WeatherForecastItem item)
     {
         throw new NotImplementedException();
     }

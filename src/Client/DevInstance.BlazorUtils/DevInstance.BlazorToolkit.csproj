@@ -4,9 +4,10 @@
 		<TargetFramework>net8.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<AssemblyName>DevInstance.BlazorUtils</AssemblyName>
-		<RootNamespace>DevInstance.BlazorUtils</RootNamespace>
+		<AssemblyName>DevInstance.BlazorToolkit</AssemblyName>
+		<RootNamespace>DevInstance.BlazorToolkit</RootNamespace>
 		<Configurations>Debug;Release;NetApiMoqs;ServiceMoqs</Configurations>
+		<Copyright>Copyright 2021-2024 DevInstance LLC</Copyright>
 	</PropertyGroup>
 
 	<ItemGroup>

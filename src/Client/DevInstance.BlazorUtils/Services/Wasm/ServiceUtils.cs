@@ -1,7 +1,7 @@
 ﻿using DevInstance.LogScope;
 using System.Net;
 
-namespace DevInstance.BlazorUtils.Services.Wasm;
+namespace DevInstance.BlazorToolkit.Services.Wasm;
 
 public delegate void ResultHandler<T>(T result);
 

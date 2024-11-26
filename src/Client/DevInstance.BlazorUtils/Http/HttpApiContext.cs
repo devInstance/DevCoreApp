@@ -1,7 +1,7 @@
 ﻿using DevInstance.DevCoreApp.Shared.Model;
 using System.Net.Http.Json;
 
-namespace DevInstance.BlazorUtils.Http;
+namespace DevInstance.BlazorToolkit.Http;
 
 internal class HttpApiContext<T> : IApiContext<T>
 {

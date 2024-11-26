@@ -1,4 +1,4 @@
-﻿using DevInstance.BlazorUtils.Services;
+﻿using DevInstance.BlazorToolkit.Services;
 using DevInstance.LogScope;
 using Microsoft.AspNetCore.Components;
 
@@ -19,8 +19,17 @@ public class BasePage : ComponentBase, IServiceExecutionHost
         log = ScopeManager.CreateLogger(this);
     }
 
+    /// <summary>
+    /// Flag to indicate if the service call is in progress
+    /// </summary>
     public bool InProgress { get; set; } = false;
+    /// <summary>
+    /// Flag to indicate if the service call has an error
+    /// </summary>
     public bool IsError { get; set; } = false;
+    /// <summary>
+    /// Error message from the service call
+    /// </summary>
     public string ErrorMessage { get; set; } = "";
 
     protected ServiceExecutionHandler BeginServiceCall()

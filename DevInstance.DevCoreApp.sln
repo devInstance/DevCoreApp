@@ -33,7 +33,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EmailProcessor.MailKit", "s
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EmailProcessor", "src\Server\Email\Processor\EmailProcessor.csproj", "{7609E010-1A0A-4181-A840-84C6723EC47F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DevInstance.BlazorUtils", "src\Client\DevInstance.BlazorUtils\DevInstance.BlazorUtils.csproj", "{3724BE39-FBF4-4657-9929-DAFC35A2E3B1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DevInstance.BlazorToolkit", "src\Client\DevInstance.BlazorUtils\DevInstance.BlazorToolkit.csproj", "{3724BE39-FBF4-4657-9929-DAFC35A2E3B1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Services", "src\Shared\Services\Shared.Services.csproj", "{92C1A160-4F63-4B6A-897E-2088EEC67F7A}"
 EndProject

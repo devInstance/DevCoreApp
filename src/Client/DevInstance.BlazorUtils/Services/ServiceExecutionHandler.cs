@@ -1,6 +1,6 @@
 ﻿using DevInstance.LogScope;
 
-namespace DevInstance.BlazorUtils.Services;
+namespace DevInstance.BlazorToolkit.Services;
 
 public delegate Task<ServiceActionResult<T>> PerformAsyncCallHandler<T>();
 
