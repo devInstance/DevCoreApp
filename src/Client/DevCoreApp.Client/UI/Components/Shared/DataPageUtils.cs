@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace DevInstance.DevCoreApp.Client.Utils;
+namespace DevInstance.DevCoreApp.Client.UI.Components.Shared;
 
 public static class DataPageUtils
 {

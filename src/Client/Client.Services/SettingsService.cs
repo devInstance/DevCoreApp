@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Localization;
 using System.Globalization;
 using DevInstance.DevCoreApp.Shared.Services;
-using DevInstance.BlazorToolkit.Services.Wasm;
 
 namespace DevInstance.DevCoreApp.Client.Services;
 

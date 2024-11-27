@@ -4,6 +4,7 @@ using DevInstance.LogScope;
 using DevInstance.DevCoreApp.Client.Services.Net.Api;
 using DevInstance.DevCoreApp.Shared.Services;
 using DevInstance.BlazorToolkit.Services.Wasm;
+using DevInstance.BlazorToolkit.Model;
 
 namespace DevInstance.DevCoreApp.Client.Services;
 

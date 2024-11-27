@@ -18,10 +18,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <ProjectReference Include="..\..\..\..\..\..\..\devinstance\BlazorToolkit\DevInstance.BlazorToolkit.csproj" />
 	  <ProjectReference Include="..\..\Shared\Model\Shared.Model.csproj" />
 	  <ProjectReference Include="..\..\Shared\Services\Shared.Services.csproj" />
 	  <ProjectReference Include="..\..\Shared\Utils\Shared.Utils.csproj" />
-	  <ProjectReference Include="..\DevInstance.BlazorUtils\DevInstance.BlazorToolkit.csproj" />
 	</ItemGroup>
 
 </Project>

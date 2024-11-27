@@ -1,4 +1,5 @@
 ﻿
+using DevInstance.BlazorToolkit.Model;
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.DevCoreApp.Shared.Model;
 

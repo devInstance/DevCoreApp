@@ -1,4 +1,5 @@
-﻿using DevInstance.DevCoreApp.Shared.Model;
+﻿using DevInstance.BlazorToolkit.Model;
+using DevInstance.DevCoreApp.Shared.Model;
 using DevInstance.DevCoreApp.Shared.Services;
 using DevInstance.LogScope;
 using Microsoft.AspNetCore.Components;

@@ -1,4 +1,5 @@
-﻿using DevInstance.BlazorToolkit.Services;
+﻿using DevInstance.BlazorToolkit.Model;
+using DevInstance.BlazorToolkit.Services;
 using DevInstance.BlazorToolkit.Services.Server;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Server.Database.Core.Data.Decorators;

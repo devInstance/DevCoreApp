@@ -1,5 +1,5 @@
-﻿using DevInstance.DevCoreApp.Shared.Model;
-using DevInstance.BlazorToolkit.Services;
+﻿using DevInstance.BlazorToolkit.Services;
+using DevInstance.BlazorToolkit.Model;
 
 namespace DevInstance.DevCoreApp.Shared.Services;
 

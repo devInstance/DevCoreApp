@@ -1,4 +1,5 @@
 ﻿@page "/server/weather"
+@using DevInstance.BlazorToolkit.Model
 @attribute [StreamRendering]
 @inherits BasePage
 
@@ -8,13 +9,9 @@
 
 <h1>@loc["Weather (Streaming)"]</h1>
 
-<p>@loc["This page demonstrates server-side stream rendering using <code>@attribute [StreamRendering]</code>"]</p>
+<p>@(new MarkupString(loc["This page demonstrates server-side stream rendering using <code>@attribute [StreamRendering]</code>"]))</p>
 
-@if (forecasts == null)
-{
-    <p><em>Loading...</em></p>
-}
-else
+@if (!InProgress)
 {
     <table class="table table-striped">
         <thead>
@@ -102,6 +99,11 @@ else
                UrlTemplate="/server/weather?page={0}">
     </DataPager>
 }
+else
+{
+    <PageProgress></PageProgress>
+}
+
 
 @code {
     [Inject]
@@ -115,12 +117,16 @@ else
 
     private WeatherForecastItem selectedForecast;
 
+    [SupplyParameterFromQuery]
+    [Parameter]
+    public int Page { get; set; } = 0;
+
     protected override async Task OnInitializedAsync()
     {
         log = ScopeManager.CreateLogger(this);
         using (var scope = log.TraceScope())
         {
-            await RequestDataAsync(0);
+            await RequestDataAsync(Page);
             Service.OnDataUpdate += Service_OnDataUpdate;
         }
     }
@@ -129,7 +135,7 @@ else
     {
         using (var scope = log.TraceScope())
         {
-            await RequestDataAsync(0);
+            await RequestDataAsync(Page);
         }
     }
 
