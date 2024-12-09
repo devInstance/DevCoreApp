@@ -13,7 +13,7 @@
 	  <PackageReference Include="DevInstance.LogScope" Version="1.4.2" />
 	  <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="8.0.11" />
 	  <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
-	  <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
+	  <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
 	  <PackageReference Include="Microsoft.Extensions.Localization.Abstractions" Version="8.0.11" />
 	</ItemGroup>
 

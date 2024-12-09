@@ -22,13 +22,14 @@ public class CRUDService<T> : BaseService, ICRUDService<T> where T : ModelItem
     {
         using (var log = Log.TraceScope())
         {
-            return await ServiceUtils.HandleWebApiCallAsync(log,
+            return await ServiceUtils.HandleWebApiCallAsync(
                 async (l) =>
                 {
                     var api = Api.Get(id);
 
                     return await api.ExecuteAsync();
-                }
+                },
+                log
             );
         }
     }
@@ -42,7 +43,7 @@ public class CRUDService<T> : BaseService, ICRUDService<T> where T : ModelItem
     {
         using (var log = Log.TraceScope())
         {
-            return await ServiceUtils.HandleWebApiCallAsync(log,
+            return await ServiceUtils.HandleWebApiCallAsync(
                 async (l) =>
                 {
                     var response = await Api.Post(item).ExecuteAsync();
@@ -51,7 +52,8 @@ public class CRUDService<T> : BaseService, ICRUDService<T> where T : ModelItem
                         OnDataUpdate?.Invoke(response);
                     }
                     return response;
-                }
+                },
+                log
             );
         }
     }
@@ -60,7 +62,7 @@ public class CRUDService<T> : BaseService, ICRUDService<T> where T : ModelItem
     {
         using (var log = Log.TraceScope())
         {
-            return await ServiceUtils.HandleWebApiCallAsync(log,
+            return await ServiceUtils.HandleWebApiCallAsync(
                 async (l) =>
                 {
                     var response = await Api.Put(item.Id, item).ExecuteAsync();
@@ -69,7 +71,8 @@ public class CRUDService<T> : BaseService, ICRUDService<T> where T : ModelItem
                         OnDataUpdate?.Invoke(response);
                     }
                     return response;
-                }
+                },
+                log
             );
         }
     }
@@ -78,7 +81,7 @@ public class CRUDService<T> : BaseService, ICRUDService<T> where T : ModelItem
     {
         using (var log = Log.TraceScope())
         {
-            return await ServiceUtils.HandleWebApiCallAsync(log,
+            return await ServiceUtils.HandleWebApiCallAsync(
                 async (l) =>
                 {
                     var response = await Api.Delete(item.Id).ExecuteAsync();
@@ -87,7 +90,8 @@ public class CRUDService<T> : BaseService, ICRUDService<T> where T : ModelItem
                         OnDataUpdate?.Invoke(default(T));
                     }
                     return true;
-                }
+                },
+                log
             );
         }
     }

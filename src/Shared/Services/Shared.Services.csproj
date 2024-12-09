@@ -10,11 +10,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <PackageReference Include="DevInstance.BlazorToolkit" Version="8.0.1" />
 	  <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\..\..\..\..\..\devinstance\BlazorToolkit\DevInstance.BlazorToolkit.csproj" />
 		<ProjectReference Include="..\Model\Shared.Model.csproj" />
 	</ItemGroup>
 

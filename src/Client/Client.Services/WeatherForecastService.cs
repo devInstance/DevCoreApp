@@ -23,7 +23,7 @@ public class WeatherForecastService : CRUDService<WeatherForecastItem>, IWeather
     {
         using (var log = Log.TraceScope())
         {
-            return await ServiceUtils.HandleWebApiCallAsync(log,
+            return await ServiceUtils.HandleWebApiCallAsync(
                 async (l) =>
                 {
                     var api = Api.GetWeatherForecastApi().Get();
@@ -41,7 +41,8 @@ public class WeatherForecastService : CRUDService<WeatherForecastItem>, IWeather
                     }
 
                     return await api.ListAsync();
-                }
+                },
+                log
             );
         }
     }

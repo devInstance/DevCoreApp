@@ -20,6 +20,7 @@
 		<ProjectReference Include="..\Database\Postgres\Postgres.csproj" />
 		<ProjectReference Include="..\Database\SqlServer\SqlServer.csproj" />
 		<ProjectReference Include="..\Email\Processor\EmailProcessor.csproj" />
+		<PackageReference Include="Azure.Identity" Version="1.10.3" />
 		<PackageReference Include="DevInstance.LogScope.Extensions.MicrosoftLogger" Version="1.0.1" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="8.0.11" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.11" />

@@ -13,7 +13,6 @@ public class NetApiRepository : INetApiRepository
     public NetApiRepository(IHttpClientFactory factory, NavigationManager navigationManager)
     {
         httpFactory = factory;
-        //httpFactory.BaseAddress = new Uri(navigationManager.BaseUri);
     }
 
     HttpClient HttpClient => httpFactory.CreateClient("DevInstance.DevCoreApp.ServerAPI");
