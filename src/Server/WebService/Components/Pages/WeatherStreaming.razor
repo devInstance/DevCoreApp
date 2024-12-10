@@ -16,30 +16,29 @@
     <table class="table table-striped">
         <thead>
             <tr>
-                <th scope="col"></th>
                 <th scope="col">
                     <SortableHeader Label="@loc["Date"]"
-                                    SortField="WeatherForecastFields.Date"
-                                    IsSorted="forecasts?.SortBy.FromFieldName() == WeatherForecastFields.Date"
-                                    IsAsc="forecasts?.IsAsc ?? true"
-                                    OnSort="@(() => SortBy(WeatherForecastFields.Date, !forecasts?.IsAsc ?? true))" />
+                        SortField="WeatherForecastFields.Date"
+                        IsSorted="forecasts?.SortBy.FromFieldName() == WeatherForecastFields.Date"
+                        IsAsc="forecasts?.IsAsc ?? true"
+                        UrlTemplate="@HeaderUrlTemplate" />
                 </th>
                 <th scope="col">
                     <SortableHeader Label="@loc["Temp. (C)"]"
-                                    SortField="WeatherForecastFields.Date"
-                                    IsSorted="forecasts?.SortBy.FromFieldName() == WeatherForecastFields.Temperature"
-                                    IsAsc="forecasts?.IsAsc ?? true"
-                                    OnSort="@(() => SortBy(WeatherForecastFields.Temperature, !forecasts?.IsAsc ?? true))" />
+                        SortField="WeatherForecastFields.Temperature"
+                        IsSorted="forecasts?.SortBy.FromFieldName() == WeatherForecastFields.Temperature"
+                        IsAsc="forecasts?.IsAsc ?? true"
+                        UrlTemplate="@HeaderUrlTemplate" />
                 </th>
                 <th scope="col">
                     <span>@loc["Temp. (F)"]</span>
                 </th>
                 <th scope="col">
                     <SortableHeader Label="@loc["Summary"]"
-                                    SortField="WeatherForecastFields.Date"
-                                    IsSorted="forecasts?.SortBy.FromFieldName() == WeatherForecastFields.Summary"
-                                    IsAsc="forecasts?.IsAsc ?? true"
-                                    OnSort="@(() => SortBy(WeatherForecastFields.Summary, !forecasts?.IsAsc ?? true))" />
+                        SortField="WeatherForecastFields.Summary"
+                        IsSorted="forecasts?.SortBy.FromFieldName() == WeatherForecastFields.Summary"
+                        IsAsc="forecasts?.IsAsc ?? true"
+                        UrlTemplate="@HeaderUrlTemplate" />
                 </th>
             </tr>
         </thead>
@@ -47,44 +46,6 @@
             @foreach (var forecast in forecasts.Items)
             {
                 <tr>
-                    <td class="first-table-item text-nowrap">
-                        <div class="btn-group">
-                            <button type="button"
-                                    class="btn btn-default"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#addForecastModal"
-                                    data-bs-keyboard="false"
-                                    data-bs-backdrop="static"
-                                    title="@loc["Edit"]"
-                                    @onclick="@(() => selectedForecast = forecast)"
-                            @onclick:preventDefault>
-                                <span class="bi bi-pencil" aria-hidden="true"></span>
-                            </button>
-                            <button type="button" class="btn dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
-                                <span class="visually-hidden">Toggle Dropdown</span>
-                            </button>
-                            <ul class="dropdown-menu">
-                                <li>
-                                    <a class="dropdown-item" href="#"
-                                       data-bs-toggle="modal"
-                                       data-bs-target="#addForecastModal"
-                                       data-bs-keyboard="false"
-                                       data-bs-backdrop="static"
-                                       title="@loc["Edit"]"
-                                       @onclick="@(() => selectedForecast = forecast)"
-                                    @onclick:preventDefault>
-                                        <span class="bi bi-pen small-timer-button" aria-hidden="true"></span> @loc["Edit"]
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#addDeleteModal" @onclick="@(() => selectedForecast = forecast)" @onclick:preventDefault>
-                                        <span class="bi bi-trash small-timer-button" aria-hidden="true"></span> @loc["Delete"]
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-                    </td>
-
                     <td>@forecast.Date.ToShortDateString()</td>
                     <td>@forecast.TemperatureC</td>
                     <td>@forecast.TemperatureF</td>
@@ -94,9 +55,9 @@
         </tbody>
     </table>
     <DataPager PagesCount="@forecasts.PagesCount"
-               SelectedPage="@forecasts.Page"
-               OnPageChanged="@RequestDataAsync"
-               UrlTemplate="/server/weather?page={0}">
+    SelectedPage="@forecasts.Page"
+    OnPageChanged="@RequestDataAsync"
+    UrlTemplate="@PagerUrlTemplate">
     </DataPager>
 }
 else
@@ -121,6 +82,40 @@ else
     [Parameter]
     public int Page { get; set; } = 0;
 
+    [SupplyParameterFromQuery]
+    [Parameter]
+    public string SortBy { get; set; } = string.Empty;
+
+    [SupplyParameterFromQuery]
+    [Parameter]
+    public bool Asc { get; set; } = true;
+
+    private string PagerUrlTemplate
+    {
+        get
+        {
+            var url = "/server/weather?page={0}";
+            if (forecasts != null)
+            {
+                url += $"&sortby={forecasts.SortBy}&asc={forecasts.IsAsc}";
+            }
+            return url;
+        }
+    }
+
+    private string HeaderUrlTemplate
+    {
+        get
+        {
+            var url = "/server/weather?sortby={0}&asc={1}";
+            if (Page > 0)
+            {
+                url += $"&page={Page}";
+            }
+            return url;
+        }
+    }
+
     protected override async Task OnInitializedAsync()
     {
         log = ScopeManager.CreateLogger(this);
@@ -141,21 +136,11 @@ else
 
     protected async Task RequestDataAsync(int page)
     {
-        await ServiceCallAsync(() => Service.GetItemsAsync(PageSize, page, null, null, null), (a) => { forecasts = a; });
+        await ServiceCallAsync(() => Service.GetItemsAsync(PageSize, page, SortBy?.FromFieldName(), Asc, null), (a) => { forecasts = a; });
     }
 
     private async Task Remove(WeatherForecastItem item)
     {
         await ServiceCallAsync(() => Service.RemoveAsync(item), null, async (a) => { await RequestDataAsync(forecasts.Page); });
-    }
-
-    private async Task SortBy(WeatherForecastFields sortBy, bool isAsc)
-    {
-        await ServiceCallAsync(
-            () => Service.GetItemsAsync(PageSize, forecasts?.Page ?? 0, sortBy, isAsc, null),
-            (a) =>
-            {
-                forecasts = a;
-            });
     }
 }
