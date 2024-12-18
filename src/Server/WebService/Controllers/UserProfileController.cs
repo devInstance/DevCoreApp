@@ -1,43 +1,44 @@
 ﻿using DevInstance.DevCoreApp.Server.WebService.Services;
 using DevInstance.DevCoreApp.Shared.Model;
+using DevInstance.WebServiceToolkit.Controllers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using static DevInstance.WebServiceToolkit.Controllers.ControllerUtils;
 
-namespace DevInstance.DevCoreApp.Server.Controllers
+namespace DevInstance.DevCoreApp.Server.Controllers;
+
+[Route("api/user/profile")]
+[ApiController]
+public class UserProfileController : ControllerBase
 {
-    [Route("api/user/profile")]
-    [ApiController]
-    public class UserProfileController : BaseController
+    public UserProfileService Service{ get; }
+
+    public UserProfileController(UserProfileService service)
     {
-        public UserProfileService Service{ get; }
+        Service = service;
+    }
 
-        public UserProfileController(UserProfileService service)
+    [Authorize]
+    [HttpGet]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<UserProfileItem> GetProfile()
+    {
+        return this.HandleWebRequest((WebHandler<UserProfileItem>)(() =>
         {
-            Service = service;
-        }
+            return Ok(Service.Get());
+        }));
+    }
 
-        [Authorize]
-        [HttpGet]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public ActionResult<UserProfileItem> GetProfile()
+    [Authorize]
+    [HttpPut]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<UserProfileItem>> UpdateProfileAsync([FromBody] UserProfileItem newProfile)
+    {
+        return await this.HandleWebRequestAsync<UserProfileItem>(async () =>
         {
-            return HandleWebRequest((WebHandler<UserProfileItem>)(() =>
-            {
-                return Ok(Service.Get());
-            }));
-        }
-
-        [Authorize]
-        [HttpPut]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<ActionResult<UserProfileItem>> UpdateProfileAsync([FromBody] UserProfileItem newProfile)
-        {
-            return await HandleWebRequestAsync<UserProfileItem>(async () =>
-            {
-                return Ok(await Service.UpdateAsync(newProfile));
-            });
-        }
+            return Ok(await Service.UpdateAsync(newProfile));
+        });
     }
 }

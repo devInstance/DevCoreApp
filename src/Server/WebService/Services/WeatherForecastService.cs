@@ -4,13 +4,13 @@ using DevInstance.BlazorToolkit.Services.Server;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Server.Database.Core.Data.Decorators;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
-using DevInstance.DevCoreApp.Server.Exceptions;
 using DevInstance.DevCoreApp.Server.WebService.Authentication;
 using DevInstance.DevCoreApp.Server.WebService.Tools;
 using DevInstance.DevCoreApp.Shared.Model;
 using DevInstance.DevCoreApp.Shared.Services;
 using DevInstance.DevCoreApp.Shared.Utils;
 using DevInstance.LogScope;
+using DevInstance.WebServiceToolkit.Exceptions;
 using Microsoft.EntityFrameworkCore;
 
 namespace DevInstance.DevCoreApp.Server.WebService.Services;

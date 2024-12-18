@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using DevInstance.DevCoreApp.Server.WebService.Services;
 using DevInstance.BlazorToolkit.Model;
+using DevInstance.WebServiceToolkit.Controllers;
 
 namespace DevInstance.DevCoreApp.Server.Controllers;
 
@@ -11,7 +12,7 @@ namespace DevInstance.DevCoreApp.Server.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/forecast")]
-public class WeatherForecastController : BaseController
+public class WeatherForecastController : ControllerBase
 {
     public WeatherForecastService Service { get; }
 
@@ -33,7 +34,7 @@ public class WeatherForecastController : BaseController
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<ModelList<WeatherForecastItem>>> GetItemsAsync(int? top, int? page, string? sortBy, bool? asc, int? filter, int? fields, string? search)
     {
-        return await HandleWebRequestAsync<ModelList<WeatherForecastItem>>(async () =>
+        return await this.HandleWebRequestAsync<ModelList<WeatherForecastItem>>(async () =>
         {
             return Ok(await Service.GetItemsAsync(top, page, sortBy, asc, filter, fields, search));
         });
@@ -50,7 +51,7 @@ public class WeatherForecastController : BaseController
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<WeatherForecastItem>> GetByIdAsync(string id)
     {
-        return await HandleWebRequestAsync<WeatherForecastItem>(async () =>
+        return await this.HandleWebRequestAsync<WeatherForecastItem>(async () =>
         {
             return Ok(await Service.GetByIdAsync(id));
         });
@@ -66,7 +67,7 @@ public class WeatherForecastController : BaseController
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<WeatherForecastItem>> AddAsync(WeatherForecastItem item)
     {
-        return await HandleWebRequestAsync<WeatherForecastItem>(async () =>
+        return await this.HandleWebRequestAsync<WeatherForecastItem>(async () =>
         {
             return Ok(await Service.AddAsync(item));
         });
@@ -85,7 +86,7 @@ public class WeatherForecastController : BaseController
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<WeatherForecastItem>> UpdateAsync(string id, [FromBody] WeatherForecastItem item)
     {
-        return await HandleWebRequestAsync<WeatherForecastItem>(async () =>
+        return await this.HandleWebRequestAsync<WeatherForecastItem>(async () =>
         {
             return Ok(await Service.UpdateAsync(id, item));
         });
@@ -103,7 +104,7 @@ public class WeatherForecastController : BaseController
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<WeatherForecastItem>> RemoveAsync(string id)
     {
-        return await HandleWebRequestAsync<WeatherForecastItem>(async () =>
+        return await this.HandleWebRequestAsync<WeatherForecastItem>(async () =>
         {
             return Ok(await Service.RemoveAsync(id));
         });

@@ -5,25 +5,24 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace DevInstance.DevCoreApp.Server.Database.SqlServer
+namespace DevInstance.DevCoreApp.Server.Database.SqlServer;
+
+public static class ConfigurationExtensions
 {
-    public static class ConfigurationExtensions
+    public static void ConfigureSqlServerDatabase(this IServiceCollection services, IConfiguration configuration)
     {
-        public static void ConfigureSqlServerDatabase(this IServiceCollection services, IConfiguration configuration)
-        {
-            var connectionString = configuration.GetConnectionString("SqlServerConnection");
-            services.AddDbContext<ApplicationDbContext, SqlServerApplicationDbContext>(options =>
-                    options.UseSqlServer(
-                            connectionString,
-                            b => b.MigrationsAssembly("DevInstance.DevCoreApp.Server.Database.SqlServer")
-                            ));
+        var connectionString = configuration.GetConnectionString("SqlServerConnection");
+        services.AddDbContext<ApplicationDbContext, SqlServerApplicationDbContext>(options =>
+                options.UseSqlServer(
+                        connectionString,
+                        b => b.MigrationsAssembly("DevInstance.DevCoreApp.Server.Database.SqlServer")
+                        ));
 
-            services.AddScoped<IQueryRepository, SqlServerQueryRepository>();
-        }
+        services.AddScoped<IQueryRepository, SqlServerQueryRepository>();
+    }
 
-        public static void ConfigureSqlServerIdentityContext(this IServiceCollection services)
-        {
-            services.ConfigureIdentityContext<SqlServerApplicationDbContext>();
-        }
+    public static void ConfigureSqlServerIdentityContext(this IServiceCollection services)
+    {
+        services.ConfigureIdentityContext<SqlServerApplicationDbContext>();
     }
 }

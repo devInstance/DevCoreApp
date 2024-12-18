@@ -1,9 +1,9 @@
 ﻿using DevInstance.LogScope;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
-using DevInstance.DevCoreApp.Server.Database.Core.Data.Queries;
 using DevInstance.DevCoreApp.Shared.Utils;
 using DevInstance.DevCoreApp.Server.WebService.Authentication;
 using DevInstance.BlazorToolkit.Model;
+using DevInstance.WebServiceToolkit.Database.Queries;
 
 namespace DevInstance.DevCoreApp.Server.WebService.Services;
 
