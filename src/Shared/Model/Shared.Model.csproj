@@ -9,6 +9,7 @@
 
   <ItemGroup>
 	  <PackageReference Include="DevInstance.BlazorToolkit" Version="8.0.1" />
+	  <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.0" />
   </ItemGroup>
 
   <ItemGroup>
