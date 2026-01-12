@@ -2,8 +2,8 @@
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Shared.Utils;
 using DevInstance.DevCoreApp.Server.WebService.Authentication;
-using DevInstance.BlazorToolkit.Model;
 using DevInstance.WebServiceToolkit.Database.Queries;
+using DevInstance.WebServiceToolkit.Common.Model;
 
 namespace DevInstance.DevCoreApp.Server.WebService.Services;
 

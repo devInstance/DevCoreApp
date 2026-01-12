@@ -8,16 +8,18 @@ namespace DevInstance.DevCoreApp.Client.Services.Net;
 
 public class NetApiRepository : INetApiRepository
 {
-    private readonly IHttpClientFactory httpFactory;
+    private readonly IHttpClientFactory clientFactory;
+    private readonly IHttpApiContextFactory apiFactory;
 
-    public NetApiRepository(IHttpClientFactory factory, NavigationManager navigationManager)
+    public NetApiRepository(IHttpClientFactory client, IHttpApiContextFactory api,NavigationManager navigationManager)
     {
-        httpFactory = factory;
+        clientFactory = client;
+        apiFactory = api;
     }
 
-    HttpClient HttpClient => httpFactory.CreateClient("DevInstance.DevCoreApp.ServerAPI");
+    HttpClient HttpClient => clientFactory.CreateClient("DevInstance.DevCoreApp.ServerAPI");
     public IApiContext<WeatherForecastItem> GetWeatherForecastApi()
     {
-        return HttpApiContextFactory.Create<WeatherForecastItem>(HttpClient, "api/forecast");
+        return apiFactory.Create<WeatherForecastItem>(HttpClient, "api/forecast");
     }
 }

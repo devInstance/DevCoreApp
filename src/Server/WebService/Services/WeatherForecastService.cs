@@ -1,5 +1,4 @@
-﻿using DevInstance.BlazorToolkit.Model;
-using DevInstance.BlazorToolkit.Services;
+﻿using DevInstance.BlazorToolkit.Services;
 using DevInstance.BlazorToolkit.Services.Server;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Server.Database.Core.Data.Decorators;
@@ -10,6 +9,7 @@ using DevInstance.DevCoreApp.Shared.Model;
 using DevInstance.DevCoreApp.Shared.Services;
 using DevInstance.DevCoreApp.Shared.Utils;
 using DevInstance.LogScope;
+using DevInstance.WebServiceToolkit.Common.Model;
 using DevInstance.WebServiceToolkit.Exceptions;
 using Microsoft.EntityFrameworkCore;
 
@@ -49,11 +49,12 @@ public class WeatherForecastService : BaseService, IWeatherForecastService
     {
         using (log.TraceScope())
         {
-            return await ServiceUtils.HandleServiceCallAsync(log,
+            return await ServiceUtils.HandleServiceCallAsync(
                 async (l) =>
                 {
                     return await GetItemsAsync(top, page, sortBy?.ToFieldName(), isAsc, null, null, search);
-                }
+                },
+                log
             );
         }
     }

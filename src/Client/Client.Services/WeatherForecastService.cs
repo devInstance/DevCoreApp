@@ -4,7 +4,8 @@ using DevInstance.LogScope;
 using DevInstance.DevCoreApp.Client.Services.Net.Api;
 using DevInstance.DevCoreApp.Shared.Services;
 using DevInstance.BlazorToolkit.Services.Wasm;
-using DevInstance.BlazorToolkit.Model;
+using DevInstance.WebServiceToolkit.Common.Model;
+using DevInstance.BlazorToolkit.Http.Extensions;
 
 namespace DevInstance.DevCoreApp.Client.Services;
 
@@ -40,7 +41,7 @@ public class WeatherForecastService : CRUDService<WeatherForecastItem>, IWeather
                         api = api.Sort(sortBy.Value.ToString(), isAsc ?? true);
                     }
 
-                    return await api.ListAsync();
+                    return await api.ExecuteListAsync();
                 },
                 log
             );

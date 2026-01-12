@@ -31,20 +31,15 @@ public class BasePage : ComponentBase, IServiceExecutionHost
     /// Error message from the service call
     /// </summary>
     public string ErrorMessage { get; set; } = "";
+    public ServiceExecutionType ServiceState { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
-    protected ServiceExecutionHandler BeginServiceCall()
-    {
-        return new ServiceExecutionHandler(log, this);
-    }
+    public PersistentComponentState ComponentState => throw new NotImplementedException();
+
+    public Dictionary<string, string> State => throw new NotImplementedException();
 
     public void ShowLogin()
     {
         NavigationManager.NavigateTo($"account/login?returnUrl={Uri.EscapeDataString(NavigationManager.Uri)}");
-    }
-
-    protected async Task ServiceCallAsync<T>(PerformAsyncCallHandler<T> handler, Action<T> success = null, Func<T, Task> sucessAsync = null, Action<ServiceActionError[]> error = null, Action before = null, bool enableProgress = true)
-    {
-        await BeginServiceCall().DispatchCall<T>(handler, success, sucessAsync, error, before, enableProgress).ExecuteAsync();
     }
 
     void IServiceExecutionHost.StateHasChanged()

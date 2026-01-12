@@ -1,4 +1,4 @@
-﻿using DevInstance.BlazorToolkit.Model;
+﻿using DevInstance.WebServiceToolkit.Common.Model;
 using System;
 using System.Collections.Generic;
 using System.Text;

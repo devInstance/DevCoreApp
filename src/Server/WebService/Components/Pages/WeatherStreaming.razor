@@ -1,5 +1,5 @@
 ﻿@page "/server/weather"
-@using DevInstance.BlazorToolkit.Model
+@using DevInstance.BlazorToolkit.Services
 @attribute [StreamRendering]
 @inherits BasePage
 
@@ -136,11 +136,11 @@ else
 
     protected async Task RequestDataAsync(int page)
     {
-        await ServiceCallAsync(() => Service.GetItemsAsync(PageSize, page, SortBy?.FromFieldName(), Asc, null), (a) => { forecasts = a; });
+        await this.ServiceReadAsync(() => Service.GetItemsAsync(PageSize, page, SortBy?.FromFieldName(), Asc, null), (a) => { forecasts = a; });
     }
 
     private async Task Remove(WeatherForecastItem item)
     {
-        await ServiceCallAsync(() => Service.RemoveAsync(item), null, async (a) => { await RequestDataAsync(forecasts.Page); });
+        await this.ServiceSubmitAsync(() => Service.RemoveAsync(item), null, async (a) => { await RequestDataAsync(forecasts.Page); });
     }
 }

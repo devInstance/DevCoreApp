@@ -1,9 +1,9 @@
 ﻿using DevInstance.BlazorToolkit.Http;
-using DevInstance.BlazorToolkit.Model;
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.BlazorToolkit.Services.Wasm;
 using DevInstance.DevCoreApp.Shared.Services;
 using DevInstance.LogScope;
+using DevInstance.WebServiceToolkit.Common.Model;
 
 namespace DevInstance.DevCoreApp.Client.Services;
 
@@ -65,7 +65,7 @@ public class CRUDService<T> : BaseService, ICRUDService<T> where T : ModelItem
             return await ServiceUtils.HandleWebApiCallAsync(
                 async (l) =>
                 {
-                    var response = await Api.Put(item.Id, item).ExecuteAsync();
+                    var response = await Api.Put(item, item.Id).ExecuteAsync();
                     if (response != null)
                     {
                         OnDataUpdate?.Invoke(response);

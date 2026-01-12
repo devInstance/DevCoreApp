@@ -2,8 +2,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using DevInstance.DevCoreApp.Server.WebService.Services;
-using DevInstance.BlazorToolkit.Model;
 using DevInstance.WebServiceToolkit.Controllers;
+using DevInstance.WebServiceToolkit.Common.Model;
 
 namespace DevInstance.DevCoreApp.Server.Controllers;
 

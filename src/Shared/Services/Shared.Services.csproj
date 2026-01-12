@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net8.0</TargetFramework>
+		<TargetFramework>net10.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<AssemblyName>DevInstance.DevCoreApp.Shared.Services</AssemblyName>
 		<RootNamespace>DevInstance.DevCoreApp.Shared.Services</RootNamespace>
@@ -10,9 +10,9 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="DevInstance.BlazorToolkit" Version="8.0.1" />
-	  <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.0" />
-	  <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.0" />
+	  <PackageReference Include="DevInstance.BlazorToolkit" Version="10.0.0" />
+	  <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.1" />
+	  <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.1" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -1,4 +1,5 @@
-﻿using DevInstance.DevCoreApp.Shared.Model;
+﻿using DevInstance.BlazorToolkit.Services;
+using DevInstance.DevCoreApp.Shared.Model;
 using DevInstance.DevCoreApp.Shared.Services;
 using DevInstance.LogScope;
 using Microsoft.AspNetCore.Components;
@@ -62,7 +63,7 @@ public partial class NewForecastModal
     {
         using (var l = log.TraceScope())
         {
-            await ServiceCallAsync(() => Service.AddNewAsync(
+            await this.ServiceSubmitAsync(() => Service.AddNewAsync(
                 new WeatherForecastItem
                 {
                     TemperatureC = Temperature,
@@ -76,7 +77,7 @@ public partial class NewForecastModal
                 },
                 (e) =>
                 {
-                    //TODO: Show error
+                    return true;
                 }
             );
         }
