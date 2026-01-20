@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet build:*)",
+      "Bash(Select-String -Pattern \"error CS|Warning\\\\\\(s\\\\\\)|Error\\\\\\(s\\\\\\)\")",
+      "Bash(findstr:*)"
+    ]
+  }
+}

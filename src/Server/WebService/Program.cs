@@ -1,4 +1,4 @@
-using DevInstance.DevCoreApp.Components.Account;
+using DevInstance.DevCoreApp.Server.WebService.Components.Account;
 
 //TODO: migrate to view-model
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
@@ -35,18 +35,15 @@ public class Program
         // Add services to the container.
 #if DEBUG
         builder.Services.AddRazorComponents(options => options.DetailedErrors = builder.Environment.IsDevelopment())
-                .AddInteractiveWebAssemblyComponents()
                 .AddInteractiveServerComponents();
 #else
         builder.Services.AddRazorComponents()
-                .AddInteractiveWebAssemblyComponents()
                 .AddInteractiveServerComponents();
 #endif
 
         builder.Services.AddCascadingAuthenticationState();
-        builder.Services.AddScoped<IdentityUserAccessor>();
         builder.Services.AddScoped<IdentityRedirectManager>();
-        builder.Services.AddScoped<AuthenticationStateProvider, PersistingServerAuthenticationStateProvider>();
+        builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
 
         builder.Services.AddAuthorization();
         builder.Services.AddAuthentication(options =>
@@ -70,9 +67,6 @@ public class Program
 
         builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
         builder.Services.AddLocalization();
-
-        // Calling client registrations since Main function is not called in the client
-        Client.ClientRegistry.Register(builder.Services);
 
         var app = builder.Build();
 
@@ -99,9 +93,7 @@ public class Program
         app.UseAuthorization();
 
         app.MapRazorComponents<App>()
-            .AddInteractiveServerRenderMode()
-            .AddInteractiveWebAssemblyRenderMode()
-            .AddAdditionalAssemblies(typeof(Client._Imports).Assembly);
+            .AddInteractiveServerRenderMode();
 
         app.MapControllers();
         // Add additional endpoints required by the Identity /Account Razor components.

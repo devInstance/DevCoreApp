@@ -1,17 +1,13 @@
-﻿@page "/server/counter"
+﻿@page "/counter"
 @rendermode InteractiveServer
 
-@inject IStringLocalizer<Counter> loc;
+<PageTitle>Counter</PageTitle>
 
-<PageTitle>@loc["Counter on server"]</PageTitle>
+<h1>Counter</h1>
 
-<h1>@loc["Counter (InteractiveServer mode)"]</h1>
+<p role="status">Current count: @currentCount</p>
 
-<p>@(new MarkupString(loc["This is an example of the page rendered using <code>@rendermode InteractiveServer</code>"]))</p>
-
-<p role="status">@loc["Current count:"] @currentCount</p>
-
-<button class="btn btn-primary" @onclick="IncrementCount">@loc["Click me"]</button>
+<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
 
 @code {
     private int currentCount = 0;

@@ -1,5 +1,9 @@
 ﻿@page "/Account/RegisterConfirmation"
 
+@using System.Text
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.WebUtilities
+
 @inject UserManager<ApplicationUser> UserManager
 @inject IEmailSender<ApplicationUser> EmailSender
 @inject NavigationManager NavigationManager
@@ -20,7 +24,7 @@
 }
 else
 {
-    <p>Please check your email to confirm your account.</p>
+    <p role="alert">Please check your email to confirm your account.</p>
 }
 
 @code {
@@ -41,6 +45,7 @@ else
         if (Email is null)
         {
             RedirectManager.RedirectTo("");
+            return;
         }
 
         var user = await UserManager.FindByEmailAsync(Email);
