@@ -1,4 +1,4 @@
-namespace DevInstance.DevCoreApp.Server.WebService.Components.Account
+namespace DevInstance.DevCoreApp.Server.WebService.UI.Account
 {
     public enum PasskeyOperation
     {

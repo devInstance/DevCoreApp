@@ -12,7 +12,7 @@ using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using DevInstance.DevCoreApp.Shared.Utils;
 using DevInstance.BlazorToolkit.Utils;
 
-namespace DevInstance.DevCoreApp.Server.WebService.Components.Account.Pages.Admin;
+namespace DevInstance.DevCoreApp.Server.WebService.UI.Account.Pages.Admin;
 
 public partial class Setup
 {

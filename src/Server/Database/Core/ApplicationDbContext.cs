@@ -23,9 +23,9 @@ public abstract class ApplicationDbContext : IdentityDbContext<ApplicationUser, 
     {
         base.OnModelCreating(builder);
 
-        WeatherForecast[] items = GenerateRecords();
+       // WeatherForecast[] items = GenerateRecords();
 
-        builder.Entity<WeatherForecast>().HasData(items);
+       // builder.Entity<WeatherForecast>().HasData(items);
     }
 
     private static WeatherForecast[] GenerateRecords()

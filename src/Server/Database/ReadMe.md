@@ -53,27 +53,40 @@ private void ConfigureDatabase(IServiceCollection services)
 
 ## Migrations
 
-Migrations are owned by the provider project. Run the following command in the WebService project to create a migration:
+Migrations are owned by the provider project. To create a migration, navigate to the WebService project directory and run:
 
-`DevCoreApp\src\Server\WebService> dotnet ef migrations add <Migration Name>  --project ..\Database\<Provider>`
+**Working Directory:** `src\Server\WebService`
 
-Example:
+**Command:**
+```
+dotnet ef migrations add <Migration Name> --project ..\Database\<Provider>
+```
 
-`DevCoreApp\src\Server\WebService> dotnet ef migrations add CreateIdentitySchema --project ..\Database\Postgres`
+**Example:**
+```
+dotnet ef migrations add CreateIdentitySchema --project ..\Database\Postgres
+```
 
 To apply a migration to the local development database, use:
 
-`dotnet ef database update`
+```
+dotnet ef database update
+```
 
 Production deployment can be done by running a script. The production script is usually stored in the deployment/sql/<provider> folder and should have the full name of the migration. Generate the script with:
 
-`dotnet ef migrations script  --project ..\Database\<provider> > ..\..\..\deployment\sql\<provider>\<migration>.sql`
+```
+dotnet ef migrations script --project ..\Database\<provider> > ..\..\..\deployment\sql\<provider>\<migration>.sql
+```
 
-Example:
-
-`dotnet ef migrations script  --project ..\Database\Postgres\ > ..\..\..\deployment\sql\postgres\20210728041133_CreateIdentitySchema.sql`
+**Example:**
+```
+dotnet ef migrations script --project ..\Database\Postgres > ..\..\..\deployment\sql\postgres\20210728041133_CreateIdentitySchema.sql
+```
 
 If you encounter the "Command dotnet ef not found" error, please install the EF tool:
 
-`dotnet tool install --global dotnet-ef`
+```
+dotnet tool install --global dotnet-ef
+```
 

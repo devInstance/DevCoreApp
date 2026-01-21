@@ -2,7 +2,7 @@ using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Identity;
 
-namespace DevInstance.DevCoreApp.Server.WebService.Components.Account
+namespace DevInstance.DevCoreApp.Server.WebService.UI.Account
 {
     internal sealed class IdentityRedirectManager(NavigationManager navigationManager)
     {

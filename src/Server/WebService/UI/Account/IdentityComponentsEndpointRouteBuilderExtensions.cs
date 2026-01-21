@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using System.Text.Json;
-using DevInstance.DevCoreApp.Server.WebService.Components.Account.Pages;
-using DevInstance.DevCoreApp.Server.WebService.Components.Account.Pages.Manage;
+using DevInstance.DevCoreApp.Server.WebService.UI.Account.Pages;
+using DevInstance.DevCoreApp.Server.WebService.UI.Account.Pages.Manage;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;

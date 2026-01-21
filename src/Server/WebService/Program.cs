@@ -1,9 +1,9 @@
-using DevInstance.DevCoreApp.Server.WebService.Components.Account;
+using DevInstance.DevCoreApp.Server.WebService.UI.Account;
 
 //TODO: migrate to view-model
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
 
-using DevInstance.DevCoreApp.Server.WebService.Components;
+using DevInstance.DevCoreApp.Server.WebService.UI;
 using DevInstance.DevCoreApp.Server.WebService.Tools;
 using DevInstance.LogScope.Extensions.MicrosoftLogger;
 using DevInstance.LogScope.Formatters;
@@ -61,7 +61,6 @@ public class Program
 
         builder.Services.AddAppIdentity();
 
-        builder.Services.AddScoped<IWeatherForecastService, WeatherForecastService>();
         builder.Services.AddServerAppServices();
         builder.Services.AddControllers();
 
