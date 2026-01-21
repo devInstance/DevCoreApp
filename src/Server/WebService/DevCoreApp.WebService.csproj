@@ -22,23 +22,23 @@
 		<ProjectReference Include="..\Database\SqlServer\SqlServer.csproj" />
 		<ProjectReference Include="..\Email\Processor\EmailProcessor.csproj" />
 		
-		<PackageReference Include="DevInstance.LogScope.Extensions.MicrosoftLogger" Version="8.0.0" />
-		<PackageReference Include="DevInstance.WebServiceToolkit" Version="10.0.0" />
-		<PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="10.0.1" />
-		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.1" />
-		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="10.0.1" />
-		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.1" />
-		<PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.1" />
-		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.1" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.1" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.1">
+		<PackageReference Include="DevInstance.LogScope.Extensions.MicrosoftLogger" Version="10.0.0" />
+		<PackageReference Include="DevInstance.WebServiceToolkit" Version="10.0.1" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="10.0.2" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.2" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="10.0.2" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.2" />
+		<PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.2" />
+		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.2" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.2" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.2">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.1" />
-		<PackageReference Include="Microsoft.Extensions.Localization" Version="10.0.1" />
-		<PackageReference Include="Microsoft.Extensions.Localization.Abstractions" Version="10.0.1" />
-		<PackageReference Include="System.Text.Json" Version="10.0.1" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.2" />
+		<PackageReference Include="Microsoft.Extensions.Localization" Version="10.0.2" />
+		<PackageReference Include="Microsoft.Extensions.Localization.Abstractions" Version="10.0.2" />
+		<PackageReference Include="System.Text.Json" Version="10.0.2" />
 	</ItemGroup>
 
 </Project>

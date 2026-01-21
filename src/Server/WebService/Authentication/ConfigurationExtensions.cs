@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Threading.Tasks;
@@ -48,5 +48,19 @@ public static class ConfigurationExtensions
         services.AddScoped<IApplicationSignManager, ApplicationSignManager>();
         services.AddScoped<IApplicationUserManager, ApplicationUserManager>();
 
+    }
+
+    public static async Task SeedRolesAsync(this IServiceProvider serviceProvider)
+    {
+        using var scope = serviceProvider.CreateScope();
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
+
+        foreach (var roleName in ApplicationRoles.All)
+        {
+            if (!await roleManager.RoleExistsAsync(roleName))
+            {
+                await roleManager.CreateAsync(new IdentityRole<Guid>(roleName));
+            }
+        }
     }
 }

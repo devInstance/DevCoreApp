@@ -19,7 +19,7 @@ namespace DevInstance.DevCoreApp;
 
 public class Program
 {
-    public static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
 
@@ -99,7 +99,10 @@ public class Program
         // Add additional endpoints required by the Identity /Account Razor components.
         app.MapAdditionalIdentityEndpoints();
 
-        app.Run();
+        // Seed roles
+        await app.Services.SeedRolesAsync();
+
+        await app.RunAsync();
     }
 
     private const string PostgresProvider = "Postgres";
