@@ -3,7 +3,10 @@
     "allow": [
       "Bash(dotnet build:*)",
       "Bash(Select-String -Pattern \"error CS|Warning\\\\\\(s\\\\\\)|Error\\\\\\(s\\\\\\)\")",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(find:*)",
+      "Bash(dotnet ef migrations add:*)",
+      "Bash(dotnet ef migrations remove:*)"
     ]
   }
 }

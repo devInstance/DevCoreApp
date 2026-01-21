@@ -20,7 +20,10 @@ public static class UserProfileDecorators
         return new UserProfileItem
         {
             Id = profile.PublicId,
-            Name = profile.Name,
+            FirstName = profile.FirstName,
+            MiddleName = profile.MiddleName,
+            LastName = profile.LastName,
+            PhoneNumber = profile.PhoneNumber,
             Email = profile.Email,
             CreateDate = profile.CreateDate
         };

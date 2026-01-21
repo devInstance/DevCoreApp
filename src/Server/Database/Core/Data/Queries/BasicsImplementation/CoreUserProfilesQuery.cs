@@ -39,10 +39,10 @@ public class CoreUserProfilesQuery : CoreBaseQuery, IUserProfilesQuery
         await DB.SaveChangesAsync();
     }
 
-    public IUserProfilesQuery ByName(string name)
+    public IUserProfilesQuery ByLastName(string lastName)
     {
         currentQuery = from pr in currentQuery
-                       where pr.Name == name
+                       where pr.LastName == lastName
                        select pr;
 
         return this;

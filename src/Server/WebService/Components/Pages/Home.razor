@@ -1,7 +1,32 @@
 ﻿@page "/"
 
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+
+@inject UserManager<ApplicationUser> UserManager
+
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, world!</h1>
+@if (showSetupBanner)
+{
+    <div class="alert alert-info">
+        <h4>Welcome! Initial Setup Required</h4>
+        <p>No users have been registered yet. Create the owner account to get started.</p>
+        <a href="admin/setup" class="btn btn-primary">Set Up Owner Account</a>
+    </div>
+}
+else
+{
+    <h1>Hello, world!</h1>
 
-Welcome to your new app.
+    <p>Welcome to your new app.</p>
+}
+
+@code {
+    private bool showSetupBanner;
+
+    protected override async Task OnInitializedAsync()
+    {
+        showSetupBanner = !await UserManager.Users.AnyAsync();
+    }
+}

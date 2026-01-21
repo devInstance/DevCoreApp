@@ -9,6 +9,6 @@ public interface IUserProfilesQuery : IModelQuery<UserProfile, IUserProfilesQuer
 {
     IQueryable<UserProfile> Select();
 
-    IUserProfilesQuery ByName(string name);
+    IUserProfilesQuery ByLastName(string lastName);
     IUserProfilesQuery ByApplicationUserId(Guid id);
 }

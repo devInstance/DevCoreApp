@@ -28,7 +28,10 @@ public class UserProfileService : BaseService
     public async Task<UserProfileItem> UpdateAsync(UserProfileItem newProfile)
     {
         var profile = AuthorizationContext.CurrentProfile;
-        profile.Name = newProfile.Name;
+        profile.FirstName = newProfile.FirstName;
+        profile.MiddleName = newProfile.MiddleName;
+        profile.LastName = newProfile.LastName;
+        profile.PhoneNumber = newProfile.PhoneNumber;
         await Repository.GetUserProfilesQuery(AuthorizationContext.CurrentProfile).UpdateAsync(profile);
 
         return profile.ToView();

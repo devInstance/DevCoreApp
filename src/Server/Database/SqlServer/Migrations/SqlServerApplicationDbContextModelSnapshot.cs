@@ -17,7 +17,7 @@ namespace DevInstance.DevCoreApp.Server.Database.SqlServer.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "7.0.4")
+                .HasAnnotation("ProductVersion", "10.0.2")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -103,7 +103,16 @@ namespace DevInstance.DevCoreApp.Server.Database.SqlServer.Migrations
                     b.Property<string>("Email")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Name")
+                    b.Property<string>("FirstName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LastName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MiddleName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PhoneNumber")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PublicId")
@@ -118,7 +127,7 @@ namespace DevInstance.DevCoreApp.Server.Database.SqlServer.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("UserProfiles");
+                    b.ToTable("UserProfiles", (string)null);
                 });
 
             modelBuilder.Entity("DevInstance.DevCoreApp.Server.Database.Core.Models.WeatherForecast", b =>
@@ -158,7 +167,7 @@ namespace DevInstance.DevCoreApp.Server.Database.SqlServer.Migrations
 
                     b.HasIndex("UpdatedById");
 
-                    b.ToTable("WeatherForecasts");
+                    b.ToTable("WeatherForecasts", (string)null);
 
                     b.HasData(
                         new
