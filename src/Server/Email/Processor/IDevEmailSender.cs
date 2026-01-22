@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace DevInstance.DevCoreApp.Server.EmailProcessor
 {
-    public interface IEmailSender
+    public interface IDevEmailSender
     {
-        Task SendAsync(IEmailMessage message);
+        Task SendAsync(IDevEmailMessage message);
     }
 }

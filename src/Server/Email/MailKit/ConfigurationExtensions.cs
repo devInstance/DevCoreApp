@@ -19,7 +19,7 @@ namespace DevInstance.DevCoreApp.Server.EmailProcessor.MailKit
                 UserName = configuration["EmailConfiguration:UserName"],
                 Password = configuration["EmailConfiguration:Password"]
             };
-            services.AddScoped<IEmailSender>(x => new MailKitEmailSender(emailConfig));
+            services.AddScoped<IDevEmailSender>(x => new MailKitEmailSender(emailConfig));
         }
     }
 }

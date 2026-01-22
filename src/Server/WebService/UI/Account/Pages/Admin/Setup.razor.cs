@@ -113,26 +113,12 @@ public partial class Setup
 
         Logger.LogInformation("UserProfile created for owner with email {Email}.", Input.Email);
 
-        var userId = await UserManager.GetUserIdAsync(user);
-        var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
-        code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-        var callbackUrl = NavigationManager.GetUriWithQueryParameters(
-            NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
-            new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code });
+        // Automatically confirm email for owner account during setup
+        var token = await UserManager.GenerateEmailConfirmationTokenAsync(user);
+        await UserManager.ConfirmEmailAsync(user, token);
 
-        await EmailSender.SendConfirmationLinkAsync(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));
-
-        if (UserManager.Options.SignIn.RequireConfirmedAccount)
-        {
-            RedirectManager.RedirectTo(
-                "Account/RegisterConfirmation",
-                new() { ["email"] = Input.Email });
-        }
-        else
-        {
-            await SignInManager.SignInAsync(user, isPersistent: false);
-            RedirectManager.RedirectTo("/");
-        }
+        await SignInManager.SignInAsync(user, isPersistent: false);
+        RedirectManager.RedirectTo("/");
     }
 
     private ApplicationUser CreateUser()

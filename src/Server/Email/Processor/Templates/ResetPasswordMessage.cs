@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace DevInstance.DevCoreApp.Server.EmailProcessor.Templates
 {
-    public class ResetPasswordMessage : IEmailMessage
+    public class ResetPasswordMessage : IDevEmailMessage
     {
         public EmailAddress From => new EmailAddress { Name = "Password recovery", Address = "noreply@xxx.net" };
 
@@ -19,6 +15,8 @@ namespace DevInstance.DevCoreApp.Server.EmailProcessor.Templates
         public string Uri {  get; }
 
         public EmailAddress Recipent { get; }
+
+        public bool IsHtml { get; } = false;
 
         public ResetPasswordMessage(EmailAddress recipent, string uri)
         {

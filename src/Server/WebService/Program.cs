@@ -1,19 +1,18 @@
-using DevInstance.DevCoreApp.Server.WebService.UI.Account;
-
-//TODO: migrate to view-model
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
-
-using DevInstance.DevCoreApp.Server.WebService.UI;
+using DevInstance.DevCoreApp.Server.Database.Postgres;
+using DevInstance.DevCoreApp.Server.Database.SqlServer;
+using DevInstance.DevCoreApp.Server.EmailProcessor.MailKit;
+using DevInstance.DevCoreApp.Server.WebService.Authentication;
+using DevInstance.DevCoreApp.Server.WebService.Background;
+using DevInstance.DevCoreApp.Server.WebService.Notifications;
+using DevInstance.DevCoreApp.Server.WebService.Services;
 using DevInstance.DevCoreApp.Server.WebService.Tools;
+using DevInstance.DevCoreApp.Server.WebService.UI;
+using DevInstance.DevCoreApp.Server.WebService.UI.Account;
 using DevInstance.LogScope.Extensions.MicrosoftLogger;
 using DevInstance.LogScope.Formatters;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
-using DevInstance.DevCoreApp.Server.Database.Postgres;
-using DevInstance.DevCoreApp.Server.Database.SqlServer;
-using DevInstance.DevCoreApp.Server.WebService.Authentication;
-using DevInstance.DevCoreApp.Shared.Services;
-using DevInstance.DevCoreApp.Server.WebService.Services;
 
 namespace DevInstance.DevCoreApp;
 
@@ -22,6 +21,10 @@ public class Program
     public static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+
+        builder.Services.AddSingleton<BackgroundWorker>();
+        builder.Services.AddSingleton<IBackgroundWorker>(sp => sp.GetRequiredService<BackgroundWorker>());
+        builder.Services.AddHostedService(sp => sp.GetRequiredService<BackgroundWorker>());
 
         builder.Services.AddTimeProvider();
 
@@ -64,7 +67,9 @@ public class Program
         builder.Services.AddServerAppServices();
         builder.Services.AddControllers();
 
-        builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+        builder.Services.AddMailKit(builder.Configuration);
+        builder.Services.AddScoped<IEmailSenderService, EmailSenderService>();
+        builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityEmailSender>();
         builder.Services.AddLocalization();
 
         var app = builder.Build();

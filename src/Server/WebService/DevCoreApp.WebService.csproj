@@ -21,7 +21,8 @@
 		<ProjectReference Include="..\Database\Postgres\Postgres.csproj" />
 		<ProjectReference Include="..\Database\SqlServer\SqlServer.csproj" />
 		<ProjectReference Include="..\Email\Processor\EmailProcessor.csproj" />
-		
+		<ProjectReference Include="..\Email\MailKit\EmailProcessor.MailKit.csproj" />
+
 		<PackageReference Include="DevInstance.LogScope.Extensions.MicrosoftLogger" Version="10.0.0" />
 		<PackageReference Include="DevInstance.WebServiceToolkit" Version="10.0.1" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="10.0.2" />

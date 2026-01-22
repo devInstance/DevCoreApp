@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace DevInstance.DevCoreApp.Server.EmailProcessor.MailKit;
 
-public class MailKitEmailSender : IEmailSender
+public class MailKitEmailSender : IDevEmailSender
 {
     public MailKitEmailSender(EmailConfiguration configuration)
     {
@@ -13,7 +13,7 @@ public class MailKitEmailSender : IEmailSender
 
     public EmailConfiguration Configuration { get; }
 
-    public async Task SendAsync(IEmailMessage message)
+    public async Task SendAsync(IDevEmailMessage message)
     {
         var mimeMessage = new MimeMessage();
         mimeMessage.From.Add(new MailboxAddress(message.From.Name, message.From.Address));
