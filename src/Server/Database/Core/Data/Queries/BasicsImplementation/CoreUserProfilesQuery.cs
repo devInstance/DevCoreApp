@@ -14,9 +14,9 @@ public class CoreUserProfilesQuery : CoreBaseQuery, IUserProfilesQuery
 {
     private IQueryable<UserProfile> currentQuery;
 
-    public string SortedBy => throw new NotImplementedException();
+    public string SortedBy { get; set; }
 
-    public bool IsAsc => throw new NotImplementedException();
+    public bool IsAsc { get; set; }
 
     private CoreUserProfilesQuery(IQueryable<UserProfile> q, IScopeManager logManager,
                          ITimeProvider timeProvider,
@@ -110,7 +110,14 @@ public class CoreUserProfilesQuery : CoreBaseQuery, IUserProfilesQuery
 
     public IUserProfilesQuery Search(string search)
     {
-        throw new NotImplementedException();
+        currentQuery = from profile in currentQuery
+                       where profile.FirstName.IndexOf(search) >= 0 || 
+                                profile.LastName.IndexOf(search) >= 0 || 
+                                profile.Email.IndexOf(search) >= 0 || 
+                                profile.PhoneNumber.IndexOf(search) >= 0 ||
+                                profile.MiddleName.IndexOf(search) >= 0
+                       select profile;
+        return this;
     }
 
     public IUserProfilesQuery Skip(int value)
@@ -127,6 +134,108 @@ public class CoreUserProfilesQuery : CoreBaseQuery, IUserProfilesQuery
 
     public IUserProfilesQuery SortBy(string column, bool isAsc)
     {
-        throw new NotImplementedException();
+        this.IsAsc = isAsc;
+        if (string.Compare(column, "Email", true) == 0)
+        {
+            if (isAsc)
+            {
+                currentQuery = (from ts in currentQuery
+                                orderby ts.Email
+                                select ts);
+            }
+            else
+            {
+                currentQuery = (from ts in currentQuery
+                                orderby ts.Email descending
+                                select ts);
+            }
+            SortedBy = "Email";
+        }
+        else if (string.Compare(column, "FirstName", true) == 0)
+        {
+            if (isAsc)
+            {
+                currentQuery = (from ts in currentQuery
+                                orderby ts.FirstName
+                                select ts);
+            }
+            else
+            {
+                currentQuery = (from ts in currentQuery
+                                orderby ts.FirstName descending
+                                select ts);
+            }
+            SortedBy = "FirstName";
+        }
+        else if (string.Compare(column, "MiddleName", true) == 0)
+        {
+            if (isAsc)
+            {
+                currentQuery = (from ts in currentQuery
+                                orderby ts.MiddleName
+                                select ts);
+            }
+            else
+            {
+                currentQuery = (from ts in currentQuery
+                                orderby ts.MiddleName descending
+                                select ts);
+            }
+            SortedBy = "MiddleName";
+        }
+        else if (string.Compare(column, "LastName", true) == 0)
+        {
+            if (isAsc)
+            {
+                currentQuery = (from ts in currentQuery
+                                orderby ts.LastName
+                                select ts);
+            }
+            else
+            {
+                currentQuery = (from ts in currentQuery
+                                orderby ts.LastName descending
+                                select ts);
+            }
+            SortedBy = "LastName";
+        }
+        else if (string.Compare(column, "PhoneNumber", true) == 0)
+        {
+            if (isAsc)
+            {
+                currentQuery = (from ts in currentQuery
+                                orderby ts.PhoneNumber
+                                select ts);
+            }
+            else
+            {
+                currentQuery = (from ts in currentQuery
+                                orderby ts.PhoneNumber descending
+                                select ts);
+            }
+            SortedBy = "PhoneNumber";
+        }
+        else if (string.Compare(column, "Status", true) == 0)
+        {
+            if (isAsc)
+            {
+                currentQuery = (from ts in currentQuery
+                                orderby ts.Status
+                                select ts);
+            }
+            else
+            {
+                currentQuery = (from ts in currentQuery
+                                orderby ts.Status descending
+                                select ts);
+            }
+            SortedBy = "Status";
+        }
+        else
+        {
+            throw new ArgumentException("Invalid column name");
+        }
+
+        return this;
     }
 }

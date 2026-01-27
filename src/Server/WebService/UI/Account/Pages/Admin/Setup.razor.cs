@@ -54,7 +54,7 @@ public partial class Setup
     {
         Input ??= new();
 
-        // Security check: redirect if users already exist
+        // Security check: redirect if UserList already exist
         if (await UserManager.Users.AnyAsync())
         {
             RedirectManager.RedirectTo("/");

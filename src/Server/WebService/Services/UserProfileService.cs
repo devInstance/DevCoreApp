@@ -44,9 +44,19 @@ public class UserProfileService : BaseService
         return ServiceActionResult<UserProfileItem>.OK(profile.ToView());
     }
 
-    public async Task<ServiceActionResult<ModelList<UserProfileItem>>> GetAllUsersAsync(int? top, int? page)
+    public async Task<ServiceActionResult<ModelList<UserProfileItem>>> GetAllUsersAsync(int? top, int? page, string? sortField = null, bool? isAsc = null, string? search = null)
     {
         var profilesQuery = Repository.GetUserProfilesQuery(AuthorizationContext.CurrentProfile);
+
+        if (!string.IsNullOrEmpty(search))
+        {
+            profilesQuery = profilesQuery.Search(search);
+        }
+
+        if (!string.IsNullOrEmpty(sortField))
+        {
+            profilesQuery = profilesQuery.SortBy(sortField, isAsc ?? true);
+        }
 
         var totalCount = await profilesQuery.Clone().Select().CountAsync();
         var userProfiles = await profilesQuery.Paginate(top, page).Select().ToListAsync();
@@ -66,8 +76,7 @@ public class UserProfileService : BaseService
             }
         }
 
-        var modelList = ModelListResult.CreateList(users.ToArray(), totalCount, top, page);
-
+        var modelList = ModelListResult.CreateList(users.ToArray(), totalCount, top, page, sortField, isAsc, search);
         return ServiceActionResult<ModelList<UserProfileItem>>.OK(modelList);
     }
 }
