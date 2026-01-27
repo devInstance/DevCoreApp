@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.12.35209.166
+# Visual Studio Version 18
+VisualStudioVersion = 18.2.11415.280 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Client", "Client", "{B7DBCFFA-D9E5-4E4D-A8AF-37800E9F6E6E}"
 EndProject
@@ -32,8 +32,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EmailProcessor.MailKit", "src\Server\Email\MailKit\EmailProcessor.MailKit.csproj", "{29CA0DBB-3B16-41DA-9F75-10CD1F820B65}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EmailProcessor", "src\Server\Email\Processor\EmailProcessor.csproj", "{7609E010-1A0A-4181-A840-84C6723EC47F}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Services", "src\Shared\Services\Shared.Services.csproj", "{92C1A160-4F63-4B6A-897E-2088EEC67F7A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -123,14 +121,6 @@ Global
 		{7609E010-1A0A-4181-A840-84C6723EC47F}.Release|Any CPU.Build.0 = Release|Any CPU
 		{7609E010-1A0A-4181-A840-84C6723EC47F}.ServiceMoqs|Any CPU.ActiveCfg = ServiceMoqs|Any CPU
 		{7609E010-1A0A-4181-A840-84C6723EC47F}.ServiceMoqs|Any CPU.Build.0 = ServiceMoqs|Any CPU
-		{92C1A160-4F63-4B6A-897E-2088EEC67F7A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{92C1A160-4F63-4B6A-897E-2088EEC67F7A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{92C1A160-4F63-4B6A-897E-2088EEC67F7A}.NetApiMoqs|Any CPU.ActiveCfg = Debug|Any CPU
-		{92C1A160-4F63-4B6A-897E-2088EEC67F7A}.NetApiMoqs|Any CPU.Build.0 = Debug|Any CPU
-		{92C1A160-4F63-4B6A-897E-2088EEC67F7A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{92C1A160-4F63-4B6A-897E-2088EEC67F7A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{92C1A160-4F63-4B6A-897E-2088EEC67F7A}.ServiceMoqs|Any CPU.ActiveCfg = Debug|Any CPU
-		{92C1A160-4F63-4B6A-897E-2088EEC67F7A}.ServiceMoqs|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -148,7 +138,6 @@ Global
 		{21DA75E8-C02E-4BF9-9EC9-B5F4AED770C7} = {C8D232B9-D9F5-49EF-94E6-62D4D286D0D5}
 		{29CA0DBB-3B16-41DA-9F75-10CD1F820B65} = {0F781128-F35F-4891-B0C5-D7EDCAB6582F}
 		{7609E010-1A0A-4181-A840-84C6723EC47F} = {0F781128-F35F-4891-B0C5-D7EDCAB6582F}
-		{92C1A160-4F63-4B6A-897E-2088EEC67F7A} = {C8D232B9-D9F5-49EF-94E6-62D4D286D0D5}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {90D2632F-45AE-4664-8699-41C525356109}

@@ -20,7 +20,7 @@ namespace DevInstance.DevCoreApp.Server.WebService.UI.Account
         protected override async Task<bool> ValidateAuthenticationStateAsync(
             AuthenticationState authenticationState, CancellationToken cancellationToken)
         {
-            // Get the user manager from a new scope to ensure it fetches fresh data
+            // GetCurrentUser the user manager from a new scope to ensure it fetches fresh data
             await using var scope = scopeFactory.CreateAsyncScope();
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
             return await ValidateSecurityStampAsync(userManager, authenticationState.User);

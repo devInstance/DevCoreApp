@@ -1,0 +1,45 @@
+@page "/admin/users"
+@attribute [Authorize(Roles = "Owner,Admin")]
+
+<PageTitle>Users</PageTitle>
+
+<h1>Users</h1>
+
+@if (Host.InProgress)
+{
+    <p><em>Loading...</em></p>
+}
+else if (users != null)
+{
+    if (!users.Items.Any())
+    {
+        <p>No users found.</p>
+    }
+    else
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Email</th>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>Roles</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var user in users.Items)
+                {
+                    <tr>
+                        <td>@user.Email</td>
+                        <td>@user.FullName</td>
+                        <td>@user.PhoneNumber</td>
+                        <td>@user.Roles</td>
+                        <td>@user.Status</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <ModelDataPager List="users" OnPageChanged="OnPageChangedAsync" />
+    }
+}

@@ -5,7 +5,10 @@ using System.Linq;
 
 namespace DevInstance.DevCoreApp.Server.Database.Core.Data.Queries;
 
-public interface IUserProfilesQuery : IModelQuery<UserProfile, IUserProfilesQuery>, IQSearchable<IUserProfilesQuery>
+public interface IUserProfilesQuery : IModelQuery<UserProfile, IUserProfilesQuery>, 
+        IQSearchable<IUserProfilesQuery>, 
+        IQPageable<IUserProfilesQuery>, 
+        IQSortable<IUserProfilesQuery>
 {
     IQueryable<UserProfile> Select();
 

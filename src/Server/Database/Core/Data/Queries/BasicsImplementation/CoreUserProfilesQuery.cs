@@ -14,6 +14,10 @@ public class CoreUserProfilesQuery : CoreBaseQuery, IUserProfilesQuery
 {
     private IQueryable<UserProfile> currentQuery;
 
+    public string SortedBy => throw new NotImplementedException();
+
+    public bool IsAsc => throw new NotImplementedException();
+
     private CoreUserProfilesQuery(IQueryable<UserProfile> q, IScopeManager logManager,
                          ITimeProvider timeProvider,
                          ApplicationDbContext dB,
@@ -105,6 +109,23 @@ public class CoreUserProfilesQuery : CoreBaseQuery, IUserProfilesQuery
     }
 
     public IUserProfilesQuery Search(string search)
+    {
+        throw new NotImplementedException();
+    }
+
+    public IUserProfilesQuery Skip(int value)
+    {
+        currentQuery = currentQuery.Skip(value);
+        return this;
+    }
+
+    public IUserProfilesQuery Take(int value)
+    {
+        currentQuery = currentQuery.Take(value);
+        return this;
+    }
+
+    public IUserProfilesQuery SortBy(string column, bool isAsc)
     {
         throw new NotImplementedException();
     }

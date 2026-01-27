@@ -26,7 +26,7 @@ public class UserProfileController : ControllerBase
     {
         return this.HandleWebRequest((WebHandler<UserProfileItem>)(() =>
         {
-            return Ok(Service.Get());
+            return Ok(Service.GetCurrentUser());
         }));
     }
 
@@ -38,7 +38,7 @@ public class UserProfileController : ControllerBase
     {
         return await this.HandleWebRequestAsync<UserProfileItem>(async () =>
         {
-            return Ok(await Service.UpdateAsync(newProfile));
+            return Ok(await Service.UpdateCurrentUserAsync(newProfile));
         });
     }
 }

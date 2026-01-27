@@ -29,9 +29,4 @@ public abstract class CoreQueryRepository : IQueryRepository
     {
         return new CoreUserProfilesQuery(LogManager, TimeProvider, DB, currentProfile);
     }
-
-    public IWeatherForecastQuery GetWeatherForecastQuery(UserProfile currentProfile)
-    {
-        return new CoreWeatherForecastQuery(LogManager, TimeProvider, DB, currentProfile);
-    }
 }

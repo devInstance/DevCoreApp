@@ -1,23 +1,56 @@
 ﻿@inherits LayoutComponentBase
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+@implements IServiceExecutionHost
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+@inject NavigationManager NavigationManager
+
+
+<CascadingValue Value="this" IsFixed="true">
+    <div class="page">
+        <div class="sidebar">
+            <NavMenu />
         </div>
 
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
-</div>
+        <main>
+            <div class="top-row px-4">
+                <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+            </div>
 
-<div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
-    <span class="dismiss">🗙</span>
-</div>
+            <article class="content px-4">
+                @Body
+            </article>
+        </main>
+    </div>
+
+    <div id="blazor-error-ui" data-nosnippet>
+        An unhandled error has occurred.
+        <a href="." class="reload">Reload</a>
+        <span class="dismiss">🗙</span>
+    </div>
+</CascadingValue>
+
+@code {
+    public ServiceExecutionType ServiceState { get; set; }
+    public string ErrorMessage { get; set; } = string.Empty;
+    public bool IsError { get; set; } = false;
+    public bool InProgress { get; set; } = false;
+
+    protected override void OnInitialized()
+    {
+    }
+
+    public void ShowLogin()
+    {
+        //TODO: Implement return URL
+        NavigationManager.NavigateTo("account/login");
+    }
+
+    public PersistentComponentState ComponentState => null;
+
+    public Dictionary<string, string> State => null;
+
+    public new void StateHasChanged()
+    {
+        InvokeAsync(() => base.StateHasChanged());
+    }
+}
