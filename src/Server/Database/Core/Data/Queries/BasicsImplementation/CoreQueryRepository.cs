@@ -29,4 +29,9 @@ public abstract class CoreQueryRepository : IQueryRepository
     {
         return new CoreUserProfilesQuery(LogManager, TimeProvider, DB, currentProfile);
     }
+
+    public IGridProfilesQuery GetGridProfilesQuery(UserProfile currentProfile)
+    {
+        return new CoreGridProfilesQuery(LogManager, TimeProvider, DB, currentProfile);
+    }
 }

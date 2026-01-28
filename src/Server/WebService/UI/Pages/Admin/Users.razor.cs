@@ -10,8 +10,13 @@ namespace DevInstance.DevCoreApp.Server.WebService.UI.Pages.Admin;
 
 public partial class Users
 {
+    private const string GridName = "AdminUsers";
+
     [Inject]
     private UserProfileService UserService { get; set; } = default!;
+
+    [Inject]
+    private GridProfileService GridProfileService { get; set; } = default!;
 
     [CascadingParameter]
     private IServiceExecutionHost Host { get; set; } = default!;
@@ -36,7 +41,67 @@ public partial class Users
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadUsers(0, null, null, null);
+        await LoadGridProfile();
+        await LoadUsers(0, SortField, IsAsc, null);
+    }
+
+    private async Task LoadGridProfile()
+    {
+        await Host.ServiceReadAsync(
+            async () => await GridProfileService.GetAsync(GridName),
+            (profile) =>
+            {
+                if (profile != null)
+                {
+                    ApplyGridProfile(profile);
+                }
+            }
+        );
+    }
+
+    private void ApplyGridProfile(GridProfileItem profile)
+    {
+        pageCount = profile.PageSize;
+        SortField = profile.SortField ?? string.Empty;
+        IsAsc = profile.IsAsc;
+
+        foreach (var columnState in profile.Columns)
+        {
+            var column = Columns.FirstOrDefault(c => c.Field == columnState.Field);
+            if (column != null)
+            {
+                column.IsVisible = columnState.IsVisible;
+            }
+        }
+
+        if (profile.Columns.Count > 0)
+        {
+            Columns = Columns
+                .OrderBy(c => profile.Columns.FindIndex(cs => cs.Field == c.Field) is var idx && idx >= 0 ? idx : int.MaxValue)
+                .ToList();
+        }
+    }
+
+    private async Task SaveGridProfile()
+    {
+        var profileItem = new GridProfileItem
+        {
+            GridName = GridName,
+            ProfileName = "Default",
+            PageSize = pageCount,
+            SortField = string.IsNullOrEmpty(SortField) ? null : SortField,
+            IsAsc = IsAsc,
+            Columns = Columns.Select((c, index) => new GridColumnState
+            {
+                Field = c.Field,
+                IsVisible = c.IsVisible,
+                Order = index
+            }).ToList()
+        };
+
+        await Host.ServiceSubmitAsync(
+            async () => await GridProfileService.SaveAsync(profileItem)
+        );
     }
 
     private async Task LoadUsers(int page, string? sortField, bool? isAsc, string? search)
@@ -55,9 +120,13 @@ public partial class Users
     public async Task OnSave(GridSettingsResult<UserProfileItem> grid)
     {
         Columns = grid.Columns;
-        if (pageCount != grid.PageSize)
+        var pageSizeChanged = pageCount != grid.PageSize;
+        pageCount = grid.PageSize;
+
+        await SaveGridProfile();
+
+        if (pageSizeChanged)
         {
-            pageCount = grid.PageSize;
             await LoadUsers(0, SortField, IsAsc, null);
         }
     }
@@ -77,6 +146,7 @@ public partial class Users
     {
         SortField = args.SortBy;
         IsAsc = args.IsAscending;
+        await SaveGridProfile();
         await LoadUsers(UserList?.Page ?? 0, args.SortBy, args.IsAscending, UserList?.Search);
     }
 }

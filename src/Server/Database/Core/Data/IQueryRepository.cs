@@ -6,4 +6,5 @@ namespace DevInstance.DevCoreApp.Server.Database.Core.Data;
 public interface IQueryRepository
 {
     IUserProfilesQuery GetUserProfilesQuery(UserProfile currentProfile);
+    IGridProfilesQuery GetGridProfilesQuery(UserProfile currentProfile);
 }

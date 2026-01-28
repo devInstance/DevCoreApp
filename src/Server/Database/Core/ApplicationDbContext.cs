@@ -9,6 +9,7 @@ namespace DevInstance.DevCoreApp.Server.Database.Core;
 public abstract class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>
 {
     public DbSet<UserProfile> UserProfiles { get; set; }
+    public DbSet<GridProfile> GridProfiles { get; set; }
 
     public ApplicationDbContext(DbContextOptions options)
             : base(options)
@@ -18,5 +19,9 @@ public abstract class ApplicationDbContext : IdentityDbContext<ApplicationUser, 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+
+        builder.Entity<GridProfile>()
+            .HasIndex(g => new { g.UserProfileId, g.GridName, g.ProfileName })
+            .IsUnique();
     }
 }
