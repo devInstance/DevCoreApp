@@ -35,6 +35,7 @@ public static class UserProfileDecorators
 
     public static UserProfile ToRecord(this UserProfile profile, UserProfileItem newProfile)
     {
+        profile.Email = newProfile.Email;
         profile.FirstName = newProfile.FirstName;
         profile.MiddleName = newProfile.MiddleName;
         profile.LastName = newProfile.LastName;

@@ -6,7 +6,8 @@
       "Bash(findstr:*)",
       "Bash(find:*)",
       "Bash(dotnet ef migrations add:*)",
-      "Bash(dotnet ef migrations remove:*)"
+      "Bash(dotnet ef migrations remove:*)",
+      "Bash(dir \"C:\\\\Projects\\\\devInstance\\\\DevCoreApp\\\\web-api-app\\\\DevCoreApp\\\\src\\\\Server\\\\Database\\\\Core\\\\Models\" /b)"
     ]
   }
 }

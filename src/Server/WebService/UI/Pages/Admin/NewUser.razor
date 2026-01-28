@@ -1,0 +1,69 @@
+@page "/admin/users/new"
+@attribute [Authorize(Roles = "Owner,Admin")]
+
+<PageTitle>New User</PageTitle>
+
+<h1>New User</h1>
+
+<div class="row">
+    <div class="col-lg-6">
+        @if (Host.IsError)
+        {
+            <div class="alert alert-danger" role="alert">
+                @Host.ErrorMessage
+            </div>
+        }
+        <EditForm Model="Input" OnValidSubmit="CreateUser" FormName="newuser">
+            <DataAnnotationsValidator />
+            <p class="text-muted">Create a new user account. An email will be sent to the user to complete registration.</p>
+            <hr />
+            <ValidationSummary class="text-danger" role="alert" />
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.FirstName" id="Input.FirstName" class="form-control" autocomplete="given-name" aria-required="true" placeholder="First Name" />
+                <label for="Input.FirstName">First Name</label>
+                <ValidationMessage For="() => Input.FirstName" class="text-danger" />
+            </div>
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.MiddleName" id="Input.MiddleName" class="form-control" autocomplete="additional-name" placeholder="Middle Name" />
+                <label for="Input.MiddleName">Middle Name</label>
+                <ValidationMessage For="() => Input.MiddleName" class="text-danger" />
+            </div>
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.LastName" id="Input.LastName" class="form-control" autocomplete="family-name" aria-required="true" placeholder="Last Name" />
+                <label for="Input.LastName">Last Name</label>
+                <ValidationMessage For="() => Input.LastName" class="text-danger" />
+            </div>
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.PhoneNumber" id="Input.PhoneNumber" class="form-control" autocomplete="tel" placeholder="Phone Number" />
+                <label for="Input.PhoneNumber">Phone Number</label>
+                <ValidationMessage For="() => Input.PhoneNumber" class="text-danger" />
+            </div>
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.Email" id="Input.Email" class="form-control" autocomplete="email" aria-required="true" placeholder="name@example.com" />
+                <label for="Input.Email">Email</label>
+                <ValidationMessage For="() => Input.Email" class="text-danger" />
+            </div>
+            <div class="form-floating mb-3">
+                <InputSelect @bind-Value="Input.Role" id="Input.Role" class="form-select" aria-required="true">
+                    <option value="">Select a role...</option>
+                    @foreach (var role in AvailableRoles)
+                    {
+                        <option value="@role">@role</option>
+                    }
+                </InputSelect>
+                <label for="Input.Role">Role</label>
+                <ValidationMessage For="() => Input.Role" class="text-danger" />
+            </div>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-lg btn-primary" disabled="@Host.InProgress">
+                    @if (Host.InProgress)
+                    {
+                        <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                    }
+                    Create User
+                </button>
+                <a href="/admin/users" class="btn btn-lg btn-outline-secondary">Cancel</a>
+            </div>
+        </EditForm>
+    </div>
+</div>

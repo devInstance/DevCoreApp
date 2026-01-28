@@ -5,8 +5,10 @@ namespace DevInstance.DevCoreApp.Server.Database.Core.Models;
 
 public enum UserStatus
 {
-    LIVE = 1,
-    SUSPENDED = 2
+    UNKNOWN = 0,
+    INITIATED = 1,
+    LIVE = 2,
+    SUSPENDED = 3
 }
 
 /// <summary>

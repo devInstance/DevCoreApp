@@ -23,7 +23,7 @@
 		<ProjectReference Include="..\Email\MailKit\EmailProcessor.MailKit.csproj" />
 
 		<PackageReference Include="DevInstance.LogScope.Extensions.MicrosoftLogger" Version="10.0.0" />
-		<PackageReference Include="DevInstance.WebServiceToolkit" Version="10.0.3" />
+		<PackageReference Include="DevInstance.WebServiceToolkit" Version="10.0.4" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="10.0.2" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.2" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="10.0.2" />
