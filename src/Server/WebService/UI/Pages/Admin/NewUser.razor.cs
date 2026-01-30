@@ -18,7 +18,10 @@ public partial class NewUser
     private IServiceExecutionHost Host { get; set; } = default!;
 
     [SupplyParameterFromForm]
-    private InputModel Input { get; set; } = new();
+    private UserProfileItem Input { get; set; } = new();
+
+    [SupplyParameterFromForm(Name = "SelectedRole")]
+    private string SelectedRole { get; set; } = "";
 
     private List<string> AvailableRoles { get; set; } = new();
 
@@ -34,49 +37,13 @@ public partial class NewUser
 
     private async Task CreateUser()
     {
-        var newUser = new UserProfileItem
-        {
-            FirstName = Input.FirstName,
-            MiddleName = Input.MiddleName ?? "",
-            LastName = Input.LastName,
-            PhoneNumber = Input.PhoneNumber ?? "",
-            Email = Input.Email
-        };
-
         await Host.ServiceSubmitAsync(
-            async () => await UserService.CreateUserAsync(newUser, Input.Role)
+            async () => await UserService.CreateUserAsync(Input, SelectedRole)
         );
 
         if (!Host.IsError)
         {
             NavigationManager.NavigateTo("/admin/users");
         }
-    }
-
-    private sealed class InputModel
-    {
-        [Required]
-        [Display(Name = "First Name")]
-        public string FirstName { get; set; } = "";
-
-        [Display(Name = "Middle Name")]
-        public string? MiddleName { get; set; }
-
-        [Required]
-        [Display(Name = "Last Name")]
-        public string LastName { get; set; } = "";
-
-        [Phone]
-        [Display(Name = "Phone Number")]
-        public string? PhoneNumber { get; set; }
-
-        [Required]
-        [EmailAddress]
-        [Display(Name = "Email")]
-        public string Email { get; set; } = "";
-
-        [Required]
-        [Display(Name = "Role")]
-        public string Role { get; set; } = "";
     }
 }

@@ -44,15 +44,14 @@
                 <ValidationMessage For="() => Input.Email" class="text-danger" />
             </div>
             <div class="form-floating mb-3">
-                <InputSelect @bind-Value="Input.Role" id="Input.Role" class="form-select" aria-required="true">
+                <InputSelect @bind-Value="SelectedRole" id="SelectedRole" class="form-select" aria-required="true">
                     <option value="">Select a role...</option>
                     @foreach (var role in AvailableRoles)
                     {
                         <option value="@role">@role</option>
                     }
                 </InputSelect>
-                <label for="Input.Role">Role</label>
-                <ValidationMessage For="() => Input.Role" class="text-danger" />
+                <label for="SelectedRole">Role</label>
             </div>
             <div class="d-flex gap-2">
                 <button type="submit" class="btn btn-lg btn-primary" disabled="@Host.InProgress">

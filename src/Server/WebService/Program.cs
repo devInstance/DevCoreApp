@@ -5,6 +5,7 @@ using DevInstance.DevCoreApp.Server.EmailProcessor.MailKit;
 using DevInstance.DevCoreApp.Server.WebService.Authentication;
 using DevInstance.DevCoreApp.Server.WebService.Background;
 using DevInstance.DevCoreApp.Server.WebService.Notifications;
+using DevInstance.DevCoreApp.Server.WebService.Notifications.Templates;
 using DevInstance.DevCoreApp.Server.WebService.Services;
 using DevInstance.DevCoreApp.Server.WebService.Tools;
 using DevInstance.DevCoreApp.Server.WebService.UI;
@@ -69,6 +70,7 @@ public class Program
 
         builder.Services.AddMailKit(builder.Configuration);
         builder.Services.AddScoped<IEmailSenderService, EmailSenderService>();
+        builder.Services.AddSingleton<IEmailTemplateService, EmailTemplateService>();
         builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityEmailSender>();
         builder.Services.AddLocalization();
 

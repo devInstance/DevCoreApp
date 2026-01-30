@@ -2,6 +2,7 @@ using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using DevInstance.DevCoreApp.Server.EmailProcessor;
 using DevInstance.DevCoreApp.Server.WebService.Background;
 using DevInstance.DevCoreApp.Server.WebService.Background.Requests;
+using DevInstance.DevCoreApp.Server.WebService.Notifications.Templates;
 using Microsoft.AspNetCore.Identity;
 
 namespace DevInstance.DevCoreApp.Server.WebService.Notifications;
@@ -10,35 +11,46 @@ public class IdentityEmailSender : IEmailSender<ApplicationUser>
 {
     private readonly IBackgroundWorker _backgroundWorker;
     private readonly IConfiguration _configuration;
+    private readonly IEmailTemplateService _templateService;
 
-    public IdentityEmailSender(IBackgroundWorker backgroundWorker, IConfiguration configuration)
+    public IdentityEmailSender(IBackgroundWorker backgroundWorker, IConfiguration configuration, IEmailTemplateService templateService)
     {
         _backgroundWorker = backgroundWorker;
         _configuration = configuration;
+        _templateService = templateService;
     }
 
-    public Task SendConfirmationLinkAsync(ApplicationUser user, string email, string confirmationLink)
+    public async Task SendConfirmationLinkAsync(ApplicationUser user, string email, string confirmationLink)
     {
-        var subject = "Confirm your email";
-        var content = $"Please confirm your account by <a href='{confirmationLink}'>clicking here</a>.";
-        return QueueEmailAsync(email, subject, content, isHtml: true);
+        var result = await _templateService.RenderAsync(EmailTemplateName.ConfirmEmail, new Dictionary<string, string>
+        {
+            ["Link"] = confirmationLink
+        });
+
+        QueueEmail(email, result);
     }
 
-    public Task SendPasswordResetLinkAsync(ApplicationUser user, string email, string resetLink)
+    public async Task SendPasswordResetLinkAsync(ApplicationUser user, string email, string resetLink)
     {
-        var subject = "Reset your password";
-        var content = $"Please reset your password by <a href='{resetLink}'>clicking here</a>.";
-        return QueueEmailAsync(email, subject, content, isHtml: true);
+        var result = await _templateService.RenderAsync(EmailTemplateName.PasswordResetLink, new Dictionary<string, string>
+        {
+            ["Link"] = resetLink
+        });
+
+        QueueEmail(email, result);
     }
 
-    public Task SendPasswordResetCodeAsync(ApplicationUser user, string email, string resetCode)
+    public async Task SendPasswordResetCodeAsync(ApplicationUser user, string email, string resetCode)
     {
-        var subject = "Reset your password";
-        var content = $"Please reset your password using the following code: {resetCode}";
-        return QueueEmailAsync(email, subject, content, isHtml: false);
+        var result = await _templateService.RenderAsync(EmailTemplateName.PasswordResetCode, new Dictionary<string, string>
+        {
+            ["Code"] = resetCode
+        });
+
+        QueueEmail(email, result);
     }
 
-    private Task QueueEmailAsync(string toEmail, string subject, string content, bool isHtml)
+    private void QueueEmail(string toEmail, EmailTemplateResult result)
     {
         var fromEmail = _configuration["EmailConfiguration:FromEmail"] ?? _configuration["EmailConfiguration:UserName"] ?? "noreply@example.com";
         var fromName = _configuration["EmailConfiguration:FromName"] ?? "DevCoreApp";
@@ -47,9 +59,9 @@ public class IdentityEmailSender : IEmailSender<ApplicationUser>
         {
             From = new EmailAddress { Name = fromName, Address = fromEmail },
             To = [new EmailAddress { Name = toEmail, Address = toEmail }],
-            Subject = subject,
-            Content = content,
-            IsHtml = isHtml
+            Subject = result.Subject,
+            Content = result.Content,
+            IsHtml = result.IsHtml
         };
 
         _backgroundWorker.Submit(new BackgroundRequestItem
@@ -57,7 +69,5 @@ public class IdentityEmailSender : IEmailSender<ApplicationUser>
             RequestType = BackgroundRequestType.SendEmail,
             Content = emailRequest
         });
-
-        return Task.CompletedTask;
     }
 }

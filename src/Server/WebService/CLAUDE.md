@@ -35,6 +35,11 @@ Page (Blazor) → Host.ServiceReadAsync / Host.ServiceSubmitAsync → Service �
 ### ID Generation
 - Use `IdGenerator.New()` from `DevInstance.BlazorToolkit.Utils` for generating unique public IDs and temporary values (e.g., temp passwords)
 
+### DTO / Form Model Pattern
+- DTOs (`{Entity}Item`) carry validation attributes (`[Required]`, `[EmailAddress]`, `[Phone]`, `[Display]`) directly — no separate `InputModel` classes in pages
+- Pages bind forms directly to the DTO: `[SupplyParameterFromForm] private UserProfileItem Input { get; set; } = new();`
+- Fields not part of the DTO (e.g., role selection during creation) live as separate page properties
+
 ### Naming Conventions
 - **DTO / View Model:** `{Entity}Item` (e.g., `UserProfileItem`)
 - **Service:** `{Entity}Service` (e.g., `UserProfileService`)
@@ -45,6 +50,14 @@ Page (Blazor) → Host.ServiceReadAsync / Host.ServiceSubmitAsync → Service �
 
 ### Background Email
 Queue emails via `IBackgroundWorker.Submit()` with a `BackgroundRequestItem` of type `SendEmail` containing an `EmailRequest`.
+
+### Email Templates
+- HTML templates live in `wwwroot/email-templates/`
+- Template names are string constants in `EmailTemplateName`
+- Template metadata (subject, path, isHtml) is registered in `EmailTemplateRepository`
+- Render templates via `IEmailTemplateService.RenderAsync(name, placeholders)` — returns `EmailTemplateResult` with `Subject`, `Content`, `IsHtml`
+- Placeholders use `{{Key}}` syntax in both subject and body
+- To add a new template: add a constant to `EmailTemplateName`, register in `EmailTemplateRepository`, create the HTML file in `wwwroot/email-templates/`
 
 ### Roles
 Defined in `ApplicationRoles`: Owner, Admin, Manager, Employee, Client. Owner is the super-admin role and is typically excluded from user-assignable roles.

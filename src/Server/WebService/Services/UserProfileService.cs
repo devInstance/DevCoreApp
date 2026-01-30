@@ -6,6 +6,7 @@ using DevInstance.DevCoreApp.Server.EmailProcessor;
 using DevInstance.DevCoreApp.Server.WebService.Authentication;
 using DevInstance.DevCoreApp.Server.WebService.Background;
 using DevInstance.DevCoreApp.Server.WebService.Background.Requests;
+using DevInstance.DevCoreApp.Server.WebService.Notifications.Templates;
 using DevInstance.DevCoreApp.Server.WebService.Tools;
 using DevInstance.DevCoreApp.Shared.Model;
 using DevInstance.DevCoreApp.Shared.Utils;
@@ -24,6 +25,7 @@ public class UserProfileService : BaseService
     public UserManager<ApplicationUser> UserManager { get; }
     private IUserStore<ApplicationUser> UserStore { get; }
     private IBackgroundWorker BackgroundWorker { get; }
+    private IEmailTemplateService EmailTemplateService { get; }
 
     private IScopeLog log;
 
@@ -33,7 +35,8 @@ public class UserProfileService : BaseService
                               IAuthorizationContext authorizationContext,
                               UserManager<ApplicationUser> userManager,
                               IUserStore<ApplicationUser> userStore,
-                              IBackgroundWorker backgroundWorker)
+                              IBackgroundWorker backgroundWorker,
+                              IEmailTemplateService emailTemplateService)
         : base(logManager, timeProvider, query, authorizationContext)
     {
         log = logManager.CreateLogger(this);
@@ -41,6 +44,7 @@ public class UserProfileService : BaseService
         UserManager = userManager;
         UserStore = userStore;
         BackgroundWorker = backgroundWorker;
+        EmailTemplateService = emailTemplateService;
     }
 
     public ServiceActionResult<UserProfileItem> GetCurrentUser()
@@ -164,6 +168,12 @@ public class UserProfileService : BaseService
 
         var token = await UserManager.GeneratePasswordResetTokenAsync(user);
 
+        var result = await EmailTemplateService.RenderAsync(EmailTemplateName.Registration, new Dictionary<string, string>
+        {
+            ["FirstName"] = userProfile.FirstName,
+            ["Link"] = token
+        });
+
         var emailRequest = new EmailRequest
         {
             From = new EmailAddress { Address = "noreply@example.com", Name = "DevCoreApp" },
@@ -171,9 +181,9 @@ public class UserProfileService : BaseService
             {
                 new EmailAddress { Address = userProfile.Email, Name = $"{userProfile.FirstName} {userProfile.LastName}" }
             },
-            Subject = "Complete Your Registration",
-            IsHtml = true,
-            Content = $"<p>Hello {userProfile.FirstName},</p><p>An account has been created for you. Please complete your registration by setting your password.</p>"
+            Subject = result.Subject,
+            IsHtml = result.IsHtml,
+            Content = result.Content
         };
 
         BackgroundWorker.Submit(new BackgroundRequestItem
