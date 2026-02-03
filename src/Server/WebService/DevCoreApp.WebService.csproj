@@ -39,6 +39,12 @@
 		<PackageReference Include="Microsoft.Extensions.Localization" Version="10.0.2" />
 		<PackageReference Include="Microsoft.Extensions.Localization.Abstractions" Version="10.0.2" />
 		<PackageReference Include="System.Text.Json" Version="10.0.2" />
+		<PackageReference Include="DartSassBuilder" Version="1.0.0" />
 	</ItemGroup>
+
+	<!-- SCSS Compilation: Copy compiled CSS from Styles to wwwroot -->
+	<Target Name="CopySassOutput" AfterTargets="DartSassCompile">
+		<Copy SourceFiles="Styles\app.css" DestinationFolder="wwwroot" />
+	</Target>
 
 </Project>

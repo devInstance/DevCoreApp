@@ -124,6 +124,10 @@ AutoTest.Net/
 # Web workbench (sass)
 .sass-cache/
 
+# Compiled SCSS output (generated from Styles/*.scss)
+**/Styles/app.css
+**/wwwroot/app.css
+
 # Installshield output folder
 [Ee]xpress/
 

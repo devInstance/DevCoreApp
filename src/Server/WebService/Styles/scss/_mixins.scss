@@ -1,0 +1,172 @@
+// ============================================
+// SCSS Mixins
+// ============================================
+
+// --------------------------------------------
+// Flexbox
+// --------------------------------------------
+
+@mixin flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@mixin flex-between {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+@mixin flex-column {
+    display: flex;
+    flex-direction: column;
+}
+
+// --------------------------------------------
+// Responsive Breakpoints
+// --------------------------------------------
+
+@mixin media-up($breakpoint) {
+    @media (min-width: $breakpoint) {
+        @content;
+    }
+}
+
+@mixin media-down($breakpoint) {
+    @media (max-width: $breakpoint - 0.02px) {
+        @content;
+    }
+}
+
+// Shorthand mixins
+@mixin sm-up { @include media-up($breakpoint-sm) { @content; } }
+@mixin md-up { @include media-up($breakpoint-md) { @content; } }
+@mixin lg-up { @include media-up($breakpoint-lg) { @content; } }
+@mixin xl-up { @include media-up($breakpoint-xl) { @content; } }
+
+@mixin sm-down { @include media-down($breakpoint-sm) { @content; } }
+@mixin md-down { @include media-down($breakpoint-md) { @content; } }
+@mixin lg-down { @include media-down($breakpoint-lg) { @content; } }
+@mixin xl-down { @include media-down($breakpoint-xl) { @content; } }
+
+// --------------------------------------------
+// Transitions
+// --------------------------------------------
+
+@mixin transition($properties...) {
+    transition: $properties;
+}
+
+@mixin transition-base {
+    transition: all $transition-base;
+}
+
+@mixin transition-slow {
+    transition: all $transition-slow;
+}
+
+// --------------------------------------------
+// Truncate Text
+// --------------------------------------------
+
+@mixin text-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@mixin line-clamp($lines) {
+    display: -webkit-box;
+    -webkit-line-clamp: $lines;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+// --------------------------------------------
+// Scrollbar
+// --------------------------------------------
+
+@mixin custom-scrollbar($width: $scrollbar-width, $thumb-bg: $scrollbar-thumb-bg, $thumb-hover-bg: $scrollbar-thumb-hover-bg) {
+    &::-webkit-scrollbar {
+        width: $width;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background-color: $thumb-bg;
+        border-radius: $width / 2;
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+        background-color: $thumb-hover-bg;
+    }
+}
+
+// --------------------------------------------
+// Position
+// --------------------------------------------
+
+@mixin position-absolute($top: null, $right: null, $bottom: null, $left: null) {
+    position: absolute;
+    @if $top != null { top: $top; }
+    @if $right != null { right: $right; }
+    @if $bottom != null { bottom: $bottom; }
+    @if $left != null { left: $left; }
+}
+
+@mixin position-fixed($top: null, $right: null, $bottom: null, $left: null) {
+    position: fixed;
+    @if $top != null { top: $top; }
+    @if $right != null { right: $right; }
+    @if $bottom != null { bottom: $bottom; }
+    @if $left != null { left: $left; }
+}
+
+// --------------------------------------------
+// Size
+// --------------------------------------------
+
+@mixin size($width, $height: $width) {
+    width: $width;
+    height: $height;
+}
+
+@mixin square($size) {
+    @include size($size, $size);
+}
+
+@mixin circle($size) {
+    @include square($size);
+    border-radius: $border-radius-circle;
+}
+
+// --------------------------------------------
+// Focus States
+// --------------------------------------------
+
+@mixin focus-ring($color: $primary) {
+    &:focus {
+        outline: none;
+        box-shadow: 0 0 0 0.1rem $white, 0 0 0 0.25rem rgba($color, 0.5);
+    }
+}
+
+// --------------------------------------------
+// Visually Hidden (Accessible)
+// --------------------------------------------
+
+@mixin visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
