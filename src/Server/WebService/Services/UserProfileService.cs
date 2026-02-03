@@ -123,11 +123,10 @@ public class UserProfileService : BaseService
 
         // Create ApplicationUser with a temporary random password
         var user = Activator.CreateInstance<ApplicationUser>();
-        var tempPassword = IdGenerator.New();
+        user.Email = newUser.Email;
+        user.UserName = newUser.Email;
 
-        await UserStore.SetUserNameAsync(user, newUser.Email, CancellationToken.None);
-        var emailStore = (IUserEmailStore<ApplicationUser>)UserStore;
-        await emailStore.SetEmailAsync(user, newUser.Email, CancellationToken.None);
+        var tempPassword = IdGenerator.New();
 
         var result = await UserManager.CreateAsync(user, tempPassword);
         if (!result.Succeeded)
@@ -174,6 +173,8 @@ public class UserProfileService : BaseService
             ["Link"] = token
         });
 
+        // TODO: We should not instantiate EmailRequest here directly, but use a factory or builder pattern
+        // We should inroduce a new interface IDevCoreEmailSender and implement it in IdentityEmailSender along with IEmailSender<ApplicationUser>
         var emailRequest = new EmailRequest
         {
             From = new EmailAddress { Address = "noreply@example.com", Name = "DevCoreApp" },
@@ -183,7 +184,8 @@ public class UserProfileService : BaseService
             },
             Subject = result.Subject,
             IsHtml = result.IsHtml,
-            Content = result.Content
+            Content = result.Content,
+            TemplateName = EmailTemplateName.Registration
         };
 
         BackgroundWorker.Submit(new BackgroundRequestItem

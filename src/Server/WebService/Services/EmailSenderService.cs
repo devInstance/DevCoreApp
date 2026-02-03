@@ -1,38 +1,34 @@
 using DevInstance.DevCoreApp.Server.EmailProcessor;
 using DevInstance.DevCoreApp.Server.WebService.Background.Requests;
+using DevInstance.DevCoreApp.Server.WebService.Tools;
+using DevInstance.LogScope;
 
 namespace DevInstance.DevCoreApp.Server.WebService.Services;
 
-public interface IEmailSenderService
-{
-    Task SendAsync(EmailRequest request);
-}
-
-public class EmailSenderService : IEmailSenderService
+[AppService]
+public class EmailSenderService
 {
     private readonly IDevEmailSender _emailSender;
-    private readonly ILogger<EmailSenderService> _logger;
+    private readonly IScopeLog log;
 
-    public EmailSenderService(IDevEmailSender emailSender, ILogger<EmailSenderService> logger)
+    public EmailSenderService(IDevEmailSender emailSender, IScopeManager logManager)
     {
         _emailSender = emailSender;
-        _logger = logger;
+        log = logManager.CreateLogger(this);
     }
 
     public async Task SendAsync(EmailRequest request)
     {
+        using var l = log.TraceScope();
+
         try
         {
             await _emailSender.SendAsync(request);
-            _logger.LogInformation("Email sent successfully to {To} with subject '{Subject}'",
-                string.Join(", ", request.To.Select(t => t.Address)),
-                request.Subject);
+            l.I($"Email sent successfully to {string.Join(", ", request.To.Select(t => t.Address))} with subject '{request.Subject}'");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to send email to {To} with subject '{Subject}'",
-                string.Join(", ", request.To.Select(t => t.Address)),
-                request.Subject);
+            l.E($"Failed to send email to {string.Join(", ", request.To.Select(t => t.Address))} with subject '{request.Subject}': {ex.Message}");
             throw;
         }
     }

@@ -1,0 +1,115 @@
+@page "/admin/email-log"
+@attribute [Authorize(Roles = "Owner,Admin")]
+
+<PageTitle>Email Log</PageTitle>
+
+<div class="row mb-3">
+    <div class="col col-md-6 col-lg-4 d-flex">
+        <input class="form-control" placeholder="Search emails..." @bind="SearchTerm" @bind:event="oninput" disabled="@Host.InProgress" />
+        <button class="btn btn-primary ms-2" @onclick="OnSearch" disabled="@Host.InProgress">
+            <i class="bi bi-search"></i>
+        </button>
+    </div>
+    <div class="col col-md-6 col-lg-8">
+        <div class="d-flex align-items-center justify-content-end gap-2">
+            <select class="form-select" style="width: auto;" @bind="StatusFilter" disabled="@Host.InProgress">
+                <option value="">All Statuses</option>
+                <option value="0">Batched</option>
+                <option value="1">Sent</option>
+                <option value="2">Failed</option>
+            </select>
+            <input type="date" class="form-control" style="width: auto;" @bind="StartDateFilter" disabled="@Host.InProgress" />
+            <input type="date" class="form-control" style="width: auto;" @bind="EndDateFilter" disabled="@Host.InProgress" />
+            <button class="btn btn-outline-primary" @onclick="OnApplyFilters" disabled="@Host.InProgress">
+                <i class="bi bi-funnel"></i> Filter
+            </button>
+            @if (SelectedIds.Count > 0)
+            {
+                <button class="btn btn-danger" @onclick="OnDeleteSelected" disabled="@Host.InProgress">
+                    <i class="bi bi-trash me-1"></i>Delete Selected (@SelectedIds.Count)
+                </button>
+            }
+            <button class="btn btn-warning" @onclick="OnResendAllFailed" disabled="@Host.InProgress">
+                <i class="bi bi-arrow-repeat me-1"></i>Resend All Failed
+            </button>
+        </div>
+    </div>
+</div>
+
+@if (Host.InProgress)
+{
+    <div class="text-center">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+}
+else if (EmailLogList != null)
+{
+    @if (!string.IsNullOrEmpty(EmailLogList.Search))
+    {
+        <div class="alert alert-light">
+            Searching for <strong>@SearchTerm</strong>
+            <button type="button" class="btn-close ms-2" @onclick="OnClearSearch">
+            </button>
+        </div>
+    }
+
+    @if (!EmailLogList.Items.Any())
+    {
+        <p>No email log entries found.</p>
+    }
+    else
+    {
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th scope="col" style="width: 40px;">
+                        <input type="checkbox" class="form-check-input" @bind="SelectAll" />
+                    </th>
+                    @foreach (var col in Columns.Where(c => c.IsVisible))
+                    {
+                        @if (col.IsSortable)
+                        {
+                        <th scope="col">
+                            <HSortableHeader Model="EmailLogList" Label="@col.Label" SortField="@col.Field" OnSort="OnSortAsync"></HSortableHeader>
+                        </th>
+                        }
+                        else
+                        {
+                        <th scope="col">
+                            @col.Label
+                        </th>
+                        }
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in EmailLogList.Items)
+                {
+                    <tr @onclick="() => OnRowClick(row)" style="cursor: pointer;">
+                        <td @onclick:stopPropagation="true">
+                            <input type="checkbox" class="form-check-input" checked="@SelectedIds.Contains(row.Id)" @onchange="(e) => OnRowSelect(row.Id, (bool)(e.Value ?? false))" />
+                        </td>
+                        @foreach (var col in Columns.Where(c => c.IsVisible))
+                        {
+                            <td>
+                                @if (col.Template is not null)
+                                {
+                                    @col.Template(col.ValueSelector(row))
+                                }
+                                else
+                                {
+                                    @col.ValueSelector(row)
+                                }
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <ModelDataPager List="EmailLogList" OnPageChanged="OnPageChangedAsync" />
+    }
+}
+
+<GridSettings Columns="Columns" OnSave="OnSave" PageSize="pageCount" TItem="DevInstance.DevCoreApp.Shared.Model.EmailLogItem" />

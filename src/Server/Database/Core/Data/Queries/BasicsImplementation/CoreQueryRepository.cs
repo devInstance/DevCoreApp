@@ -34,4 +34,9 @@ public abstract class CoreQueryRepository : IQueryRepository
     {
         return new CoreGridProfilesQuery(LogManager, TimeProvider, DB, currentProfile);
     }
+
+    public IEmailLogQuery GetEmailLogQuery(UserProfile currentProfile)
+    {
+        return new CoreEmailLogQuery(LogManager, TimeProvider, DB, currentProfile);
+    }
 }

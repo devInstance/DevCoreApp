@@ -30,6 +30,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\..\Email\Processor\EmailProcessor.csproj" />
 		<ProjectReference Include="..\..\..\Shared\Model\Shared.Model.csproj" />
 		<ProjectReference Include="..\..\..\Shared\Utils\Shared.Utils.csproj" />
 	</ItemGroup>

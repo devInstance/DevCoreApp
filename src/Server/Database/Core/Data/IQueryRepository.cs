@@ -7,4 +7,5 @@ public interface IQueryRepository
 {
     IUserProfilesQuery GetUserProfilesQuery(UserProfile currentProfile);
     IGridProfilesQuery GetGridProfilesQuery(UserProfile currentProfile);
+    IEmailLogQuery GetEmailLogQuery(UserProfile currentProfile);
 }

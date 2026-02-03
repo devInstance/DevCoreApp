@@ -27,7 +27,7 @@ public class IdentityEmailSender : IEmailSender<ApplicationUser>
             ["Link"] = confirmationLink
         });
 
-        QueueEmail(email, result);
+        QueueEmail(email, result, EmailTemplateName.ConfirmEmail);
     }
 
     public async Task SendPasswordResetLinkAsync(ApplicationUser user, string email, string resetLink)
@@ -37,7 +37,7 @@ public class IdentityEmailSender : IEmailSender<ApplicationUser>
             ["Link"] = resetLink
         });
 
-        QueueEmail(email, result);
+        QueueEmail(email, result, EmailTemplateName.PasswordResetLink);
     }
 
     public async Task SendPasswordResetCodeAsync(ApplicationUser user, string email, string resetCode)
@@ -47,10 +47,10 @@ public class IdentityEmailSender : IEmailSender<ApplicationUser>
             ["Code"] = resetCode
         });
 
-        QueueEmail(email, result);
+        QueueEmail(email, result, EmailTemplateName.PasswordResetCode);
     }
 
-    private void QueueEmail(string toEmail, EmailTemplateResult result)
+    private void QueueEmail(string toEmail, EmailTemplateResult result, string templateName)
     {
         var fromEmail = _configuration["EmailConfiguration:FromEmail"] ?? _configuration["EmailConfiguration:UserName"] ?? "noreply@example.com";
         var fromName = _configuration["EmailConfiguration:FromName"] ?? "DevCoreApp";
@@ -61,7 +61,8 @@ public class IdentityEmailSender : IEmailSender<ApplicationUser>
             To = [new EmailAddress { Name = toEmail, Address = toEmail }],
             Subject = result.Subject,
             Content = result.Content,
-            IsHtml = result.IsHtml
+            IsHtml = result.IsHtml,
+            TemplateName = templateName
         };
 
         _backgroundWorker.Submit(new BackgroundRequestItem

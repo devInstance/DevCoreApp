@@ -10,6 +10,7 @@ public abstract class ApplicationDbContext : IdentityDbContext<ApplicationUser, 
 {
     public DbSet<UserProfile> UserProfiles { get; set; }
     public DbSet<GridProfile> GridProfiles { get; set; }
+    public DbSet<EmailLog> EmailLogs { get; set; }
 
     public ApplicationDbContext(DbContextOptions options)
             : base(options)

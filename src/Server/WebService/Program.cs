@@ -69,7 +69,6 @@ public class Program
         builder.Services.AddControllers();
 
         builder.Services.AddMailKit(builder.Configuration);
-        builder.Services.AddScoped<IEmailSenderService, EmailSenderService>();
         builder.Services.AddSingleton<IEmailTemplateService, EmailTemplateService>();
         builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityEmailSender>();
         builder.Services.AddLocalization();
