@@ -71,7 +71,16 @@ else if (UserList != null)
                         @foreach (var col in Columns.Where(c => c.IsVisible))
                         {
                             <td>
-                                @if (col.Template is not null)
+                                @if (col.Field == "actions")
+                                {
+                                    <a href="admin/users/@row.Id/edit" class="btn btn-sm btn-outline-primary me-1" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <button class="btn btn-sm btn-outline-danger" title="Delete" @onclick="() => ShowDeleteConfirmation(row)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                }
+                                else if (col.Template is not null)
                                 {
                                     @col.Template(col.ValueSelector(row))
                                 }
@@ -90,3 +99,31 @@ else if (UserList != null)
 }
 
 <GridSettings Columns="Columns" OnSave="OnSave" PageSize="pageCount" TItem="DevInstance.DevCoreApp.Shared.Model.UserProfileItem" />
+
+@if (UserToDelete != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Delete</h5>
+                    <button type="button" class="btn-close" @onclick="CancelDelete"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete user <strong>@UserToDeleteName</strong>?</p>
+                    <p class="text-danger">This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CancelDelete">Cancel</button>
+                    <button type="button" class="btn btn-danger" @onclick="ConfirmDelete" disabled="@Host.InProgress">
+                        @if (Host.InProgress)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                        }
+                        Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}

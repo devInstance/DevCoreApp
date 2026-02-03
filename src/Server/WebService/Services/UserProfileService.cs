@@ -167,6 +167,131 @@ public class UserProfileService : BaseService
         return ServiceActionResult<UserProfileItem>.OK(userProfile.ToView(user, new List<string> { role }));
     }
 
+    public async Task<ServiceActionResult<UserProfileItem>> GetUserByIdAsync(string publicId)
+    {
+        using var l = log.TraceScope();
+
+        var profile = await Repository.GetUserProfilesQuery(AuthorizationContext.CurrentProfile)
+            .ByPublicId(publicId)
+            .Select()
+            .FirstOrDefaultAsync();
+
+        if (profile == null)
+        {
+            throw new InvalidOperationException("User not found.");
+        }
+
+        var appUser = await UserManager.FindByIdAsync(profile.ApplicationUserId.ToString());
+        if (appUser == null)
+        {
+            throw new InvalidOperationException("User account not found.");
+        }
+
+        var roles = await UserManager.GetRolesAsync(appUser);
+        return ServiceActionResult<UserProfileItem>.OK(profile.ToView(appUser, roles));
+    }
+
+    public async Task<ServiceActionResult<UserProfileItem>> UpdateUserAsync(string publicId, UserProfileItem updatedUser, string role)
+    {
+        using var l = log.TraceScope();
+
+        // Validate role
+        if (string.IsNullOrWhiteSpace(role))
+        {
+            throw new InvalidOperationException("Please select a role.");
+        }
+
+        var profilesQuery = Repository.GetUserProfilesQuery(AuthorizationContext.CurrentProfile);
+        var profile = await profilesQuery.ByPublicId(publicId).Select().FirstOrDefaultAsync();
+
+        if (profile == null)
+        {
+            throw new InvalidOperationException("User not found.");
+        }
+
+        var appUser = await UserManager.FindByIdAsync(profile.ApplicationUserId.ToString());
+        if (appUser == null)
+        {
+            throw new InvalidOperationException("User account not found.");
+        }
+
+        // Check if email changed and if new email already exists
+        if (!string.Equals(appUser.Email, updatedUser.Email, StringComparison.OrdinalIgnoreCase))
+        {
+            var existingUser = await UserManager.FindByEmailAsync(updatedUser.Email);
+            if (existingUser != null)
+            {
+                throw new InvalidOperationException("A user with this email address already exists.");
+            }
+
+            appUser.Email = updatedUser.Email;
+            appUser.UserName = updatedUser.Email;
+            var emailResult = await UserManager.UpdateAsync(appUser);
+            if (!emailResult.Succeeded)
+            {
+                throw new InvalidOperationException(
+                    $"Error updating email: {string.Join(", ", emailResult.Errors.Select(e => e.Description))}");
+            }
+        }
+
+        // Update roles
+        var currentRoles = await UserManager.GetRolesAsync(appUser);
+        if (!currentRoles.Contains(role))
+        {
+            await UserManager.RemoveFromRolesAsync(appUser, currentRoles);
+            var roleResult = await UserManager.AddToRoleAsync(appUser, role);
+            if (!roleResult.Succeeded)
+            {
+                l.E($"Failed to assign role {role}: {string.Join(", ", roleResult.Errors.Select(e => e.Description))}");
+            }
+        }
+
+        // Update profile
+        profile.ToRecord(updatedUser);
+        var updateQuery = Repository.GetUserProfilesQuery(AuthorizationContext.CurrentProfile);
+        await updateQuery.UpdateAsync(profile);
+
+        l.I($"User {publicId} updated successfully.");
+
+        var roles = await UserManager.GetRolesAsync(appUser);
+        return ServiceActionResult<UserProfileItem>.OK(profile.ToView(appUser, roles));
+    }
+
+    public async Task<ServiceActionResult<bool>> DeleteUserAsync(string publicId)
+    {
+        using var l = log.TraceScope();
+
+        var profilesQuery = Repository.GetUserProfilesQuery(AuthorizationContext.CurrentProfile);
+        var profile = await profilesQuery.ByPublicId(publicId).Select().FirstOrDefaultAsync();
+
+        if (profile == null)
+        {
+            throw new InvalidOperationException("User not found.");
+        }
+
+        var appUser = await UserManager.FindByIdAsync(profile.ApplicationUserId.ToString());
+
+        // Delete profile first
+        await profilesQuery.RemoveAsync(profile);
+        l.I($"UserProfile {publicId} deleted.");
+
+        // Delete application user if exists
+        if (appUser != null)
+        {
+            var result = await UserManager.DeleteAsync(appUser);
+            if (!result.Succeeded)
+            {
+                l.E($"Failed to delete ApplicationUser: {string.Join(", ", result.Errors.Select(e => e.Description))}");
+            }
+            else
+            {
+                l.I($"ApplicationUser for {publicId} deleted.");
+            }
+        }
+
+        return ServiceActionResult<bool>.OK(true);
+    }
+
     private async Task SendRegistrationEmailAsync(ApplicationUser user, UserProfile userProfile)
     {
         using var l = log.TraceScope();

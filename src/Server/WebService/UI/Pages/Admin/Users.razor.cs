@@ -32,7 +32,11 @@ public partial class Users
         new() { Label = "Phone", Field = "phone", ValueSelector = u => u.PhoneNumber },
         new() { Label = "Roles", Field = "roles", ValueSelector = u => u.Roles, IsSortable = false },
         new() { Label = "Status", Field = "status", ValueSelector = u => u.Status.ToString() },
+        new() { Label = "Actions", Field = "actions", ValueSelector = u => u.Id, IsSortable = false },
     };
+
+    private string? UserToDelete { get; set; }
+    private string? UserToDeleteName { get; set; }
 
     private int pageCount = 10;
     private string SearchTerm { get; set; } = string.Empty;
@@ -148,5 +152,34 @@ public partial class Users
         IsAsc = args.IsAscending;
         await SaveGridProfile();
         await LoadUsers(UserList?.Page ?? 0, args.SortBy, args.IsAscending, UserList?.Search);
+    }
+
+    private void ShowDeleteConfirmation(UserProfileItem user)
+    {
+        UserToDelete = user.Id;
+        UserToDeleteName = user.FullName;
+    }
+
+    private void CancelDelete()
+    {
+        UserToDelete = null;
+        UserToDeleteName = null;
+    }
+
+    private async Task ConfirmDelete()
+    {
+        if (string.IsNullOrEmpty(UserToDelete)) return;
+
+        await Host.ServiceSubmitAsync(
+            async () => await UserService.DeleteUserAsync(UserToDelete)
+        );
+
+        UserToDelete = null;
+        UserToDeleteName = null;
+
+        if (!Host.IsError)
+        {
+            await LoadUsers(UserList?.Page ?? 0, UserList?.SortBy, UserList?.IsAsc, UserList?.Search);
+        }
     }
 }
