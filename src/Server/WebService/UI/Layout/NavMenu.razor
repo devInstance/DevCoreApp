@@ -1,82 +1,56 @@
-﻿@implements IDisposable
+@implements IDisposable
 
 @inject NavigationManager NavigationManager
 
-<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">DevCoreApp</a>
-    </div>
-</div>
-
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
-
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
+<div class="sidebar-nav">
     <nav class="nav flex-column">
-        <div class="nav-item px-3">
+        <!-- Main navigation -->
+        <div class="nav-item">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+                <i class="bi bi-house-door me-2"></i>
+                <span>Home</span>
             </NavLink>
         </div>
 
-        <div class="nav-item px-3">
+        <div class="nav-item">
             <NavLink class="nav-link" href="auth">
-                <span class="bi bi-lock-nav-menu" aria-hidden="true"></span> Auth Required
+                <i class="bi bi-shield-lock me-2"></i>
+                <span>Auth Required</span>
             </NavLink>
         </div>
 
+        <!-- Admin section -->
         <AuthorizeView Roles="Owner,Admin">
             <Authorized>
-                <div class="nav-item px-3 mt-3">
-                    <span class="nav-link text-muted fw-bold">Admin</span>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="admin/users">
-                        <span class="bi bi-people-fill-nav-menu" aria-hidden="true"></span> Users
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="admin/email-log">
-                        <span class="bi bi-envelope-fill-nav-menu" aria-hidden="true"></span> Email Log
-                    </NavLink>
-                </div>
-            </Authorized>
-        </AuthorizeView>
-
-        <AuthorizeView>
-            <Authorized>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="Account/Manage">
-                        <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> @context.User.Identity?.Name
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <form action="Account/Logout" method="post">
-                        <AntiforgeryToken />
-                        <input type="hidden" name="ReturnUrl" value="@currentUrl" />
-                        <button type="submit" class="nav-link">
-                            <span class="bi bi-arrow-bar-left-nav-menu" aria-hidden="true"></span> Logout
-                        </button>
-                    </form>
+                <div class="nav-group">
+                    <div class="nav-group-header @(AdminGroupCollapsed ? "collapsed" : "")" @onclick="ToggleAdminGroup">
+                        <i class="bi bi-gear me-2"></i>
+                        <span class="flex-grow-1">Administration</span>
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="nav-group-items @(AdminGroupCollapsed ? "d-none" : "")">
+                        <div class="nav-item">
+                            <NavLink class="nav-link" href="admin/users">
+                                <i class="bi bi-people me-2"></i>
+                                <span>Users</span>
+                            </NavLink>
+                        </div>
+                        <div class="nav-item">
+                            <NavLink class="nav-link" href="admin/email-log">
+                                <i class="bi bi-envelope me-2"></i>
+                                <span>Email Log</span>
+                            </NavLink>
+                        </div>
+                    </div>
                 </div>
             </Authorized>
-            <NotAuthorized>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="Account/Register">
-                        <span class="bi bi-person-nav-menu" aria-hidden="true"></span> Register
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="Account/Login">
-                        <span class="bi bi-person-badge-nav-menu" aria-hidden="true"></span> Login
-                    </NavLink>
-                </div>
-            </NotAuthorized>
         </AuthorizeView>
     </nav>
 </div>
 
 @code {
     private string? currentUrl;
+    private bool AdminGroupCollapsed { get; set; } = false;
 
     protected override void OnInitialized()
     {
@@ -90,9 +64,13 @@
         StateHasChanged();
     }
 
+    private void ToggleAdminGroup()
+    {
+        AdminGroupCollapsed = !AdminGroupCollapsed;
+    }
+
     public void Dispose()
     {
         NavigationManager.LocationChanged -= OnLocationChanged;
     }
 }
-

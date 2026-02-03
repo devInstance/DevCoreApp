@@ -1,31 +1,98 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 
 @implements IServiceExecutionHost
+@implements IDisposable
 
 @inject NavigationManager NavigationManager
 
-
 <CascadingValue Value="this" IsFixed="true">
-    <div class="page">
-        <div class="sidebar">
-            <NavMenu />
-        </div>
-
-        <main>
-            <div class="top-row px-4">
-                <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar @GetSidebarClass()">
+            <div class="sidebar-header">
+                <a class="sidebar-brand" href="">
+                    <i class="bi bi-box-seam me-2"></i>
+                    <span class="brand-text">DevCoreApp</span>
+                </a>
             </div>
+            <NavMenu />
+        </aside>
 
-            <article class="content px-4">
-                @Body
-            </article>
-        </main>
+        <!-- Main content area -->
+        <div class="main-wrapper">
+            <!-- Top navbar -->
+            <header class="topbar">
+                <div class="topbar-start">
+                    <button class="btn btn-link sidebar-toggle" @onclick="ToggleSidebar" title="Toggle sidebar">
+                        <i class="bi bi-list fs-5"></i>
+                    </button>
+                </div>
+                <div class="topbar-end">
+                    <!-- Notifications -->
+                    <div class="topbar-item">
+                        <button class="btn btn-link position-relative" title="Notifications">
+                            <i class="bi bi-bell fs-5"></i>
+                            <span class="notification-badge"></span>
+                        </button>
+                    </div>
+
+                    <!-- User menu -->
+                    <AuthorizeView>
+                        <Authorized>
+                            <div class="topbar-item dropdown">
+                                <button class="btn btn-link dropdown-toggle d-flex align-items-center" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <div class="avatar-placeholder me-2">
+                                        @GetUserInitials(context.User.Identity?.Name)
+                                    </div>
+                                    <span class="d-none d-md-inline">@context.User.Identity?.Name</span>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <a class="dropdown-item" href="Account/Manage">
+                                            <i class="bi bi-person me-2"></i>Profile
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="#">
+                                            <i class="bi bi-gear me-2"></i>Settings
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form action="Account/Logout" method="post">
+                                            <AntiforgeryToken />
+                                            <input type="hidden" name="ReturnUrl" value="@currentUrl" />
+                                            <button type="submit" class="dropdown-item">
+                                                <i class="bi bi-box-arrow-right me-2"></i>Sign out
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                        </Authorized>
+                        <NotAuthorized>
+                            <div class="topbar-item">
+                                <a href="Account/Login" class="btn btn-outline-primary btn-sm me-2">Login</a>
+                                <a href="Account/Register" class="btn btn-primary btn-sm">Register</a>
+                            </div>
+                        </NotAuthorized>
+                    </AuthorizeView>
+                </div>
+            </header>
+
+            <!-- Page content -->
+            <main class="main-content">
+                <div class="container-fluid py-4">
+                    @Body
+                </div>
+            </main>
+        </div>
     </div>
 
     <div id="blazor-error-ui" data-nosnippet>
         An unhandled error has occurred.
         <a href="." class="reload">Reload</a>
-        <span class="dismiss">🗙</span>
+        <span class="dismiss">X</span>
     </div>
 </CascadingValue>
 
@@ -35,13 +102,57 @@
     public bool IsError { get; set; } = false;
     public bool InProgress { get; set; } = false;
 
+    private SidebarMode sidebarMode = SidebarMode.Expanded;
+    private string? currentUrl;
+
+    private enum SidebarMode
+    {
+        Expanded,   // Full width with icons and text
+        IconsOnly,  // Narrow with icons only
+        Hidden      // Completely hidden
+    }
+
     protected override void OnInitialized()
     {
+        currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        NavigationManager.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void ToggleSidebar()
+    {
+        sidebarMode = sidebarMode switch
+        {
+            SidebarMode.Expanded => SidebarMode.IconsOnly,
+            SidebarMode.IconsOnly => SidebarMode.Hidden,
+            SidebarMode.Hidden => SidebarMode.Expanded,
+            _ => SidebarMode.Expanded
+        };
+    }
+
+    private string GetSidebarClass() => sidebarMode switch
+    {
+        SidebarMode.IconsOnly => "icons-only",
+        SidebarMode.Hidden => "hidden",
+        _ => ""
+    };
+
+    private string GetUserInitials(string? name)
+    {
+        if (string.IsNullOrEmpty(name)) return "?";
+        var parts = name.Split('@')[0].Split('.');
+        if (parts.Length >= 2)
+            return $"{parts[0][0]}{parts[1][0]}".ToUpper();
+        return name.Substring(0, Math.Min(2, name.Length)).ToUpper();
     }
 
     public void ShowLogin()
     {
-        //TODO: Implement return URL
         NavigationManager.NavigateTo("account/login");
     }
 
@@ -52,5 +163,10 @@
     public new void StateHasChanged()
     {
         InvokeAsync(() => base.StateHasChanged());
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
     }
 }
