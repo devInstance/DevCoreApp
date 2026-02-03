@@ -1,4 +1,4 @@
-using DevInstance.DevCoreApp.Server.WebService.Grid;
+using DevInstance.DevCoreApp.Server.WebService.UI.Model.Grid;
 using Microsoft.AspNetCore.Components;
 
 namespace DevInstance.DevCoreApp.Server.WebService.UI.Components;

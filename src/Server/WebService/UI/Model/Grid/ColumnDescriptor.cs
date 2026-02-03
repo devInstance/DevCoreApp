@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Components;
 
-namespace DevInstance.DevCoreApp.Server.WebService.Grid;
+namespace DevInstance.DevCoreApp.Server.WebService.UI.Model.Grid;
 
 public class ColumnDescriptor<TItem>
 {

@@ -1,7 +1,7 @@
 using DevInstance.BlazorToolkit.Services;
-using DevInstance.DevCoreApp.Server.WebService.Grid;
 using DevInstance.DevCoreApp.Server.WebService.Services;
 using DevInstance.DevCoreApp.Server.WebService.UI.Components;
+using DevInstance.DevCoreApp.Server.WebService.UI.Model.Grid;
 using DevInstance.DevCoreApp.Shared.Model;
 using DevInstance.WebServiceToolkit.Common.Model;
 using Microsoft.AspNetCore.Components;
