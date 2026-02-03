@@ -35,8 +35,18 @@ public partial class NewUser
         );
     }
 
+    private string? RoleError { get; set; }
+
     private async Task CreateUser()
     {
+        RoleError = null;
+
+        if (string.IsNullOrWhiteSpace(SelectedRole))
+        {
+            RoleError = "Please select a role";
+            return;
+        }
+
         await Host.ServiceSubmitAsync(
             async () => await UserService.CreateUserAsync(Input, SelectedRole)
         );

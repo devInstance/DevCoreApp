@@ -114,6 +114,12 @@ public class UserProfileService : BaseService
     {
         using var l = log.TraceScope();
 
+        // Validate role
+        if (string.IsNullOrWhiteSpace(role))
+        {
+            throw new InvalidOperationException("Please select a role.");
+        }
+
         // Check if email already exists
         var existingUser = await UserManager.FindByEmailAsync(newUser.Email);
         if (existingUser != null)

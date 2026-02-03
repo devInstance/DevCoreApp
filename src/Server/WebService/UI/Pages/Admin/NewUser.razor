@@ -52,6 +52,10 @@
                     }
                 </InputSelect>
                 <label for="SelectedRole">Role</label>
+                @if (!string.IsNullOrEmpty(RoleError))
+                {
+                    <div class="text-danger">@RoleError</div>
+                }
             </div>
             <div class="d-flex gap-2">
                 <button type="submit" class="btn btn-lg btn-primary" disabled="@Host.InProgress">
