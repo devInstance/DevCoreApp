@@ -21,7 +21,7 @@ public static class UserProfileDecorators
         return new UserProfileItem
         {
             Id = profile.PublicId,
-            Email = appUser.Email ?? string.Empty,
+            Email = appUser?.Email ?? profile.Email ?? string.Empty,
             FirstName = profile.FirstName ?? string.Empty,
             MiddleName = profile.MiddleName ?? string.Empty,
             LastName = profile.LastName ?? string.Empty,

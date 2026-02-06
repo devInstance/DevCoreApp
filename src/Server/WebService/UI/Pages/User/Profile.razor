@@ -1,0 +1,117 @@
+@page "/user/profile"
+@attribute [Authorize]
+
+<PageTitle>My Profile</PageTitle>
+
+<div class="page-header">
+    <h1>My Profile</h1>
+    <p class="text-muted">View and update your personal information</p>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                @if (Host.InProgress && Input == null)
+                {
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                }
+                else if (Input != null)
+                {
+                    @if (!string.IsNullOrEmpty(successMessage))
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            @successMessage
+                            <button type="button" class="btn-close" @onclick="() => successMessage = null"></button>
+                        </div>
+                    }
+
+                    @if (Host.IsError)
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            @Host.ErrorMessage
+                        </div>
+                    }
+
+                    <EditForm Model="Input" OnValidSubmit="UpdateProfile">
+                        <DataAnnotationsValidator />
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <InputText @bind-Value="Input.FirstName" id="Input.FirstName" class="form-control" placeholder="First Name" />
+                                    <label for="Input.FirstName">First Name</label>
+                                    <ValidationMessage For="() => Input.FirstName" class="text-danger" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <InputText @bind-Value="Input.LastName" id="Input.LastName" class="form-control" placeholder="Last Name" />
+                                    <label for="Input.LastName">Last Name</label>
+                                    <ValidationMessage For="() => Input.LastName" class="text-danger" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <InputText @bind-Value="Input.MiddleName" id="Input.MiddleName" class="form-control" placeholder="Middle Name" />
+                            <label for="Input.MiddleName">Middle Name</label>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <InputText @bind-Value="Input.Email" id="Input.Email" class="form-control" placeholder="Email" disabled />
+                            <label for="Input.Email">Email</label>
+                            <small class="text-muted">Contact an administrator to change your email address.</small>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <InputText @bind-Value="Input.PhoneNumber" id="Input.PhoneNumber" class="form-control" placeholder="Phone Number" />
+                            <label for="Input.PhoneNumber">Phone Number</label>
+                            <ValidationMessage For="() => Input.PhoneNumber" class="text-danger" />
+                        </div>
+
+                        <hr class="my-4" />
+
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="text-muted">Role: </span>
+                                <span class="badge bg-secondary">@Input.Roles</span>
+                            </div>
+                            <button type="submit" class="btn btn-primary" disabled="@Host.InProgress">
+                                @if (Host.InProgress)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                                }
+                                Save Changes
+                            </button>
+                        </div>
+                    </EditForm>
+                }
+            </div>
+        </div>
+
+        <div class="card shadow-sm mt-4">
+            <div class="card-body p-4">
+                <h5 class="card-title">Change Password</h5>
+                <p class="text-muted">Use the forgot password feature to reset your password.</p>
+                <a href="Account/ForgotPassword" class="btn btn-outline-secondary">Reset Password</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card shadow-sm">
+            <div class="card-body text-center p-4">
+                <div class="avatar-placeholder avatar-lg mx-auto mb-3" style="width: 80px; height: 80px; font-size: 2rem;">
+                    @GetInitials()
+                </div>
+                <h5 class="mb-1">@Input?.FullName</h5>
+                <p class="text-muted mb-0">@Input?.Email</p>
+            </div>
+        </div>
+    </div>
+</div>
