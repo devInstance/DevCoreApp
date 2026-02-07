@@ -3,7 +3,7 @@ using DevInstance.DevCoreApp.Shared.TestUtils;
 using DevInstance.DevCoreApp.Server.Tests;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using Moq;
-using DevInstance.DevCoreApp.Server.WebService.Services;
+using DevInstance.DevCoreApp.Server.Admin.WebService.Services;
 using DevInstance.DevCoreApp.Server.Database.Core.Data.Queries;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using System;

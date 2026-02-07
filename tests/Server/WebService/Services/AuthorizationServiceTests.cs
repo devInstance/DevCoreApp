@@ -9,7 +9,7 @@ using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using DevInstance.DevCoreApp.Server.Database.Core.Data.Queries;
 using DevInstance.DevCoreApp.Server.Exceptions;
 using System.Threading.Tasks;
-using DevInstance.DevCoreApp.Server.WebService.Authentication;
+using DevInstance.DevCoreApp.Server.Admin.WebService.Authentication;
 using System.Security.Claims;
 
 namespace DevInstance.DevCoreApp.Server.Services.Tests;

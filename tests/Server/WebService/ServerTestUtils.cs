@@ -1,5 +1,5 @@
 ﻿using DevInstance.DevCoreApp.Server.Database.Core.Models;
-using DevInstance.DevCoreApp.Server.WebService.Authentication;
+using DevInstance.DevCoreApp.Server.Admin.WebService.Authentication;
 using Moq;
 using System;
 using System.Threading.Tasks;

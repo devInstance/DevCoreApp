@@ -19,7 +19,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\..\src\Server\WebService\WebService.csproj" />
+      <ProjectReference Include="..\..\..\src\Server\WebService\DevCoreApp.Admin.WebService\DevCoreApp.Admin.WebService.csproj" />
       <ProjectReference Include="..\..\Shared\TestUtils\TestUtils.csproj" />
     </ItemGroup>
 

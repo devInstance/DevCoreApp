@@ -55,7 +55,7 @@ private void ConfigureDatabase(IServiceCollection services)
 
 Migrations are owned by the provider project. To create a migration, navigate to the WebService project directory and run:
 
-**Working Directory:** `src\Server\WebService`
+**Working Directory:** `src\Server\WebService\DevCoreApp.Admin.WebService`
 
 **Command:**
 ```
