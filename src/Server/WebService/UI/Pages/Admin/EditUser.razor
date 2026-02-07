@@ -44,6 +44,15 @@
                     <label for="Input.Email">Email</label>
                     <ValidationMessage For="() => Input.Email" class="text-danger" />
                 </div>
+                @if (SelectedRole == "Owner")
+                {
+                    <label for="Input.Email">Role: Owner</label>
+                    <div class="alert alert-warning" role="alert">
+                        The Owner role cannot be changed. To change this user's role, please contact another Owner.
+                    </div>
+                }
+                else
+                {
                 <div class="form-floating mb-3">
                     <InputSelect @bind-Value="SelectedRole" id="SelectedRole" class="form-select" aria-required="true">
                         <option value="">Select a role...</option>
@@ -58,6 +67,7 @@
                         <div class="text-danger">@RoleError</div>
                     }
                 </div>
+                }
                 <div class="mb-3">
                     <span class="text-muted">Status: @Input.Status</span>
                 </div>
