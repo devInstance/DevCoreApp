@@ -9,7 +9,7 @@ public static class ServiceExtensions
     {
 //        services.AddScoped<IToolbarService, ToolbarService>();
 //        services.AddScoped<ISettingsService, SettingsService>();
-        services.AddScoped<IWeatherForecastService, WeatherForecastService>();
+//        services.AddScoped<IWeatherForecastService, WeatherForecastService>();
 
         return services;
     }

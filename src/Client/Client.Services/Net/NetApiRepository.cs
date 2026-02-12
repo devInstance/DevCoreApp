@@ -18,8 +18,8 @@ public class NetApiRepository : INetApiRepository
     }
 
     HttpClient HttpClient => clientFactory.CreateClient("DevInstance.DevCoreApp.ServerAPI");
-    public IApiContext<WeatherForecastItem> GetWeatherForecastApi()
-    {
-        return apiFactory.Create<WeatherForecastItem>(HttpClient, "api/forecast");
-    }
+    //public IApiContext<WeatherForecastItem> GetWeatherForecastApi()
+    //{
+    //    return apiFactory.Create<WeatherForecastItem>(HttpClient, "api/forecast");
+    //}
 }

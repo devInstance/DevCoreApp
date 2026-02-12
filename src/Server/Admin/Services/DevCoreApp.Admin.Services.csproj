@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+	<AssemblyName>DevInstance.DevCoreApp.Server.Admin.Services</AssemblyName>
+	<RootNamespace>DevInstance.DevCoreApp.Server.Admin.Services</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+	  <ProjectReference Include="..\..\..\Shared\Model\Shared.Model.csproj" />
+	  <ProjectReference Include="..\..\..\Shared\Utils\Shared.Utils.csproj" />
+	  <ProjectReference Include="..\..\Database\Core\Core.csproj" />
+	  <ProjectReference Include="..\..\Database\Postgres\Postgres.csproj" />
+	  <ProjectReference Include="..\..\Database\SqlServer\SqlServer.csproj" />
+	  <ProjectReference Include="..\..\Email\Processor\EmailProcessor.csproj" />
+	  <ProjectReference Include="..\..\Email\MailKit\EmailProcessor.MailKit.csproj" />
+
+	  <PackageReference Include="DevInstance.BlazorToolkit" Version="10.1.1" />
+
+	  <PackageReference Include="DevInstance.WebServiceToolkit" Version="10.0.4" />
+  </ItemGroup>
+
+</Project>

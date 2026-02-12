@@ -1,0 +1,36 @@
+<Solution>
+  <Configurations>
+    <BuildType Name="Debug" />
+    <BuildType Name="NetApiMoqs" />
+    <BuildType Name="Release" />
+    <BuildType Name="ServiceMoqs" />
+  </Configurations>
+  <Folder Name="/Client/">
+    <Project Path="src/Client/Client.Services/Client.Services.csproj" />
+    <Project Path="src/Client/DevCoreApp.Client/DevCoreApp.Client.csproj">
+      <BuildType Solution="NetApiMoqs|*" Project="Debug" />
+      <BuildType Solution="ServiceMoqs|*" Project="Debug" />
+    </Project>
+  </Folder>
+  <Folder Name="/Server/" />
+  <Folder Name="/Server/Admin/">
+    <Project Path="src/Server/Admin/Services/DevCoreApp.Admin.Services.csproj">
+      <BuildType Solution="NetApiMoqs|*" Project="Debug" />
+      <BuildType Solution="ServiceMoqs|*" Project="Debug" />
+    </Project>
+    <Project Path="src/Server/Admin/WebService/DevCoreApp.Admin.WebService.csproj" />
+  </Folder>
+  <Folder Name="/Server/Database/">
+    <Project Path="src/Server/Database/Core/Core.csproj" />
+    <Project Path="src/Server/Database/Postgres/Postgres.csproj" />
+    <Project Path="src/Server/Database/SqlServer/SqlServer.csproj" />
+  </Folder>
+  <Folder Name="/Server/Email/">
+    <Project Path="src/Server/Email/MailKit/EmailProcessor.MailKit.csproj" />
+    <Project Path="src/Server/Email/Processor/EmailProcessor.csproj" />
+  </Folder>
+  <Folder Name="/Shared/">
+    <Project Path="src/Shared/Model/Shared.Model.csproj" />
+    <Project Path="src/Shared/Utils/Shared.Utils.csproj" />
+  </Folder>
+</Solution>

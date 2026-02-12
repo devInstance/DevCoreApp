@@ -1,0 +1,54 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<UserSecretsId>aspnet-DevInstance.DevCoreApp-0533fd67-bb14-4bd3-b8b1-646b0cb66317</UserSecretsId>
+		<BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+		<AssemblyName>DevInstance.DevCoreApp.Server.Admin.WebService</AssemblyName>
+		<RootNamespace>DevInstance.DevCoreApp.Server.Admin.WebService</RootNamespace>
+		<Copyright>Copyright 2021-2026 DevInstance LLC</Copyright>
+		<PackageProjectUrl>https://devinstance.net/blog/aspnet-core-introduction-to-the-clean-architecture</PackageProjectUrl>
+		<Configurations>Debug;Release;NetApiMoqs;ServiceMoqs</Configurations>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <Compile Remove="UI\Account\**" />
+	  <Content Remove="UI\Account\**" />
+	  <EmbeddedResource Remove="UI\Account\**" />
+	  <None Remove="UI\Account\**" />
+	  <SassFile Remove="UI\Account\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="DevInstance.LogScope.Extensions.MicrosoftLogger" Version="10.0.0" />
+		<PackageReference Include="DevInstance.WebServiceToolkit" Version="10.0.4" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="10.0.3" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.3" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="10.0.3" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.3" />
+		<PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.3" />
+		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.3" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.3" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.3">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.3" />
+		<PackageReference Include="Microsoft.Extensions.Localization" Version="10.0.3" />
+		<PackageReference Include="Microsoft.Extensions.Localization.Abstractions" Version="10.0.3" />
+		<PackageReference Include="System.Text.Json" Version="10.0.3" />
+		<PackageReference Include="DartSassBuilder" Version="1.1.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\Services\DevCoreApp.Admin.Services.csproj" />
+	</ItemGroup>
+
+	<!-- SCSS Compilation: Copy compiled CSS from Styles to wwwroot -->
+	<Target Name="CopySassOutput" AfterTargets="DartSassCompile">
+		<Copy SourceFiles="Styles\app.css" DestinationFolder="wwwroot" />
+	</Target>
+
+</Project>

@@ -10,6 +10,6 @@ namespace DevInstance.DevCoreApp.Client.Services.Net.Api
 {
     public interface INetApiRepository
     {
-        IApiContext<WeatherForecastItem> GetWeatherForecastApi();
+        //IApiContext<WeatherForecastItem> GetWeatherForecastApi();
     }
 }
