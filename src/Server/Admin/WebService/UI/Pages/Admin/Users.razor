@@ -19,84 +19,23 @@
     </div>
 </div>
 
-@if (Host.InProgress)
-{
-    <div class="text-center">
-        <div class="spinner-border" role="status">
-            <span class="visually-hidden">Loading...</span>
-        </div>
-    </div>
-}
-else if (UserList != null)
-{
-    @if (!string.IsNullOrEmpty(UserList.Search))
-    {
-        <div class="alert alert-light">
-            Searching for <strong>@SearchTerm</strong>
-            <button type="button" class="btn-close ms-2" @onclick="OnClearSearch">
-            </button>
-        </div>
-    }
-
-    @if (!UserList.Items.Any())
-    {
+<HDataGrid TItem="DevInstance.DevCoreApp.Shared.Model.UserProfileItem"
+           Data="UserList"
+           Columns="Columns"
+           IsLoading="Host.InProgress"
+           OnSort="OnSortAsync"
+           OnPageChanged="OnPageChangedAsync"
+           OnColumnsChanged="OnColumnsChanged">
+    <EmptyContent>
         <p>No users found.</p>
-    }
-    else
-    {
-        <table class="table table-striped table-hover">
-            <thead>
-                <tr>
-                    @foreach (var col in Columns.Where(c => c.IsVisible))
-                    {
-                        @if (col.IsSortable)
-                        {
-                        <th scope="col">
-                            <HSortableHeader Model="UserList" Label="@col.Label" SortField="@col.Field" OnSort="OnSortAsync"></HSortableHeader>
-                        </th>
-                        }
-                        else
-                        {
-                        <th scope="col">
-                            @col.Label
-                        </th>
-                        }
-                    }
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var row in UserList.Items)
-                {
-                    <tr>
-                        @foreach (var col in Columns.Where(c => c.IsVisible))
-                        {
-                            <td>
-                                @if (col.Field == "actions")
-                                {
-                                    <a href="admin/users/@row.Id/edit" class="btn btn-sm btn-outline-primary me-1" title="Edit">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
-                                    <button class="btn btn-sm btn-outline-danger" title="Delete" @onclick="() => ShowDeleteConfirmation(row)">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                }
-                                else if (col.Template is not null)
-                                {
-                                    @col.Template(col.ValueSelector(row))
-                                }
-                                else
-                                {
-                                    @col.ValueSelector(row)
-                                }
-                            </td>
-                        }
-                    </tr>
-                }
-            </tbody>
-        </table>
-        <ModelDataPager List="UserList" OnPageChanged="OnPageChangedAsync" />
-    }
-}
+    </EmptyContent>
+    <SearchContent>
+        <div class="alert alert-light">
+            Searching for <strong>@context</strong>
+            <button type="button" class="btn-close ms-2" @onclick="OnClearSearch"></button>
+        </div>
+    </SearchContent>
+</HDataGrid>
 
 <GridSettings Columns="Columns" OnSave="OnSave" PageSize="pageCount" TItem="DevInstance.DevCoreApp.Shared.Model.UserProfileItem" />
 

@@ -23,6 +23,9 @@
             <button class="btn btn-outline-primary" @onclick="OnApplyFilters" disabled="@Host.InProgress">
                 <i class="bi bi-funnel"></i> Filter
             </button>
+            <button class="btn @(GroupByStatus ? "btn-secondary" : "btn-outline-secondary")" @onclick="ToggleGroupByStatus" disabled="@Host.InProgress">
+                <i class="bi bi-collection me-1"></i>Group by Status
+            </button>
             @if (SelectedIds.Count > 0)
             {
                 <button class="btn btn-danger" @onclick="OnDeleteSelected" disabled="@Host.InProgress">
@@ -36,80 +39,33 @@
     </div>
 </div>
 
-@if (Host.InProgress)
-{
-    <div class="text-center">
-        <div class="spinner-border" role="status">
-            <span class="visually-hidden">Loading...</span>
-        </div>
-    </div>
-}
-else if (EmailLogList != null)
-{
-    @if (!string.IsNullOrEmpty(EmailLogList.Search))
-    {
-        <div class="alert alert-light">
-            Searching for <strong>@SearchTerm</strong>
-            <button type="button" class="btn-close ms-2" @onclick="OnClearSearch">
-            </button>
-        </div>
-    }
-
-    @if (!EmailLogList.Items.Any())
-    {
+<HDataGrid TItem="DevInstance.DevCoreApp.Shared.Model.EmailLogItem"
+           Data="EmailLogList"
+           Columns="Columns"
+           IsLoading="Host.InProgress"
+           OnSort="OnSortAsync"
+           OnPageChanged="OnPageChangedAsync"
+           OnColumnsChanged="OnColumnsChanged"
+           EnableSelection="true"
+           SelectedIds="SelectedIds"
+           SelectedIdsChanged="OnSelectionChanged"
+           IdSelector="e => e.Id"
+           OnRowClick="OnRowClick"
+           GroupBy="@(GroupByStatus ? (e => e.Status) : null)"
+           GroupsCollapsedByDefault="false">
+    <EmptyContent>
         <p>No email log entries found.</p>
-    }
-    else
-    {
-        <table class="table table-striped table-hover">
-            <thead>
-                <tr>
-                    <th scope="col" style="width: 40px;">
-                        <input type="checkbox" class="form-check-input" @bind="SelectAll" />
-                    </th>
-                    @foreach (var col in Columns.Where(c => c.IsVisible))
-                    {
-                        @if (col.IsSortable)
-                        {
-                        <th scope="col">
-                            <HSortableHeader Model="EmailLogList" Label="@col.Label" SortField="@col.Field" OnSort="OnSortAsync"></HSortableHeader>
-                        </th>
-                        }
-                        else
-                        {
-                        <th scope="col">
-                            @col.Label
-                        </th>
-                        }
-                    }
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var row in EmailLogList.Items)
-                {
-                    <tr @onclick="() => OnRowClick(row)" style="cursor: pointer;">
-                        <td @onclick:stopPropagation="true">
-                            <input type="checkbox" class="form-check-input" checked="@SelectedIds.Contains(row.Id)" @onchange="(e) => OnRowSelect(row.Id, (bool)(e.Value ?? false))" />
-                        </td>
-                        @foreach (var col in Columns.Where(c => c.IsVisible))
-                        {
-                            <td>
-                                @if (col.Template is not null)
-                                {
-                                    @col.Template(col.ValueSelector(row))
-                                }
-                                else
-                                {
-                                    @col.ValueSelector(row)
-                                }
-                            </td>
-                        }
-                    </tr>
-                }
-            </tbody>
-        </table>
-        <ModelDataPager List="EmailLogList" OnPageChanged="OnPageChangedAsync" />
-    }
-}
+    </EmptyContent>
+    <SearchContent>
+        <div class="alert alert-light">
+            Searching for <strong>@context</strong>
+            <button type="button" class="btn-close ms-2" @onclick="OnClearSearch"></button>
+        </div>
+    </SearchContent>
+    <GroupHeaderTemplate>
+        <strong>@context.Key</strong>
+        <span class="badge bg-secondary ms-2">@context.Count</span>
+    </GroupHeaderTemplate>
+</HDataGrid>
 
 <GridSettings Columns="Columns" OnSave="OnSave" PageSize="pageCount" TItem="DevInstance.DevCoreApp.Shared.Model.EmailLogItem" />

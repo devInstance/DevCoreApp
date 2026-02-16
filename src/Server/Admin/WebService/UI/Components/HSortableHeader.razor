@@ -3,44 +3,22 @@
     @if (string.IsNullOrEmpty(UrlTemplate))
     {
         <a href="#" class="text-decoration-none text-reset" @onclick="ToggleSort" @onclick:preventDefault>@Label</a>
-        <button class="btn btn-link p-0 ms-1" @onclick="ToggleSort">
-            @if (IsSorted)
-            {
-                @if (IsAsc)
-                {
-                    <i class="bi bi-caret-down-fill"></i>
-                }
-                else
-                {
-                    <i class="bi bi-caret-up-fill"></i>
-                }
-            }
-            else
-            {
-                <i class="bi bi-caret-down"></i>
-            }
-        </button>
+        @if (IsSorted)
+        {
+            <button class="btn btn-link p-0 ms-1" @onclick="ToggleSort">
+                <i class="bi @(IsAsc ? "bi-sort-down-alt" : "bi-sort-up-alt")"></i>
+            </button>
+        }
     }
     else
     {
         <a href="@SortLink" class="text-decoration-none text-reset">@Label</a>
-        <a class="btn btn-link p-0 ms-1" href="@SortLink">
-            @if (IsSorted)
-            {
-                @if (IsAsc)
-                {
-                    <i class="bi bi-caret-down-fill"></i>
-                }
-                else
-                {
-                    <i class="bi bi-caret-up-fill"></i>
-                }
-            }
-            else
-            {
-                <i class="bi bi-caret-down"></i>
-            }
-        </a>
+        @if (IsSorted)
+        {
+            <a class="btn btn-link p-0 ms-1" href="@SortLink">
+                <i class="bi @(IsAsc ? "bi-sort-down-alt" : "bi-sort-up-alt")"></i>
+            </a>
+        }
     }
 </span>
 

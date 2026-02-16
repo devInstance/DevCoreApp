@@ -6,6 +6,7 @@ using DevInstance.DevCoreApp.Server.Admin.WebService.UI.Model.Grid;
 using DevInstance.DevCoreApp.Shared.Model;
 using DevInstance.WebServiceToolkit.Common.Model;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Rendering;
 
 namespace DevInstance.DevCoreApp.Server.Admin.WebService.UI.Pages.Admin;
 
@@ -33,7 +34,6 @@ public partial class Users
         new() { Label = "Phone", Field = "phone", ValueSelector = u => u.PhoneNumber },
         new() { Label = "Roles", Field = "roles", ValueSelector = u => u.Roles, IsSortable = false },
         new() { Label = "Status", Field = "status", ValueSelector = u => u.Status.ToString() },
-        new() { Label = "Actions", Field = "actions", ValueSelector = u => u.Id, IsSortable = false },
     };
 
     private string? UserToDelete { get; set; }
@@ -46,6 +46,34 @@ public partial class Users
 
     protected override async Task OnInitializedAsync()
     {
+        Columns.Add(new()
+        {
+            Label = "Actions",
+            Field = "actions",
+            ValueSelector = u => u.Id,
+            IsSortable = false,
+            CellTemplate = user => builder =>
+            {
+                builder.OpenElement(0, "a");
+                builder.AddAttribute(1, "href", $"admin/users/{user.Id}/edit");
+                builder.AddAttribute(2, "class", "btn btn-sm btn-outline-primary me-1");
+                builder.AddAttribute(3, "title", "Edit");
+                builder.OpenElement(4, "i");
+                builder.AddAttribute(5, "class", "bi bi-pencil");
+                builder.CloseElement();
+                builder.CloseElement();
+
+                builder.OpenElement(6, "button");
+                builder.AddAttribute(7, "class", "btn btn-sm btn-outline-danger");
+                builder.AddAttribute(8, "title", "Delete");
+                builder.AddAttribute(9, "onclick", EventCallback.Factory.Create(this, () => ShowDeleteConfirmation(user)));
+                builder.OpenElement(10, "i");
+                builder.AddAttribute(11, "class", "bi bi-trash");
+                builder.CloseElement();
+                builder.CloseElement();
+            }
+        });
+
         await LoadGridProfile();
         await LoadUsers(0, SortField, IsAsc, null);
     }
@@ -149,6 +177,11 @@ public partial class Users
     {
         SearchTerm = string.Empty;
         await LoadUsers(0, UserList?.SortBy, UserList?.IsAsc, null);
+    }
+
+    public async Task OnColumnsChanged()
+    {
+        await SaveGridProfile();
     }
 
     public async Task OnSortAsync(HSortableHeaderSortArgs args)

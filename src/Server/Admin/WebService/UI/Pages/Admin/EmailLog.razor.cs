@@ -49,24 +49,7 @@ public partial class EmailLog
     private DateTime? EndDateFilter { get; set; }
 
     private HashSet<string> SelectedIds { get; set; } = new();
-
-    private bool SelectAll
-    {
-        get => EmailLogList?.Items != null && EmailLogList.Items.Any() && EmailLogList.Items.All(e => SelectedIds.Contains(e.Id));
-        set
-        {
-            if (EmailLogList?.Items == null) return;
-            if (value)
-            {
-                foreach (var item in EmailLogList.Items)
-                    SelectedIds.Add(item.Id);
-            }
-            else
-            {
-                SelectedIds.Clear();
-            }
-        }
-    }
+    private bool GroupByStatus { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -179,6 +162,11 @@ public partial class EmailLog
         await LoadEmailLogs(0, EmailLogList?.SortBy, EmailLogList?.IsAsc, null);
     }
 
+    public async Task OnColumnsChanged()
+    {
+        await SaveGridProfile();
+    }
+
     public async Task OnSortAsync(HSortableHeaderSortArgs args)
     {
         SortField = args.SortBy;
@@ -192,17 +180,20 @@ public partial class EmailLog
         await LoadEmailLogs(0, EmailLogList?.SortBy, EmailLogList?.IsAsc, EmailLogList?.Search);
     }
 
-    private void OnRowClick(EmailLogItem item)
+    private Task OnRowClick(EmailLogItem item)
     {
         NavigationManager.NavigateTo($"admin/email-log/{item.Id}");
+        return Task.CompletedTask;
     }
 
-    private void OnRowSelect(string id, bool isSelected)
+    private void ToggleGroupByStatus()
     {
-        if (isSelected)
-            SelectedIds.Add(id);
-        else
-            SelectedIds.Remove(id);
+        GroupByStatus = !GroupByStatus;
+    }
+
+    private void OnSelectionChanged(HashSet<string> selectedIds)
+    {
+        SelectedIds = selectedIds;
     }
 
     private async Task OnDeleteSelected()

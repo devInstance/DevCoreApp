@@ -9,6 +9,7 @@ public class ColumnDescriptor<TItem>
     public Func<TItem, object?> ValueSelector { get; init; } = default!;
 
     public RenderFragment<object?>? Template { get; init; }
+    public RenderFragment<TItem>? CellTemplate { get; init; }
 
     public bool IsVisible { get; set; } = true;
 
@@ -17,4 +18,8 @@ public class ColumnDescriptor<TItem>
     public bool IsSortable { get; set; } = true;
 
     public string Class { get; set; } = string.Empty;
+
+    public string? Width { get; set; }
+    public string? HeaderClass { get; set; }
+    public string? CellClass { get; set; }
 }
