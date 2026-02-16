@@ -518,10 +518,25 @@ Offcanvas panel for column visibility, ordering, and page size settings.
 
 ### Creating a New Service
 
-1. Create service class in `Services/` folder
-2. Inherit from `BaseService` for repository access
-3. Add `[AppService]` attribute for auto-registration
-4. Return `ServiceActionResult<T>` from methods
+1. Define an interface (`I{Entity}Service`) in the appropriate subfolder under `Services/`
+2. Create the implementation class in the same folder
+3. Inherit from `BaseService` for repository access
+4. Add `[BlazorService]` attribute for auto-registration (registers both concrete type and interfaces)
+5. Return `ServiceActionResult<T>` from methods
+6. Pages and controllers inject the **interface**, not the concrete class
+
+### Creating a Service Mock
+
+Mock services allow running the UI without a database. See the `mocks/` directory.
+
+1. Create `{Entity}ServiceMock.cs` under `mocks/Server/Admin/ServicesMocks/`
+2. Implement the same service interface (e.g., `IUserProfileService`)
+3. Annotate with `[BlazorServiceMock]` (not `[BlazorService]`)
+4. Use the [Bogus](https://github.com/bchavez/Bogus) library to generate fake data in the constructor
+5. Store data in an in-memory `List<T>` and implement all interface methods against it
+6. Build and run with the `ServiceMocks` configuration: `dotnet run -c ServiceMocks`
+
+Services that should work in both real and mock modes (no separate mock needed) must carry both attributes: `[BlazorService]` and `[BlazorServiceMock]`.
 
 ### BaseService Dependencies
 
