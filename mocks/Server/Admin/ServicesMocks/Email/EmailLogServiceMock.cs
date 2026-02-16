@@ -86,7 +86,20 @@ public class EmailLogServiceMock : IEmailLogService
             ModelListResult.CreateList(items, filteredList.Count, topVal, pageVal, sortBy, search));
     }
 
-    public async Task<ServiceActionResult<EmailLogItem>> GetByIdAsync(string publicId)
+    public Task<ServiceActionResult<ModelList<EmailLogItem>>> GetListAsync(int? top, int? page, string[] sortBy, string search)
+    {
+        string sortField = null;
+        bool? isAsc = null;
+        if (sortBy != null && sortBy.Length > 0)
+        {
+            var first = sortBy[0];
+            isAsc = !first.StartsWith("-");
+            sortField = isAsc == true ? first : first.Substring(1);
+        }
+        return GetAllAsync(top, page, sortField, isAsc, search);
+    }
+
+    public async Task<ServiceActionResult<EmailLogItem>> GetAsync(string publicId)
     {
         var item = modelList.Find(e => e.Id == publicId);
         if (item == null) throw new InvalidOperationException("Email log entry not found.");
@@ -96,7 +109,17 @@ public class EmailLogServiceMock : IEmailLogService
         return ServiceActionResult<EmailLogItem>.OK(item);
     }
 
-    public async Task<ServiceActionResult<bool>> DeleteAsync(string publicId)
+    public Task<ServiceActionResult<EmailLogItem>> AddAsync(EmailLogItem item)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<ServiceActionResult<EmailLogItem>> UpdateAsync(string id, EmailLogItem item)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task<ServiceActionResult<EmailLogItem>> DeleteAsync(string publicId)
     {
         var item = modelList.Find(e => e.Id == publicId);
         if (item == null) throw new InvalidOperationException("Email log entry not found.");
@@ -105,7 +128,7 @@ public class EmailLogServiceMock : IEmailLogService
 
         await Task.Delay(delay);
 
-        return ServiceActionResult<bool>.OK(true);
+        return ServiceActionResult<EmailLogItem>.OK(item);
     }
 
     public async Task<ServiceActionResult<bool>> DeleteMultipleAsync(List<string> publicIds)

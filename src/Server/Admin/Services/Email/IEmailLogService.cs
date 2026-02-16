@@ -4,16 +4,12 @@ using DevInstance.WebServiceToolkit.Common.Model;
 
 namespace DevInstance.DevCoreApp.Server.Admin.Services.Email;
 
-public interface IEmailLogService
+public interface IEmailLogService : ICRUDService<EmailLogItem>
 {
     Task<ServiceActionResult<ModelList<EmailLogItem>>> GetAllAsync(
         int? top, int? page, string? sortField = null, bool? isAsc = null,
         string? search = null, int? status = null,
         DateTime? startDate = null, DateTime? endDate = null);
-
-    Task<ServiceActionResult<EmailLogItem>> GetByIdAsync(string publicId);
-
-    Task<ServiceActionResult<bool>> DeleteAsync(string publicId);
 
     Task<ServiceActionResult<bool>> DeleteMultipleAsync(List<string> publicIds);
 

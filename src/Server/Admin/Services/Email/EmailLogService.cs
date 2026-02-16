@@ -78,7 +78,20 @@ public class EmailLogService : BaseService, IEmailLogService
         return ServiceActionResult<ModelList<EmailLogItem>>.OK(modelList);
     }
 
-    public async Task<ServiceActionResult<EmailLogItem>> GetByIdAsync(string publicId)
+    public Task<ServiceActionResult<ModelList<EmailLogItem>>> GetListAsync(int? top, int? page, string[] sortBy, string search)
+    {
+        string sortField = null;
+        bool? isAsc = null;
+        if (sortBy != null && sortBy.Length > 0)
+        {
+            var first = sortBy[0];
+            isAsc = !first.StartsWith("-");
+            sortField = isAsc == true ? first : first.Substring(1);
+        }
+        return GetAllAsync(top, page, sortField, isAsc, search);
+    }
+
+    public async Task<ServiceActionResult<EmailLogItem>> GetAsync(string publicId)
     {
         using var l = log.TraceScope();
 
@@ -95,7 +108,17 @@ public class EmailLogService : BaseService, IEmailLogService
         return ServiceActionResult<EmailLogItem>.OK(emailLog.ToView());
     }
 
-    public async Task<ServiceActionResult<bool>> DeleteAsync(string publicId)
+    public Task<ServiceActionResult<EmailLogItem>> AddAsync(EmailLogItem item)
+    {
+        throw new NotImplementedException("Email log entries are created automatically by the system.");
+    }
+
+    public Task<ServiceActionResult<EmailLogItem>> UpdateAsync(string id, EmailLogItem item)
+    {
+        throw new NotImplementedException("Email log entries cannot be updated directly.");
+    }
+
+    public async Task<ServiceActionResult<EmailLogItem>> DeleteAsync(string publicId)
     {
         using var l = log.TraceScope();
 
@@ -107,10 +130,11 @@ public class EmailLogService : BaseService, IEmailLogService
             throw new InvalidOperationException("Email log entry not found.");
         }
 
+        var view = emailLog.ToView();
         await query.RemoveAsync(emailLog);
         l.I($"Email log entry {publicId} deleted.");
 
-        return ServiceActionResult<bool>.OK(true);
+        return ServiceActionResult<EmailLogItem>.OK(view);
     }
 
     public async Task<ServiceActionResult<bool>> DeleteMultipleAsync(List<string> publicIds)

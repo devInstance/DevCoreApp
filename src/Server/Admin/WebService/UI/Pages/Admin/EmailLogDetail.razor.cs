@@ -29,7 +29,7 @@ public partial class EmailLogDetail
     private async Task LoadEmailLog()
     {
         await Host.ServiceReadAsync(
-            async () => await EmailLogService.GetByIdAsync(Id),
+            async () => await EmailLogService.GetAsync(Id),
             (result) => EmailLogEntry = result
         );
     }
