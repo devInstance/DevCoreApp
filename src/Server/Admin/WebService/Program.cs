@@ -17,6 +17,10 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using TimeProvider = DevInstance.DevCoreApp.Shared.Utils.TimeProvider; //TODO: migrate to standard TimeProvider
 
+#if SERVICEMOCKS
+using DevInstance.DevCoreApp.Server.Admin.Services.Mocks.UserAdmin;
+#endif
+
 namespace DevInstance.DevCoreApp.Server.Admin.WebService;
 
 public class Program
@@ -38,7 +42,7 @@ public class Program
 
 
         // Add services to the container.
-#if DEBUG
+#if DEBUG || SERVICEMOCKS
         builder.Services.AddRazorComponents(options => options.DetailedErrors = builder.Environment.IsDevelopment())
                 .AddInteractiveServerComponents();
 #else
@@ -60,7 +64,7 @@ public class Program
 
         AddDatabase(builder.Services, builder.Configuration);
 
-#if DEBUG
+#if DEBUG || SERVICEMOCKS
         builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 #endif
 
@@ -71,6 +75,7 @@ public class Program
         builder.Services.AddBlazorServices(typeof(UserProfileService).Assembly);
 #else
         builder.Services.AddBlazorServicesMocks();
+        builder.Services.AddBlazorServicesMocks(typeof(UserProfileServiceMock).Assembly);
         builder.Services.AddBlazorServicesMocks(typeof(UserProfileService).Assembly);
 #endif
 
@@ -117,19 +122,22 @@ public class Program
         await app.RunAsync();
     }
 
-    private const string PostgresProvider = "Postgres";
-    private const string SqlServerProvider = "SqlServer";
-
+    /// <summary>
+    /// This method just to demostrate how we can support multiple database providers. It reads the provider name from configuration and registers the corresponding services.
+    /// In real life scenario you would probably need only one of them, so you can just configure a specific database provider directly without this extra level of indirection.
+    /// </summary>
+    /// <param name="services"></param>
+    /// <param name="configuration"></param>
     private static void AddDatabase(IServiceCollection services, IConfiguration configuration)
     {
         var provider = configuration.GetSection("Database").GetValue(typeof(string), "Provider").ToString();
 
-        if (provider == PostgresProvider)
+        if (provider == "Postgres")
         {
             services.ConfigurePostgresDatabase(configuration);
             services.ConfigurePostgresIdentityContext();
         }
-        else if (provider == SqlServerProvider)
+        else if (provider == "SqlServer")
         {
             services.ConfigureSqlServerDatabase(configuration);
             services.ConfigureSqlServerIdentityContext();

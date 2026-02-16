@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 namespace DevInstance.DevCoreApp.Server.Admin.Services;
 
 [BlazorService]
+[BlazorServiceMock]
 public class GridProfileService : BaseService
 {
     public GridProfileService(IScopeManager logManager,

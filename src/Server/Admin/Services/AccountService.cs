@@ -16,6 +16,7 @@ using Microsoft.EntityFrameworkCore;
 namespace DevInstance.DevCoreApp.Server.Admin.Services;
 
 [BlazorService]
+[BlazorServiceMock]
 public class AccountService : BaseService
 {
     private readonly SignInManager<ApplicationUser> signInManager;

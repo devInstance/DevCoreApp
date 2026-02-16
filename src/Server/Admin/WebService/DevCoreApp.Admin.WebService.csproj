@@ -14,14 +14,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <Compile Remove="UI\Account\**" />
-	  <Content Remove="UI\Account\**" />
-	  <EmbeddedResource Remove="UI\Account\**" />
-	  <None Remove="UI\Account\**" />
-	  <SassFile Remove="UI\Account\**" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<PackageReference Include="DevInstance.LogScope.Extensions.MicrosoftLogger" Version="10.0.0" />
 		<PackageReference Include="DevInstance.WebServiceToolkit" Version="10.1.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="10.0.3" />
@@ -43,7 +35,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\Services\DevCoreApp.Admin.Services.csproj" />
+		<ProjectReference Include="..\Services\DevCoreApp.Admin.Services.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\..\mocks\Server\Admin\ServicesMocks\DevCoreApp.Admin.Services.Mocks.csproj" Condition="'$(Configuration)' == 'ServiceMocks'" />
 	</ItemGroup>
 
 	<!-- SCSS Compilation: Copy compiled CSS from Styles to wwwroot -->

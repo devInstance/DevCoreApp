@@ -6,7 +6,6 @@
 		<Nullable>enable</Nullable>
 		<AssemblyName>DevInstance.DevCoreApp.Server.Admin.Services.Mocks</AssemblyName>
 		<RootNamespace>DevInstance.DevCoreApp.Server.Admin.Services.Mocks</RootNamespace>
-		<AssemblyName>DevInstance.DevCoreApp.Server.Admin.Services</AssemblyName>
 		<Configurations>Debug;Release;ServiceMocks</Configurations>
 	</PropertyGroup>
 
