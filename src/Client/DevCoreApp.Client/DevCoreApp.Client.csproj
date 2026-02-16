@@ -9,6 +9,7 @@
 		<NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
 		<AssemblyName>DevInstance.DevCoreApp.Client</AssemblyName>
 		<RootNamespace>DevInstance.DevCoreApp.Client</RootNamespace>
+		<Configurations>Debug;Release;ServiceMocks</Configurations>
 	</PropertyGroup>
 
 	<ItemGroup>

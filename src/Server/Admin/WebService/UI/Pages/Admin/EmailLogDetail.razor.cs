@@ -1,5 +1,5 @@
 using DevInstance.BlazorToolkit.Services;
-using DevInstance.DevCoreApp.Server.Admin.Services;
+using DevInstance.DevCoreApp.Server.Admin.Services.Email;
 using DevInstance.DevCoreApp.Shared.Model;
 using Microsoft.AspNetCore.Components;
 
@@ -11,7 +11,7 @@ public partial class EmailLogDetail
     public string Id { get; set; } = string.Empty;
 
     [Inject]
-    private EmailLogService EmailLogService { get; set; } = default!;
+    private IEmailLogService EmailLogService { get; set; } = default!;
 
     [Inject]
     private NavigationManager NavigationManager { get; set; } = default!;

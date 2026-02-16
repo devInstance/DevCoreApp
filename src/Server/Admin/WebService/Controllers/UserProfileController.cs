@@ -1,4 +1,4 @@
-﻿using DevInstance.DevCoreApp.Server.Admin.Services;
+﻿using DevInstance.DevCoreApp.Server.Admin.Services.UserAdmin;
 using DevInstance.DevCoreApp.Shared.Model;
 using DevInstance.WebServiceToolkit.Controllers;
 using Microsoft.AspNetCore.Authorization;
@@ -11,9 +11,9 @@ namespace DevInstance.DevCoreApp.Server.Admin.WebService.Controllers;
 [ApiController]
 public class UserProfileController : ControllerBase
 {
-    public UserProfileService Service{ get; }
+    public IUserProfileService Service{ get; }
 
-    public UserProfileController(UserProfileService service)
+    public UserProfileController(IUserProfileService service)
     {
         Service = service;
     }

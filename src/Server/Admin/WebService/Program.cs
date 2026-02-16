@@ -1,9 +1,9 @@
 using DevInstance.BlazorToolkit.Tools;
-using DevInstance.DevCoreApp.Server.Admin.Services;
 using DevInstance.DevCoreApp.Server.Admin.Services.Authentication;
 using DevInstance.DevCoreApp.Server.Admin.Services.Background;
 using DevInstance.DevCoreApp.Server.Admin.Services.Notifications;
 using DevInstance.DevCoreApp.Server.Admin.Services.Notifications.Templates;
+using DevInstance.DevCoreApp.Server.Admin.Services.UserAdmin;
 using DevInstance.DevCoreApp.Server.Admin.WebService.Identity;
 using DevInstance.DevCoreApp.Server.Admin.WebService.UI;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
@@ -66,10 +66,15 @@ public class Program
 
         builder.Services.AddAppIdentity();
 
+#if !SERVICEMOCKS
         builder.Services.AddBlazorServices();
         builder.Services.AddBlazorServices(typeof(UserProfileService).Assembly);
-        builder.Services.AddControllers();
+#else
+        builder.Services.AddBlazorServicesMocks();
+        builder.Services.AddBlazorServicesMocks(typeof(UserProfileService).Assembly);
+#endif
 
+        builder.Services.AddControllers();
         builder.Services.AddMailKit(builder.Configuration);
         builder.Services.AddSingleton<IEmailTemplateService, EmailTemplateService>(); //TODO: use webservice toolkit for it
         builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityEmailSender>();

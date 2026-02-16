@@ -4,12 +4,12 @@
     <TargetFramework>net10.0</TargetFramework>
     <AssemblyName>DevInstance.DevCoreApp.Shared.Model</AssemblyName>
     <RootNamespace>DevInstance.DevCoreApp.Shared.Model</RootNamespace>
-    <Configurations>Debug;Release;NetApiMoqs;ServiceMoqs</Configurations>
+    <Configurations>Debug;Release;ServiceMocks</Configurations>
   </PropertyGroup>
 
   <ItemGroup>
-	  <PackageReference Include="DevInstance.BlazorToolkit" Version="10.0.0" />
-	  <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.1" />
+	  <PackageReference Include="DevInstance.BlazorToolkit" Version="10.1.2" />
+	  <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.3" />
   </ItemGroup>
 
   <ItemGroup>

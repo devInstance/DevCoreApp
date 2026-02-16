@@ -1,5 +1,6 @@
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.DevCoreApp.Server.Admin.Services;
+using DevInstance.DevCoreApp.Server.Admin.Services.Email;
 using DevInstance.DevCoreApp.Server.Admin.WebService.UI.Components;
 using DevInstance.DevCoreApp.Server.Admin.WebService.UI.Model.Grid;
 using DevInstance.DevCoreApp.Shared.Model;
@@ -13,7 +14,7 @@ public partial class EmailLog
     private const string GridName = "AdminEmailLog";
 
     [Inject]
-    private EmailLogService EmailLogService { get; set; } = default!;
+    private IEmailLogService EmailLogService { get; set; } = default!;
 
     [Inject]
     private GridProfileService GridProfileService { get; set; } = default!;

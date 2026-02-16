@@ -16,10 +16,10 @@ using DevInstance.WebServiceToolkit.Database.Queries.Extensions;
 using DevInstance.WebServiceToolkit.Tools;
 using Microsoft.EntityFrameworkCore;
 
-namespace DevInstance.DevCoreApp.Server.Admin.Services;
+namespace DevInstance.DevCoreApp.Server.Admin.Services.Email;
 
 [BlazorService]
-public class EmailLogService : BaseService
+public class EmailLogService : BaseService, IEmailLogService
 {
     private IBackgroundWorker BackgroundWorker { get; }
 
@@ -70,7 +70,11 @@ public class EmailLogService : BaseService
 
         var items = emailLogs.Select(e => e.ToView()).ToArray();
 
-        var modelList = ModelListResult.CreateList(items, totalCount, top, page, sortField, isAsc, search);
+        string[] sortBy = !string.IsNullOrEmpty(sortField)
+            ? new[] { (isAsc == false ? "-" : "") + sortField }
+            : null;
+
+        var modelList = ModelListResult.CreateList(items, totalCount, top, page, sortBy, search);
         return ServiceActionResult<ModelList<EmailLogItem>>.OK(modelList);
     }
 

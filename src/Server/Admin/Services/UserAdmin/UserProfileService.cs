@@ -17,10 +17,10 @@ using DevInstance.WebServiceToolkit.Database.Queries.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
-namespace DevInstance.DevCoreApp.Server.Admin.Services;
+namespace DevInstance.DevCoreApp.Server.Admin.Services.UserAdmin;
 
 [BlazorService]
-public class UserProfileService : BaseService
+public class UserProfileService : BaseService, IUserProfileService
 {
     public UserManager<ApplicationUser> UserManager { get; }
     private IUserStore<ApplicationUser> UserStore { get; }
@@ -61,7 +61,7 @@ public class UserProfileService : BaseService
         return ServiceActionResult<UserProfileItem>.OK(profile.ToView());
     }
 
-    public async Task<ServiceActionResult<ModelList<UserProfileItem>>> GetAllUsersAsync(int? top, int? page, string? sortField = null, bool? isAsc = null, string? search = null)
+    public async Task<ServiceActionResult<ModelList<UserProfileItem>>> GetListAsync(int? top, int? page, string[] sortBy = null, string search = null)
     {
         using var l = log.TraceScope();
 
@@ -72,9 +72,14 @@ public class UserProfileService : BaseService
             profilesQuery = profilesQuery.Search(search);
         }
 
-        if (!string.IsNullOrEmpty(sortField))
+        if (sortBy != null && sortBy.Length > 0)
         {
-            profilesQuery = profilesQuery.SortBy(sortField, isAsc ?? true);
+            foreach (var sortField in sortBy)
+            {
+                var isAsc = !sortField.StartsWith("-");
+                var field = isAsc ? sortField : sortField.Substring(1);
+                profilesQuery = profilesQuery.SortBy(field, isAsc);
+            }
         }
 
         var totalCount = await profilesQuery.Clone().Select().CountAsync();
@@ -95,7 +100,7 @@ public class UserProfileService : BaseService
             }
         }
 
-        var modelList = ModelListResult.CreateList(users.ToArray(), totalCount, top, page, sortField, isAsc, search);
+        var modelList = ModelListResult.CreateList(users.ToArray(), totalCount, top, page, sortBy, search, true);
         return ServiceActionResult<ModelList<UserProfileItem>>.OK(modelList);
     }
 
@@ -108,6 +113,26 @@ public class UserProfileService : BaseService
             ApplicationRoles.Employee,
             ApplicationRoles.Client
         });
+    }
+
+    public async Task<ServiceActionResult<UserProfileItem>> GetAsync(string id)
+    {
+        return await GetUserByIdAsync(id);
+    }
+
+    public Task<ServiceActionResult<UserProfileItem>> AddAsync(UserProfileItem item)
+    {
+        throw new NotImplementedException("Use CreateUserAsync with a role parameter instead.");
+    }
+
+    public Task<ServiceActionResult<UserProfileItem>> UpdateAsync(string id, UserProfileItem item)
+    {
+        throw new NotImplementedException("Use UpdateUserAsync with a role parameter instead.");
+    }
+
+    public Task<ServiceActionResult<UserProfileItem>> DeleteAsync(string id)
+    {
+        throw new NotImplementedException("Use DeleteUserAsync instead.");
     }
 
     public async Task<ServiceActionResult<UserProfileItem>> CreateUserAsync(UserProfileItem newUser, string role)
@@ -167,7 +192,7 @@ public class UserProfileService : BaseService
         return ServiceActionResult<UserProfileItem>.OK(userProfile.ToView(user, new List<string> { role }));
     }
 
-    public async Task<ServiceActionResult<UserProfileItem>> GetUserByIdAsync(string publicId)
+    private async Task<ServiceActionResult<UserProfileItem>> GetUserByIdAsync(string publicId)
     {
         using var l = log.TraceScope();
 

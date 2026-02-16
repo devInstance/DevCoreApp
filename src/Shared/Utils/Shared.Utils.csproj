@@ -6,7 +6,7 @@
 		<AssemblyName>DevInstance.DevCoreApp.Shared.Utils</AssemblyName>
 		<RootNamespace>DevInstance.DevCoreApp.Shared.Utils</RootNamespace>
 		<Nullable>enable</Nullable>
-		<Configurations>Debug;Release;NetApiMoqs;ServiceMoqs</Configurations>
+		<Configurations>Debug;Release;ServiceMocks</Configurations>
 	</PropertyGroup>
 
 </Project>

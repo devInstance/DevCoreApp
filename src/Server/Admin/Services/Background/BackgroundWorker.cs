@@ -3,6 +3,7 @@ using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Server.Database.Core.Data.Decorators;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using DevInstance.DevCoreApp.Server.Admin.Services.Background.Requests;
+using DevInstance.DevCoreApp.Server.Admin.Services.Email;
 using DevInstance.LogScope;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Concurrent;
@@ -98,7 +99,7 @@ public class BackgroundWorker : BackgroundService, IBackgroundWorker
 
         try
         {
-            var emailSenderService = scope.ServiceProvider.GetRequiredService<EmailSenderService>();
+            var emailSenderService = scope.ServiceProvider.GetRequiredService<IEmailSenderService>();
             await emailSenderService.SendAsync(emailRequest);
 
             emailLog.Status = EmailLogStatus.Sent;

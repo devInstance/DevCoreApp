@@ -4,13 +4,13 @@
         <TargetFramework>net10.0</TargetFramework>
         <AssemblyName>DevInstance.DevCoreApp.Server.EmailProcessor.MailKit</AssemblyName>
         <RootNamespace>DevInstance.DevCoreApp.Server.EmailProcessor.MailKit</RootNamespace>
-        <Configurations>Debug;Release;NetApiMoqs;ServiceMoqs</Configurations>
+        <Configurations>Debug;Release;ServiceMocks</Configurations>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="MailKit" Version="4.14.1" />
-        <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.1" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.1" />
+        <PackageReference Include="MailKit" Version="4.15.0" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.3" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.3" />
     </ItemGroup>
 
     <ItemGroup>

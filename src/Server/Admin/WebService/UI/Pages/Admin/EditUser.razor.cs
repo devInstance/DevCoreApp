@@ -1,5 +1,5 @@
 using DevInstance.BlazorToolkit.Services;
-using DevInstance.DevCoreApp.Server.Admin.Services;
+using DevInstance.DevCoreApp.Server.Admin.Services.UserAdmin;
 using DevInstance.DevCoreApp.Shared.Model;
 using Microsoft.AspNetCore.Components;
 
@@ -11,7 +11,7 @@ public partial class EditUser
     public string UserId { get; set; } = string.Empty;
 
     [Inject]
-    private UserProfileService UserService { get; set; } = default!;
+    private IUserProfileService UserService { get; set; } = default!;
 
     [Inject]
     private NavigationManager NavigationManager { get; set; } = default!;
@@ -34,7 +34,7 @@ public partial class EditUser
         );
 
         await Host.ServiceReadAsync(
-            async () => await UserService.GetUserByIdAsync(UserId),
+            async () => await UserService.GetAsync(UserId),
             (user) =>
             {
                 Input = user;

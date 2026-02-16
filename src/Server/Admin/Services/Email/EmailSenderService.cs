@@ -3,10 +3,10 @@ using DevInstance.DevCoreApp.Server.EmailProcessor;
 using DevInstance.DevCoreApp.Server.Admin.Services.Background.Requests;
 using DevInstance.LogScope;
 
-namespace DevInstance.DevCoreApp.Server.Admin.Services;
+namespace DevInstance.DevCoreApp.Server.Admin.Services.Email;
 
 [BlazorService]
-public class EmailSenderService
+public class EmailSenderService : IEmailSenderService
 {
     private readonly IDevEmailSender _emailSender;
     private readonly IScopeLog log;

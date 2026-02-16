@@ -1,23 +1,20 @@
 <Solution>
   <Configurations>
     <BuildType Name="Debug" />
-    <BuildType Name="NetApiMoqs" />
     <BuildType Name="Release" />
-    <BuildType Name="ServiceMoqs" />
+    <BuildType Name="ServiceMocks" />
   </Configurations>
   <Folder Name="/Client/">
     <Project Path="src/Client/Client.Services/Client.Services.csproj" />
-    <Project Path="src/Client/DevCoreApp.Client/DevCoreApp.Client.csproj">
-      <BuildType Solution="NetApiMoqs|*" Project="Debug" />
-      <BuildType Solution="ServiceMoqs|*" Project="Debug" />
-    </Project>
+    <Project Path="src/Client/DevCoreApp.Client/DevCoreApp.Client.csproj" />
   </Folder>
   <Folder Name="/Server/" />
   <Folder Name="/Server/Admin/">
-    <Project Path="src/Server/Admin/Services/DevCoreApp.Admin.Services.csproj">
-      <BuildType Solution="NetApiMoqs|*" Project="Debug" />
-      <BuildType Solution="ServiceMoqs|*" Project="Debug" />
+    <Project Path="mocks/Server/Admin/ServicesMocks/DevCoreApp.Admin.Services.Mocks.csproj" Id="8f994a43-3290-4943-8afc-49ddd0dd83c0">
+      <Build Solution="Debug|*" Project="false" />
+      <Build Solution="Release|*" Project="false" />
     </Project>
+    <Project Path="src/Server/Admin/Services/DevCoreApp.Admin.Services.csproj" />
     <Project Path="src/Server/Admin/WebService/DevCoreApp.Admin.WebService.csproj" />
   </Folder>
   <Folder Name="/Server/Database/">

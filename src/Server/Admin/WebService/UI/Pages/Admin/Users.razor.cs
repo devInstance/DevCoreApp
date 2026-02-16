@@ -1,5 +1,6 @@
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.DevCoreApp.Server.Admin.Services;
+using DevInstance.DevCoreApp.Server.Admin.Services.UserAdmin;
 using DevInstance.DevCoreApp.Server.Admin.WebService.UI.Components;
 using DevInstance.DevCoreApp.Server.Admin.WebService.UI.Model.Grid;
 using DevInstance.DevCoreApp.Shared.Model;
@@ -13,7 +14,7 @@ public partial class Users
     private const string GridName = "AdminUsers";
 
     [Inject]
-    private UserProfileService UserService { get; set; } = default!;
+    private IUserProfileService UserService { get; set; } = default!;
 
     [Inject]
     private GridProfileService GridProfileService { get; set; } = default!;
@@ -110,8 +111,12 @@ public partial class Users
 
     private async Task LoadUsers(int page, string? sortField, bool? isAsc, string? search)
     {
+        string[] sortBy = !string.IsNullOrEmpty(sortField)
+            ? new[] { (isAsc == false ? "-" : "") + sortField }
+            : null;
+
         await Host.ServiceReadAsync(
-            async () => await UserService.GetAllUsersAsync(pageCount, page, sortField, isAsc, search),
+            async () => await UserService.GetListAsync(pageCount, page, sortBy, search),
             (result) => UserList = result
         );
     }

@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using DevInstance.BlazorToolkit.Services;
-using DevInstance.DevCoreApp.Server.Admin.Services;
+using DevInstance.DevCoreApp.Server.Admin.Services.UserAdmin;
 using DevInstance.DevCoreApp.Shared.Model;
 using Microsoft.AspNetCore.Components;
 
@@ -9,7 +9,7 @@ namespace DevInstance.DevCoreApp.Server.Admin.WebService.UI.Pages.Admin;
 public partial class NewUser
 {
     [Inject]
-    private UserProfileService UserService { get; set; } = default!;
+    private IUserProfileService UserService { get; set; } = default!;
 
     [Inject]
     private NavigationManager NavigationManager { get; set; } = default!;

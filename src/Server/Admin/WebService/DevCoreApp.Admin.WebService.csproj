@@ -10,7 +10,7 @@
 		<RootNamespace>DevInstance.DevCoreApp.Server.Admin.WebService</RootNamespace>
 		<Copyright>Copyright 2021-2026 DevInstance LLC</Copyright>
 		<PackageProjectUrl>https://devinstance.net/blog/aspnet-core-introduction-to-the-clean-architecture</PackageProjectUrl>
-		<Configurations>Debug;Release;NetApiMoqs;ServiceMoqs</Configurations>
+		<Configurations>Debug;Release;ServiceMocks</Configurations>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -23,7 +23,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="DevInstance.LogScope.Extensions.MicrosoftLogger" Version="10.0.0" />
-		<PackageReference Include="DevInstance.WebServiceToolkit" Version="10.0.4" />
+		<PackageReference Include="DevInstance.WebServiceToolkit" Version="10.1.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="10.0.3" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.3" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="10.0.3" />

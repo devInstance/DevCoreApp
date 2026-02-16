@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
 	<AssemblyName>DevInstance.DevCoreApp.Server.Admin.Services</AssemblyName>
 	<RootNamespace>DevInstance.DevCoreApp.Server.Admin.Services</RootNamespace>
+	<Configurations>Debug;Release;ServiceMocks</Configurations>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,9 +18,9 @@
 	  <ProjectReference Include="..\..\Email\Processor\EmailProcessor.csproj" />
 	  <ProjectReference Include="..\..\Email\MailKit\EmailProcessor.MailKit.csproj" />
 
-	  <PackageReference Include="DevInstance.BlazorToolkit" Version="10.1.1" />
+	  <PackageReference Include="DevInstance.BlazorToolkit" Version="10.1.2" />
 
-	  <PackageReference Include="DevInstance.WebServiceToolkit" Version="10.0.4" />
+	  <PackageReference Include="DevInstance.WebServiceToolkit" Version="10.1.0" />
   </ItemGroup>
 
 </Project>
