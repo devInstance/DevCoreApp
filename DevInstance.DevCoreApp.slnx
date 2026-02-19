@@ -4,6 +4,9 @@
     <BuildType Name="Release" />
     <BuildType Name="ServiceMocks" />
   </Configurations>
+  <Folder Name="/.docs/">
+    <File Path="docs/Specification.md" />
+  </Folder>
   <Folder Name="/Client/">
     <Project Path="src/Client/Client.Services/Client.Services.csproj" />
     <Project Path="src/Client/DevCoreApp.Client/DevCoreApp.Client.csproj" />
