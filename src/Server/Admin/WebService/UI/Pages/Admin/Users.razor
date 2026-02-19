@@ -26,6 +26,16 @@
            OnSort="OnSortAsync"
            OnPageChanged="OnPageChangedAsync"
            OnColumnsChanged="OnColumnsChanged">
+    <ColumnTemplates>
+        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.UserProfileItem" Field="actions" Context="user">
+            <a href="admin/users/@user.Id/edit" class="btn btn-sm btn-outline-primary me-1" title="Edit">
+                <i class="bi bi-pencil"></i>
+            </a>
+            <button class="btn btn-sm btn-outline-danger" title="Delete" @onclick="() => ShowDeleteConfirmation(user)">
+                <i class="bi bi-trash"></i>
+            </button>
+        </HColumnTemplate>
+    </ColumnTemplates>
     <EmptyContent>
         <p>No users found.</p>
     </EmptyContent>

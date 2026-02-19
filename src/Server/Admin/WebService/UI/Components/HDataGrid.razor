@@ -1,40 +1,10 @@
 @typeparam TItem
 
-@if (IsLoading)
-{
-    <table class="table table-striped @TableClass">
-        <thead>
-            <tr>
-                @if (EnableSelection)
-                {
-                    <th scope="col" style="width: 40px;"></th>
-                }
-                @foreach (var col in VisibleColumns)
-                {
-                    <th scope="col" width="@col.Width" class="@col.HeaderClass">@col.Label</th>
-                }
-            </tr>
-        </thead>
-        <tbody class="placeholder-glow">
-            @for (int i = 0; i < PlaceholderRows; i++)
-            {
-                <tr>
-                    @if (EnableSelection)
-                    {
-                        <td><span class="placeholder col-12"></span></td>
-                    }
-                    @foreach (var col in VisibleColumns)
-                    {
-                        <td class="@col.CellClass">
-                            <span class="placeholder" style="width: @(PlaceholderWidths[i % PlaceholderWidths.Length])%;"></span>
-                        </td>
-                    }
-                </tr>
-            }
-        </tbody>
-    </table>
-}
-else if (Data == null || !Data.Items.Any())
+<CascadingValue Value="this" IsFixed="true">
+    @ColumnTemplates
+</CascadingValue>
+
+@if (!IsLoading && (Data == null || !Data.Items.Any()))
 {
     @if (Data != null && !string.IsNullOrEmpty(Data.Search))
     {
@@ -55,14 +25,14 @@ else if (Data == null || !Data.Items.Any())
 }
 else
 {
-    @if (!string.IsNullOrEmpty(Data.Search) && SearchContent != null)
+    @if (!IsLoading && !string.IsNullOrEmpty(Data!.Search) && SearchContent != null)
     {
         @SearchContent(Data.Search)
     }
 
-    <table class="table table-striped table-hover @TableClass">
+    <table class="table table-striped @(!IsLoading ? "table-hover" : "") @TableClass" style="table-layout: fixed;">
         <thead>
-            @if (BeforeHeaderRow != null)
+            @if (!IsLoading && BeforeHeaderRow != null)
             {
                 @BeforeHeaderRow
             }
@@ -70,14 +40,17 @@ else
                 @if (EnableSelection)
                 {
                     <th scope="col" style="width: 40px;">
-                        <input type="checkbox" class="form-check-input" checked="@IsAllSelected" @onchange="OnSelectAllChanged" />
+                        @if (!IsLoading)
+                        {
+                            <input type="checkbox" class="form-check-input" checked="@IsAllSelected" @onchange="OnSelectAllChanged" />
+                        }
                     </th>
                 }
                 @foreach (var col in VisibleColumns)
                 {
-                    <th scope="col" width="@col.Width" class="@col.HeaderClass"
+                    <th scope="col" style="@(col.Width != null ? $"width: {col.Width};" : "")" class="@col.HeaderClass"
                         @oncontextmenu="(e) => OnHeaderContextMenu(e, col)" @oncontextmenu:preventDefault="true">
-                        @if (col.IsSortable)
+                        @if (col.IsSortable && !IsLoading && Data != null)
                         {
                             <HSortableHeader Model="Data" Label="@col.Label" SortField="@col.Field" OnSort="OnSort" />
                         }
@@ -89,142 +62,170 @@ else
                 }
             </tr>
         </thead>
-        <tbody>
-            @if (GroupBy != null)
-            {
-                @foreach (var group in GetGroups())
+        @if (IsLoading)
+        {
+            <tbody class="placeholder-glow">
+                @for (int i = 0; i < PlaceholderRows; i++)
                 {
-                    <tr class="table-light" style="cursor: pointer;" @onclick="() => ToggleGroup(group.Key)">
-                        <td colspan="@TotalColumnCount">
-                            <i class="bi @(IsGroupExpanded(group.Key) ? "bi-chevron-down" : "bi-chevron-right") me-1"></i>
-                            @if (GroupHeaderTemplate != null)
-                            {
-                                @GroupHeaderTemplate(group)
-                            }
-                            else
-                            {
-                                <strong>@(group.Key?.ToString() ?? "(none)")</strong>
-                                <span class="text-muted ms-2">(@group.Count)</span>
-                            }
-                        </td>
-                    </tr>
-                    @if (IsGroupExpanded(group.Key))
-                    {
-                        @foreach (var item in group.Items)
-                        {
-                            <tr class="@RowClass?.Invoke(item)"
-                                @onclick="() => OnRowClick.InvokeAsync(item)"
-                                style="@(OnRowClick.HasDelegate ? "cursor: pointer;" : "")">
-                                @if (EnableSelection)
-                                {
-                                    <td @onclick:stopPropagation="true">
-                                        <input type="checkbox" class="form-check-input"
-                                               checked="@(SelectedIds != null && IdSelector != null && SelectedIds.Contains(IdSelector(item)))"
-                                               @onchange="(e) => OnRowSelectChanged(item, (bool)(e.Value ?? false))" />
-                                    </td>
-                                }
-                                @foreach (var col in VisibleColumns)
-                                {
-                                    <td class="@col.CellClass">
-                                        @if (col.CellTemplate != null)
-                                        {
-                                            @col.CellTemplate(item)
-                                        }
-                                        else if (col.Template != null)
-                                        {
-                                            @col.Template(col.ValueSelector(item))
-                                        }
-                                        else
-                                        {
-                                            @col.ValueSelector(item)
-                                        }
-                                    </td>
-                                }
-                            </tr>
-                        }
-                    }
-                }
-            }
-            else
-            {
-                @foreach (var item in Data.Items)
-                {
-                    <tr class="@RowClass?.Invoke(item)"
-                        @onclick="() => OnRowClick.InvokeAsync(item)"
-                        style="@(OnRowClick.HasDelegate ? "cursor: pointer;" : "")">
+                    <tr>
                         @if (EnableSelection)
                         {
-                            <td @onclick:stopPropagation="true">
-                                <input type="checkbox" class="form-check-input"
-                                       checked="@(SelectedIds != null && IdSelector != null && SelectedIds.Contains(IdSelector(item)))"
-                                       @onchange="(e) => OnRowSelectChanged(item, (bool)(e.Value ?? false))" />
-                            </td>
+                            <td><span class="placeholder col-12"></span></td>
                         }
                         @foreach (var col in VisibleColumns)
                         {
                             <td class="@col.CellClass">
-                                @if (col.CellTemplate != null)
-                                {
-                                    @col.CellTemplate(item)
-                                }
-                                else if (col.Template != null)
-                                {
-                                    @col.Template(col.ValueSelector(item))
-                                }
-                                else
-                                {
-                                    @col.ValueSelector(item)
-                                }
+                                <span class="placeholder" style="width: @(PlaceholderWidths[i % PlaceholderWidths.Length])%;"></span>
                             </td>
                         }
                     </tr>
                 }
-            }
-        </tbody>
-    </table>
-
-    @if (IsContextMenuVisible)
-    {
-        <div class="position-fixed top-0 start-0 w-100 h-100" style="z-index: 1050;"
-             @onclick="CloseContextMenu" @oncontextmenu="CloseContextMenu" @oncontextmenu:preventDefault="true"></div>
-        <div class="dropdown-menu show shadow" style="position: fixed; z-index: 1051; left: @(_contextMenuX)px; top: @(_contextMenuY)px;">
-            <button class="dropdown-item @(!IsContextMenuColumnSortable ? "disabled" : "")" disabled="@(!IsContextMenuColumnSortable)" @onclick="ContextMenuSortAsc">
-                <i class="bi bi-sort-down-alt me-2"></i>Sort Asc
-            </button>
-            <button class="dropdown-item @(!IsContextMenuColumnSortable ? "disabled" : "")" disabled="@(!IsContextMenuColumnSortable)" @onclick="ContextMenuSortDesc">
-                <i class="bi bi-sort-up-alt me-2"></i>Sort Desc
-            </button>
-            <div class="dropdown-divider"></div>
-            <button class="dropdown-item @(IsFirstVisibleColumn ? "disabled" : "")" disabled="@IsFirstVisibleColumn" @onclick="ContextMenuMoveLeft">
-                <i class="bi bi-chevron-left me-2"></i>Move Left
-            </button>
-            <button class="dropdown-item @(IsLastVisibleColumn ? "disabled" : "")" disabled="@IsLastVisibleColumn" @onclick="ContextMenuMoveRight">
-                <i class="bi bi-chevron-right me-2"></i>Move Right
-            </button>
-            <div class="dropdown-divider"></div>
-            <button class="dropdown-item" @onclick="ContextMenuHideColumn">
-                <i class="bi bi-eye-slash me-2"></i>Hide
-            </button>
-            <button class="dropdown-item" @onclick="ContextMenuShowSettings">
-                <i class="bi bi-gear me-2"></i>Settings
-            </button>
-        </div>
-    }
-
-    <div class="d-flex justify-content-between align-items-center">
-        @if (!ShowAll)
-        {
-            <ModelDataPager List="Data" OnPageChanged="OnPageChanged" />
+            </tbody>
         }
         else
         {
-            <div></div>
+            <tbody>
+                @if (GroupBy != null)
+                {
+                    @foreach (var group in GetGroups())
+                    {
+                        <tr class="table-light" style="cursor: pointer;" @onclick="() => ToggleGroup(group.Key)">
+                            <td colspan="@TotalColumnCount">
+                                <i class="bi @(IsGroupExpanded(group.Key) ? "bi-chevron-down" : "bi-chevron-right") me-1"></i>
+                                @if (GroupHeaderTemplate != null)
+                                {
+                                    @GroupHeaderTemplate(group)
+                                }
+                                else
+                                {
+                                    <strong>@(group.Key?.ToString() ?? "(none)")</strong>
+                                    <span class="text-muted ms-2">(@group.Count)</span>
+                                }
+                            </td>
+                        </tr>
+                        @if (IsGroupExpanded(group.Key))
+                        {
+                            @foreach (var item in group.Items)
+                            {
+                                <tr class="@RowClass?.Invoke(item)"
+                                    @onclick="() => OnRowClick.InvokeAsync(item)"
+                                    style="@(OnRowClick.HasDelegate ? "cursor: pointer;" : "")">
+                                    @if (EnableSelection)
+                                    {
+                                        <td @onclick:stopPropagation="true">
+                                            <input type="checkbox" class="form-check-input"
+                                                   checked="@(SelectedIds != null && IdSelector != null && SelectedIds.Contains(IdSelector(item)))"
+                                                   @onchange="(e) => OnRowSelectChanged(item, (bool)(e.Value ?? false))" />
+                                        </td>
+                                    }
+                                    @foreach (var col in VisibleColumns)
+                                    {
+                                        <td class="text-truncate @col.CellClass">
+                                            @{ var cellTmpl = GetCellTemplate(col); }
+                                            @if (cellTmpl != null)
+                                            {
+                                                @cellTmpl(item)
+                                            }
+                                            else if (col.Template != null)
+                                            {
+                                                @col.Template(col.ValueSelector(item))
+                                            }
+                                            else
+                                            {
+                                                @col.ValueSelector(item)
+                                            }
+                                        </td>
+                                    }
+                                </tr>
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    @foreach (var item in Data!.Items)
+                    {
+                        <tr class="@RowClass?.Invoke(item)"
+                            @onclick="() => OnRowClick.InvokeAsync(item)"
+                            style="@(OnRowClick.HasDelegate ? "cursor: pointer;" : "")">
+                            @if (EnableSelection)
+                            {
+                                <td @onclick:stopPropagation="true">
+                                    <input type="checkbox" class="form-check-input"
+                                           checked="@(SelectedIds != null && IdSelector != null && SelectedIds.Contains(IdSelector(item)))"
+                                           @onchange="(e) => OnRowSelectChanged(item, (bool)(e.Value ?? false))" />
+                                </td>
+                            }
+                            @foreach (var col in VisibleColumns)
+                            {
+                                <td class="@col.CellClass">
+                                    @{ var cellTmpl = GetCellTemplate(col); }
+                                    @if (cellTmpl != null)
+                                    {
+                                        @cellTmpl(item)
+                                    }
+                                    else if (col.Template != null)
+                                    {
+                                        @col.Template(col.ValueSelector(item))
+                                    }
+                                    else
+                                    {
+                                        @col.ValueSelector(item)
+                                    }
+                                </td>
+                            }
+                        </tr>
+                    }
+                }
+            </tbody>
         }
-        @if (ShowAllEnabled)
+    </table>
+
+    @if (!IsLoading)
+    {
+        @if (IsContextMenuVisible)
         {
-            <button class="btn btn-sm btn-outline-secondary" @onclick="ToggleShowAll">
-                @(ShowAll ? "Show Paged" : "Show All")
-            </button>
+            <div class="position-fixed top-0 start-0 w-100 h-100" style="z-index: 1050;"
+                 @onclick="CloseContextMenu" @oncontextmenu="CloseContextMenu" @oncontextmenu:preventDefault="true"></div>
+            <div class="dropdown-menu show shadow" style="position: fixed; z-index: 1051; left: @(_contextMenuX)px; top: @(_contextMenuY)px;">
+                <button class="dropdown-item @(!IsContextMenuColumnSortable ? "disabled" : "")" disabled="@(!IsContextMenuColumnSortable)" @onclick="ContextMenuSortAsc">
+                    <i class="bi bi-sort-down-alt me-2"></i>Sort Asc
+                </button>
+                <button class="dropdown-item @(!IsContextMenuColumnSortable ? "disabled" : "")" disabled="@(!IsContextMenuColumnSortable)" @onclick="ContextMenuSortDesc">
+                    <i class="bi bi-sort-up-alt me-2"></i>Sort Desc
+                </button>
+                <div class="dropdown-divider"></div>
+                <button class="dropdown-item @(IsFirstVisibleColumn ? "disabled" : "")" disabled="@IsFirstVisibleColumn" @onclick="ContextMenuMoveLeft">
+                    <i class="bi bi-chevron-left me-2"></i>Move Left
+                </button>
+                <button class="dropdown-item @(IsLastVisibleColumn ? "disabled" : "")" disabled="@IsLastVisibleColumn" @onclick="ContextMenuMoveRight">
+                    <i class="bi bi-chevron-right me-2"></i>Move Right
+                </button>
+                <div class="dropdown-divider"></div>
+                <button class="dropdown-item" @onclick="ContextMenuHideColumn">
+                    <i class="bi bi-eye-slash me-2"></i>Hide
+                </button>
+                <button class="dropdown-item" @onclick="ContextMenuShowSettings">
+                    <i class="bi bi-gear me-2"></i>Settings
+                </button>
+            </div>
         }
-    </div>
+
+        <div class="d-flex justify-content-between align-items-center">
+            @if (!ShowAll)
+            {
+                <ModelDataPager List="Data" OnPageChanged="OnPageChanged" />
+            }
+            else
+            {
+                <div></div>
+            }
+            @if (ShowAllEnabled)
+            {
+                <button class="btn btn-sm btn-outline-secondary" @onclick="ToggleShowAll">
+                    @(ShowAll ? "Show Paged" : "Show All")
+                </button>
+            }
+        </div>
+    }
 }

@@ -11,6 +11,7 @@ public partial class HDataGrid<TItem> where TItem : ModelItem
     private static readonly int[] PlaceholderWidths = [75, 60, 85, 70, 90, 65, 80];
 
     private readonly Dictionary<object?, bool> _expandedGroups = new();
+    private readonly Dictionary<string, RenderFragment<TItem>> _columnTemplates = new();
 
     private ColumnDescriptor<TItem>? _contextMenuColumn;
     private double _contextMenuX;
@@ -83,10 +84,25 @@ public partial class HDataGrid<TItem> where TItem : ModelItem
     public RenderFragment? BeforeHeaderRow { get; set; }
 
     [Parameter]
+    public RenderFragment? ColumnTemplates { get; set; }
+
+    [Parameter]
     public EventCallback OnColumnsChanged { get; set; }
 
     [Inject]
     private IJSRuntime JS { get; set; } = default!;
+
+    internal void RegisterColumnTemplate(string field, RenderFragment<TItem> template)
+    {
+        _columnTemplates[field] = template;
+    }
+
+    private RenderFragment<TItem>? GetCellTemplate(ColumnDescriptor<TItem> col)
+    {
+        if (_columnTemplates.TryGetValue(col.Field, out var template))
+            return template;
+        return col.CellTemplate;
+    }
 
     private IEnumerable<ColumnDescriptor<TItem>> VisibleColumns => Columns.Where(c => c.IsVisible);
 

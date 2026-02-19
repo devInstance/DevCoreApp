@@ -63,6 +63,9 @@ Queue emails via `IBackgroundWorker.Submit()` with a `BackgroundRequestItem` of 
 - Placeholders use `{{Key}}` syntax in both subject and body
 - To add a new template: add a constant to `EmailTemplateName`, register in `EmailTemplateRepository`, create the HTML file in `wwwroot/email-templates/`
 
+### HDataGrid Component
+Use `HDataGrid<TItem>` for all tabular data pages. Do not write inline `<table>` markup. Full documentation: [`UI/Components/HDataGrid.md`](UI/Components/HDataGrid.md).
+
 ### Roles
 Defined in `ApplicationRoles`: Owner, Admin, Manager, Employee, Client. Owner is the super-admin role and is typically excluded from user-assignable roles.
 

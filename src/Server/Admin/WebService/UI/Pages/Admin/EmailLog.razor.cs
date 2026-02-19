@@ -29,14 +29,14 @@ public partial class EmailLog
 
     public List<ColumnDescriptor<EmailLogItem>> Columns { get; set; } = new()
     {
-        new() { Label = "From", Field = "fromaddress", ValueSelector = e => e.FromAddress },
-        new() { Label = "To", Field = "toaddress", ValueSelector = e => e.ToAddress },
-        new() { Label = "Subject", Field = "subject", ValueSelector = e => e.Subject },
-        new() { Label = "Status", Field = "status", ValueSelector = e => e.Status },
-        new() { Label = "Scheduled Date", Field = "scheduleddate", ValueSelector = e => e.ScheduledDate.ToString("g") },
-        new() { Label = "Sent Date", Field = "sentdate", ValueSelector = e => e.SentDate?.ToString("g") ?? string.Empty },
-        new() { Label = "Error", Field = "error", ValueSelector = e => e.ErrorMessage ?? string.Empty, IsVisible = false, IsSortable = false },
-        new() { Label = "Template", Field = "template", ValueSelector = e => e.TemplateName ?? string.Empty, IsVisible = false, IsSortable = false },
+        new() { Label = "From", Field = "fromaddress", ValueSelector = e => e.FromAddress, Width = "18%" },
+        new() { Label = "To", Field = "toaddress", ValueSelector = e => e.ToAddress, Width = "18%" },
+        new() { Label = "Subject", Field = "subject", ValueSelector = e => e.Subject, Width = "22%" },
+        new() { Label = "Status", Field = "status", ValueSelector = e => e.Status, Width = "10%" },
+        new() { Label = "Scheduled Date", Field = "scheduleddate", ValueSelector = e => e.ScheduledDate.ToString("g"), Width = "14%" },
+        new() { Label = "Sent Date", Field = "sentdate", ValueSelector = e => e.SentDate?.ToString("g") ?? string.Empty, Width = "14%" },
+        new() { Label = "Error", Field = "error", ValueSelector = e => e.ErrorMessage ?? string.Empty, IsVisible = false, IsSortable = false, Width = "20%" },
+        new() { Label = "Template", Field = "template", ValueSelector = e => e.TemplateName ?? string.Empty, IsVisible = false, IsSortable = false, Width = "15%" },
     };
 
     private int pageCount = 10;

@@ -6,7 +6,6 @@ using DevInstance.DevCoreApp.Server.Admin.WebService.UI.Model.Grid;
 using DevInstance.DevCoreApp.Shared.Model;
 using DevInstance.WebServiceToolkit.Common.Model;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Rendering;
 
 namespace DevInstance.DevCoreApp.Server.Admin.WebService.UI.Pages.Admin;
 
@@ -27,13 +26,14 @@ public partial class Users
 
     public List<ColumnDescriptor<UserProfileItem>> Columns { get; set; } = new()
     {
-        new() { Label = "Email", Field = "email", ValueSelector = u => u.Email },
-        new() { Label = "First Name", Field = "firstname", ValueSelector = u => u.FirstName },
-        new() { Label = "Middle Name", Field = "middlename", ValueSelector = u => u.MiddleName, IsVisible = false },
-        new() { Label = "Last Name", Field = "lastname", ValueSelector = u => u.LastName },
-        new() { Label = "Phone", Field = "phone", ValueSelector = u => u.PhoneNumber },
-        new() { Label = "Roles", Field = "roles", ValueSelector = u => u.Roles, IsSortable = false },
-        new() { Label = "Status", Field = "status", ValueSelector = u => u.Status.ToString() },
+        new() { Label = "Email", Field = "email", ValueSelector = u => u.Email, Width = "20%" },
+        new() { Label = "First Name", Field = "firstname", ValueSelector = u => u.FirstName, Width = "14%" },
+        new() { Label = "Middle Name", Field = "middlename", ValueSelector = u => u.MiddleName, IsVisible = false, Width = "14%" },
+        new() { Label = "Last Name", Field = "lastname", ValueSelector = u => u.LastName, Width = "14%" },
+        new() { Label = "Phone", Field = "phone", ValueSelector = u => u.PhoneNumber, Width = "14%" },
+        new() { Label = "Roles", Field = "roles", ValueSelector = u => u.Roles, IsSortable = false, Width = "10%" },
+        new() { Label = "Status", Field = "status", ValueSelector = u => u.Status.ToString(), Width = "10%" },
+        new() { Label = "Actions", Field = "actions", ValueSelector = u => u.Id, IsSortable = false, Width = "100px" },
     };
 
     private string? UserToDelete { get; set; }
@@ -46,34 +46,6 @@ public partial class Users
 
     protected override async Task OnInitializedAsync()
     {
-        Columns.Add(new()
-        {
-            Label = "Actions",
-            Field = "actions",
-            ValueSelector = u => u.Id,
-            IsSortable = false,
-            CellTemplate = user => builder =>
-            {
-                builder.OpenElement(0, "a");
-                builder.AddAttribute(1, "href", $"admin/users/{user.Id}/edit");
-                builder.AddAttribute(2, "class", "btn btn-sm btn-outline-primary me-1");
-                builder.AddAttribute(3, "title", "Edit");
-                builder.OpenElement(4, "i");
-                builder.AddAttribute(5, "class", "bi bi-pencil");
-                builder.CloseElement();
-                builder.CloseElement();
-
-                builder.OpenElement(6, "button");
-                builder.AddAttribute(7, "class", "btn btn-sm btn-outline-danger");
-                builder.AddAttribute(8, "title", "Delete");
-                builder.AddAttribute(9, "onclick", EventCallback.Factory.Create(this, () => ShowDeleteConfirmation(user)));
-                builder.OpenElement(10, "i");
-                builder.AddAttribute(11, "class", "bi bi-trash");
-                builder.CloseElement();
-                builder.CloseElement();
-            }
-        });
-
         await LoadGridProfile();
         await LoadUsers(0, SortField, IsAsc, null);
     }
