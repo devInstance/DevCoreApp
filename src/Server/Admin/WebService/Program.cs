@@ -7,6 +7,7 @@ using DevInstance.DevCoreApp.Server.Admin.Services.UserAdmin;
 using DevInstance.DevCoreApp.Server.Admin.WebService.Identity;
 using DevInstance.DevCoreApp.Server.Admin.WebService.UI;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
+using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Server.Database.Postgres;
 using DevInstance.DevCoreApp.Server.Database.SqlServer;
 using DevInstance.DevCoreApp.Server.EmailProcessor.MailKit;
@@ -69,6 +70,19 @@ public class Program
 #endif
 
         builder.Services.AddAppIdentity();
+
+        // IOperationContext — provides user/org/tracing context to the data layer.
+        // The factory lambda auto-selects the implementation: HttpOperationContext when
+        // running inside an HTTP request, BackgroundOperationContext otherwise (worker jobs).
+        builder.Services.AddScoped<HttpOperationContext>();
+        builder.Services.AddScoped<BackgroundOperationContext>();
+        builder.Services.AddScoped<IOperationContext>(sp =>
+        {
+            var accessor = sp.GetRequiredService<IHttpContextAccessor>();
+            return accessor.HttpContext != null
+                ? sp.GetRequiredService<HttpOperationContext>()
+                : sp.GetRequiredService<BackgroundOperationContext>();
+        });
 
 #if !SERVICEMOCKS
         builder.Services.AddBlazorServices();

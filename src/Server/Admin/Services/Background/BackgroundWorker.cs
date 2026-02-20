@@ -1,4 +1,3 @@
-using DevInstance.DevCoreApp.Server.Database.Core;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Server.Database.Core.Data.Decorators;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
@@ -34,41 +33,44 @@ public class BackgroundWorker : BackgroundService, IBackgroundWorker
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        using (var scope = factory.CreateScope())
+        while (!stoppingToken.IsCancellationRequested)
         {
-            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-            var repository = scope.ServiceProvider.GetRequiredService<IQueryRepository>();
-
-            while (!stoppingToken.IsCancellationRequested)
+            if (theQueue.TryDequeue(out var request))
             {
-                var utcNow = DateTime.UtcNow;
-                if (theQueue.TryDequeue(out var request))
+                // Create a fresh DI scope per job. This ensures:
+                //   1. Each job gets its own DbContext (no entity tracking accumulation)
+                //   2. BackgroundOperationContext is reset between jobs
+                //   3. Future per-job context (user, org) can be populated from request metadata
+                using var scope = factory.CreateScope();
+                var operationContext = scope.ServiceProvider.GetRequiredService<BackgroundOperationContext>();
+                operationContext.Reset();
+
+                var repository = scope.ServiceProvider.GetRequiredService<IQueryRepository>();
+
+                try
                 {
-                    try
+                    switch (request.RequestType)
                     {
-                        switch (request.RequestType)
+                        case BackgroundRequestType.SendEmail:
                         {
-                            case BackgroundRequestType.SendEmail:
-                            {
-                                var emailRequest = (EmailRequest)request.Content;
-                                await ProcessEmailRequestAsync(scope, repository, emailRequest);
-                            }
-                            break;
+                            var emailRequest = (EmailRequest)request.Content;
+                            await ProcessEmailRequestAsync(scope, repository, emailRequest);
                         }
-                    }
-                    catch (Exception ex)
-                    {
-                        log.E($"Background worker error: {ex.Message}");
+                        break;
                     }
                 }
-                else
+                catch (Exception ex)
                 {
-#if DEBUG
-                    await Task.Delay(1 * 1000, stoppingToken); // avoid tight loop
-#else
-                    await Task.Delay(10 * 1000, stoppingToken);
-#endif
+                    log.E($"Background worker error: {ex.Message}");
                 }
+            }
+            else
+            {
+#if DEBUG
+                await Task.Delay(1 * 1000, stoppingToken); // avoid tight loop
+#else
+                await Task.Delay(10 * 1000, stoppingToken);
+#endif
             }
         }
     }
