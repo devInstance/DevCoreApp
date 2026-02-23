@@ -10,16 +10,15 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="DevInstance.LogScope" Version="1.4.3" />
-	  <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="10.0.1" />
-	  <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.1" />
-	  <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.1" />
-	  <PackageReference Include="Microsoft.Extensions.Localization.Abstractions" Version="10.0.1" />
+	  <PackageReference Include="DevInstance.LogScope" Version="10.0.0" />
+	  <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="10.0.3" />
+	  <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.3" />
+	  <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.3" />
+	  <PackageReference Include="Microsoft.Extensions.Localization.Abstractions" Version="10.0.3" />
 	</ItemGroup>
 
 	<ItemGroup>
 	  <ProjectReference Include="..\..\Shared\Model\Shared.Model.csproj" />
-	  <ProjectReference Include="..\..\Shared\Services\Shared.Services.csproj" />
 	  <ProjectReference Include="..\..\Shared\Utils\Shared.Utils.csproj" />
 	</ItemGroup>
 

@@ -3,7 +3,7 @@ using DevInstance.BlazorToolkit.Tools;
 using DevInstance.DevCoreApp.Server.Admin.Services.Authentication;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Server.Database.Core.Data.Decorators;
-using DevInstance.DevCoreApp.Shared.Model;
+using DevInstance.DevCoreApp.Shared.Model.Settings;
 using DevInstance.DevCoreApp.Shared.Utils;
 using DevInstance.LogScope;
 using Microsoft.EntityFrameworkCore;

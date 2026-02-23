@@ -1,13 +1,14 @@
 ﻿using DevInstance.BlazorToolkit.Http;
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.BlazorToolkit.Services.Wasm;
-using DevInstance.DevCoreApp.Shared.Services;
 using DevInstance.LogScope;
 using DevInstance.WebServiceToolkit.Common.Model;
 
 namespace DevInstance.DevCoreApp.Client.Services;
 
-public class CRUDService<T> : BaseService, ICRUDService<T> where T : ModelItem
+public delegate Task DataUpdate<T>(T item);
+
+public class CRUDService<T> : BaseService where T : ModelItem
 {
     IApiContext<T> Api { get; set; }
 

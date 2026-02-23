@@ -2,7 +2,7 @@ using DevInstance.WebServiceToolkit.Common.Model;
 using System;
 using System.Collections.Generic;
 
-namespace DevInstance.DevCoreApp.Shared.Model;
+namespace DevInstance.DevCoreApp.Shared.Model.Settings;
 
 /// <summary>
 /// DTO for grid profile settings

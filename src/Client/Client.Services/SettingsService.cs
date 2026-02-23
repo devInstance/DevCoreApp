@@ -1,18 +1,17 @@
 ﻿using Microsoft.Extensions.Localization;
 using System.Globalization;
-using DevInstance.DevCoreApp.Shared.Services;
 
 namespace DevInstance.DevCoreApp.Client.Services;
 
-public class SettingsService : BaseService, ISettingsService
+public class SettingsService : BaseService
 {
     SettingsLanguageItem[] supportedLanguages;
 
     public SettingsLanguageItem[] SupportedLanguages { get => supportedLanguages; }
 
-    public IStringLocalizer<ISettingsService> Loc { get; }
+    public IStringLocalizer<SettingsService> Loc { get; }
 
-    public SettingsService(IStringLocalizer<ISettingsService> loc)
+    public SettingsService(IStringLocalizer<SettingsService> loc)
     {
         Loc = loc;
         supportedLanguages = new[]
@@ -23,7 +22,7 @@ public class SettingsService : BaseService, ISettingsService
         };
     }
 
-    private SettingsLanguageItem CreateLanguageItem(string culture, string flagName, IStringLocalizer<ISettingsService> loc)
+    private SettingsLanguageItem CreateLanguageItem(string culture, string flagName, IStringLocalizer<SettingsService> loc)
     {
         return new SettingsLanguageItem
         {

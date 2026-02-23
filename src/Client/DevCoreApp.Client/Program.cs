@@ -1,8 +1,8 @@
 using DevInstance.BlazorToolkit.Http;
+using DevInstance.BlazorToolkit.Tools;
 using DevInstance.DevCoreApp.Client.Services;
 using DevInstance.DevCoreApp.Client.Services.Net;
 using DevInstance.DevCoreApp.Client.Services.Net.Api;
-using DevInstance.DevCoreApp.Shared.Services;
 using DevInstance.DevCoreApp.Shared.Utils;
 using DevInstance.LogScope.Extensions;
 using DevInstance.LogScope.Formatters;
@@ -45,7 +45,7 @@ public class Program
 
         builder.Services.AddNetApi();
 
-        builder.Services.AddAppServices();
+        builder.Services.AddBlazorServices();//TODO: add service asssembly reference
 
         await builder.Build().RunAsync();
     }

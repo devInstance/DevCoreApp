@@ -1,9 +1,10 @@
-﻿using DevInstance.DevCoreApp.Shared.Services;
-using DevInstance.LogScope;
+﻿using DevInstance.LogScope;
 
 namespace DevInstance.DevCoreApp.Client.Services;
 
-public class ToolbarService : IToolbarService
+public delegate void ToolbarEventHandler(object value);
+
+public class ToolbarService
 {
     public event ToolbarEventHandler ShrinkSidebar;
     public event ToolbarEventHandler ToolbarHasChanged;
