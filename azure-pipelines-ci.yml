@@ -19,7 +19,7 @@ steps:
 - task: NuGetCommand@2
   inputs:
     command: 'restore'
-    restoreSolution: '**/*.slnx'
+    restoreSolution: '$(solution)'
 
 # Step 2: Build the Solution
 - task: VSBuild@1
