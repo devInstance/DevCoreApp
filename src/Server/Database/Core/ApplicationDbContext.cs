@@ -20,6 +20,9 @@ public abstract class ApplicationDbContext : IdentityDbContext<ApplicationUser, 
     public DbSet<Tenant> Tenants { get; set; }
     public DbSet<UserOrganization> UserOrganizations { get; set; }
     public DbSet<AuditLog> AuditLogs { get; set; }
+    public DbSet<Permission> Permissions { get; set; }
+    public DbSet<RolePermission> RolePermissions { get; set; }
+    public DbSet<UserPermissionOverride> UserPermissionOverrides { get; set; }
 
     public ApplicationDbContext(DbContextOptions options, IOperationContext operationContext)
             : base(options)
@@ -86,6 +89,46 @@ public abstract class ApplicationDbContext : IdentityDbContext<ApplicationUser, 
                 .WithMany()
                 .HasForeignKey(u => u.PrimaryOrganizationId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        builder.Entity<Permission>(entity =>
+        {
+            entity.HasIndex(p => p.Key)
+                .IsUnique();
+
+            entity.HasIndex(p => new { p.Module, p.Entity, p.Action })
+                .IsUnique();
+        });
+
+        builder.Entity<RolePermission>(entity =>
+        {
+            entity.HasKey(rp => new { rp.RoleId, rp.PermissionId });
+
+            entity.HasOne(rp => rp.Role)
+                .WithMany()
+                .HasForeignKey(rp => rp.RoleId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(rp => rp.Permission)
+                .WithMany(p => p.RolePermissions)
+                .HasForeignKey(rp => rp.PermissionId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<UserPermissionOverride>(entity =>
+        {
+            entity.HasOne(upo => upo.User)
+                .WithMany()
+                .HasForeignKey(upo => upo.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(upo => upo.Permission)
+                .WithMany(p => p.UserPermissionOverrides)
+                .HasForeignKey(upo => upo.PermissionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(upo => new { upo.UserId, upo.PermissionId })
+                .IsUnique();
         });
 
         builder.Entity<AuditLog>(entity =>
