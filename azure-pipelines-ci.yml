@@ -9,16 +9,29 @@ trigger:
 pool: default
 
 steps:
+- task: UseDotNet@2
+  displayName: 'Use .NET 10.x'
+  inputs:
+    version: 10.x
+
 - task: NuGetToolInstaller@1
 
 - task: NuGetCommand@2
   inputs:
-    restoreSolution: '$(solution)'
+    command: 'restore'
+    restoreSolution: '**/*.slnx'
 
+# Step 2: Build the Solution
 - task: VSBuild@1
   inputs:
     solution: '$(solution)'
-    msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(build.artifactStagingDirectory)\WebApp.zip" /p:DeployIisAppPath="Default Web Site"'
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
+    msbuildArgs: '/p:Configuration=$(buildConfiguration)'
+
+# Step 3: Run Unit Tests
+- task: DotNetCoreCLI@2
+  displayName: 'Run unit tests'
+  inputs:
+    command: 'test'
+    projects: '**/tests/**/*.csproj'
+    arguments: '--configuration $(buildConfiguration) --no-build'
 
