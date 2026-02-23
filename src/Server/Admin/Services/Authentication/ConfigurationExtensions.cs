@@ -47,6 +47,8 @@ public static class ConfigurationExtensions
 
         services.AddScoped<IApplicationSignManager, ApplicationSignManager>();
         services.AddScoped<IApplicationUserManager, ApplicationUserManager>();
+        services.AddScoped<IOrganizationContextResolver, OrganizationContextResolver>();
+        services.AddMemoryCache();
 
     }
 
