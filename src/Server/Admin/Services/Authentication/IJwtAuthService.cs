@@ -5,7 +5,7 @@ namespace DevInstance.DevCoreApp.Server.Admin.Services.Authentication;
 
 public interface IJwtAuthService
 {
-    Task<ServiceActionResult<JwtLoginResponse>> LoginAsync(JwtLoginRequest request, string? ipAddress);
+    Task<ServiceActionResult<JwtLoginResponse>> LoginAsync(JwtLoginRequest request, string? ipAddress, string? userAgent = null);
     Task<ServiceActionResult<JwtLoginResponse>> RefreshAsync(string refreshToken, string? ipAddress);
     Task<ServiceActionResult<bool>> RevokeAsync(string refreshToken, string? ipAddress);
 }

@@ -38,7 +38,7 @@ public class JwtAuthService : IJwtAuthService
         _jwtSettings = jwtSettings.Value;
     }
 
-    public async Task<ServiceActionResult<JwtLoginResponse>> LoginAsync(JwtLoginRequest request, string? ipAddress)
+    public async Task<ServiceActionResult<JwtLoginResponse>> LoginAsync(JwtLoginRequest request, string? ipAddress, string? userAgent = null)
     {
         using var l = _log.TraceScope();
 
@@ -46,6 +46,7 @@ public class JwtAuthService : IJwtAuthService
         if (user == null)
         {
             l.I("Login failed: user not found for email");
+            await RecordLoginAttemptAsync(null, ipAddress, userAgent, false, "User not found");
             return ServiceActionResult<JwtLoginResponse>.OK(
                 JwtLoginResponse.Failure("Invalid email or password."));
         }
@@ -53,6 +54,7 @@ public class JwtAuthService : IJwtAuthService
         if (user.Status != AccountStatus.Active)
         {
             l.I("Login failed: account not active");
+            await RecordLoginAttemptAsync(user.Id, ipAddress, userAgent, false, "Account not active");
             return ServiceActionResult<JwtLoginResponse>.OK(
                 JwtLoginResponse.Failure("Account is not active."));
         }
@@ -61,6 +63,7 @@ public class JwtAuthService : IJwtAuthService
         if (!result.Succeeded)
         {
             l.I("Login failed: invalid password");
+            await RecordLoginAttemptAsync(user.Id, ipAddress, userAgent, false, "Invalid password");
             return ServiceActionResult<JwtLoginResponse>.OK(
                 JwtLoginResponse.Failure("Invalid email or password."));
         }
@@ -72,6 +75,8 @@ public class JwtAuthService : IJwtAuthService
 
         user.LastLoginAt = DateTime.UtcNow;
         await _userManager.UpdateAsync(user);
+
+        await RecordLoginAttemptAsync(user.Id, ipAddress, userAgent, true, null);
 
         l.I($"JWT login succeeded for user {user.Id}");
 
@@ -247,5 +252,25 @@ public class JwtAuthService : IJwtAuthService
     {
         var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(token));
         return Convert.ToHexStringLower(bytes);
+    }
+
+    private async Task RecordLoginAttemptAsync(Guid? userId, string? ipAddress, string? userAgent, bool success, string? failureReason)
+    {
+        if (!userId.HasValue)
+            return;
+
+        var entry = new UserLoginHistory
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId.Value,
+            LoginAt = DateTime.UtcNow,
+            IpAddress = ipAddress,
+            UserAgent = userAgent,
+            Success = success,
+            FailureReason = failureReason
+        };
+
+        _dbContext.UserLoginHistories.Add(entry);
+        await _dbContext.SaveChangesAsync();
     }
 }

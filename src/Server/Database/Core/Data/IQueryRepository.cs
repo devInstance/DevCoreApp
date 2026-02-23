@@ -9,4 +9,5 @@ public interface IQueryRepository
     IGridProfilesQuery GetGridProfilesQuery(UserProfile currentProfile);
     IEmailLogQuery GetEmailLogQuery(UserProfile currentProfile);
     IOrganizationsQuery GetOrganizationsQuery(UserProfile currentProfile);
+    IUserLoginHistoryQuery GetUserLoginHistoryQuery(UserProfile currentProfile);
 }

@@ -27,7 +27,8 @@ public class AuthController : ControllerBase
         return await this.HandleWebRequestAsync<JwtLoginResponse>(async () =>
         {
             var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-            var result = await _jwtAuthService.LoginAsync(request, ipAddress);
+            var userAgent = HttpContext.Request.Headers.UserAgent.FirstOrDefault();
+            var result = await _jwtAuthService.LoginAsync(request, ipAddress, userAgent);
             return Ok(result.Result);
         });
     }

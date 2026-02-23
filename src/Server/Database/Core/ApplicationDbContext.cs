@@ -24,6 +24,7 @@ public abstract class ApplicationDbContext : IdentityDbContext<ApplicationUser, 
     public DbSet<RolePermission> RolePermissions { get; set; }
     public DbSet<UserPermissionOverride> UserPermissionOverrides { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
+    public DbSet<UserLoginHistory> UserLoginHistories { get; set; }
 
     public ApplicationDbContext(DbContextOptions options, IOperationContext operationContext)
             : base(options)
@@ -145,6 +146,18 @@ public abstract class ApplicationDbContext : IdentityDbContext<ApplicationUser, 
             entity.HasIndex(rt => rt.UserId);
 
             entity.HasIndex(rt => rt.ExpiresAt);
+        });
+
+        builder.Entity<UserLoginHistory>(entity =>
+        {
+            entity.HasOne(ulh => ulh.User)
+                .WithMany()
+                .HasForeignKey(ulh => ulh.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(ulh => ulh.UserId);
+
+            entity.HasIndex(ulh => ulh.LoginAt);
         });
 
         builder.Entity<AuditLog>(entity =>

@@ -9,6 +9,7 @@ using DevInstance.DevCoreApp.Server.Admin.Services.Authentication;
 using DevInstance.DevCoreApp.Shared.Model.Account;
 using DevInstance.DevCoreApp.Shared.Utils;
 using DevInstance.LogScope;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
@@ -24,6 +25,7 @@ public class AccountService : BaseService
     private readonly IUserStore<ApplicationUser> userStore;
     private readonly IEmailSender<ApplicationUser> emailSender;
     private readonly ApplicationDbContext dbContext;
+    private readonly IHttpContextAccessor httpContextAccessor;
     private readonly IScopeLog log;
 
     public AccountService(
@@ -35,7 +37,8 @@ public class AccountService : BaseService
         UserManager<ApplicationUser> userManager,
         IUserStore<ApplicationUser> userStore,
         IEmailSender<ApplicationUser> emailSender,
-        ApplicationDbContext dbContext)
+        ApplicationDbContext dbContext,
+        IHttpContextAccessor httpContextAccessor)
         : base(logManager, timeProvider, query, authorizationContext)
     {
         log = logManager.CreateLogger(this);
@@ -44,11 +47,18 @@ public class AccountService : BaseService
         this.userStore = userStore;
         this.emailSender = emailSender;
         this.dbContext = dbContext;
+        this.httpContextAccessor = httpContextAccessor;
     }
 
     public async Task<LoginResult> LoginAsync(LoginParameters input)
     {
         using var l = log.TraceScope();
+
+        var httpContext = httpContextAccessor.HttpContext;
+        var ipAddress = httpContext?.Connection.RemoteIpAddress?.ToString();
+        var userAgent = httpContext?.Request.Headers.UserAgent.FirstOrDefault();
+
+        var user = await userManager.FindByEmailAsync(input.Email);
 
         var result = await signInManager.PasswordSignInAsync(
             input.Email,
@@ -59,14 +69,27 @@ public class AccountService : BaseService
         if (result.Succeeded)
         {
             l.I("User logged in.");
+
+            if (user != null)
+            {
+                user.LastLoginAt = DateTime.UtcNow;
+                await userManager.UpdateAsync(user);
+                await RecordLoginAttemptAsync(user.Id, ipAddress, userAgent, true, null);
+            }
+
             return LoginResult.Success();
         }
 
         if (result.IsLockedOut)
         {
             l.W("User account locked out.");
+            if (user != null)
+                await RecordLoginAttemptAsync(user.Id, ipAddress, userAgent, false, "Account locked out");
             return LoginResult.LockedOut();
         }
+
+        if (user != null)
+            await RecordLoginAttemptAsync(user.Id, ipAddress, userAgent, false, "Invalid password");
 
         return LoginResult.InvalidLogin();
     }
@@ -276,5 +299,22 @@ public class AccountService : BaseService
         await signInManager.SignInAsync(user, isPersistent: false);
 
         return SetupOwnerResult.Success();
+    }
+
+    private async Task RecordLoginAttemptAsync(Guid userId, string? ipAddress, string? userAgent, bool success, string? failureReason)
+    {
+        var entry = new UserLoginHistory
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            LoginAt = DateTime.UtcNow,
+            IpAddress = ipAddress,
+            UserAgent = userAgent,
+            Success = success,
+            FailureReason = failureReason
+        };
+
+        dbContext.UserLoginHistories.Add(entry);
+        await dbContext.SaveChangesAsync();
     }
 }
