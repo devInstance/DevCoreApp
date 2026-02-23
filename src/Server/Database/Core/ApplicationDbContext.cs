@@ -23,6 +23,7 @@ public abstract class ApplicationDbContext : IdentityDbContext<ApplicationUser, 
     public DbSet<Permission> Permissions { get; set; }
     public DbSet<RolePermission> RolePermissions { get; set; }
     public DbSet<UserPermissionOverride> UserPermissionOverrides { get; set; }
+    public DbSet<RefreshToken> RefreshTokens { get; set; }
 
     public ApplicationDbContext(DbContextOptions options, IOperationContext operationContext)
             : base(options)
@@ -129,6 +130,21 @@ public abstract class ApplicationDbContext : IdentityDbContext<ApplicationUser, 
 
             entity.HasIndex(upo => new { upo.UserId, upo.PermissionId })
                 .IsUnique();
+        });
+
+        builder.Entity<RefreshToken>(entity =>
+        {
+            entity.HasOne(rt => rt.User)
+                .WithMany()
+                .HasForeignKey(rt => rt.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(rt => rt.TokenHash)
+                .IsUnique();
+
+            entity.HasIndex(rt => rt.UserId);
+
+            entity.HasIndex(rt => rt.ExpiresAt);
         });
 
         builder.Entity<AuditLog>(entity =>

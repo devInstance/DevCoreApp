@@ -1,3 +1,4 @@
+using System.Text;
 using DevInstance.BlazorToolkit.Tools;
 using DevInstance.DevCoreApp.Server.Admin.Services.Authentication;
 using DevInstance.DevCoreApp.Server.Admin.Services.Background;
@@ -13,12 +14,15 @@ using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Server.Database.Postgres;
 using DevInstance.DevCoreApp.Server.Database.SqlServer;
 using DevInstance.DevCoreApp.Server.EmailProcessor.MailKit;
+using DevInstance.DevCoreApp.Shared.Model.Authentication;
 using DevInstance.DevCoreApp.Shared.Utils;
 using DevInstance.LogScope.Extensions.MicrosoftLogger;
 using DevInstance.LogScope.Formatters;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using TimeProvider = DevInstance.DevCoreApp.Shared.Utils.TimeProvider; //TODO: migrate to standard TimeProvider
 
 #if SERVICEMOCKS
@@ -58,13 +62,45 @@ public class Program
         builder.Services.AddScoped<IdentityRedirectManager>();
         builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
 
+        builder.Services.Configure<JwtSettings>(
+            builder.Configuration.GetSection(JwtSettings.SectionName));
+
+        var jwtSection = builder.Configuration.GetSection(JwtSettings.SectionName);
+
         builder.Services.AddAuthorization();
-        builder.Services.AddAuthentication(options =>
+        var authBuilder = builder.Services.AddAuthentication(options =>
             {
-                options.DefaultScheme = IdentityConstants.ApplicationScheme;
+                options.DefaultScheme = "Smart";
                 options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
             })
-            .AddIdentityCookies();
+            .AddPolicyScheme("Smart", "Smart", options =>
+            {
+                options.ForwardDefaultSelector = context =>
+                {
+                    var authHeader = context.Request.Headers.Authorization.FirstOrDefault();
+                    if (authHeader != null &&
+                        authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                        return JwtBearerDefaults.AuthenticationScheme;
+                    return IdentityConstants.ApplicationScheme;
+                };
+            });
+
+        authBuilder.AddIdentityCookies();
+        authBuilder.AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = jwtSection["Issuer"],
+                ValidAudience = jwtSection["Audience"],
+                IssuerSigningKey = new SymmetricSecurityKey(
+                    Encoding.UTF8.GetBytes(jwtSection["Secret"]!)),
+                ClockSkew = TimeSpan.FromMinutes(1),
+            };
+        });
 
         AddDatabase(builder.Services, builder.Configuration);
         builder.Services.AddScoped<IDataSeeder, OrganizationDataSeeder>();

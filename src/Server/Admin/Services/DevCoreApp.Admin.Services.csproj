@@ -19,6 +19,7 @@
 	  <ProjectReference Include="..\..\Email\MailKit\EmailProcessor.MailKit.csproj" />
 
 	  <PackageReference Include="DevInstance.BlazorToolkit" Version="10.1.2" />
+	  <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.11.0" />
 
 	  <PackageReference Include="DevInstance.WebServiceToolkit" Version="10.1.0" />
   </ItemGroup>

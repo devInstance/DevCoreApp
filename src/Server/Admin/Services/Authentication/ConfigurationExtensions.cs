@@ -44,7 +44,14 @@ public static class ConfigurationExtensions
             options.Cookie.HttpOnly = false;
             options.Events.OnRedirectToLogin = context =>
             {
-                context.Response.StatusCode = 401;
+                if (context.Request.Path.StartsWithSegments("/api"))
+                {
+                    context.Response.StatusCode = 401;
+                }
+                else
+                {
+                    context.Response.Redirect(context.RedirectUri);
+                }
                 return Task.CompletedTask;
             };
         });
