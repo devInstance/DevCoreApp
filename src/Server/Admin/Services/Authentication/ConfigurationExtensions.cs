@@ -2,6 +2,7 @@ using DevInstance.DevCoreApp.Server.Database.Core;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -56,6 +57,7 @@ public static class ConfigurationExtensions
         services.AddScoped<IApplicationUserManager, ApplicationUserManager>();
         services.AddScoped<IOrganizationContextResolver, OrganizationContextResolver>();
         services.AddScoped<IClaimsTransformation, PermissionClaimsTransformation>();
+        services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
         services.AddMemoryCache();
 
     }

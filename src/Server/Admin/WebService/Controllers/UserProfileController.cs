@@ -18,10 +18,11 @@ public class UserProfileController : ControllerBase
         Service = service;
     }
 
-    [Authorize]
+    [Authorize(Policy = "Admin.Users.View")]
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public ActionResult<UserProfileItem> GetProfile()
     {
         return this.HandleWebRequest((WebHandler<UserProfileItem>)(() =>
