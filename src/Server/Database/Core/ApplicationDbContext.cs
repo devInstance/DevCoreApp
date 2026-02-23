@@ -13,6 +13,7 @@ public abstract class ApplicationDbContext : IdentityDbContext<ApplicationUser, 
     public DbSet<EmailLog> EmailLogs { get; set; }
     public DbSet<Organization> Organizations { get; set; }
     public DbSet<Tenant> Tenants { get; set; }
+    public DbSet<UserOrganization> UserOrganizations { get; set; }
 
     public ApplicationDbContext(DbContextOptions options)
             : base(options)
@@ -47,6 +48,22 @@ public abstract class ApplicationDbContext : IdentityDbContext<ApplicationUser, 
                 .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasIndex(t => t.Subdomain)
+                .IsUnique();
+        });
+
+        builder.Entity<UserOrganization>(entity =>
+        {
+            entity.HasOne(uo => uo.User)
+                .WithMany(u => u.UserOrganizations)
+                .HasForeignKey(uo => uo.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(uo => uo.Organization)
+                .WithMany()
+                .HasForeignKey(uo => uo.OrganizationId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(uo => new { uo.UserId, uo.OrganizationId })
                 .IsUnique();
         });
     }
