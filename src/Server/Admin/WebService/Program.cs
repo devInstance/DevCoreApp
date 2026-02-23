@@ -68,6 +68,7 @@ public class Program
 
         AddDatabase(builder.Services, builder.Configuration);
         builder.Services.AddScoped<IDataSeeder, OrganizationDataSeeder>();
+        builder.Services.AddScoped<IDataSeeder, PermissionSeeder>();
 
 #if DEBUG || SERVICEMOCKS
         builder.Services.AddDatabaseDeveloperPageExceptionFilter();
