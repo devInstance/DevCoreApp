@@ -33,4 +33,15 @@
     <Project Path="src/Shared/Model/Shared.Model.csproj" />
     <Project Path="src/Shared/Utils/Shared.Utils.csproj" />
   </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="tests/Server/Database/Core/Core.Tests.csproj">
+      <BuildType Solution="ServiceMocks|*" Project="Debug" />
+    </Project>
+    <Project Path="tests/Server/WebService/WebService.Tests.csproj">
+      <BuildType Solution="ServiceMocks|*" Project="Debug" />
+    </Project>
+    <Project Path="tests/Shared/TestUtils/TestUtils.csproj">
+      <BuildType Solution="ServiceMocks|*" Project="Debug" />
+    </Project>
+  </Folder>
 </Solution>

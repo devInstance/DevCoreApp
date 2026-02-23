@@ -1,21 +1,21 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
 
 namespace DevInstance.DevCoreApp.Server.Database.Core.Data.Decorators.Tests;
 
-[TestClass()]
 public class UserProfileDecoratorsTests
 {
-    [TestMethod()]
+    [Fact]
     public void ToViewTest()
     {
         var TEST_TIME = new DateTime(2021, 8, 17, 21, 0, 0);
         UserProfile profile = new UserProfile()
         {
             Id = Guid.NewGuid(),
-            Email = "Test",
-            Name = "Test",
+            Email = "test@example.com",
+            FirstName = "John",
+            LastName = "Doe",
             PublicId = "Test",
             ApplicationUserId = Guid.NewGuid(),
             Status = UserStatus.LIVE,
@@ -25,11 +25,12 @@ public class UserProfileDecoratorsTests
 
         var result = profile.ToView();
 
-        Assert.IsNotNull(result);
+        Assert.NotNull(result);
 
-        Assert.AreEqual("Test", result.Name);
-        Assert.AreEqual("Test", result.Email);
-        Assert.AreEqual(TEST_TIME, result.CreateDate);
-        Assert.AreEqual("Test", result.Id);
+        Assert.Equal("John", result.FirstName);
+        Assert.Equal("Doe", result.LastName);
+        Assert.Equal("test@example.com", result.Email);
+        Assert.Equal(TEST_TIME, result.CreateDate);
+        Assert.Equal("Test", result.Id);
     }
 }

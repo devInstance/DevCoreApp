@@ -1,7 +1,6 @@
-﻿using DevInstance.DevCoreApp.Server.Database.Core.Models;
-using DevInstance.DevCoreApp.Server.WebService.Authentication;
+﻿using DevInstance.DevCoreApp.Server.Admin.Services.Authentication;
+using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using Moq;
-using System;
 using System.Threading.Tasks;
 
 namespace DevInstance.DevCoreApp.Server.Tests;

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net7.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <AssemblyName>DevInstance.DevCoreApp.Server.Tests</AssemblyName>
         <RootNamespace>DevInstance.DevCoreApp.Server.Tests</RootNamespace>
         <IsPackable>false</IsPackable>
@@ -10,16 +10,19 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.5.0" />
-        <PackageReference Include="MSTest.TestAdapter" Version="3.0.2" />
-        <PackageReference Include="MSTest.TestFramework" Version="3.0.2" />
+        <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
         <PackageReference Include="coverlet.collector" Version="3.2.0">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-    </ItemGroup>
+		<PackageReference Include="xunit.v3" Version="3.2.2" />
+	</ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\..\src\Server\WebService\WebService.csproj" />
+      <ProjectReference Include="..\..\..\src\Server\Admin\Services\DevCoreApp.Admin.Services.csproj" />
       <ProjectReference Include="..\..\Shared\TestUtils\TestUtils.csproj" />
     </ItemGroup>
 

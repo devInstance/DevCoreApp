@@ -1,12 +1,13 @@
-﻿using DevInstance.DevCoreApp.Server.Database.Core;
+using DevInstance.DevCoreApp.Server.Database.Core;
+using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace DevInstance.DevCoreApp.Server.Database.Postgres;
 
 internal class PostgresApplicationDbContext : ApplicationDbContext
 {
-    public PostgresApplicationDbContext(DbContextOptions options)
-        : base(options)
+    public PostgresApplicationDbContext(DbContextOptions options, IOperationContext operationContext)
+        : base(options, operationContext)
     {
     }
 
