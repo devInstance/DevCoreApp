@@ -3,9 +3,11 @@ using DevInstance.DevCoreApp.Server.Admin.Services.Authentication;
 using DevInstance.DevCoreApp.Server.Admin.Services.Background;
 using DevInstance.DevCoreApp.Server.Admin.Services.Notifications;
 using DevInstance.DevCoreApp.Server.Admin.Services.Notifications.Templates;
+using DevInstance.DevCoreApp.Server.Admin.Services.Seeding;
 using DevInstance.DevCoreApp.Server.Admin.Services.UserAdmin;
 using DevInstance.DevCoreApp.Server.Admin.WebService.Identity;
 using DevInstance.DevCoreApp.Server.Admin.WebService.UI;
+using DevInstance.DevCoreApp.Server.Database.Core;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Server.Database.Postgres;
@@ -16,6 +18,7 @@ using DevInstance.LogScope.Extensions.MicrosoftLogger;
 using DevInstance.LogScope.Formatters;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using TimeProvider = DevInstance.DevCoreApp.Shared.Utils.TimeProvider; //TODO: migrate to standard TimeProvider
 
 #if SERVICEMOCKS
@@ -64,6 +67,7 @@ public class Program
             .AddIdentityCookies();
 
         AddDatabase(builder.Services, builder.Configuration);
+        builder.Services.AddScoped<IDataSeeder, OrganizationDataSeeder>();
 
 #if DEBUG || SERVICEMOCKS
         builder.Services.AddDatabaseDeveloperPageExceptionFilter();
@@ -130,8 +134,8 @@ public class Program
         // Add additional endpoints required by the Identity /Account Razor components.
         app.MapAdditionalIdentityEndpoints();
 
-        // Seed roles
-        await app.Services.SeedRolesAsync();
+        // Apply pending migrations, seed roles and data
+        await app.Services.MigrateAndSeedAsync();
 
         await app.RunAsync();
     }

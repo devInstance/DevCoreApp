@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DevInstance.DevCoreApp.Server.Database.Postgres;
 
-internal class PostgresApplicationDbContext : ApplicationDbContext
+public class PostgresApplicationDbContext : ApplicationDbContext
 {
     public PostgresApplicationDbContext(DbContextOptions options, IOperationContext operationContext)
         : base(options, operationContext)

@@ -1,6 +1,11 @@
+using DevInstance.DevCoreApp.Server.Database.Core;
+using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace DevInstance.DevCoreApp.Server.Admin.Services.Authentication;
@@ -52,17 +57,37 @@ public static class ConfigurationExtensions
 
     }
 
-    public static async Task SeedRolesAsync(this IServiceProvider serviceProvider)
+    /// <summary>
+    /// Applies pending EF Core migrations, seeds Identity roles,
+    /// and runs all registered IDataSeeder implementations in order.
+    /// </summary>
+    public static async Task MigrateAndSeedAsync(this IServiceProvider serviceProvider)
     {
         using var scope = serviceProvider.CreateScope();
-        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
+        var services = scope.ServiceProvider;
 
+        // Apply pending migrations
+        var db = services.GetRequiredService<ApplicationDbContext>();
+        await db.Database.MigrateAsync();
+
+        // Seed Identity roles
+        var roleManager = services.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
         foreach (var roleName in ApplicationRoles.All)
         {
             if (!await roleManager.RoleExistsAsync(roleName))
             {
                 await roleManager.CreateAsync(new IdentityRole<Guid>(roleName));
             }
+        }
+
+        // Run all data seeders in order
+        var seeders = services.GetServices<IDataSeeder>()
+            .OrderBy(s => s.Order)
+            .ToList();
+
+        foreach (var seeder in seeders)
+        {
+            await seeder.SeedAsync();
         }
     }
 }

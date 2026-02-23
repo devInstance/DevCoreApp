@@ -10,7 +10,8 @@
       "Bash(dotnet add package:*)",
       "Bash(git status:*)",
       "Bash(git commit:*)",
-      "Bash(dotnet test:*)"
+      "Bash(dotnet test:*)",
+      "Bash(dotnet ef:*)"
     ]
   }
 }
