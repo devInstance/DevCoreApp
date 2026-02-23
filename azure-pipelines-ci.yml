@@ -8,6 +8,10 @@ trigger:
 
 pool: default
 
+variables:
+  buildConfiguration: 'Release'
+  solution: '**/*.slnx'
+
 steps:
 - task: UseDotNet@2
   displayName: 'Use .NET 10.x'
@@ -17,21 +21,25 @@ steps:
 - task: NuGetToolInstaller@1
 
 - task: DotNetCoreCLI@2
+  displayName: 'Restore NuGet packages'
   inputs:
     command: 'restore'
     projects: '$(solution)'
 
 # Step 2: Build the Solution
-- task: VSBuild@1
+- task: DotNetCoreCLI@2
+  displayName: 'Build solution'
   inputs:
-    solution: '$(solution)'
-    msbuildArgs: '/p:Configuration=$(buildConfiguration)'
+    command: 'build'
+    projects: '$(solution)'
+    arguments: '--configuration $(buildConfiguration) --no-restore'
 
 # Step 3: Run Unit Tests
 - task: DotNetCoreCLI@2
   displayName: 'Run unit tests'
   inputs:
     command: 'test'
-    projects: '**/tests/**/*.csproj'
-    arguments: '--configuration $(buildConfiguration) --no-build'
+    projects: '**/tests/**/*[Tt]ests.csproj'
+    arguments: '--configuration $(buildConfiguration) --no-build --no-restore'
+  continueOnError: false
 
