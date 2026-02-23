@@ -11,6 +11,7 @@ public abstract class ApplicationDbContext : IdentityDbContext<ApplicationUser, 
     public DbSet<UserProfile> UserProfiles { get; set; }
     public DbSet<GridProfile> GridProfiles { get; set; }
     public DbSet<EmailLog> EmailLogs { get; set; }
+    public DbSet<Organization> Organizations { get; set; }
 
     public ApplicationDbContext(DbContextOptions options)
             : base(options)
@@ -24,5 +25,17 @@ public abstract class ApplicationDbContext : IdentityDbContext<ApplicationUser, 
         builder.Entity<GridProfile>()
             .HasIndex(g => new { g.UserProfileId, g.GridName, g.ProfileName })
             .IsUnique();
+
+        builder.Entity<Organization>(entity =>
+        {
+            entity.HasOne(o => o.Parent)
+                .WithMany(o => o.Children)
+                .HasForeignKey(o => o.ParentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(o => o.Path);
+            entity.HasIndex(o => o.Code);
+            entity.HasIndex(o => o.ParentId);
+        });
     }
 }

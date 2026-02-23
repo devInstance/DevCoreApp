@@ -39,4 +39,9 @@ public abstract class CoreQueryRepository : IQueryRepository
     {
         return new CoreEmailLogQuery(LogManager, TimeProvider, DB, currentProfile);
     }
+
+    public IOrganizationsQuery GetOrganizationsQuery(UserProfile currentProfile)
+    {
+        return new CoreOrganizationsQuery(LogManager, TimeProvider, DB, currentProfile);
+    }
 }
