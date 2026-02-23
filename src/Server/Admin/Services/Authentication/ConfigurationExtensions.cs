@@ -1,5 +1,6 @@
 using DevInstance.DevCoreApp.Server.Database.Core;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
+using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -71,12 +72,16 @@ public static class ConfigurationExtensions
         await db.Database.MigrateAsync();
 
         // Seed Identity roles
-        var roleManager = services.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
+        var roleManager = services.GetRequiredService<RoleManager<ApplicationRole>>();
+        var systemRoles = new HashSet<string> { ApplicationRoles.Owner, ApplicationRoles.Admin };
         foreach (var roleName in ApplicationRoles.All)
         {
             if (!await roleManager.RoleExistsAsync(roleName))
             {
-                await roleManager.CreateAsync(new IdentityRole<Guid>(roleName));
+                await roleManager.CreateAsync(new ApplicationRole(roleName)
+                {
+                    IsSystemRole = systemRoles.Contains(roleName)
+                });
             }
         }
 

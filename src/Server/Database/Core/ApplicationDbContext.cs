@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace DevInstance.DevCoreApp.Server.Database.Core;
 
-public abstract class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>
+public abstract class ApplicationDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, Guid>
 {
     private readonly IOperationContext _operationContext;
 
@@ -78,6 +78,14 @@ public abstract class ApplicationDbContext : IdentityDbContext<ApplicationUser, 
 
             entity.HasIndex(uo => new { uo.UserId, uo.OrganizationId })
                 .IsUnique();
+        });
+
+        builder.Entity<ApplicationUser>(entity =>
+        {
+            entity.HasOne(u => u.PrimaryOrganization)
+                .WithMany()
+                .HasForeignKey(u => u.PrimaryOrganizationId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         builder.Entity<AuditLog>(entity =>
