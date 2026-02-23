@@ -19,11 +19,18 @@ public abstract class ApplicationDbContext : IdentityDbContext<ApplicationUser, 
     public DbSet<Organization> Organizations { get; set; }
     public DbSet<Tenant> Tenants { get; set; }
     public DbSet<UserOrganization> UserOrganizations { get; set; }
+    public DbSet<AuditLog> AuditLogs { get; set; }
 
     public ApplicationDbContext(DbContextOptions options, IOperationContext operationContext)
             : base(options)
     {
         _operationContext = operationContext;
+    }
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        base.OnConfiguring(optionsBuilder);
+        optionsBuilder.AddInterceptors(new AuditInterceptor(_operationContext));
     }
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -71,6 +78,11 @@ public abstract class ApplicationDbContext : IdentityDbContext<ApplicationUser, 
 
             entity.HasIndex(uo => new { uo.UserId, uo.OrganizationId })
                 .IsUnique();
+        });
+
+        builder.Entity<AuditLog>(entity =>
+        {
+            entity.HasIndex(a => new { a.TableName, a.RecordId, a.ChangedAt });
         });
 
         ApplyOrganizationQueryFilters(builder);
