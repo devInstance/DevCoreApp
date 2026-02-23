@@ -14,7 +14,6 @@ public class Organization : DatabaseObject
     public int Level { get; set; }
     public string Path { get; set; } = string.Empty;
     public string Type { get; set; } = string.Empty;
-    public bool IsActive { get; set; } = true;
     public string? Settings { get; set; }
     public int SortOrder { get; set; }
 }

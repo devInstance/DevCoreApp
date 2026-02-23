@@ -12,6 +12,7 @@ public abstract class ApplicationDbContext : IdentityDbContext<ApplicationUser, 
     public DbSet<GridProfile> GridProfiles { get; set; }
     public DbSet<EmailLog> EmailLogs { get; set; }
     public DbSet<Organization> Organizations { get; set; }
+    public DbSet<Tenant> Tenants { get; set; }
 
     public ApplicationDbContext(DbContextOptions options)
             : base(options)
@@ -36,6 +37,17 @@ public abstract class ApplicationDbContext : IdentityDbContext<ApplicationUser, 
             entity.HasIndex(o => o.Path);
             entity.HasIndex(o => o.Code);
             entity.HasIndex(o => o.ParentId);
+        });
+
+        builder.Entity<Tenant>(entity =>
+        {
+            entity.HasOne(t => t.RootOrganization)
+                .WithOne()
+                .HasForeignKey<Tenant>(t => t.RootOrganizationId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(t => t.Subdomain)
+                .IsUnique();
         });
     }
 }

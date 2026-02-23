@@ -25,4 +25,7 @@ public class DatabaseObject : DatabaseBaseObject
     /// Date and time of object last modification
     /// </summary>
     public DateTime UpdateDate { get; set; }
+
+    public bool IsActive { get; set; } = true;
+
 }
