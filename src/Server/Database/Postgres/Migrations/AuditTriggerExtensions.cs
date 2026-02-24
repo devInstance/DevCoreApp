@@ -27,21 +27,30 @@ DECLARE
     old_values JSONB := NULL;
     new_values JSONB := NULL;
     record_id TEXT := '';
+    record_data JSONB;
 BEGIN
     -- Map TG_OP to AuditAction enum values: Insert=0, Update=1, Delete=2
     IF TG_OP = 'INSERT' THEN
         audit_action := 0;
         new_values := to_jsonb(NEW);
-        record_id := NEW.""Id""::TEXT;
+        record_data := new_values;
     ELSIF TG_OP = 'UPDATE' THEN
         audit_action := 1;
         old_values := to_jsonb(OLD);
         new_values := to_jsonb(NEW);
-        record_id := NEW.""Id""::TEXT;
+        record_data := new_values;
     ELSIF TG_OP = 'DELETE' THEN
         audit_action := 2;
         old_values := to_jsonb(OLD);
-        record_id := OLD.""Id""::TEXT;
+        record_data := old_values;
+    END IF;
+
+    -- Extract record ID: use ""Id"" column if present, otherwise build
+    -- a composite key from all primary key columns via JSONB representation.
+    IF record_data ? 'Id' THEN
+        record_id := record_data->>'Id';
+    ELSE
+        record_id := record_data::TEXT;
     END IF;
 
     INSERT INTO ""AuditLogs"" (

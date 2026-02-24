@@ -236,3 +236,4 @@ Shared/
 - Never create `InputModel` classes in pages — DTOs carry validation attributes
 - Never bypass the organization scoping filter with `IgnoreQueryFilters()` unless explicitly required for admin/system operations
 - Never use `ILogger` / `LogInformation` — use `IScopeLog` from DevInstance.LogScope
+- Never create or scaffold EF Core migrations (`dotnet ef migrations add`) — notify the user that a migration is needed and let them create it

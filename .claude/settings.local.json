@@ -17,7 +17,8 @@
       "Bash(find:*)",
       "Bash(grep:*)",
       "Bash(echo python not available:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(cd:*)"
     ]
   }
 }
