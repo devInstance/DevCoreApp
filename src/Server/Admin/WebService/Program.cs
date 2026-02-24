@@ -8,6 +8,7 @@ using DevInstance.DevCoreApp.Server.Admin.Services.Seeding;
 using DevInstance.DevCoreApp.Server.Admin.Services.UserAdmin;
 using DevInstance.DevCoreApp.Server.Admin.WebService.Identity;
 using DevInstance.DevCoreApp.Server.Admin.WebService.Logging;
+using DevInstance.DevCoreApp.Server.Admin.WebService.Health;
 using DevInstance.DevCoreApp.Server.Admin.WebService.Middleware;
 using DevInstance.DevCoreApp.Server.Admin.WebService.UI;
 using DevInstance.DevCoreApp.Server.Database.Core;
@@ -148,6 +149,11 @@ public class Program
         builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityEmailSender>();
         builder.Services.AddLocalization();
 
+        builder.Services.AddHealthChecks()
+            .AddCheck<DatabaseHealthCheck>("database", tags: new[] { "ready" })
+            .AddCheck<BackgroundWorkerHealthCheck>("background-worker", tags: new[] { "ready" })
+            .AddCheck<StuckEmailsHealthCheck>("stuck-emails", tags: new[] { "ready" });
+
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.
@@ -181,6 +187,18 @@ public class Program
         app.MapControllers();
         // Add additional endpoints required by the Identity /Account Razor components.
         app.MapAdditionalIdentityEndpoints();
+
+        // Health check endpoints
+        app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+        {
+            Predicate = _ => false, // Liveness: no dependency checks
+            ResponseWriter = HealthCheckResponseWriter.WriteAsync
+        });
+        app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+        {
+            Predicate = check => check.Tags.Contains("ready"),
+            ResponseWriter = HealthCheckResponseWriter.WriteAsync
+        });
 
         // Apply pending migrations, seed roles and data
         await app.Services.MigrateAndSeedAsync();

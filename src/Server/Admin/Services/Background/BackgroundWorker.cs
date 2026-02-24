@@ -19,6 +19,9 @@ public class BackgroundWorker : BackgroundService, IBackgroundWorker
     protected readonly IConfiguration config;
     private readonly IScopeLog log;
 
+    public DateTime? LastHeartbeat { get; private set; }
+    public int QueueLength => theQueue.Count;
+
     public BackgroundWorker(IServiceScopeFactory factory, IConfiguration config, IScopeManager manager)
     {
         this.factory = factory;
@@ -35,6 +38,8 @@ public class BackgroundWorker : BackgroundService, IBackgroundWorker
     {
         while (!stoppingToken.IsCancellationRequested)
         {
+            LastHeartbeat = DateTime.UtcNow;
+
             if (theQueue.TryDequeue(out var request))
             {
                 // Create a fresh DI scope per job. This ensures:
