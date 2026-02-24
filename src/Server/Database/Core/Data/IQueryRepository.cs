@@ -10,4 +10,5 @@ public interface IQueryRepository
     IEmailLogQuery GetEmailLogQuery(UserProfile currentProfile);
     IOrganizationsQuery GetOrganizationsQuery(UserProfile currentProfile);
     IUserLoginHistoryQuery GetUserLoginHistoryQuery(UserProfile currentProfile);
+    ISettingsQuery GetSettingsQuery(UserProfile currentProfile);
 }

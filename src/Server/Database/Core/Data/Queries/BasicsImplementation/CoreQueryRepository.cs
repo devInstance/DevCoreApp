@@ -49,4 +49,9 @@ public abstract class CoreQueryRepository : IQueryRepository
     {
         return new CoreUserLoginHistoryQuery(LogManager, TimeProvider, DB, currentProfile);
     }
+
+    public ISettingsQuery GetSettingsQuery(UserProfile currentProfile)
+    {
+        return new CoreSettingsQuery(LogManager, TimeProvider, DB, currentProfile);
+    }
 }
