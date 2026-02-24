@@ -7,6 +7,8 @@ using DevInstance.DevCoreApp.Server.Admin.Services.Notifications.Templates;
 using DevInstance.DevCoreApp.Server.Admin.Services.Seeding;
 using DevInstance.DevCoreApp.Server.Admin.Services.UserAdmin;
 using DevInstance.DevCoreApp.Server.Admin.WebService.Identity;
+using DevInstance.DevCoreApp.Server.Admin.WebService.Logging;
+using DevInstance.DevCoreApp.Server.Admin.WebService.Middleware;
 using DevInstance.DevCoreApp.Server.Admin.WebService.UI;
 using DevInstance.DevCoreApp.Server.Database.Core;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
@@ -23,6 +25,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Serilog;
 using TimeProvider = DevInstance.DevCoreApp.Shared.Utils.TimeProvider; //TODO: migrate to standard TimeProvider
 
 #if SERVICEMOCKS
@@ -37,6 +40,11 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
+        // Serilog: replaces the default Microsoft logging provider.
+        // LogScope (IScopeManager/IScopeLog) continues to be the application-level API —
+        // it bridges to ILogger which now flows into the Serilog pipeline.
+        SerilogConfiguration.ConfigureSerilog(builder);
+
         builder.Services.AddSingleton<BackgroundWorker>();
         builder.Services.AddSingleton<IBackgroundWorker>(sp => sp.GetRequiredService<BackgroundWorker>());
         builder.Services.AddHostedService(sp => sp.GetRequiredService<BackgroundWorker>());
@@ -45,7 +53,7 @@ public class Program
 #if DEBUG
         builder.Services.AddMicrosoftScopeLogging(DevInstance.LogScope.LogLevel.TRACE, "LScope", new DefaultFormattersOptions { ShowTimestamp = true, ShowThreadNumber = true });
 #else
-    builder.Services.AddMicrosoftScopeLogging(DevInstance.LogScope.LogLevel.NOLOG, "LScope");
+        builder.Services.AddMicrosoftScopeLogging(DevInstance.LogScope.LogLevel.INFO, "LScope");
 #endif
 
 
@@ -158,9 +166,12 @@ public class Program
 
         app.UseHttpsRedirection();
 
+        app.UseCorrelationId();
+        app.UseSerilogRequestLogging();
+
         app.UseStaticFiles();
         app.UseAntiforgery();
-        
+
         app.UseAuthentication();
         app.UseAuthorization();
 

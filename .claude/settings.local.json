@@ -11,7 +11,9 @@
       "Bash(git status:*)",
       "Bash(git commit:*)",
       "Bash(dotnet test:*)",
-      "Bash(dotnet ef:*)"
+      "Bash(dotnet ef:*)",
+      "Bash(ls:*)",
+      "Bash(head:*)"
     ]
   }
 }

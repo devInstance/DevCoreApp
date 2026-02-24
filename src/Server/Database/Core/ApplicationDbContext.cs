@@ -26,6 +26,7 @@ public abstract class ApplicationDbContext : IdentityDbContext<ApplicationUser, 
     public DbSet<RefreshToken> RefreshTokens { get; set; }
     public DbSet<UserLoginHistory> UserLoginHistories { get; set; }
     public DbSet<Setting> Settings { get; set; }
+    public DbSet<ApplicationLog> ApplicationLogs { get; set; }
 
     public ApplicationDbContext(DbContextOptions options, IOperationContext operationContext)
             : base(options)
@@ -182,6 +183,20 @@ public abstract class ApplicationDbContext : IdentityDbContext<ApplicationUser, 
                 .IsUnique();
 
             entity.HasIndex(s => s.Category);
+        });
+
+        builder.Entity<ApplicationLog>(entity =>
+        {
+            entity.Property(al => al.Properties)
+                .HasColumnType("jsonb");
+
+            entity.HasIndex(al => al.Timestamp);
+
+            entity.HasIndex(al => al.Level);
+
+            entity.HasIndex(al => al.CorrelationId);
+
+            entity.HasIndex(al => al.UserId);
         });
 
         builder.Entity<AuditLog>(entity =>
