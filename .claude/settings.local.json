@@ -13,7 +13,11 @@
       "Bash(dotnet test:*)",
       "Bash(dotnet ef:*)",
       "Bash(ls:*)",
-      "Bash(head:*)"
+      "Bash(head:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(echo python not available:*)",
+      "Bash(python3:*)"
     ]
   }
 }

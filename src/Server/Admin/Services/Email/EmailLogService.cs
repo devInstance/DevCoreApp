@@ -13,6 +13,7 @@ using DevInstance.LogScope;
 using DevInstance.WebServiceToolkit.Common.Model;
 using DevInstance.WebServiceToolkit.Common.Tools;
 using DevInstance.WebServiceToolkit.Database.Queries.Extensions;
+using DevInstance.WebServiceToolkit.Exceptions;
 using DevInstance.WebServiceToolkit.Tools;
 using Microsoft.EntityFrameworkCore;
 
@@ -102,7 +103,7 @@ public class EmailLogService : BaseService, IEmailLogService
 
         if (emailLog == null)
         {
-            throw new InvalidOperationException("Email log entry not found.");
+            throw new RecordNotFoundException("Email log entry not found.");
         }
 
         return ServiceActionResult<EmailLogItem>.OK(emailLog.ToView());
@@ -127,7 +128,7 @@ public class EmailLogService : BaseService, IEmailLogService
 
         if (emailLog == null)
         {
-            throw new InvalidOperationException("Email log entry not found.");
+            throw new RecordNotFoundException("Email log entry not found.");
         }
 
         var view = emailLog.ToView();
@@ -165,7 +166,7 @@ public class EmailLogService : BaseService, IEmailLogService
 
         if (emailLog == null)
         {
-            throw new InvalidOperationException("Email log entry not found.");
+            throw new RecordNotFoundException("Email log entry not found.");
         }
 
         emailLog.Status = EmailLogStatus.Batched;

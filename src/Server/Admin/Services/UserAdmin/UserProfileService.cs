@@ -3,6 +3,7 @@ using DevInstance.BlazorToolkit.Tools;
 using DevInstance.DevCoreApp.Server.Admin.Services.Authentication;
 using DevInstance.DevCoreApp.Server.Admin.Services.Background;
 using DevInstance.DevCoreApp.Server.Admin.Services.Background.Requests;
+using DevInstance.DevCoreApp.Server.Admin.Services.Exceptions;
 using DevInstance.DevCoreApp.Server.Admin.Services.Notifications.Templates;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Server.Database.Core.Data.Decorators;
@@ -14,6 +15,7 @@ using DevInstance.LogScope;
 using DevInstance.WebServiceToolkit.Common.Model;
 using DevInstance.WebServiceToolkit.Common.Tools;
 using DevInstance.WebServiceToolkit.Database.Queries.Extensions;
+using DevInstance.WebServiceToolkit.Exceptions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -142,14 +144,14 @@ public class UserProfileService : BaseService, IUserProfileService
         // Validate role
         if (string.IsNullOrWhiteSpace(role))
         {
-            throw new InvalidOperationException("Please select a role.");
+            throw new BadRequestException("Please select a role.");
         }
 
         // Check if email already exists
         var existingUser = await UserManager.FindByEmailAsync(newUser.Email);
         if (existingUser != null)
         {
-            throw new InvalidOperationException("A user with this email address already exists.");
+            throw new RecordConflictException("A user with this email address already exists.");
         }
 
         // Create ApplicationUser with a temporary random password
@@ -162,7 +164,7 @@ public class UserProfileService : BaseService, IUserProfileService
         var result = await UserManager.CreateAsync(user, tempPassword);
         if (!result.Succeeded)
         {
-            throw new InvalidOperationException(
+            throw new BusinessRuleException(
                 $"Error creating user: {string.Join(", ", result.Errors.Select(e => e.Description))}");
         }
 
@@ -203,13 +205,13 @@ public class UserProfileService : BaseService, IUserProfileService
 
         if (profile == null)
         {
-            throw new InvalidOperationException("User not found.");
+            throw new RecordNotFoundException("User not found.");
         }
 
         var appUser = await UserManager.FindByIdAsync(profile.ApplicationUserId.ToString());
         if (appUser == null)
         {
-            throw new InvalidOperationException("User account not found.");
+            throw new RecordNotFoundException("User account not found.");
         }
 
         var roles = await UserManager.GetRolesAsync(appUser);
@@ -223,7 +225,7 @@ public class UserProfileService : BaseService, IUserProfileService
         // Validate role
         if (string.IsNullOrWhiteSpace(role))
         {
-            throw new InvalidOperationException("Please select a role.");
+            throw new BadRequestException("Please select a role.");
         }
 
         var profilesQuery = Repository.GetUserProfilesQuery(AuthorizationContext.CurrentProfile);
@@ -231,13 +233,13 @@ public class UserProfileService : BaseService, IUserProfileService
 
         if (profile == null)
         {
-            throw new InvalidOperationException("User not found.");
+            throw new RecordNotFoundException("User not found.");
         }
 
         var appUser = await UserManager.FindByIdAsync(profile.ApplicationUserId.ToString());
         if (appUser == null)
         {
-            throw new InvalidOperationException("User account not found.");
+            throw new RecordNotFoundException("User account not found.");
         }
 
         // Check if email changed and if new email already exists
@@ -246,7 +248,7 @@ public class UserProfileService : BaseService, IUserProfileService
             var existingUser = await UserManager.FindByEmailAsync(updatedUser.Email);
             if (existingUser != null)
             {
-                throw new InvalidOperationException("A user with this email address already exists.");
+                throw new RecordConflictException("A user with this email address already exists.");
             }
 
             appUser.Email = updatedUser.Email;
@@ -254,7 +256,7 @@ public class UserProfileService : BaseService, IUserProfileService
             var emailResult = await UserManager.UpdateAsync(appUser);
             if (!emailResult.Succeeded)
             {
-                throw new InvalidOperationException(
+                throw new BusinessRuleException(
                     $"Error updating email: {string.Join(", ", emailResult.Errors.Select(e => e.Description))}");
             }
         }
@@ -291,7 +293,7 @@ public class UserProfileService : BaseService, IUserProfileService
 
         if (profile == null)
         {
-            throw new InvalidOperationException("User not found.");
+            throw new RecordNotFoundException("User not found.");
         }
 
         var appUser = await UserManager.FindByIdAsync(profile.ApplicationUserId.ToString());

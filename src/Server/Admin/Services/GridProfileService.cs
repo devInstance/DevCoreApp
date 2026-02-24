@@ -6,6 +6,7 @@ using DevInstance.DevCoreApp.Server.Database.Core.Data.Decorators;
 using DevInstance.DevCoreApp.Shared.Model.Settings;
 using DevInstance.DevCoreApp.Shared.Utils;
 using DevInstance.LogScope;
+using DevInstance.WebServiceToolkit.Exceptions;
 using Microsoft.EntityFrameworkCore;
 
 namespace DevInstance.DevCoreApp.Server.Admin.Services;
@@ -69,7 +70,7 @@ public class GridProfileService : BaseService
         // Authorization check for global profiles
         if (item.IsGlobal && !CanEditGlobalProfile())
         {
-            throw new UnauthorizedAccessException(
+            throw new UnauthorizedException(
                 "Only Owner, Admin, or Manager can edit global profiles.");
         }
 

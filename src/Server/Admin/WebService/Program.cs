@@ -149,6 +149,9 @@ public class Program
         builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityEmailSender>();
         builder.Services.AddLocalization();
 
+        builder.Services.AddExceptionHandler<ApiExceptionHandler>();
+        builder.Services.AddProblemDetails();
+
         builder.Services.AddHealthChecks()
             .AddCheck<DatabaseHealthCheck>("database", tags: new[] { "ready" })
             .AddCheck<BackgroundWorkerHealthCheck>("background-worker", tags: new[] { "ready" })
@@ -161,14 +164,17 @@ public class Program
         {
             app.UseWebAssemblyDebugging();
             app.UseMigrationsEndPoint();
-            app.UseDeveloperExceptionPage();
         }
         else
         {
-            app.UseExceptionHandler("/Error");
             // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
             app.UseHsts();
         }
+
+        // ApiExceptionHandler (registered via AddExceptionHandler<T>) runs first:
+        // - API requests (/api/*): returns sanitized JSON with correlation ID
+        // - Non-API requests: falls through to the /Error page
+        app.UseExceptionHandler("/Error");
 
         app.UseHttpsRedirection();
 
