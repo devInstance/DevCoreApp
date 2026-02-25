@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 namespace DevInstance.DevCoreApp.Server.Admin.Services.Authentication;
 
 [BlazorService]
+[BlazorServiceMock]
 public class PermissionService : IPermissionService
 {
     private readonly IAuthorizationContext _authContext;

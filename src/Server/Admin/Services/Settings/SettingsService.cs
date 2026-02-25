@@ -17,6 +17,7 @@ using Microsoft.Extensions.Caching.Memory;
 namespace DevInstance.DevCoreApp.Server.Admin.Services.Settings;
 
 [BlazorService]
+[BlazorServiceMock]
 public class SettingsService : ISettingsService
 {
     private const string CachePrefix = "settings:";
@@ -175,7 +176,7 @@ public class SettingsService : ISettingsService
         return new SettingsContext
         {
             UserId = applicationUserId,
-            OrganizationId = _operationContext.PrimaryOrganizationId,
+            OrganizationId = _operationContext?.PrimaryOrganizationId,
             TenantId = null, // Tenant resolution not yet implemented
         };
     }

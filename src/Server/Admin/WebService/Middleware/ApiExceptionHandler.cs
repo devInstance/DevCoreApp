@@ -15,13 +15,6 @@ namespace DevInstance.DevCoreApp.Server.Admin.WebService.Middleware;
 /// </summary>
 public class ApiExceptionHandler : IExceptionHandler
 {
-    private readonly IScopeLog _log;
-
-    public ApiExceptionHandler(IScopeManager logManager)
-    {
-        _log = logManager.CreateLogger(this);
-    }
-
     public async ValueTask<bool> TryHandleAsync(
         HttpContext httpContext,
         Exception exception,
@@ -37,13 +30,16 @@ public class ApiExceptionHandler : IExceptionHandler
 
         var correlationId = httpContext.Items[CorrelationIdMiddleware.ItemKey] as string;
 
+        // Resolve logger from the request scope to avoid DI lifetime issues
+        var log = httpContext.RequestServices.GetRequiredService<IScopeManager>().CreateLogger(this);
+
         if (statusCode == (int)HttpStatusCode.InternalServerError)
         {
-            _log.E($"Unhandled exception [CorrelationId={correlationId}]: {exception}");
+            log.E($"Unhandled exception [CorrelationId={correlationId}]: {exception}");
         }
         else
         {
-            _log.W($"{exception.GetType().Name} [CorrelationId={correlationId}]: {exception.Message}");
+            log.W($"{exception.GetType().Name} [CorrelationId={correlationId}]: {exception.Message}");
         }
 
         httpContext.Response.StatusCode = statusCode;

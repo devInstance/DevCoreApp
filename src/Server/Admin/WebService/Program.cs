@@ -150,7 +150,6 @@ public class Program
         builder.Services.AddLocalization();
 
         builder.Services.AddExceptionHandler<ApiExceptionHandler>();
-        builder.Services.AddProblemDetails();
 
         builder.Services.AddHealthChecks()
             .AddCheck<DatabaseHealthCheck>("database", tags: new[] { "ready" })
@@ -164,17 +163,17 @@ public class Program
         {
             app.UseWebAssemblyDebugging();
             app.UseMigrationsEndPoint();
+            app.UseDeveloperExceptionPage();
         }
         else
         {
+            // Production: ApiExceptionHandler (registered via AddExceptionHandler<T>) runs
+            // first inside UseExceptionHandler — handles API paths with JSON, falls through
+            // to /Error page for non-API paths.
+            app.UseExceptionHandler("/Error");
             // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
             app.UseHsts();
         }
-
-        // ApiExceptionHandler (registered via AddExceptionHandler<T>) runs first:
-        // - API requests (/api/*): returns sanitized JSON with correlation ID
-        // - Non-API requests: falls through to the /Error page
-        app.UseExceptionHandler("/Error");
 
         app.UseHttpsRedirection();
 

@@ -18,26 +18,27 @@ namespace DevInstance.DevCoreApp.Server.Admin.WebService.Identity;
 /// Organization properties return null/empty because the organization hierarchy
 /// entities have not been implemented yet. Once they are, this class will resolve
 /// the user's primary org and visible org set from the UserOrganizations table.
+///
+/// Note: Dependencies are resolved lazily (via IServiceProvider) to break a
+/// circular dependency: IOperationContext → HttpOperationContext → UserManager
+/// → UserStore → ApplicationDbContext → IOperationContext.
 /// </summary>
 public class HttpOperationContext : IOperationContext
 {
-    private readonly IHttpContextAccessor httpContextAccessor;
-    private readonly UserManager<ApplicationUser> userManager;
-    private readonly IQueryRepository queryRepository;
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IServiceProvider _serviceProvider;
 
-    private Guid? resolvedUserId;
-    private bool userIdResolved;
+    private Guid? _resolvedUserId;
+    private bool _userIdResolved;
 
     private static readonly IReadOnlySet<Guid> EmptyOrgSet = new HashSet<Guid>();
 
     public HttpOperationContext(
         IHttpContextAccessor httpContextAccessor,
-        UserManager<ApplicationUser> userManager,
-        IQueryRepository queryRepository)
+        IServiceProvider serviceProvider)
     {
-        this.httpContextAccessor = httpContextAccessor;
-        this.userManager = userManager;
-        this.queryRepository = queryRepository;
+        _httpContextAccessor = httpContextAccessor;
+        _serviceProvider = serviceProvider;
     }
 
     /// <summary>
@@ -49,48 +50,38 @@ public class HttpOperationContext : IOperationContext
     {
         get
         {
-            if (!userIdResolved)
+            if (!_userIdResolved)
             {
-                userIdResolved = true;
-                var httpContext = httpContextAccessor.HttpContext;
+                _userIdResolved = true;
+                var httpContext = _httpContextAccessor.HttpContext;
                 if (httpContext?.User != null)
                 {
-                    // Extract the ApplicationUser.Id from Identity claims
+                    var userManager = _serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
                     var appUserId = userManager.GetUserId(httpContext.User);
                     if (!string.IsNullOrEmpty(appUserId) && Guid.TryParse(appUserId, out var parsedAppUserId))
                     {
-                        // Look up the UserProfile linked to this ApplicationUser
+                        var queryRepository = _serviceProvider.GetRequiredService<IQueryRepository>();
                         var profile = queryRepository
                             .GetUserProfilesQuery(null!)
                             .ByApplicationUserId(parsedAppUserId)
                             .Select()
                             .FirstOrDefault();
 
-                        resolvedUserId = profile?.Id;
+                        _resolvedUserId = profile?.Id;
                     }
                 }
             }
-            return resolvedUserId;
+            return _resolvedUserId;
         }
     }
 
-    /// <summary>
-    /// Not yet implemented — will resolve from UserOrganizations once the org hierarchy is built.
-    /// </summary>
     public Guid? PrimaryOrganizationId => null;
 
-    /// <summary>
-    /// Not yet implemented — will resolve from UserOrganizations once the org hierarchy is built.
-    /// </summary>
     public IReadOnlySet<Guid> VisibleOrganizationIds => EmptyOrgSet;
 
     public string? IpAddress =>
-        httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString();
+        _httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString();
 
-    /// <summary>
-    /// Returns the W3C trace ID from the current Activity if available (for distributed tracing),
-    /// otherwise falls back to ASP.NET Core's per-request TraceIdentifier.
-    /// </summary>
     public string? CorrelationId =>
-        Activity.Current?.Id ?? httpContextAccessor.HttpContext?.TraceIdentifier;
+        Activity.Current?.Id ?? _httpContextAccessor.HttpContext?.TraceIdentifier;
 }

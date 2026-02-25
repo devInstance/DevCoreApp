@@ -17,7 +17,32 @@
       },
       "dotnetRunMessages": true,
       "applicationUrl": "https://devcoreapp.dev.localhost:7082;http://devcoreapp.dev.localhost:5212"
+    },
+    "IIS Express": {
+      "commandName": "IISExpress",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    "WSL": {
+      "commandName": "WSL2",
+      "launchBrowser": true,
+      "launchUrl": "https://devcoreapp.dev.localhost:7082",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "https://devcoreapp.dev.localhost:7082;http://devcoreapp.dev.localhost:5212"
+      },
+      "distributionName": ""
     }
   },
-  "$schema": "https://json.schemastore.org/launchsettings.json"
+  "$schema": "https://json.schemastore.org/launchsettings.json",
+  "iisSettings": {
+    "windowsAuthentication": false,
+    "anonymousAuthentication": true,
+    "iisExpress": {
+      "applicationUrl": "http://localhost:60947/",
+      "sslPort": 44330
+    }
+  }
 }
