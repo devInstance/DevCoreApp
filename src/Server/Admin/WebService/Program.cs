@@ -2,6 +2,8 @@ using System.Text;
 using DevInstance.BlazorToolkit.Tools;
 using DevInstance.DevCoreApp.Server.Admin.Services.Authentication;
 using DevInstance.DevCoreApp.Server.Admin.Services.Background;
+using DevInstance.DevCoreApp.Server.Admin.Services.BackgroundTasks;
+using DevInstance.DevCoreApp.Server.Admin.Services.BackgroundTasks.Handlers;
 using DevInstance.DevCoreApp.Server.Admin.Services.Notifications;
 using DevInstance.DevCoreApp.Server.Admin.Services.Notifications.Templates;
 using DevInstance.DevCoreApp.Server.Admin.Services.Seeding;
@@ -46,6 +48,12 @@ public class Program
         // it bridges to ILogger which now flows into the Serilog pipeline.
         SerilogConfiguration.ConfigureSerilog(builder);
 
+        // Background task infrastructure
+        builder.Services.Configure<BackgroundTaskSettings>(
+            builder.Configuration.GetSection(BackgroundTaskSettings.SectionName));
+        builder.Services.AddSingleton<IBackgroundTaskHandler, SendEmailTaskHandler>();
+        builder.Services.AddSingleton<BackgroundTaskWorker>();
+        builder.Services.AddSingleton<IBackgroundTaskWorker>(sp => sp.GetRequiredService<BackgroundTaskWorker>());
         builder.Services.AddSingleton<BackgroundWorker>();
         builder.Services.AddSingleton<IBackgroundWorker>(sp => sp.GetRequiredService<BackgroundWorker>());
         builder.Services.AddHostedService(sp => sp.GetRequiredService<BackgroundWorker>());

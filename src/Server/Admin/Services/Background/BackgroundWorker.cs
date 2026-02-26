@@ -1,128 +1,94 @@
-using DevInstance.DevCoreApp.Server.Database.Core.Data;
-using DevInstance.DevCoreApp.Server.Database.Core.Data.Decorators;
-using DevInstance.DevCoreApp.Server.Database.Core.Models;
+using System.Text.Json;
 using DevInstance.DevCoreApp.Server.Admin.Services.Background.Requests;
-using DevInstance.DevCoreApp.Server.Admin.Services.Email;
+using DevInstance.DevCoreApp.Server.Admin.Services.BackgroundTasks;
+using DevInstance.DevCoreApp.Server.Database.Core.Data;
+using DevInstance.DevCoreApp.Shared.Model.Common;
 using DevInstance.LogScope;
-using Microsoft.EntityFrameworkCore;
-using System.Collections.Concurrent;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 
 namespace DevInstance.DevCoreApp.Server.Admin.Services.Background;
 
 public class BackgroundWorker : BackgroundService, IBackgroundWorker
 {
-    protected readonly ConcurrentQueue<BackgroundRequestItem> theQueue = new();
-    protected readonly IServiceScopeFactory factory;
-    protected readonly IConfiguration config;
-    private readonly IScopeLog log;
+    private readonly IServiceScopeFactory _scopeFactory;
+    private readonly IBackgroundTaskWorker _taskWorker;
+    private readonly IScopeLog _log;
 
-    public DateTime? LastHeartbeat { get; private set; }
-    public int QueueLength => theQueue.Count;
+    public DateTime? LastHeartbeat => _taskWorker.LastHeartbeat;
+    public int QueueLength => _taskWorker.QueueLength;
 
-    public BackgroundWorker(IServiceScopeFactory factory, IConfiguration config, IScopeManager manager)
+    public BackgroundWorker(
+        IServiceScopeFactory scopeFactory,
+        IBackgroundTaskWorker taskWorker,
+        IScopeManager logManager)
     {
-        this.factory = factory;
-        this.config = config;
-        log = manager.CreateLogger(this);
+        _scopeFactory = scopeFactory;
+        _taskWorker = taskWorker;
+        _log = logManager.CreateLogger(this);
+    }
+
+    public async Task SubmitAsync(BackgroundRequestItem item)
+    {
+        using var scope = _scopeFactory.CreateScope();
+        var operationContext = scope.ServiceProvider.GetRequiredService<BackgroundOperationContext>();
+        operationContext.Reset();
+
+        var repository = scope.ServiceProvider.GetRequiredService<IQueryRepository>();
+        var query = repository.GetBackgroundTaskQuery(null!);
+        var task = query.CreateNew();
+
+        task.TaskType = MapRequestType(item.RequestType);
+        task.Payload = SerializePayload(item.Content);
+        task.Status = BackgroundTaskStatus.Queued;
+        task.MaxRetries = 3;
+        task.ScheduledAt = DateTime.UtcNow;
+        task.ResultReference = ExtractResultReference(item);
+
+        await query.AddAsync(task);
+
+        _taskWorker.Enqueue(task.Id);
     }
 
     public void Submit(BackgroundRequestItem item)
     {
-        theQueue.Enqueue(item);
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await SubmitAsync(item);
+            }
+            catch (Exception ex)
+            {
+                _log.E($"Failed to persist background task: {ex.Message}");
+            }
+        });
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        while (!stoppingToken.IsCancellationRequested)
-        {
-            LastHeartbeat = DateTime.UtcNow;
-
-            if (theQueue.TryDequeue(out var request))
-            {
-                // Create a fresh DI scope per job. This ensures:
-                //   1. Each job gets its own DbContext (no entity tracking accumulation)
-                //   2. BackgroundOperationContext is reset between jobs
-                //   3. Future per-job context (user, org) can be populated from request metadata
-                using var scope = factory.CreateScope();
-                var operationContext = scope.ServiceProvider.GetRequiredService<BackgroundOperationContext>();
-                operationContext.Reset();
-
-                var repository = scope.ServiceProvider.GetRequiredService<IQueryRepository>();
-
-                try
-                {
-                    switch (request.RequestType)
-                    {
-                        case BackgroundRequestType.SendEmail:
-                        {
-                            var emailRequest = (EmailRequest)request.Content;
-                            await ProcessEmailRequestAsync(scope, repository, emailRequest);
-                        }
-                        break;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    log.E($"Background worker error: {ex.Message}");
-                }
-            }
-            else
-            {
-#if DEBUG
-                await Task.Delay(1 * 1000, stoppingToken); // avoid tight loop
-#else
-                await Task.Delay(10 * 1000, stoppingToken);
-#endif
-            }
-        }
+        return _taskWorker.ExecuteAsync(stoppingToken);
     }
 
-    private async Task ProcessEmailRequestAsync(IServiceScope scope, IQueryRepository repository, EmailRequest emailRequest)
+    private static string MapRequestType(BackgroundRequestType requestType) => requestType switch
     {
-        using var l = log.TraceScope();
+        BackgroundRequestType.SendEmail => BackgroundTaskTypes.SendEmail,
+        _ => requestType.ToString()
+    };
 
-        var query = repository.GetEmailLogQuery(null!);
-        EmailLog emailLog;
+    private static string SerializePayload(object content)
+    {
+        return JsonSerializer.Serialize(content, content.GetType());
+    }
 
-        if (!string.IsNullOrEmpty(emailRequest.EmailLogId))
+    private static string? ExtractResultReference(BackgroundRequestItem item)
+    {
+        if (item.RequestType == BackgroundRequestType.SendEmail && item.Content is EmailRequest emailRequest)
         {
-            emailLog = await query.ByPublicId(emailRequest.EmailLogId).Select().FirstOrDefaultAsync();
-            if (emailLog == null)
-            {
-                l.E($"Email log entry {emailRequest.EmailLogId} not found for resend.");
-                return;
-            }
+            return !string.IsNullOrEmpty(emailRequest.EmailLogId)
+                ? $"EmailLog:{emailRequest.EmailLogId}"
+                : null;
         }
-        else
-        {
-            emailLog = query.CreateNew();
-            emailLog.ToRecord(emailRequest, emailRequest.TemplateName, DateTime.UtcNow);
-            await query.AddAsync(emailLog);
-            l.I($"Created email log entry {emailLog.PublicId} with Batched status.");
-        }
-
-        try
-        {
-            var emailSenderService = scope.ServiceProvider.GetRequiredService<IEmailSenderService>();
-            await emailSenderService.SendAsync(emailRequest);
-
-            emailLog.Status = EmailLogStatus.Sent;
-            emailLog.SentDate = DateTime.UtcNow;
-            emailLog.ErrorMessage = null;
-            var updateQuery = repository.GetEmailLogQuery(null!);
-            await updateQuery.UpdateAsync(emailLog);
-            l.I($"Email log entry {emailLog.PublicId} marked as Sent.");
-        }
-        catch (Exception ex)
-        {
-            emailLog.Status = EmailLogStatus.Failed;
-            emailLog.ErrorMessage = ex.Message;
-            var updateQuery = repository.GetEmailLogQuery(null!);
-            await updateQuery.UpdateAsync(emailLog);
-            l.E($"Email log entry {emailLog.PublicId} marked as Failed: {ex.Message}");
-        }
+        return null;
     }
 }
