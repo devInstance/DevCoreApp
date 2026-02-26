@@ -2,7 +2,6 @@ using System.Text.Json;
 using DevInstance.DevCoreApp.Server.Admin.Services.Background.Requests;
 using DevInstance.DevCoreApp.Server.Admin.Services.Email;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
-using DevInstance.DevCoreApp.Server.Database.Core.Data.Decorators;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using DevInstance.LogScope;
 using Microsoft.EntityFrameworkCore;
@@ -28,40 +27,45 @@ public class SendEmailTaskHandler : IBackgroundTaskHandler
         var emailRequest = JsonSerializer.Deserialize<EmailRequest>(payload)
             ?? throw new InvalidOperationException("Failed to deserialize email request payload.");
 
+        if (string.IsNullOrEmpty(emailRequest.EmailLogId))
+        {
+            throw new InvalidOperationException("EmailLogId is required. EmailLog must be created before submitting the background task.");
+        }
+
         var repository = scopedProvider.GetRequiredService<IQueryRepository>();
         var query = repository.GetEmailLogQuery(null!);
-        EmailLog emailLog;
 
-        if (!string.IsNullOrEmpty(emailRequest.EmailLogId))
+        var emailLog = await query.ByPublicId(emailRequest.EmailLogId).Select().FirstOrDefaultAsync(cancellationToken);
+        if (emailLog == null)
         {
-            emailLog = await query.ByPublicId(emailRequest.EmailLogId).Select().FirstOrDefaultAsync(cancellationToken);
-            if (emailLog == null)
-            {
-                l.E($"Email log entry {emailRequest.EmailLogId} not found for resend.");
-                return;
-            }
-        }
-        else
-        {
-            emailLog = query.CreateNew();
-            emailLog.ToRecord(emailRequest, emailRequest.TemplateName, DateTime.UtcNow);
-            await query.AddAsync(emailLog);
-            l.I($"Created email log entry {emailLog.PublicId} with Batched status.");
+            l.E($"Email log entry {emailRequest.EmailLogId} not found.");
+            return;
         }
 
         try
         {
             var emailSenderService = scopedProvider.GetRequiredService<IEmailSenderService>();
-            await emailSenderService.SendAsync(emailRequest);
+            var result = await emailSenderService.SendAsync(emailRequest);
 
-            emailLog.Status = EmailLogStatus.Sent;
-            emailLog.SentDate = DateTime.UtcNow;
-            emailLog.ErrorMessage = null;
+            emailLog.Status = result.Success ? EmailLogStatus.Sent : EmailLogStatus.Failed;
+            emailLog.SentDate = result.Success ? DateTime.UtcNow : null;
+            emailLog.ProviderMessageId = result.ProviderId;
+            emailLog.ErrorMessage = result.Success ? null : result.ErrorMessage;
+
             var updateQuery = repository.GetEmailLogQuery(null!);
             await updateQuery.UpdateAsync(emailLog);
-            l.I($"Email log entry {emailLog.PublicId} marked as Sent.");
+
+            if (result.Success)
+            {
+                l.I($"Email log entry {emailLog.PublicId} marked as Sent (provider: {result.ProviderId}).");
+            }
+            else
+            {
+                l.E($"Email log entry {emailLog.PublicId} marked as Failed: {result.ErrorMessage}");
+                throw new InvalidOperationException($"Email provider returned failure: {result.ErrorMessage}");
+            }
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not InvalidOperationException { Message: var m } || !m.StartsWith("Email provider returned failure:"))
         {
             emailLog.Status = EmailLogStatus.Failed;
             emailLog.ErrorMessage = ex.Message;

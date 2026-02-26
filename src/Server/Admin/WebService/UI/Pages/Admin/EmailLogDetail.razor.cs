@@ -58,7 +58,7 @@ public partial class EmailLogDetail
         {
             "Sent" => "bg-success",
             "Failed" => "bg-danger",
-            "Batched" => "bg-warning text-dark",
+            "Queued" => "bg-warning text-dark",
             _ => "bg-secondary"
         };
     }

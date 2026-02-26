@@ -5,7 +5,7 @@ namespace DevInstance.DevCoreApp.Server.Database.Core.Models;
 
 public enum EmailLogStatus
 {
-    Batched = 0,
+    Queued = 0,
     Sent = 1,
     Failed = 2
 }
@@ -21,6 +21,7 @@ public class EmailLog : DatabaseObject
     public bool IsHtml { get; set; }
     public EmailLogStatus Status { get; set; }
     public string? ErrorMessage { get; set; }
+    public string? ProviderMessageId { get; set; }
     public DateTime ScheduledDate { get; set; }
     public DateTime? SentDate { get; set; }
     public string? TemplateName { get; set; }

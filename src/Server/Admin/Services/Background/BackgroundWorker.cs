@@ -2,6 +2,7 @@ using System.Text.Json;
 using DevInstance.DevCoreApp.Server.Admin.Services.Background.Requests;
 using DevInstance.DevCoreApp.Server.Admin.Services.BackgroundTasks;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
+using DevInstance.DevCoreApp.Server.Database.Core.Data.Decorators;
 using DevInstance.DevCoreApp.Shared.Model.Common;
 using DevInstance.LogScope;
 using Microsoft.Extensions.DependencyInjection;
@@ -35,6 +36,21 @@ public class BackgroundWorker : BackgroundService, IBackgroundWorker
         operationContext.Reset();
 
         var repository = scope.ServiceProvider.GetRequiredService<IQueryRepository>();
+
+        // For SendEmail requests, ensure EmailLog exists before creating the BackgroundTask
+        if (item.RequestType == BackgroundRequestType.SendEmail && item.Content is EmailRequest emailRequest)
+        {
+            if (string.IsNullOrEmpty(emailRequest.EmailLogId))
+            {
+                var emailLogQuery = repository.GetEmailLogQuery(null!);
+                var emailLog = emailLogQuery.CreateNew();
+                emailLog.ToRecord(emailRequest, emailRequest.TemplateName, DateTime.UtcNow);
+                await emailLogQuery.AddAsync(emailLog);
+
+                emailRequest.EmailLogId = emailLog.PublicId;
+            }
+        }
+
         var query = repository.GetBackgroundTaskQuery(null!);
         var task = query.CreateNew();
 

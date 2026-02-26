@@ -37,7 +37,7 @@ public class EmailLogServiceMock : IEmailLogService
                 "Your account has been created"))
             .RuleFor(e => e.Content, f => $"<html><body><p>{f.Lorem.Paragraphs(2)}</p></body></html>")
             .RuleFor(e => e.IsHtml, true)
-            .RuleFor(e => e.Status, f => f.PickRandom("Sent", "Failed", "Batched"))
+            .RuleFor(e => e.Status, f => f.PickRandom("Sent", "Failed", "Queued"))
             .RuleFor(e => e.ErrorMessage, (f, e) => e.Status == "Failed" ? f.PickRandom("SMTP timeout", "Invalid recipient", "Connection refused") : null)
             .RuleFor(e => e.TemplateName, f => f.PickRandom("Registration", "PasswordReset", "Welcome"))
             .RuleFor(e => e.ScheduledDate, f => f.Date.Recent(30))
@@ -145,7 +145,7 @@ public class EmailLogServiceMock : IEmailLogService
         var item = modelList.Find(e => e.Id == publicId);
         if (item == null) throw new InvalidOperationException("Email log entry not found.");
 
-        item.Status = "Batched";
+        item.Status = "Queued";
         item.ErrorMessage = null;
         item.SentDate = null;
         item.ScheduledDate = DateTime.UtcNow;
@@ -162,7 +162,7 @@ public class EmailLogServiceMock : IEmailLogService
 
         foreach (var item in failed)
         {
-            item.Status = "Batched";
+            item.Status = "Queued";
             item.ErrorMessage = null;
             item.SentDate = null;
             item.ScheduledDate = DateTime.UtcNow;

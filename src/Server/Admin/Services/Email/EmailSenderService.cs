@@ -17,26 +17,20 @@ public class EmailSenderService : IEmailSenderService
         log = logManager.CreateLogger(this);
     }
 
-    public async Task SendAsync(EmailRequest request)
+    public async Task<EmailSendResult> SendAsync(EmailRequest request)
     {
         using var l = log.TraceScope();
 
-        try
+        var result = await _emailProvider.SendAsync(request);
+        if (result.Success)
         {
-            var result = await _emailProvider.SendAsync(request);
-            if (result.Success)
-            {
-                l.I($"Email sent successfully to {string.Join(", ", request.To.Select(t => t.Address))} with subject '{request.Subject}'");
-            }
-            else
-            {
-                l.E($"Email provider returned failure for {string.Join(", ", request.To.Select(t => t.Address))} with subject '{request.Subject}': {result.ErrorMessage}");
-            }
+            l.I($"Email sent successfully to {string.Join(", ", request.To.Select(t => t.Address))} with subject '{request.Subject}'");
         }
-        catch (Exception ex)
+        else
         {
-            l.E($"Failed to send email to {string.Join(", ", request.To.Select(t => t.Address))} with subject '{request.Subject}': {ex.Message}");
-            throw;
+            l.E($"Email provider returned failure for {string.Join(", ", request.To.Select(t => t.Address))} with subject '{request.Subject}': {result.ErrorMessage}");
         }
+
+        return result;
     }
 }

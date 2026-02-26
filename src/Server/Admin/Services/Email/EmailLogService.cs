@@ -169,7 +169,7 @@ public class EmailLogService : BaseService, IEmailLogService
             throw new RecordNotFoundException("Email log entry not found.");
         }
 
-        emailLog.Status = EmailLogStatus.Batched;
+        emailLog.Status = EmailLogStatus.Queued;
         emailLog.ErrorMessage = null;
         emailLog.SentDate = null;
         emailLog.ScheduledDate = TimeProvider.CurrentTime;
@@ -222,7 +222,7 @@ public class EmailLogService : BaseService, IEmailLogService
 
         foreach (var emailLog in failedEmails)
         {
-            emailLog.Status = EmailLogStatus.Batched;
+            emailLog.Status = EmailLogStatus.Queued;
             emailLog.ErrorMessage = null;
             emailLog.SentDate = null;
             emailLog.ScheduledDate = TimeProvider.CurrentTime;

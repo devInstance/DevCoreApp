@@ -22,6 +22,7 @@ public static class EmailLogDecorators
             IsHtml = emailLog.IsHtml,
             Status = emailLog.Status.ToString(),
             ErrorMessage = emailLog.ErrorMessage,
+            ProviderMessageId = emailLog.ProviderMessageId,
             ScheduledDate = emailLog.ScheduledDate,
             SentDate = emailLog.SentDate,
             TemplateName = emailLog.TemplateName,
@@ -40,6 +41,7 @@ public static class EmailLogDecorators
         emailLog.Content = item.Content;
         emailLog.IsHtml = item.IsHtml;
         emailLog.ErrorMessage = item.ErrorMessage;
+        emailLog.ProviderMessageId = item.ProviderMessageId;
         emailLog.ScheduledDate = item.ScheduledDate;
         emailLog.SentDate = item.SentDate;
         emailLog.TemplateName = item.TemplateName;
@@ -56,7 +58,7 @@ public static class EmailLogDecorators
         emailLog.Subject = message.Subject;
         emailLog.Content = message.Content;
         emailLog.IsHtml = message.IsHtml;
-        emailLog.Status = EmailLogStatus.Batched;
+        emailLog.Status = EmailLogStatus.Queued;
         emailLog.ScheduledDate = scheduledDate;
         emailLog.TemplateName = templateName;
 

@@ -14,6 +14,7 @@ public class EmailLogItem : ModelItem
     public bool IsHtml { get; set; }
     public string Status { get; set; } = string.Empty;
     public string? ErrorMessage { get; set; }
+    public string? ProviderMessageId { get; set; }
     public DateTime ScheduledDate { get; set; }
     public DateTime? SentDate { get; set; }
     public string? TemplateName { get; set; }
