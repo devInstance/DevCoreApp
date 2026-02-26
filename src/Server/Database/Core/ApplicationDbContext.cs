@@ -1,5 +1,6 @@
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
+using DevInstance.DevCoreApp.Server.Database.Core.Models.BackgroundTasks;
 using DevInstance.DevCoreApp.Server.Database.Core.Models.Base;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -27,6 +28,8 @@ public abstract class ApplicationDbContext : IdentityDbContext<ApplicationUser, 
     public DbSet<UserLoginHistory> UserLoginHistories { get; set; }
     public DbSet<Setting> Settings { get; set; }
     public DbSet<ApplicationLog> ApplicationLogs { get; set; }
+    public DbSet<BackgroundTask> BackgroundTasks { get; set; }
+    public DbSet<BackgroundTaskLog> BackgroundTaskLogs { get; set; }
 
     public ApplicationDbContext(DbContextOptions options, IOperationContext operationContext)
             : base(options)
@@ -202,6 +205,37 @@ public abstract class ApplicationDbContext : IdentityDbContext<ApplicationUser, 
         builder.Entity<AuditLog>(entity =>
         {
             entity.HasIndex(a => new { a.TableName, a.RecordId, a.ChangedAt });
+        });
+
+        builder.Entity<BackgroundTask>(entity =>
+        {
+            entity.Property(bt => bt.Payload)
+                .HasColumnType("jsonb");
+
+            entity.HasOne(bt => bt.CreatedBy)
+                .WithMany()
+                .HasForeignKey(bt => bt.CreatedById)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(bt => bt.Organization)
+                .WithMany()
+                .HasForeignKey(bt => bt.OrganizationId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(bt => bt.Status);
+            entity.HasIndex(bt => bt.TaskType);
+            entity.HasIndex(bt => bt.ScheduledAt);
+            entity.HasIndex(bt => bt.OrganizationId);
+        });
+
+        builder.Entity<BackgroundTaskLog>(entity =>
+        {
+            entity.HasOne(btl => btl.BackgroundTask)
+                .WithMany()
+                .HasForeignKey(btl => btl.BackgroundTaskId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(btl => btl.BackgroundTaskId);
         });
 
         ApplyOrganizationQueryFilters(builder);

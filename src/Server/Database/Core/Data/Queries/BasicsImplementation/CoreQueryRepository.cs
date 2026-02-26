@@ -54,4 +54,14 @@ public abstract class CoreQueryRepository : IQueryRepository
     {
         return new CoreSettingsQuery(LogManager, TimeProvider, DB, currentProfile);
     }
+
+    public IBackgroundTaskQuery GetBackgroundTaskQuery(UserProfile currentProfile)
+    {
+        return new CoreBackgroundTaskQuery(LogManager, TimeProvider, DB, currentProfile);
+    }
+
+    public IBackgroundTaskLogQuery GetBackgroundTaskLogQuery(UserProfile currentProfile)
+    {
+        return new CoreBackgroundTaskLogQuery(LogManager, TimeProvider, DB, currentProfile);
+    }
 }

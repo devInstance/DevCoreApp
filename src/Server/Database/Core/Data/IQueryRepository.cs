@@ -11,4 +11,6 @@ public interface IQueryRepository
     IOrganizationsQuery GetOrganizationsQuery(UserProfile currentProfile);
     IUserLoginHistoryQuery GetUserLoginHistoryQuery(UserProfile currentProfile);
     ISettingsQuery GetSettingsQuery(UserProfile currentProfile);
+    IBackgroundTaskQuery GetBackgroundTaskQuery(UserProfile currentProfile);
+    IBackgroundTaskLogQuery GetBackgroundTaskLogQuery(UserProfile currentProfile);
 }
