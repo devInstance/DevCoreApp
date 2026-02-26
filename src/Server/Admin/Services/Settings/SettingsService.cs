@@ -24,6 +24,7 @@ public class SettingsService : ISettingsService
     private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(10);
 
     private readonly ApplicationDbContext _dbContext;
+    private readonly IQueryRepository _repository;
     private readonly IOperationContext _operationContext;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly UserManager<ApplicationUser> _userManager;
@@ -33,6 +34,7 @@ public class SettingsService : ISettingsService
     public SettingsService(
         IScopeManager logManager,
         ApplicationDbContext dbContext,
+        IQueryRepository repository,
         IOperationContext operationContext,
         IHttpContextAccessor httpContextAccessor,
         UserManager<ApplicationUser> userManager,
@@ -40,6 +42,7 @@ public class SettingsService : ISettingsService
     {
         _log = logManager.CreateLogger(this);
         _dbContext = dbContext;
+        _repository = repository;
         _operationContext = operationContext;
         _httpContextAccessor = httpContextAccessor;
         _userManager = userManager;
@@ -100,17 +103,15 @@ public class SettingsService : ISettingsService
         }
         else
         {
-            var setting = new Setting
-            {
-                Id = Guid.NewGuid(),
-                TenantId = tenantId,
-                OrganizationId = organizationId,
-                UserId = userId,
-                Category = category,
-                Key = key,
-                Value = serializedValue,
-                ValueType = valueType,
-            };
+            var settingsQuery = _repository.GetSettingsQuery(null!);
+            var setting = settingsQuery.CreateNew();
+            setting.TenantId = tenantId;
+            setting.OrganizationId = organizationId;
+            setting.UserId = userId;
+            setting.Category = category;
+            setting.Key = key;
+            setting.Value = serializedValue;
+            setting.ValueType = valueType;
             _dbContext.Settings.Add(setting);
         }
 

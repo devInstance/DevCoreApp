@@ -7,51 +7,28 @@ using DevInstance.DevCoreApp.Shared.Utils;
 using DevInstance.LogScope;
 using System;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace NoCrast.Server.Database.Postgres.Data.Queries;
 
-public class CoreBackgroundTaskLogQuery : CoreBaseQuery, IBackgroundTaskLogQuery
+public class CoreBackgroundTaskLogQuery : CoreBaseQuery<BackgroundTaskLog, CoreBackgroundTaskLogQuery>, IBackgroundTaskLogQuery
 {
-    private IQueryable<BackgroundTaskLog> currentQuery;
-
-    public string SortedBy { get; set; }
-
-    public bool IsAsc { get; set; }
-
     private CoreBackgroundTaskLogQuery(IQueryable<BackgroundTaskLog> q, IScopeManager logManager,
                          ITimeProvider timeProvider,
                          ApplicationDbContext dB,
                          UserProfile currentProfile)
-        : base(logManager, timeProvider, dB, currentProfile)
+        : base(q, logManager, timeProvider, dB, currentProfile)
     {
-        currentQuery = q;
     }
 
     public CoreBackgroundTaskLogQuery(IScopeManager logManager,
                              ITimeProvider timeProvider,
                              ApplicationDbContext dB,
                              UserProfile currentProfile)
-        : this(from btl in dB.BackgroundTaskLogs select btl, logManager, timeProvider, dB, currentProfile)
+        : base(logManager, timeProvider, dB, currentProfile)
     {
     }
 
-    public async Task AddAsync(BackgroundTaskLog record)
-    {
-        DB.BackgroundTaskLogs.Add(record);
-        await DB.SaveChangesAsync();
-    }
-
-    public IBackgroundTaskLogQuery ByPublicId(string id)
-    {
-        if (Guid.TryParse(id, out var guid))
-        {
-            currentQuery = from btl in currentQuery
-                           where btl.Id == guid
-                           select btl;
-        }
-        return this;
-    }
+    public IBackgroundTaskLogQuery ByPublicId(string id) => ByGuidIdHelper(id);
 
     public IBackgroundTaskLogQuery ByBackgroundTaskId(Guid backgroundTaskId)
     {
@@ -83,34 +60,9 @@ public class CoreBackgroundTaskLogQuery : CoreBaseQuery, IBackgroundTaskLogQuery
         };
     }
 
-    public async Task RemoveAsync(BackgroundTaskLog record)
-    {
-        DB.BackgroundTaskLogs.Remove(record);
-        await DB.SaveChangesAsync();
-    }
+    public IBackgroundTaskLogQuery Skip(int value) => SkipHelper(value);
 
-    public IQueryable<BackgroundTaskLog> Select()
-    {
-        return currentQuery;
-    }
-
-    public async Task UpdateAsync(BackgroundTaskLog record)
-    {
-        DB.BackgroundTaskLogs.Update(record);
-        await DB.SaveChangesAsync();
-    }
-
-    public IBackgroundTaskLogQuery Skip(int value)
-    {
-        currentQuery = currentQuery.Skip(value);
-        return this;
-    }
-
-    public IBackgroundTaskLogQuery Take(int value)
-    {
-        currentQuery = currentQuery.Take(value);
-        return this;
-    }
+    public IBackgroundTaskLogQuery Take(int value) => TakeHelper(value);
 
     public IBackgroundTaskLogQuery SortBy(string column, bool isAsc)
     {

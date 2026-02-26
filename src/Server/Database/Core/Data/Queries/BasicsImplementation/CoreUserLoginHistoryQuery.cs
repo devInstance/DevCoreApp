@@ -5,52 +5,28 @@ using DevInstance.DevCoreApp.Shared.Utils;
 using DevInstance.LogScope;
 using System;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace NoCrast.Server.Database.Postgres.Data.Queries;
 
-public class CoreUserLoginHistoryQuery : CoreBaseQuery, IUserLoginHistoryQuery
+public class CoreUserLoginHistoryQuery : CoreBaseQuery<UserLoginHistory, CoreUserLoginHistoryQuery>, IUserLoginHistoryQuery
 {
-    private IQueryable<UserLoginHistory> currentQuery;
-
-    public string SortedBy { get; set; }
-
-    public bool IsAsc { get; set; }
-
     private CoreUserLoginHistoryQuery(IQueryable<UserLoginHistory> q, IScopeManager logManager,
                          ITimeProvider timeProvider,
                          ApplicationDbContext dB,
                          UserProfile currentProfile)
-        : base(logManager, timeProvider, dB, currentProfile)
+        : base(q, logManager, timeProvider, dB, currentProfile)
     {
-        currentQuery = q;
     }
 
     public CoreUserLoginHistoryQuery(IScopeManager logManager,
                              ITimeProvider timeProvider,
                              ApplicationDbContext dB,
                              UserProfile currentProfile)
-        : this(from ulh in dB.UserLoginHistories select ulh, logManager, timeProvider, dB, currentProfile)
+        : base(logManager, timeProvider, dB, currentProfile)
     {
     }
 
-    public async Task AddAsync(UserLoginHistory record)
-    {
-        DB.UserLoginHistories.Add(record);
-        await DB.SaveChangesAsync();
-    }
-
-    public IUserLoginHistoryQuery ByPublicId(string id)
-    {
-        // UserLoginHistory inherits DatabaseBaseObject (no PublicId) — filter by Id instead
-        if (Guid.TryParse(id, out var guid))
-        {
-            currentQuery = from ulh in currentQuery
-                           where ulh.Id == guid
-                           select ulh;
-        }
-        return this;
-    }
+    public IUserLoginHistoryQuery ByPublicId(string id) => ByGuidIdHelper(id);
 
     public IUserLoginHistoryQuery ByUserId(Guid userId)
     {
@@ -99,23 +75,6 @@ public class CoreUserLoginHistoryQuery : CoreBaseQuery, IUserLoginHistoryQuery
         };
     }
 
-    public async Task RemoveAsync(UserLoginHistory record)
-    {
-        DB.UserLoginHistories.Remove(record);
-        await DB.SaveChangesAsync();
-    }
-
-    public IQueryable<UserLoginHistory> Select()
-    {
-        return currentQuery;
-    }
-
-    public async Task UpdateAsync(UserLoginHistory record)
-    {
-        DB.UserLoginHistories.Update(record);
-        await DB.SaveChangesAsync();
-    }
-
     public IUserLoginHistoryQuery Search(string search)
     {
         currentQuery = from ulh in currentQuery
@@ -125,17 +84,9 @@ public class CoreUserLoginHistoryQuery : CoreBaseQuery, IUserLoginHistoryQuery
         return this;
     }
 
-    public IUserLoginHistoryQuery Skip(int value)
-    {
-        currentQuery = currentQuery.Skip(value);
-        return this;
-    }
+    public IUserLoginHistoryQuery Skip(int value) => SkipHelper(value);
 
-    public IUserLoginHistoryQuery Take(int value)
-    {
-        currentQuery = currentQuery.Take(value);
-        return this;
-    }
+    public IUserLoginHistoryQuery Take(int value) => TakeHelper(value);
 
     public IUserLoginHistoryQuery SortBy(string column, bool isAsc)
     {

@@ -5,51 +5,28 @@ using DevInstance.DevCoreApp.Shared.Utils;
 using DevInstance.LogScope;
 using System;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace NoCrast.Server.Database.Postgres.Data.Queries;
 
-public class CoreSettingsQuery : CoreBaseQuery, ISettingsQuery
+public class CoreSettingsQuery : CoreBaseQuery<Setting, CoreSettingsQuery>, ISettingsQuery
 {
-    private IQueryable<Setting> currentQuery;
-
-    public string SortedBy { get; set; }
-
-    public bool IsAsc { get; set; }
-
     private CoreSettingsQuery(IQueryable<Setting> q, IScopeManager logManager,
                          ITimeProvider timeProvider,
                          ApplicationDbContext dB,
                          UserProfile currentProfile)
-        : base(logManager, timeProvider, dB, currentProfile)
+        : base(q, logManager, timeProvider, dB, currentProfile)
     {
-        currentQuery = q;
     }
 
     public CoreSettingsQuery(IScopeManager logManager,
                              ITimeProvider timeProvider,
                              ApplicationDbContext dB,
                              UserProfile currentProfile)
-        : this(from s in dB.Settings select s, logManager, timeProvider, dB, currentProfile)
+        : base(logManager, timeProvider, dB, currentProfile)
     {
     }
 
-    public async Task AddAsync(Setting record)
-    {
-        DB.Settings.Add(record);
-        await DB.SaveChangesAsync();
-    }
-
-    public ISettingsQuery ByPublicId(string id)
-    {
-        if (Guid.TryParse(id, out var guid))
-        {
-            currentQuery = from s in currentQuery
-                           where s.Id == guid
-                           select s;
-        }
-        return this;
-    }
+    public ISettingsQuery ByPublicId(string id) => ByGuidIdHelper(id);
 
     public ISettingsQuery ByCategory(string category)
     {
@@ -112,23 +89,6 @@ public class CoreSettingsQuery : CoreBaseQuery, ISettingsQuery
         };
     }
 
-    public async Task RemoveAsync(Setting record)
-    {
-        DB.Settings.Remove(record);
-        await DB.SaveChangesAsync();
-    }
-
-    public IQueryable<Setting> Select()
-    {
-        return currentQuery;
-    }
-
-    public async Task UpdateAsync(Setting record)
-    {
-        DB.Settings.Update(record);
-        await DB.SaveChangesAsync();
-    }
-
     public ISettingsQuery Search(string search)
     {
         currentQuery = from s in currentQuery
@@ -139,17 +99,9 @@ public class CoreSettingsQuery : CoreBaseQuery, ISettingsQuery
         return this;
     }
 
-    public ISettingsQuery Skip(int value)
-    {
-        currentQuery = currentQuery.Skip(value);
-        return this;
-    }
+    public ISettingsQuery Skip(int value) => SkipHelper(value);
 
-    public ISettingsQuery Take(int value)
-    {
-        currentQuery = currentQuery.Take(value);
-        return this;
-    }
+    public ISettingsQuery Take(int value) => TakeHelper(value);
 
     public ISettingsQuery SortBy(string column, bool isAsc)
     {

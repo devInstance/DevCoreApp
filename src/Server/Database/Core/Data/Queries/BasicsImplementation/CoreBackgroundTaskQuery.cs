@@ -1,4 +1,3 @@
-using DevInstance.BlazorToolkit.Utils;
 using DevInstance.DevCoreApp.Server.Database.Core;
 using DevInstance.DevCoreApp.Server.Database.Core.Data.Queries;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
@@ -8,48 +7,28 @@ using DevInstance.DevCoreApp.Shared.Utils;
 using DevInstance.LogScope;
 using System;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace NoCrast.Server.Database.Postgres.Data.Queries;
 
-public class CoreBackgroundTaskQuery : CoreBaseQuery, IBackgroundTaskQuery
+public class CoreBackgroundTaskQuery : CoreDatabaseObjectQuery<BackgroundTask, CoreBackgroundTaskQuery>, IBackgroundTaskQuery
 {
-    private IQueryable<BackgroundTask> currentQuery;
-
-    public string SortedBy { get; set; }
-
-    public bool IsAsc { get; set; }
-
     private CoreBackgroundTaskQuery(IQueryable<BackgroundTask> q, IScopeManager logManager,
                          ITimeProvider timeProvider,
                          ApplicationDbContext dB,
                          UserProfile currentProfile)
-        : base(logManager, timeProvider, dB, currentProfile)
+        : base(q, logManager, timeProvider, dB, currentProfile)
     {
-        currentQuery = q;
     }
 
     public CoreBackgroundTaskQuery(IScopeManager logManager,
                              ITimeProvider timeProvider,
                              ApplicationDbContext dB,
                              UserProfile currentProfile)
-        : this(from bt in dB.BackgroundTasks select bt, logManager, timeProvider, dB, currentProfile)
+        : base(logManager, timeProvider, dB, currentProfile)
     {
     }
 
-    public async Task AddAsync(BackgroundTask record)
-    {
-        DB.BackgroundTasks.Add(record);
-        await DB.SaveChangesAsync();
-    }
-
-    public IBackgroundTaskQuery ByPublicId(string id)
-    {
-        currentQuery = from bt in currentQuery
-                       where bt.PublicId == id
-                       select bt;
-        return this;
-    }
+    public IBackgroundTaskQuery ByPublicId(string id) => ByPublicIdHelper(id);
 
     public IBackgroundTaskQuery ByStatus(BackgroundTaskStatus status)
     {
@@ -97,38 +76,6 @@ public class CoreBackgroundTaskQuery : CoreBaseQuery, IBackgroundTaskQuery
         return new CoreBackgroundTaskQuery(currentQuery, LogManager, TimeProvider, DB, CurrentProfile);
     }
 
-    public BackgroundTask CreateNew()
-    {
-        DateTime now = TimeProvider.CurrentTime;
-
-        return new BackgroundTask
-        {
-            Id = Guid.NewGuid(),
-            PublicId = IdGenerator.New(),
-            CreateDate = now,
-            UpdateDate = now,
-        };
-    }
-
-    public async Task RemoveAsync(BackgroundTask record)
-    {
-        DB.BackgroundTasks.Remove(record);
-        await DB.SaveChangesAsync();
-    }
-
-    public IQueryable<BackgroundTask> Select()
-    {
-        return currentQuery;
-    }
-
-    public async Task UpdateAsync(BackgroundTask record)
-    {
-        DateTime now = TimeProvider.CurrentTime;
-        record.UpdateDate = now;
-        DB.BackgroundTasks.Update(record);
-        await DB.SaveChangesAsync();
-    }
-
     public IBackgroundTaskQuery Search(string search)
     {
         currentQuery = from bt in currentQuery
@@ -139,17 +86,9 @@ public class CoreBackgroundTaskQuery : CoreBaseQuery, IBackgroundTaskQuery
         return this;
     }
 
-    public IBackgroundTaskQuery Skip(int value)
-    {
-        currentQuery = currentQuery.Skip(value);
-        return this;
-    }
+    public IBackgroundTaskQuery Skip(int value) => SkipHelper(value);
 
-    public IBackgroundTaskQuery Take(int value)
-    {
-        currentQuery = currentQuery.Take(value);
-        return this;
-    }
+    public IBackgroundTaskQuery Take(int value) => TakeHelper(value);
 
     public IBackgroundTaskQuery SortBy(string column, bool isAsc)
     {

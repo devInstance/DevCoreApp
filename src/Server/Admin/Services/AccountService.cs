@@ -271,23 +271,16 @@ public class AccountService : BaseService
         }
 
         // Create UserProfile
-        var now = TimeProvider.CurrentTime;
-        var userProfile = new UserProfile
-        {
-            Id = Guid.NewGuid(),
-            PublicId = IdGenerator.New(),
-            Email = input.Email,
-            FirstName = input.FirstName,
-            MiddleName = input.MiddleName ?? "",
-            LastName = input.LastName,
-            PhoneNumber = input.PhoneNumber ?? "",
-            ApplicationUserId = user.Id,
-            Status = UserStatus.LIVE,
-            CreateDate = now,
-            UpdateDate = now
-        };
-        dbContext.UserProfiles.Add(userProfile);
-        await dbContext.SaveChangesAsync();
+        var profileQuery = Repository.GetUserProfilesQuery(null!);
+        var userProfile = profileQuery.CreateNew();
+        userProfile.Email = input.Email;
+        userProfile.FirstName = input.FirstName;
+        userProfile.MiddleName = input.MiddleName ?? "";
+        userProfile.LastName = input.LastName;
+        userProfile.PhoneNumber = input.PhoneNumber ?? "";
+        userProfile.ApplicationUserId = user.Id;
+        userProfile.Status = UserStatus.LIVE;
+        await profileQuery.AddAsync(userProfile);
 
         l.I($"UserProfile created for owner with email {input.Email}.");
 
@@ -303,18 +296,13 @@ public class AccountService : BaseService
 
     private async Task RecordLoginAttemptAsync(Guid userId, string? ipAddress, string? userAgent, bool success, string? failureReason)
     {
-        var entry = new UserLoginHistory
-        {
-            Id = Guid.NewGuid(),
-            UserId = userId,
-            LoginAt = DateTime.UtcNow,
-            IpAddress = ipAddress,
-            UserAgent = userAgent,
-            Success = success,
-            FailureReason = failureReason
-        };
-
-        dbContext.UserLoginHistories.Add(entry);
-        await dbContext.SaveChangesAsync();
+        var query = Repository.GetUserLoginHistoryQuery(null!);
+        var entry = query.CreateNew();
+        entry.UserId = userId;
+        entry.IpAddress = ipAddress;
+        entry.UserAgent = userAgent;
+        entry.Success = success;
+        entry.FailureReason = failureReason;
+        await query.AddAsync(entry);
     }
 }

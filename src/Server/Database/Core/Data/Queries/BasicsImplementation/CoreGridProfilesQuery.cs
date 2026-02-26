@@ -1,4 +1,3 @@
-using DevInstance.BlazorToolkit.Utils;
 using DevInstance.DevCoreApp.Server.Database.Core;
 using DevInstance.DevCoreApp.Server.Database.Core.Data.Queries;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
@@ -6,44 +5,28 @@ using DevInstance.DevCoreApp.Shared.Utils;
 using DevInstance.LogScope;
 using System;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace NoCrast.Server.Database.Postgres.Data.Queries;
 
-public class CoreGridProfilesQuery : CoreBaseQuery, IGridProfilesQuery
+public class CoreGridProfilesQuery : CoreDatabaseObjectQuery<GridProfile, CoreGridProfilesQuery>, IGridProfilesQuery
 {
-    private IQueryable<GridProfile> currentQuery;
-
     private CoreGridProfilesQuery(IQueryable<GridProfile> q, IScopeManager logManager,
                          ITimeProvider timeProvider,
                          ApplicationDbContext dB,
                          UserProfile currentProfile)
-        : base(logManager, timeProvider, dB, currentProfile)
+        : base(q, logManager, timeProvider, dB, currentProfile)
     {
-        currentQuery = q;
     }
 
     public CoreGridProfilesQuery(IScopeManager logManager,
                                  ITimeProvider timeProvider,
                                  ApplicationDbContext dB,
                                  UserProfile currentProfile)
-        : this(from gp in dB.GridProfiles select gp, logManager, timeProvider, dB, currentProfile)
+        : base(logManager, timeProvider, dB, currentProfile)
     {
     }
 
-    public async Task AddAsync(GridProfile record)
-    {
-        DB.GridProfiles.Add(record);
-        await DB.SaveChangesAsync();
-    }
-
-    public IGridProfilesQuery ByPublicId(string id)
-    {
-        currentQuery = from gp in currentQuery
-                       where gp.PublicId == id
-                       select gp;
-        return this;
-    }
+    public IGridProfilesQuery ByPublicId(string id) => ByPublicIdHelper(id);
 
     public IGridProfilesQuery ByUserProfileId(Guid userProfileId)
     {
@@ -80,37 +63,5 @@ public class CoreGridProfilesQuery : CoreBaseQuery, IGridProfilesQuery
     public IGridProfilesQuery Clone()
     {
         return new CoreGridProfilesQuery(currentQuery, LogManager, TimeProvider, DB, CurrentProfile);
-    }
-
-    public GridProfile CreateNew()
-    {
-        DateTime now = TimeProvider.CurrentTime;
-
-        return new GridProfile
-        {
-            Id = Guid.NewGuid(),
-            PublicId = IdGenerator.New(),
-            CreateDate = now,
-            UpdateDate = now,
-        };
-    }
-
-    public async Task RemoveAsync(GridProfile record)
-    {
-        DB.GridProfiles.Remove(record);
-        await DB.SaveChangesAsync();
-    }
-
-    public IQueryable<GridProfile> Select()
-    {
-        return currentQuery;
-    }
-
-    public async Task UpdateAsync(GridProfile record)
-    {
-        DateTime now = TimeProvider.CurrentTime;
-        record.UpdateDate = now;
-        DB.GridProfiles.Update(record);
-        await DB.SaveChangesAsync();
     }
 }

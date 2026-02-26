@@ -1,46 +1,29 @@
-﻿using DevInstance.LogScope;
 using DevInstance.DevCoreApp.Server.Database.Core;
 using DevInstance.DevCoreApp.Server.Database.Core.Data.Queries;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using DevInstance.DevCoreApp.Shared.Utils;
+using DevInstance.LogScope;
 using System;
 using System.Linq;
-using System.Threading.Tasks;
-using DevInstance.BlazorToolkit.Utils;
 
 namespace NoCrast.Server.Database.Postgres.Data.Queries;
 
-public class CoreUserProfilesQuery : CoreBaseQuery, IUserProfilesQuery
+public class CoreUserProfilesQuery : CoreDatabaseObjectQuery<UserProfile, CoreUserProfilesQuery>, IUserProfilesQuery
 {
-    private IQueryable<UserProfile> currentQuery;
-
-    public string SortedBy { get; set; }
-
-    public bool IsAsc { get; set; }
-
     private CoreUserProfilesQuery(IQueryable<UserProfile> q, IScopeManager logManager,
                          ITimeProvider timeProvider,
                          ApplicationDbContext dB,
                          UserProfile currentProfile)
- : base(logManager, timeProvider, dB, currentProfile)
+        : base(q, logManager, timeProvider, dB, currentProfile)
     {
-        currentQuery = q;
     }
 
     public CoreUserProfilesQuery(IScopeManager logManager,
                                      ITimeProvider timeProvider,
                                      ApplicationDbContext dB,
-                                     UserProfile currentProfile) 
-        : this(from ts in dB.UserProfiles
-               select ts, logManager, timeProvider, dB, currentProfile)
+                                     UserProfile currentProfile)
+        : base(logManager, timeProvider, dB, currentProfile)
     {
-
-    }
-
-    public async Task AddAsync(UserProfile record)
-    {
-        DB.UserProfiles.Add(record);
-        await DB.SaveChangesAsync();
     }
 
     public IUserProfilesQuery ByLastName(string lastName)
@@ -48,55 +31,14 @@ public class CoreUserProfilesQuery : CoreBaseQuery, IUserProfilesQuery
         currentQuery = from pr in currentQuery
                        where pr.LastName == lastName
                        select pr;
-
         return this;
     }
 
-    public IUserProfilesQuery ByPublicId(string id)
-    {
-        currentQuery = from pr in currentQuery
-                       where pr.PublicId == id
-                       select pr;
-
-        return this;
-    }
+    public IUserProfilesQuery ByPublicId(string id) => ByPublicIdHelper(id);
 
     public IUserProfilesQuery Clone()
     {
         return new CoreUserProfilesQuery(currentQuery, LogManager, TimeProvider, DB, CurrentProfile);
-    }
-
-    public UserProfile CreateNew()
-    {
-        DateTime now = TimeProvider.CurrentTime;
-
-        return new UserProfile
-        {
-            Id = Guid.NewGuid(),
-            PublicId = IdGenerator.New(),
-            CreateDate = now,
-            UpdateDate = now,
-        };
-    }
-
-    public async Task RemoveAsync(UserProfile record)
-    {
-        DB.UserProfiles.Remove(record);
-        await DB.SaveChangesAsync();
-    }
-
-    public IQueryable<UserProfile> Select()
-    {
-        return (from pr in currentQuery select pr);
-    }
-
-    public async Task UpdateAsync(UserProfile record)
-    {
-        DateTime now = TimeProvider.CurrentTime;
-
-        record.UpdateDate = now;
-        DB.UserProfiles.Update(record);
-        await DB.SaveChangesAsync();
     }
 
     public IUserProfilesQuery ByApplicationUserId(Guid id)
@@ -104,33 +46,24 @@ public class CoreUserProfilesQuery : CoreBaseQuery, IUserProfilesQuery
         currentQuery = from pr in currentQuery
                        where pr.ApplicationUserId == id
                        select pr;
-
         return this;
     }
 
     public IUserProfilesQuery Search(string search)
     {
         currentQuery = from profile in currentQuery
-                       where profile.FirstName.IndexOf(search) >= 0 || 
-                                profile.LastName.IndexOf(search) >= 0 || 
-                                profile.Email.IndexOf(search) >= 0 || 
+                       where profile.FirstName.IndexOf(search) >= 0 ||
+                                profile.LastName.IndexOf(search) >= 0 ||
+                                profile.Email.IndexOf(search) >= 0 ||
                                 profile.PhoneNumber.IndexOf(search) >= 0 ||
                                 profile.MiddleName.IndexOf(search) >= 0
                        select profile;
         return this;
     }
 
-    public IUserProfilesQuery Skip(int value)
-    {
-        currentQuery = currentQuery.Skip(value);
-        return this;
-    }
+    public IUserProfilesQuery Skip(int value) => SkipHelper(value);
 
-    public IUserProfilesQuery Take(int value)
-    {
-        currentQuery = currentQuery.Take(value);
-        return this;
-    }
+    public IUserProfilesQuery Take(int value) => TakeHelper(value);
 
     public IUserProfilesQuery SortBy(string column, bool isAsc)
     {

@@ -1,63 +1,38 @@
-using DevInstance.LogScope;
 using DevInstance.DevCoreApp.Server.Database.Core;
 using DevInstance.DevCoreApp.Server.Database.Core.Data.Queries;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using DevInstance.DevCoreApp.Shared.Utils;
+using DevInstance.LogScope;
 using System;
 using System.Linq;
-using System.Threading.Tasks;
-using DevInstance.WebServiceToolkit.Common.Tools;
 
 namespace NoCrast.Server.Database.Postgres.Data.Queries;
 
-public class CoreOrganizationsQuery : CoreBaseQuery, IOrganizationsQuery
+public class CoreOrganizationsQuery : CoreDatabaseObjectQuery<Organization, CoreOrganizationsQuery>, IOrganizationsQuery
 {
-    private IQueryable<Organization> currentQuery;
-
-    public string SortedBy { get; set; }
-
-    public bool IsAsc { get; set; }
-
     private CoreOrganizationsQuery(IQueryable<Organization> q, IScopeManager logManager,
                          ITimeProvider timeProvider,
                          ApplicationDbContext dB,
                          UserProfile currentProfile)
- : base(logManager, timeProvider, dB, currentProfile)
+        : base(q, logManager, timeProvider, dB, currentProfile)
     {
-        currentQuery = q;
     }
 
     public CoreOrganizationsQuery(IScopeManager logManager,
                                      ITimeProvider timeProvider,
                                      ApplicationDbContext dB,
                                      UserProfile currentProfile)
-        : this(from o in dB.Organizations
-               select o, logManager, timeProvider, dB, currentProfile)
+        : base(logManager, timeProvider, dB, currentProfile)
     {
-
     }
 
-    public async Task AddAsync(Organization record)
-    {
-        DB.Organizations.Add(record);
-        await DB.SaveChangesAsync();
-    }
-
-    public IOrganizationsQuery ByPublicId(string id)
-    {
-        currentQuery = from o in currentQuery
-                       where o.PublicId == id
-                       select o;
-
-        return this;
-    }
+    public IOrganizationsQuery ByPublicId(string id) => ByPublicIdHelper(id);
 
     public IOrganizationsQuery ByParentId(Guid? parentId)
     {
         currentQuery = from o in currentQuery
                        where o.ParentId == parentId
                        select o;
-
         return this;
     }
 
@@ -66,7 +41,6 @@ public class CoreOrganizationsQuery : CoreBaseQuery, IOrganizationsQuery
         currentQuery = from o in currentQuery
                        where o.Path.StartsWith(pathPrefix)
                        select o;
-
         return this;
     }
 
@@ -75,7 +49,6 @@ public class CoreOrganizationsQuery : CoreBaseQuery, IOrganizationsQuery
         currentQuery = from o in currentQuery
                        where o.Type == type
                        select o;
-
         return this;
     }
 
@@ -84,7 +57,6 @@ public class CoreOrganizationsQuery : CoreBaseQuery, IOrganizationsQuery
         currentQuery = from o in currentQuery
                        where o.IsActive == isActive
                        select o;
-
         return this;
     }
 
@@ -93,7 +65,6 @@ public class CoreOrganizationsQuery : CoreBaseQuery, IOrganizationsQuery
         currentQuery = from o in currentQuery
                        where o.Level == level
                        select o;
-
         return this;
     }
 
@@ -102,46 +73,12 @@ public class CoreOrganizationsQuery : CoreBaseQuery, IOrganizationsQuery
         currentQuery = from o in currentQuery
                        where o.Code == code
                        select o;
-
         return this;
     }
 
     public IOrganizationsQuery Clone()
     {
         return new CoreOrganizationsQuery(currentQuery, LogManager, TimeProvider, DB, CurrentProfile);
-    }
-
-    public Organization CreateNew()
-    {
-        DateTime now = TimeProvider.CurrentTime;
-
-        return new Organization
-        {
-            Id = Guid.NewGuid(),
-            PublicId = IdGenerator.New(),
-            CreateDate = now,
-            UpdateDate = now,
-        };
-    }
-
-    public async Task RemoveAsync(Organization record)
-    {
-        DB.Organizations.Remove(record);
-        await DB.SaveChangesAsync();
-    }
-
-    public IQueryable<Organization> Select()
-    {
-        return (from o in currentQuery select o);
-    }
-
-    public async Task UpdateAsync(Organization record)
-    {
-        DateTime now = TimeProvider.CurrentTime;
-
-        record.UpdateDate = now;
-        DB.Organizations.Update(record);
-        await DB.SaveChangesAsync();
     }
 
     public IOrganizationsQuery Search(string search)
@@ -154,17 +91,9 @@ public class CoreOrganizationsQuery : CoreBaseQuery, IOrganizationsQuery
         return this;
     }
 
-    public IOrganizationsQuery Skip(int value)
-    {
-        currentQuery = currentQuery.Skip(value);
-        return this;
-    }
+    public IOrganizationsQuery Skip(int value) => SkipHelper(value);
 
-    public IOrganizationsQuery Take(int value)
-    {
-        currentQuery = currentQuery.Take(value);
-        return this;
-    }
+    public IOrganizationsQuery Take(int value) => TakeHelper(value);
 
     public IOrganizationsQuery SortBy(string column, bool isAsc)
     {

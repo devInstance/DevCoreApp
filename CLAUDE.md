@@ -220,6 +220,7 @@ Shared/
 
 - Run `dotnet build` before committing to verify compilation
 - Use `IdGenerator.New()` for PublicId values, never `Guid.NewGuid().ToString()`
+- Use `query.CreateNew()` to instantiate entities — never `new Entity { ... }` directly. The query's `CreateNew()` method sets `Id`, `PublicId`, `CreateDate`, `UpdateDate` (and other base fields) consistently via `IdGenerator` and `ITimeProvider`. The only exception is data seeders that run during database initialization.
 - Use LogScope (`IScopeLog`) for logging, not `ILogger`
 - Use `[AuditExclude]` on sensitive entity properties
 - Set `OrganizationId` on new business records
@@ -230,6 +231,7 @@ Shared/
 
 - Never expose `Id` (Guid PK) to the client — use `PublicId`
 - Never call `DbContext` directly from a service — use query classes
+- Never instantiate entities directly with `new Entity { ... }` — use `query.CreateNew()` instead (seeders are the only exception)
 - Never inject `DbContext` or database types into pages or controllers
 - Never add ASP.NET Core HTTP dependencies to the Database project
 - Never put business logic in entity classes — keep them as data models
