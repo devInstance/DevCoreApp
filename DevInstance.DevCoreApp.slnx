@@ -28,6 +28,8 @@
   <Folder Name="/Server/Email/">
     <Project Path="src/Server/Email/MailKit/EmailProcessor.MailKit.csproj" />
     <Project Path="src/Server/Email/Processor/EmailProcessor.csproj" />
+    <Project Path="src/Server/Email/SendGrid/EmailProcessor.SendGrid.csproj" />
+    <Project Path="src/Server/Email/Smtp/EmailProcessor.Smtp.csproj" />
   </Folder>
   <Folder Name="/Shared/">
     <Project Path="src/Shared/Model/Shared.Model.csproj" />

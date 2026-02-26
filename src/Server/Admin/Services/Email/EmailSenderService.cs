@@ -8,12 +8,12 @@ namespace DevInstance.DevCoreApp.Server.Admin.Services.Email;
 [BlazorService]
 public class EmailSenderService : IEmailSenderService
 {
-    private readonly IDevEmailSender _emailSender;
+    private readonly IEmailProvider _emailProvider;
     private readonly IScopeLog log;
 
-    public EmailSenderService(IDevEmailSender emailSender, IScopeManager logManager)
+    public EmailSenderService(IEmailProvider emailProvider, IScopeManager logManager)
     {
-        _emailSender = emailSender;
+        _emailProvider = emailProvider;
         log = logManager.CreateLogger(this);
     }
 
@@ -23,8 +23,15 @@ public class EmailSenderService : IEmailSenderService
 
         try
         {
-            await _emailSender.SendAsync(request);
-            l.I($"Email sent successfully to {string.Join(", ", request.To.Select(t => t.Address))} with subject '{request.Subject}'");
+            var result = await _emailProvider.SendAsync(request);
+            if (result.Success)
+            {
+                l.I($"Email sent successfully to {string.Join(", ", request.To.Select(t => t.Address))} with subject '{request.Subject}'");
+            }
+            else
+            {
+                l.E($"Email provider returned failure for {string.Join(", ", request.To.Select(t => t.Address))} with subject '{request.Subject}': {result.ErrorMessage}");
+            }
         }
         catch (Exception ex)
         {

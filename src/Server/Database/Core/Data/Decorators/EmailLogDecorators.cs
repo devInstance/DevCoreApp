@@ -47,7 +47,7 @@ public static class EmailLogDecorators
         return emailLog;
     }
 
-    public static EmailLog ToRecord(this EmailLog emailLog, IDevEmailMessage message, string? templateName, DateTime scheduledDate)
+    public static EmailLog ToRecord(this EmailLog emailLog, IEmailMessage message, string? templateName, DateTime scheduledDate)
     {
         emailLog.FromAddress = message.From.Address;
         emailLog.FromName = message.From.Name;

@@ -2,7 +2,7 @@ using DevInstance.DevCoreApp.Server.EmailProcessor;
 
 namespace DevInstance.DevCoreApp.Server.Admin.Services.Background.Requests;
 
-public class EmailRequest : IDevEmailMessage
+public class EmailRequest : IEmailMessage
 {
     public EmailAddress From { get; set; } = new();
     public List<EmailAddress> To { get; set; } = [];
