@@ -211,10 +211,11 @@ public class Program
         app.UseSerilogRequestLogging();
 
         app.UseStaticFiles();
-        app.UseAntiforgery();
 
         app.UseAuthentication();
         app.UseAuthorization();
+
+        app.UseAntiforgery();
 
         app.MapRazorComponents<App>()
             .AddInteractiveServerRenderMode();

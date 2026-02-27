@@ -1,0 +1,281 @@
+@page "/admin/organizations"
+@attribute [Authorize(Policy = "Admin.Organizations.Edit")]
+
+<PageTitle>Organizations</PageTitle>
+
+<div class="row mb-3">
+    <div class="col col-md-6 col-lg-4 d-flex">
+        <input class="form-control" placeholder="Search organizations..." @bind="SearchTerm" @bind:event="oninput" disabled="@Host.InProgress" />
+        <button class="btn btn-primary ms-2" @onclick="OnSearch" disabled="@Host.InProgress">
+            <i class="bi bi-search"></i>
+        </button>
+    </div>
+    <div class="col col-md-6 col-lg-8">
+        <div class="d-flex align-items-center justify-content-end gap-2">
+            <button class="btn @(ShowTreeView ? "btn-secondary" : "btn-outline-secondary")" @onclick="ToggleTreeView" disabled="@Host.InProgress">
+                <i class="bi @(ShowTreeView ? "bi-diagram-3-fill" : "bi-diagram-3") me-1"></i>Tree View
+            </button>
+            <select class="form-select" style="width: auto;" @bind="ActiveFilter" @bind:after="OnApplyFilters" disabled="@Host.InProgress">
+                <option value="">All</option>
+                <option value="true">Active</option>
+                <option value="false">Inactive</option>
+            </select>
+            <button class="btn btn-primary" @onclick="ShowCreateModal" disabled="@Host.InProgress">
+                <i class="bi bi-plus-lg me-1"></i>New Organization
+            </button>
+        </div>
+    </div>
+</div>
+
+@if (Host.IsError)
+{
+    <div class="alert alert-danger" role="alert">
+        @Host.ErrorMessage
+    </div>
+}
+
+@if (ShowTreeView)
+{
+    <div class="card">
+        <div class="card-body">
+            @if (TreeData != null && TreeData.Count > 0)
+            {
+                @RenderTreeLevel(TreeData.Where(o => o.Level == 0).ToList(), TreeData)
+            }
+            else if (!Host.InProgress)
+            {
+                <p class="text-muted">No organizations found.</p>
+            }
+            else
+            {
+                <div class="text-center py-3">
+                    <div class="spinner-border spinner-border-sm" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+else
+{
+    <HDataGrid TItem="DevInstance.DevCoreApp.Shared.Model.Organizations.OrganizationItem"
+               Data="OrgList"
+               Columns="Columns"
+               IsLoading="Host.InProgress"
+               OnSort="OnSortAsync"
+               OnPageChanged="OnPageChangedAsync"
+               OnColumnsChanged="OnColumnsChanged"
+               OnRowClick="OnRowClick">
+        <ColumnTemplates>
+            <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.Organizations.OrganizationItem" Field="name" Context="org">
+                <span style="padding-left: @(org.Level * 20)px;">
+                    @if (org.Level > 0)
+                    {
+                        <i class="bi bi-arrow-return-right text-muted me-1"></i>
+                    }
+                    @org.Name
+                </span>
+            </HColumnTemplate>
+            <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.Organizations.OrganizationItem" Field="status" Context="org">
+                @if (org.IsActive)
+                {
+                    <span class="badge bg-success">Active</span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary">Inactive</span>
+                }
+            </HColumnTemplate>
+            <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.Organizations.OrganizationItem" Field="actions" Context="org">
+                <button class="btn btn-sm btn-outline-primary me-1" title="Edit" @onclick="() => ShowEditModal(org)" @onclick:stopPropagation="true">
+                    <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-warning me-1" title="@(org.IsActive ? "Deactivate" : "Activate")" @onclick="() => OnToggleActive(org)" @onclick:stopPropagation="true">
+                    <i class="bi @(org.IsActive ? "bi-pause-circle" : "bi-play-circle")"></i>
+                </button>
+                @if (org.Level > 0)
+                {
+                    <button class="btn btn-sm btn-outline-info" title="Move" @onclick="() => ShowMoveModal(org)" @onclick:stopPropagation="true">
+                        <i class="bi bi-arrows-move"></i>
+                    </button>
+                }
+            </HColumnTemplate>
+        </ColumnTemplates>
+        <EmptyContent>
+            <p>No organizations found.</p>
+        </EmptyContent>
+        <SearchContent>
+            <div class="alert alert-light">
+                Searching for <strong>@context</strong>
+                <button type="button" class="btn-close ms-2" @onclick="OnClearSearch"></button>
+            </div>
+        </SearchContent>
+    </HDataGrid>
+
+    <GridSettings Columns="Columns" OnSave="OnSave" PageSize="pageCount" TItem="DevInstance.DevCoreApp.Shared.Model.Organizations.OrganizationItem" />
+}
+
+@* ---------- Create / Edit Modal ---------- *@
+@if (EditItem != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <EditForm Model="EditItem" OnValidSubmit="OnSaveOrg">
+                    <DataAnnotationsValidator />
+                    <div class="modal-header">
+                        <h5 class="modal-title">@(IsCreating ? "New Organization" : "Edit Organization")</h5>
+                        <button type="button" class="btn-close" @onclick="CloseEditModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <ValidationSummary class="text-danger" role="alert" />
+                        @if (IsCreating)
+                        {
+                            <div class="mb-3">
+                                <label class="form-label">Parent Organization</label>
+                                <select class="form-select" @bind="SelectedParentId">
+                                    <option value="">(Root - no parent)</option>
+                                    @if (TreeData != null)
+                                    {
+                                        @foreach (var org in TreeData.Where(o => o.IsActive))
+                                        {
+                                            <option value="@org.Id">@(new string('\u00A0', org.Level * 3))@org.Name (@org.Code)</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        }
+                        <div class="form-floating mb-3">
+                            <InputText @bind-Value="EditItem.Name" id="EditItem.Name" class="form-control" placeholder="Name" />
+                            <label for="EditItem.Name">Name</label>
+                            <ValidationMessage For="() => EditItem.Name" class="text-danger" />
+                        </div>
+                        <div class="form-floating mb-3">
+                            <InputText @bind-Value="EditItem.Code" id="EditItem.Code" class="form-control" placeholder="Code" />
+                            <label for="EditItem.Code">Code</label>
+                            <ValidationMessage For="() => EditItem.Code" class="text-danger" />
+                        </div>
+                        <div class="form-floating mb-3">
+                            <InputText @bind-Value="EditItem.Type" id="EditItem.Type" class="form-control" placeholder="Type" />
+                            <label for="EditItem.Type">Type</label>
+                            <ValidationMessage For="() => EditItem.Type" class="text-danger" />
+                        </div>
+                        <div class="form-floating mb-3">
+                            <InputNumber @bind-Value="EditItem.SortOrder" id="EditItem.SortOrder" class="form-control" placeholder="Sort Order" />
+                            <label for="EditItem.SortOrder">Sort Order</label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="CloseEditModal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" disabled="@Host.InProgress">
+                            @if (Host.InProgress)
+                            {
+                                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                            }
+                            @(IsCreating ? "Create" : "Save Changes")
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@* ---------- Move Modal ---------- *@
+@if (MoveItem != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Move "@MoveItem.Name"</h5>
+                    <button type="button" class="btn-close" @onclick="CloseMoveModal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Select a new parent organization:</p>
+                    <select class="form-select" @bind="MoveTargetId">
+                        @if (TreeData != null)
+                        {
+                            @foreach (var org in TreeData.Where(o => o.IsActive && o.Id != MoveItem.Id && !o.Path.StartsWith(MoveItem.Path + "/")))
+                            {
+                                <option value="@org.Id">@(new string('\u00A0', org.Level * 3))@org.Name (@org.Code)</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseMoveModal">Cancel</button>
+                    <button type="button" class="btn btn-primary" @onclick="OnConfirmMove" disabled="@(Host.InProgress || string.IsNullOrEmpty(MoveTargetId))">
+                        @if (Host.InProgress)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                        }
+                        Move
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private RenderFragment RenderTreeLevel(List<DevInstance.DevCoreApp.Shared.Model.Organizations.OrganizationItem> roots, List<DevInstance.DevCoreApp.Shared.Model.Organizations.OrganizationItem> allOrgs) => __builder =>
+    {
+        <ul class="list-unstyled mb-0">
+            @foreach (var org in roots.OrderBy(o => o.SortOrder).ThenBy(o => o.Name))
+            {
+                var children = allOrgs.Where(o => o.ParentId == org.Id).ToList();
+                var isExpanded = ExpandedNodes.Contains(org.Id);
+                <li class="py-1">
+                    <div class="d-flex align-items-center @(!org.IsActive ? "text-muted" : "")">
+                        @if (children.Count > 0)
+                        {
+                            <button class="btn btn-sm btn-link p-0 me-1" @onclick="() => ToggleNode(org.Id)">
+                                <i class="bi @(isExpanded ? "bi-chevron-down" : "bi-chevron-right")"></i>
+                            </button>
+                        }
+                        else
+                        {
+                            <span class="me-3"></span>
+                        }
+                        <i class="bi @(org.Level == 0 ? "bi-building" : "bi-diagram-3") me-2"></i>
+                        <span class="fw-medium me-2">@org.Name</span>
+                        <span class="text-muted small me-2">(@org.Code)</span>
+                        @if (!string.IsNullOrEmpty(org.Type))
+                        {
+                            <span class="badge bg-light text-dark me-2">@org.Type</span>
+                        }
+                        @if (!org.IsActive)
+                        {
+                            <span class="badge bg-secondary me-2">Inactive</span>
+                        }
+                        <div class="ms-auto">
+                            <button class="btn btn-sm btn-outline-primary me-1" title="Edit" @onclick="() => ShowEditModal(org)">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-success me-1" title="Add Child" @onclick="() => ShowCreateChildModal(org)">
+                                <i class="bi bi-plus"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-warning me-1" title="@(org.IsActive ? "Deactivate" : "Activate")" @onclick="() => OnToggleActive(org)">
+                                <i class="bi @(org.IsActive ? "bi-pause-circle" : "bi-play-circle")"></i>
+                            </button>
+                            @if (org.Level > 0)
+                            {
+                                <button class="btn btn-sm btn-outline-info" title="Move" @onclick="() => ShowMoveModal(org)">
+                                    <i class="bi bi-arrows-move"></i>
+                                </button>
+                            }
+                        </div>
+                    </div>
+                    @if (isExpanded && children.Count > 0)
+                    {
+                        <div class="ms-4">
+                            @RenderTreeLevel(children, allOrgs)
+                        </div>
+                    }
+                </li>
+            }
+        </ul>
+    };
+}

@@ -67,6 +67,7 @@ public class PermissionSeeder : IDataSeeder
         await _db.SaveChangesAsync(cancellationToken);
 
         // 2. Ensure system roles exist
+        await EnsureSystemRoleAsync("Owner", "Super-admin with all permissions");
         await EnsureSystemRoleAsync("Admin", "Full administrative access to all features");
         await EnsureSystemRoleAsync("User", "Basic read-only access");
 
@@ -75,6 +76,7 @@ public class PermissionSeeder : IDataSeeder
         var permissionsByKey = await _db.Permissions
             .ToDictionaryAsync(p => p.Key, cancellationToken);
 
+        await SyncRolePermissionsAsync("Owner", allKeys, permissionsByKey, cancellationToken);
         await SyncRolePermissionsAsync("Admin", allKeys, permissionsByKey, cancellationToken);
 
         var userPermissionKeys = allKeys
