@@ -49,6 +49,15 @@ public class CoreUserProfilesQuery : CoreDatabaseObjectQuery<UserProfile, CoreUs
         return this;
     }
 
+    public IUserProfilesQuery ByOrganizationId(Guid organizationId)
+    {
+        currentQuery = from pr in currentQuery
+                       join uo in DB.UserOrganizations on pr.ApplicationUserId equals uo.UserId
+                       where uo.OrganizationId == organizationId
+                       select pr;
+        return this;
+    }
+
     public IUserProfilesQuery Search(string search)
     {
         currentQuery = from profile in currentQuery

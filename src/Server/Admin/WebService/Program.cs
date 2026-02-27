@@ -8,6 +8,7 @@ using DevInstance.DevCoreApp.Server.Admin.Services.Notifications;
 using DevInstance.DevCoreApp.Server.Admin.Services.Notifications.Templates;
 using DevInstance.DevCoreApp.Server.Admin.Services.Seeding;
 using DevInstance.DevCoreApp.Server.Admin.Services.UserAdmin;
+using DevInstance.DevCoreApp.Server.Admin.WebService.Hubs;
 using DevInstance.DevCoreApp.Server.Admin.WebService.Identity;
 using DevInstance.DevCoreApp.Server.Admin.WebService.Logging;
 using DevInstance.DevCoreApp.Server.Admin.WebService.Health;
@@ -117,6 +118,21 @@ public class Program
                     Encoding.UTF8.GetBytes(jwtSection["Secret"]!)),
                 ClockSkew = TimeSpan.FromMinutes(1),
             };
+
+            // SignalR sends JWT as a query parameter ("access_token") for WebSocket connections
+            options.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = context =>
+                {
+                    var accessToken = context.Request.Query["access_token"];
+                    var path = context.HttpContext.Request.Path;
+                    if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                    {
+                        context.Token = accessToken;
+                    }
+                    return Task.CompletedTask;
+                }
+            };
         });
 
         AddDatabase(builder.Services, builder.Configuration);
@@ -150,6 +166,9 @@ public class Program
         builder.Services.AddBlazorServicesMocks(typeof(UserProfileServiceMock).Assembly);
         builder.Services.AddBlazorServicesMocks(typeof(UserProfileService).Assembly);
 #endif
+
+        builder.Services.AddSignalR();
+        builder.Services.AddScoped<INotificationHubService, NotificationHubService>();
 
         builder.Services.AddControllers();
         builder.Services.AddMailKit(builder.Configuration);
@@ -198,6 +217,7 @@ public class Program
             .AddInteractiveServerRenderMode();
 
         app.MapControllers();
+        app.MapHub<NotificationHub>("/hubs/notifications");
         // Add additional endpoints required by the Identity /Account Razor components.
         app.MapAdditionalIdentityEndpoints();
 

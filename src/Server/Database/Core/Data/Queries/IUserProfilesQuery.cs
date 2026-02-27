@@ -14,4 +14,5 @@ public interface IUserProfilesQuery : IModelQuery<UserProfile, IUserProfilesQuer
 
     IUserProfilesQuery ByLastName(string lastName);
     IUserProfilesQuery ByApplicationUserId(Guid id);
+    IUserProfilesQuery ByOrganizationId(Guid organizationId);
 }
