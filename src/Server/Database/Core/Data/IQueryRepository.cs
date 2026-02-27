@@ -16,4 +16,5 @@ public interface IQueryRepository
     INotificationTemplateQuery GetNotificationTemplateQuery(UserProfile currentProfile);
     INotificationQuery GetNotificationQuery(UserProfile currentProfile);
     IUserNotificationPreferenceQuery GetUserNotificationPreferenceQuery(UserProfile currentProfile);
+    IFileRecordQuery GetFileRecordQuery(UserProfile currentProfile);
 }

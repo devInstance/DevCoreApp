@@ -17,6 +17,8 @@
 	  <ProjectReference Include="..\..\Database\SqlServer\SqlServer.csproj" />
 	  <ProjectReference Include="..\..\Email\Processor\EmailProcessor.csproj" />
 	  <ProjectReference Include="..\..\Email\MailKit\EmailProcessor.MailKit.csproj" />
+	  <ProjectReference Include="..\..\Storage\Processor\StorageProcessor.csproj" />
+	  <ProjectReference Include="..\..\Storage\Local\StorageProcessor.Local.csproj" />
 
 	  <PackageReference Include="DevInstance.BlazorToolkit" Version="10.1.2" />
 	  <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.16.0" />

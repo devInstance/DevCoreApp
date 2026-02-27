@@ -20,6 +20,7 @@ using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Server.Database.Postgres;
 using DevInstance.DevCoreApp.Server.Database.SqlServer;
 using DevInstance.DevCoreApp.Server.EmailProcessor.MailKit;
+using DevInstance.DevCoreApp.Server.StorageProcessor.Local;
 using DevInstance.DevCoreApp.Shared.Model.Authentication;
 using DevInstance.DevCoreApp.Shared.Utils;
 using DevInstance.LogScope.Extensions.SerilogLogger;
@@ -173,6 +174,7 @@ public class Program
 
         builder.Services.AddControllers();
         builder.Services.AddMailKit(builder.Configuration);
+        builder.Services.AddLocalFileStorage(builder.Configuration);
         builder.Services.AddSingleton<IEmailTemplateService, EmailTemplateService>(); //TODO: use webservice toolkit for it
         builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityEmailSender>();
         builder.Services.AddLocalization();

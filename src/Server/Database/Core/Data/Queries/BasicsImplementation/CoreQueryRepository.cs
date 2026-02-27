@@ -79,4 +79,9 @@ public abstract class CoreQueryRepository : IQueryRepository
     {
         return new CoreUserNotificationPreferenceQuery(LogManager, TimeProvider, DB, currentProfile);
     }
+
+    public IFileRecordQuery GetFileRecordQuery(UserProfile currentProfile)
+    {
+        return new CoreFileRecordQuery(LogManager, TimeProvider, DB, currentProfile);
+    }
 }

@@ -31,6 +31,11 @@
     <Project Path="src/Server/Email/SendGrid/EmailProcessor.SendGrid.csproj" />
     <Project Path="src/Server/Email/Smtp/EmailProcessor.Smtp.csproj" />
   </Folder>
+  <Folder Name="/Server/Storage/">
+    <Project Path="src/Server/Storage/Processor/StorageProcessor.csproj" />
+    <Project Path="src/Server/Storage/Local/StorageProcessor.Local.csproj" />
+    <Project Path="src/Server/Storage/S3/StorageProcessor.S3.csproj" />
+  </Folder>
   <Folder Name="/Shared/">
     <Project Path="src/Shared/Model/Shared.Model.csproj" />
     <Project Path="src/Shared/Utils/Shared.Utils.csproj" />

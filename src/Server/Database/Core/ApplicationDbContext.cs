@@ -2,6 +2,7 @@ using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using DevInstance.DevCoreApp.Server.Database.Core.Models.BackgroundTasks;
 using DevInstance.DevCoreApp.Server.Database.Core.Models.Base;
+using DevInstance.DevCoreApp.Server.Database.Core.Models.Files;
 using DevInstance.DevCoreApp.Server.Database.Core.Models.Notifications;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -34,6 +35,7 @@ public abstract class ApplicationDbContext : IdentityDbContext<ApplicationUser, 
     public DbSet<NotificationTemplate> NotificationTemplates { get; set; }
     public DbSet<Notification> Notifications { get; set; }
     public DbSet<UserNotificationPreference> UserNotificationPreferences { get; set; }
+    public DbSet<FileRecord> FileRecords { get; set; }
 
     public ApplicationDbContext(DbContextOptions options, IOperationContext operationContext)
             : base(options)
@@ -283,6 +285,26 @@ public abstract class ApplicationDbContext : IdentityDbContext<ApplicationUser, 
                 .IsUnique();
 
             entity.HasIndex(p => p.OrganizationId);
+        });
+
+        builder.Entity<FileRecord>(entity =>
+        {
+            entity.HasOne(fr => fr.CreatedBy)
+                .WithMany()
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(fr => fr.UpdatedBy)
+                .WithMany()
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(fr => fr.Organization)
+                .WithMany()
+                .HasForeignKey(fr => fr.OrganizationId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(fr => fr.OrganizationId);
+            entity.HasIndex(fr => new { fr.EntityType, fr.EntityId });
+            entity.HasIndex(fr => fr.StorageProvider);
         });
 
         ApplyOrganizationQueryFilters(builder);
