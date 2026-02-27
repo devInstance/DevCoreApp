@@ -14,7 +14,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="DevInstance.LogScope.Extensions.MicrosoftLogger" Version="10.0.0" />
+		<PackageReference Include="DevInstance.LogScope.Extensions.SerilogLogger" Version="10.1.0" />
 		<PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
 		<PackageReference Include="Serilog.Sinks.PostgreSQL" Version="2.3.0" />
 		<PackageReference Include="DevInstance.WebServiceToolkit" Version="10.1.0" />

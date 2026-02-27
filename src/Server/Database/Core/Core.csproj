@@ -11,7 +11,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="DevInstance.LogScope" Version="10.0.0" />
+		<PackageReference Include="DevInstance.LogScope" Version="10.1.0" />
 		<PackageReference Include="DevInstance.WebServiceToolkit.Database" Version="10.0.2" />
 		<PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.3" />
 		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.3" />

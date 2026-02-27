@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
-namespace DevInstance.DevCoreApp.Server.Admin.Services.BackgroundTasks;
+namespace DevInstance.DevCoreApp.Server.Admin.Services.Background.Tasks;
 
 public class BackgroundTaskWorker : IBackgroundTaskWorker
 {
@@ -37,11 +37,15 @@ public class BackgroundTaskWorker : IBackgroundTaskWorker
 
     public void Enqueue(Guid backgroundTaskId)
     {
+        using var l = _log.TraceScope();
+
         _immediateQueue.Enqueue(backgroundTaskId);
     }
 
     public async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        using var l = _log.TraceScope();
+
         _concurrencySemaphore = new SemaphoreSlim(_settings.MaxConcurrency, _settings.MaxConcurrency);
 
         await RecoverStuckTasksAsync();
@@ -168,6 +172,8 @@ public class BackgroundTaskWorker : IBackgroundTaskWorker
 
     private async Task ProcessTaskAsync(Guid taskId, CancellationToken cancellationToken)
     {
+        using var l = _log.TraceScope();
+
         using var scope = _scopeFactory.CreateScope();
         var operationContext = scope.ServiceProvider.GetRequiredService<BackgroundOperationContext>();
         operationContext.Reset();

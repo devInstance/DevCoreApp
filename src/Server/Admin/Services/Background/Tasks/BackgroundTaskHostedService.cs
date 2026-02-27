@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Hosting;
 
-namespace DevInstance.DevCoreApp.Server.Admin.Services.BackgroundTasks;
+namespace DevInstance.DevCoreApp.Server.Admin.Services.Background.Tasks;
 
 public class BackgroundTaskHostedService : BackgroundService
 {

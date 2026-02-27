@@ -7,7 +7,7 @@ using DevInstance.LogScope;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace DevInstance.DevCoreApp.Server.Admin.Services.BackgroundTasks.Handlers;
+namespace DevInstance.DevCoreApp.Server.Admin.Services.Background.Tasks.Handlers;
 
 public class SendEmailTaskHandler : IBackgroundTaskHandler
 {

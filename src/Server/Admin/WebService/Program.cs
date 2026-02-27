@@ -2,8 +2,8 @@ using System.Text;
 using DevInstance.BlazorToolkit.Tools;
 using DevInstance.DevCoreApp.Server.Admin.Services.Authentication;
 using DevInstance.DevCoreApp.Server.Admin.Services.Background;
-using DevInstance.DevCoreApp.Server.Admin.Services.BackgroundTasks;
-using DevInstance.DevCoreApp.Server.Admin.Services.BackgroundTasks.Handlers;
+using DevInstance.DevCoreApp.Server.Admin.Services.Background.Tasks;
+using DevInstance.DevCoreApp.Server.Admin.Services.Background.Tasks.Handlers;
 using DevInstance.DevCoreApp.Server.Admin.Services.Notifications;
 using DevInstance.DevCoreApp.Server.Admin.Services.Notifications.Templates;
 using DevInstance.DevCoreApp.Server.Admin.Services.Seeding;
@@ -22,7 +22,7 @@ using DevInstance.DevCoreApp.Server.Database.SqlServer;
 using DevInstance.DevCoreApp.Server.EmailProcessor.MailKit;
 using DevInstance.DevCoreApp.Shared.Model.Authentication;
 using DevInstance.DevCoreApp.Shared.Utils;
-using DevInstance.LogScope.Extensions.MicrosoftLogger;
+using DevInstance.LogScope.Extensions.SerilogLogger;
 using DevInstance.LogScope.Formatters;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -60,10 +60,11 @@ public class Program
         builder.Services.AddHostedService(sp => sp.GetRequiredService<BackgroundWorker>());
 
         builder.Services.AddScoped<ITimeProvider, TimeProvider>();
+
 #if DEBUG
-        builder.Services.AddMicrosoftScopeLogging(DevInstance.LogScope.LogLevel.TRACE, "LScope", new DefaultFormattersOptions { ShowTimestamp = true, ShowThreadNumber = true });
+        builder.Services.AddSerilogScopeLogging(LogScope.LogLevel.TRACE, new DefaultFormattersOptions { ShowThreadNumber = true });
 #else
-        builder.Services.AddMicrosoftScopeLogging(DevInstance.LogScope.LogLevel.INFO, "LScope");
+        builder.Services.AddSerilogScopeLogging(LogScope.LogLevel.INFO);
 #endif
 
 

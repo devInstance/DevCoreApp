@@ -1,6 +1,6 @@
 using System.Text.Json;
 using DevInstance.DevCoreApp.Server.Admin.Services.Background.Requests;
-using DevInstance.DevCoreApp.Server.Admin.Services.BackgroundTasks;
+using DevInstance.DevCoreApp.Server.Admin.Services.Background.Tasks;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Server.Database.Core.Data.Decorators;
 using DevInstance.DevCoreApp.Shared.Model.Common;
@@ -31,6 +31,8 @@ public class BackgroundWorker : BackgroundService, IBackgroundWorker
 
     public async Task SubmitAsync(BackgroundRequestItem item)
     {
+        using var log = _log.TraceScope();
+
         using var scope = _scopeFactory.CreateScope();
         var operationContext = scope.ServiceProvider.GetRequiredService<BackgroundOperationContext>();
         operationContext.Reset();
@@ -68,6 +70,8 @@ public class BackgroundWorker : BackgroundService, IBackgroundWorker
 
     public void Submit(BackgroundRequestItem item)
     {
+        using var log = _log.TraceScope();
+
         _ = Task.Run(async () =>
         {
             try
@@ -83,6 +87,7 @@ public class BackgroundWorker : BackgroundService, IBackgroundWorker
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        using var log = _log.TraceScope();
         return _taskWorker.ExecuteAsync(stoppingToken);
     }
 

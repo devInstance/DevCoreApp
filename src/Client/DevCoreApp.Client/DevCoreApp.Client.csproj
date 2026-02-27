@@ -14,7 +14,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="DevInstance.BlazorToolkit" Version="10.1.2" />
-		<PackageReference Include="DevInstance.LogScope.NET" Version="10.0.0" />
+		<PackageReference Include="DevInstance.LogScope.NET" Version="10.1.0" />
 		<PackageReference Include="FluentValidation" Version="12.1.1" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="10.0.3" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.3" />

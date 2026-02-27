@@ -21,7 +21,8 @@
       "Bash(cd:*)",
       "Bash(dotnet tool:*)",
       "Bash(dotnet list:*)",
-      "Bash(dotnet-ildasm:*)"
+      "Bash(dotnet-ildasm:*)",
+      "Bash(mkdir:*)"
     ]
   }
 }

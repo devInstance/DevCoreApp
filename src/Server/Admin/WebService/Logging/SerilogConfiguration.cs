@@ -30,7 +30,7 @@ public static class SerilogConfiguration
         if (builder.Environment.IsDevelopment())
         {
             loggerConfig
-                .MinimumLevel.Debug()
+                .MinimumLevel.Verbose() // Allow more verbose logging in development
                 .WriteTo.Console(
                     outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {CorrelationId} {Message:lj}{NewLine}{Exception}");
         }
