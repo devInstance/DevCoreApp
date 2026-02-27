@@ -2,6 +2,7 @@ using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using DevInstance.DevCoreApp.Server.Database.Core.Models.BackgroundTasks;
 using DevInstance.DevCoreApp.Server.Database.Core.Models.Base;
+using DevInstance.DevCoreApp.Server.Database.Core.Models.Notifications;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -30,6 +31,9 @@ public abstract class ApplicationDbContext : IdentityDbContext<ApplicationUser, 
     public DbSet<ApplicationLog> ApplicationLogs { get; set; }
     public DbSet<BackgroundTask> BackgroundTasks { get; set; }
     public DbSet<BackgroundTaskLog> BackgroundTaskLogs { get; set; }
+    public DbSet<NotificationTemplate> NotificationTemplates { get; set; }
+    public DbSet<Notification> Notifications { get; set; }
+    public DbSet<UserNotificationPreference> UserNotificationPreferences { get; set; }
 
     public ApplicationDbContext(DbContextOptions options, IOperationContext operationContext)
             : base(options)
@@ -236,6 +240,49 @@ public abstract class ApplicationDbContext : IdentityDbContext<ApplicationUser, 
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasIndex(btl => btl.BackgroundTaskId);
+        });
+
+        builder.Entity<NotificationTemplate>(entity =>
+        {
+            entity.HasIndex(nt => nt.Name)
+                .IsUnique();
+        });
+
+        builder.Entity<Notification>(entity =>
+        {
+            entity.HasOne(n => n.User)
+                .WithMany()
+                .HasForeignKey(n => n.UserProfileId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(n => n.Organization)
+                .WithMany()
+                .HasForeignKey(n => n.OrganizationId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(n => n.UserProfileId);
+            entity.HasIndex(n => n.IsRead);
+            entity.HasIndex(n => n.CreateDate);
+            entity.HasIndex(n => n.GroupKey);
+            entity.HasIndex(n => n.OrganizationId);
+        });
+
+        builder.Entity<UserNotificationPreference>(entity =>
+        {
+            entity.HasOne(p => p.User)
+                .WithMany()
+                .HasForeignKey(p => p.UserProfileId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(p => p.Organization)
+                .WithMany()
+                .HasForeignKey(p => p.OrganizationId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(p => new { p.UserProfileId, p.NotificationCategory })
+                .IsUnique();
+
+            entity.HasIndex(p => p.OrganizationId);
         });
 
         ApplyOrganizationQueryFilters(builder);

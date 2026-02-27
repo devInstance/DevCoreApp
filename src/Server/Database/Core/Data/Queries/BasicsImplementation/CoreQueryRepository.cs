@@ -64,4 +64,19 @@ public abstract class CoreQueryRepository : IQueryRepository
     {
         return new CoreBackgroundTaskLogQuery(LogManager, TimeProvider, DB, currentProfile);
     }
+
+    public INotificationTemplateQuery GetNotificationTemplateQuery(UserProfile currentProfile)
+    {
+        return new CoreNotificationTemplateQuery(LogManager, TimeProvider, DB, currentProfile);
+    }
+
+    public INotificationQuery GetNotificationQuery(UserProfile currentProfile)
+    {
+        return new CoreNotificationQuery(LogManager, TimeProvider, DB, currentProfile);
+    }
+
+    public IUserNotificationPreferenceQuery GetUserNotificationPreferenceQuery(UserProfile currentProfile)
+    {
+        return new CoreUserNotificationPreferenceQuery(LogManager, TimeProvider, DB, currentProfile);
+    }
 }

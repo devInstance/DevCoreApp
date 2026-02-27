@@ -13,4 +13,7 @@ public interface IQueryRepository
     ISettingsQuery GetSettingsQuery(UserProfile currentProfile);
     IBackgroundTaskQuery GetBackgroundTaskQuery(UserProfile currentProfile);
     IBackgroundTaskLogQuery GetBackgroundTaskLogQuery(UserProfile currentProfile);
+    INotificationTemplateQuery GetNotificationTemplateQuery(UserProfile currentProfile);
+    INotificationQuery GetNotificationQuery(UserProfile currentProfile);
+    IUserNotificationPreferenceQuery GetUserNotificationPreferenceQuery(UserProfile currentProfile);
 }
