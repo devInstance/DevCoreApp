@@ -1,0 +1,57 @@
+@using DevInstance.DevCoreApp.Shared.Model.Roles
+
+@if (groupedPermissions != null)
+{
+    @foreach (var module in groupedPermissions)
+    {
+        <div class="card mb-3">
+            <div class="card-header d-flex align-items-center">
+                <strong class="flex-grow-1">@module.Key</strong>
+                @if (!ReadOnly)
+                {
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox"
+                               id="selectall-@module.Key"
+                               checked="@IsModuleFullySelected(module.Key)"
+                               @onchange="(e) => OnToggleModule(module.Key, (bool)(e.Value ?? false))" />
+                        <label class="form-check-label small" for="selectall-@module.Key">Select All</label>
+                    </div>
+                }
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-sm table-bordered mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 200px;">Entity</th>
+                            @foreach (var action in GetModuleActions(module.Key))
+                            {
+                                <th class="text-center" style="width: 120px;">@action</th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var entity in module.Value)
+                        {
+                            <tr>
+                                <td>@entity.Key</td>
+                                @foreach (var action in GetModuleActions(module.Key))
+                                {
+                                    var permission = entity.Value.FirstOrDefault(p => p.Action == action);
+                                    <td class="text-center">
+                                        @if (permission != null)
+                                        {
+                                            <input class="form-check-input" type="checkbox"
+                                                   checked="@IsSelected(permission.Key)"
+                                                   disabled="@ReadOnly"
+                                                   @onchange="(e) => OnTogglePermission(permission.Key, (bool)(e.Value ?? false))" />
+                                        }
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+}

@@ -1,0 +1,207 @@
+@page "/admin/roles"
+@attribute [Authorize(Policy = "Admin.Roles.Edit")]
+
+<PageTitle>Roles</PageTitle>
+
+<div class="row mb-3">
+    <div class="col col-md-6 col-lg-4 d-flex">
+        <input class="form-control" placeholder="Search roles..." @bind="SearchTerm" @bind:event="oninput" disabled="@Host.InProgress" />
+        <button class="btn btn-primary ms-2" @onclick="OnSearch" disabled="@Host.InProgress">
+            <i class="bi bi-search"></i>
+        </button>
+    </div>
+    <div class="col col-md-6 col-lg-8">
+        <div class="float-end">
+            <button class="btn btn-primary" @onclick="ShowCreateModal" disabled="@Host.InProgress">
+                <i class="bi bi-plus-lg me-1"></i>New Role
+            </button>
+        </div>
+    </div>
+</div>
+
+@if (Host.IsError)
+{
+    <div class="alert alert-danger" role="alert">
+        @Host.ErrorMessage
+    </div>
+}
+
+<HDataGrid TItem="DevInstance.DevCoreApp.Shared.Model.Roles.RoleItem"
+           Data="RoleList"
+           Columns="Columns"
+           IsLoading="Host.InProgress"
+           OnSort="OnSortAsync"
+           OnPageChanged="OnPageChangedAsync"
+           OnColumnsChanged="OnColumnsChanged"
+           OnRowClick="OnRowClick">
+    <ColumnTemplates>
+        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.Roles.RoleItem" Field="name" Context="role">
+            @role.Name
+            @if (role.IsSystemRole)
+            {
+                <span class="badge bg-info ms-1">System</span>
+            }
+        </HColumnTemplate>
+        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.Roles.RoleItem" Field="actions" Context="role">
+            <button class="btn btn-sm btn-outline-primary me-1" title="Edit" @onclick="() => ShowEditModal(role)" @onclick:stopPropagation="true">
+                <i class="bi bi-pencil"></i>
+            </button>
+            @if (!role.IsSystemRole)
+            {
+                <button class="btn btn-sm btn-outline-danger" title="Delete" @onclick="() => ShowDeleteConfirmation(role)" @onclick:stopPropagation="true">
+                    <i class="bi bi-trash"></i>
+                </button>
+            }
+        </HColumnTemplate>
+    </ColumnTemplates>
+    <EmptyContent>
+        <p>No roles found.</p>
+    </EmptyContent>
+    <SearchContent>
+        <div class="alert alert-light">
+            Searching for <strong>@context</strong>
+            <button type="button" class="btn-close ms-2" @onclick="OnClearSearch"></button>
+        </div>
+    </SearchContent>
+</HDataGrid>
+
+<GridSettings Columns="Columns" OnSave="OnSave" PageSize="pageCount" TItem="DevInstance.DevCoreApp.Shared.Model.Roles.RoleItem" />
+
+@* ---------- Create Modal ---------- *@
+@if (showCreateModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <EditForm Model="CreateItem" OnValidSubmit="OnCreateRole">
+                    <DataAnnotationsValidator />
+                    <div class="modal-header">
+                        <h5 class="modal-title">New Role</h5>
+                        <button type="button" class="btn-close" @onclick="CloseCreateModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <ValidationSummary class="text-danger" role="alert" />
+                        <div class="form-floating mb-3">
+                            <InputText @bind-Value="CreateItem.Name" id="CreateItem.Name" class="form-control" placeholder="Name" />
+                            <label for="CreateItem.Name">Name</label>
+                            <ValidationMessage For="() => CreateItem.Name" class="text-danger" />
+                        </div>
+                        <div class="form-floating mb-3">
+                            <InputText @bind-Value="CreateItem.Description" id="CreateItem.Description" class="form-control" placeholder="Description" />
+                            <label for="CreateItem.Description">Description</label>
+                            <ValidationMessage For="() => CreateItem.Description" class="text-danger" />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="CloseCreateModal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" disabled="@Host.InProgress">
+                            @if (Host.InProgress)
+                            {
+                                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                            }
+                            Create
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@* ---------- Edit + Permissions Modal ---------- *@
+@if (EditingRole != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <EditForm Model="EditingRole" OnValidSubmit="SaveRoleAndPermissions">
+                    <DataAnnotationsValidator />
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit Role: @EditingRole.Name</h5>
+                        <button type="button" class="btn-close" @onclick="CloseEditModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <ValidationSummary class="text-danger" role="alert" />
+
+                        @if (EditingRole.IsSystemRole)
+                        {
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-1"></i>
+                                This is a system role. Its name and permissions are managed automatically.
+                                Only the description can be edited.
+                            </div>
+                        }
+
+                        <div class="form-floating mb-3">
+                            <InputText @bind-Value="EditingRole.Name" id="EditingRole.Name" class="form-control" placeholder="Name"
+                                       disabled="@EditingRole.IsSystemRole" />
+                            <label for="EditingRole.Name">Name</label>
+                            <ValidationMessage For="() => EditingRole.Name" class="text-danger" />
+                        </div>
+                        <div class="form-floating mb-3">
+                            <InputText @bind-Value="EditingRole.Description" id="EditingRole.Description" class="form-control" placeholder="Description" />
+                            <label for="EditingRole.Description">Description</label>
+                            <ValidationMessage For="() => EditingRole.Description" class="text-danger" />
+                        </div>
+
+                        <h6 class="mt-4 mb-3">Permissions</h6>
+
+                        @if (allPermissions != null)
+                        {
+                            <PermissionGrid AllPermissions="allPermissions"
+                                            @bind-SelectedKeys="selectedPermissionKeys"
+                                            ReadOnly="EditingRole.IsSystemRole" />
+                        }
+                        else
+                        {
+                            <div class="text-center py-3">
+                                <div class="spinner-border spinner-border-sm" role="status">
+                                    <span class="visually-hidden">Loading permissions...</span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="CloseEditModal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" disabled="@Host.InProgress">
+                            @if (Host.InProgress)
+                            {
+                                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                            }
+                            Save Changes
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@* ---------- Delete Confirmation Modal ---------- *@
+@if (DeletingRole != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Delete</h5>
+                    <button type="button" class="btn-close" @onclick="CancelDelete"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete role <strong>@DeletingRole.Name</strong>?</p>
+                    <p class="text-danger">This will remove all permission assignments for this role. This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CancelDelete">Cancel</button>
+                    <button type="button" class="btn btn-danger" @onclick="ConfirmDelete" disabled="@Host.InProgress">
+                        @if (Host.InProgress)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                        }
+                        Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
