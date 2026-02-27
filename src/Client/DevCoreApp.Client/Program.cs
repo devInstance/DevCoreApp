@@ -3,6 +3,7 @@ using DevInstance.BlazorToolkit.Tools;
 using DevInstance.DevCoreApp.Client.Services;
 using DevInstance.DevCoreApp.Client.Services.Net;
 using DevInstance.DevCoreApp.Client.Services.Net.Api;
+using DevInstance.DevCoreApp.Client.Services.Notifications;
 using DevInstance.DevCoreApp.Shared.Utils;
 using DevInstance.LogScope.Extensions;
 using DevInstance.LogScope.Formatters;
@@ -44,6 +45,7 @@ public class Program
             );
 
         builder.Services.AddNetApi();
+        builder.Services.AddNotificationHub();
 
         builder.Services.AddBlazorServices();//TODO: add service asssembly reference
 
