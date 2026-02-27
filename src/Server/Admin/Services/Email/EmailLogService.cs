@@ -61,10 +61,9 @@ public class EmailLogService : BaseService, IEmailLogService
             query = query.ByDateRange(startDate, endDate);
         }
 
-        if (!string.IsNullOrEmpty(sortField))
-        {
-            query = query.SortBy(sortField, isAsc ?? true);
-        }
+        query = !string.IsNullOrEmpty(sortField)
+            ? query.SortBy(sortField, isAsc ?? true)
+            : query.SortBy("scheduleddate", false);
 
         var totalCount = await query.Clone().Select().CountAsync();
         var emailLogs = await query.Paginate(top, page).Select().ToListAsync();
