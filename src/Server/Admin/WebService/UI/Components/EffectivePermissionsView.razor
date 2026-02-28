@@ -1,0 +1,74 @@
+@using DevInstance.DevCoreApp.Shared.Model.UserAdmin
+
+@if (Permissions == null)
+{
+    <div class="text-center py-3">
+        <div class="spinner-border spinner-border-sm" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+}
+else if (Permissions.Count == 0)
+{
+    <div class="alert alert-info">No permissions defined.</div>
+}
+else
+{
+    @foreach (var module in groupedPermissions)
+    {
+        <div class="card mb-3">
+            <div class="card-header">
+                <strong>@module.Key</strong>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-sm table-bordered mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 200px;">Entity</th>
+                            @foreach (var action in GetModuleActions(module.Key))
+                            {
+                                <th class="text-center" style="width: 140px;">@action</th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var entity in module.Value)
+                        {
+                            <tr>
+                                <td>@entity.Key</td>
+                                @foreach (var action in GetModuleActions(module.Key))
+                                {
+                                    var perm = entity.Value.FirstOrDefault(p => p.Action == action);
+                                    <td class="text-center">
+                                        @if (perm != null)
+                                        {
+                                            @if (perm.IsGranted)
+                                            {
+                                                <span class="text-success" title="@perm.Source">
+                                                    <i class="bi bi-check-circle-fill"></i>
+                                                </span>
+                                            }
+                                            else if (perm.Source.StartsWith("Override: Denied"))
+                                            {
+                                                <span class="text-danger" title="@perm.Source">
+                                                    <i class="bi bi-x-circle-fill"></i>
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted" title="@perm.Source">
+                                                    <i class="bi bi-dash"></i>
+                                                </span>
+                                            }
+                                            <div class="small text-muted" style="font-size: 0.7rem;">@perm.Source</div>
+                                        }
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+}

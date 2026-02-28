@@ -4,6 +4,9 @@ using DevInstance.BlazorToolkit.Tools;
 using DevInstance.DevCoreApp.Server.Admin.Services.Authentication;
 using DevInstance.DevCoreApp.Server.Admin.Services.UserAdmin;
 using DevInstance.DevCoreApp.Shared.Model;
+using DevInstance.DevCoreApp.Shared.Model.Common;
+using DevInstance.DevCoreApp.Shared.Model.Permissions;
+using DevInstance.DevCoreApp.Shared.Model.UserAdmin;
 using DevInstance.WebServiceToolkit.Common.Model;
 using DevInstance.WebServiceToolkit.Common.Tools;
 
@@ -15,12 +18,31 @@ public class UserProfileServiceMock : IUserProfileService
     const int TotalCount = 100;
     List<UserProfileItem> modelList = new List<UserProfileItem>();
 
+    private Dictionary<string, List<UserOrganizationItem>> userOrganizations = new();
+    private Dictionary<string, List<PermissionOverrideItem>> userOverrides = new();
+
+    private readonly List<(string Id, string Name, string Path)> mockOrgs = new()
+    {
+        ("org-root", "Acme Corp", "Acme Corp"),
+        ("org-east", "East Region", "Acme Corp / East Region"),
+        ("org-west", "West Region", "Acme Corp / West Region"),
+        ("org-ny", "New York Office", "Acme Corp / East Region / New York Office"),
+        ("org-boston", "Boston Office", "Acme Corp / East Region / Boston Office")
+    };
+
     private int delay = 500;
 
     public UserProfileServiceMock()
     {
         var faker = CreateFaker();
         modelList = faker.Generate(TotalCount);
+
+        // Seed first user with org assignment
+        var firstUser = modelList.First();
+        userOrganizations[firstUser.Id] = new List<UserOrganizationItem>
+        {
+            new() { OrganizationId = "org-root", OrganizationName = "Acme Corp", OrganizationPath = "Acme Corp", Scope = OrganizationAccessScope.WithChildren, IsPrimary = true }
+        };
     }
 
     private static Faker<UserProfileItem> CreateFaker()
@@ -194,5 +216,116 @@ public class UserProfileServiceMock : IUserProfileService
         await Task.Delay(delay);
 
         return ServiceActionResult<bool>.OK(true);
+    }
+
+    public async Task<ServiceActionResult<List<UserOrganizationItem>>> GetUserOrganizationsAsync(string userId)
+    {
+        await Task.Delay(delay);
+
+        var items = userOrganizations.GetValueOrDefault(userId, new List<UserOrganizationItem>());
+        return ServiceActionResult<List<UserOrganizationItem>>.OK(items);
+    }
+
+    public async Task<ServiceActionResult<bool>> SetUserOrganizationsAsync(string userId, List<UserOrganizationItem> organizations)
+    {
+        await Task.Delay(delay);
+
+        // Enrich with org names from mock data
+        foreach (var org in organizations)
+        {
+            var mockOrg = mockOrgs.FirstOrDefault(o => o.Id == org.OrganizationId);
+            if (mockOrg != default)
+            {
+                org.OrganizationName = mockOrg.Name;
+                org.OrganizationPath = mockOrg.Path;
+            }
+        }
+
+        userOrganizations[userId] = organizations;
+        return ServiceActionResult<bool>.OK(true);
+    }
+
+    public async Task<ServiceActionResult<List<PermissionOverrideItem>>> GetUserPermissionOverridesAsync(string userId)
+    {
+        await Task.Delay(delay);
+
+        var items = userOverrides.GetValueOrDefault(userId, new List<PermissionOverrideItem>());
+        return ServiceActionResult<List<PermissionOverrideItem>>.OK(items);
+    }
+
+    public async Task<ServiceActionResult<bool>> SetUserPermissionOverridesAsync(string userId, List<PermissionOverrideItem> overrides)
+    {
+        await Task.Delay(delay);
+
+        userOverrides[userId] = overrides;
+        return ServiceActionResult<bool>.OK(true);
+    }
+
+    public async Task<ServiceActionResult<List<EffectivePermissionItem>>> GetEffectivePermissionsAsync(string userId)
+    {
+        await Task.Delay(delay);
+
+        var user = modelList.Find(i => i.Id == userId);
+        var userRole = user?.Roles?.Split(',').FirstOrDefault()?.Trim() ?? "";
+        var overrides = userOverrides.GetValueOrDefault(userId, new List<PermissionOverrideItem>());
+        var overrideLookup = overrides.ToDictionary(o => o.PermissionKey, o => o);
+
+        var allKeys = PermissionDefinitions.GetAll();
+        var isAdminOrOwner = userRole is "Owner" or "Admin";
+
+        var items = allKeys.Select(key =>
+        {
+            var parts = key.Split('.');
+            var module = parts.Length > 0 ? parts[0] : "";
+            var entity = parts.Length > 1 ? parts[1] : "";
+            var action = parts.Length > 2 ? parts[2] : "";
+
+            var hasOverride = overrideLookup.TryGetValue(key, out var ov);
+
+            bool isGranted;
+            string source;
+
+            if (hasOverride && ov!.IsGranted)
+            {
+                isGranted = true;
+                source = isAdminOrOwner
+                    ? $"Override: Granted (also via Role: {userRole})"
+                    : "Override: Granted";
+            }
+            else if (hasOverride && !ov!.IsGranted)
+            {
+                isGranted = false;
+                source = isAdminOrOwner
+                    ? $"Override: Denied (overrides Role: {userRole})"
+                    : "Override: Denied";
+            }
+            else if (isAdminOrOwner)
+            {
+                isGranted = true;
+                source = $"Role: {userRole}";
+            }
+            else if (action == "View")
+            {
+                isGranted = true;
+                source = $"Role: {userRole}";
+            }
+            else
+            {
+                isGranted = false;
+                source = "Not granted";
+            }
+
+            return new EffectivePermissionItem
+            {
+                Key = key,
+                Module = module,
+                Entity = entity,
+                Action = action,
+                IsGranted = isGranted,
+                Source = source
+            };
+        }).ToList();
+
+        return ServiceActionResult<List<EffectivePermissionItem>>.OK(items);
     }
 }

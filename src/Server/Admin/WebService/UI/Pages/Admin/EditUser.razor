@@ -1,95 +1,325 @@
 @page "/admin/users/{UserId}/edit"
 @attribute [Authorize(Roles = "Owner,Admin")]
 
+@using DevInstance.DevCoreApp.Shared.Model.Common
+@using DevInstance.DevCoreApp.Shared.Model.UserAdmin
+@using DevInstance.DevCoreApp.Shared.Model.Roles
+@using DevInstance.DevCoreApp.Server.Admin.WebService.UI.Components
+
 <PageTitle>Edit User</PageTitle>
 
 <h1>Edit User</h1>
 
-<div class="row">
-    <div class="col-lg-6">
-        @if (Host.IsError)
-        {
-            <div class="alert alert-danger" role="alert">
-                @Host.ErrorMessage
-            </div>
-        }
-        @if (Input != null)
-        {
-            <EditForm Model="Input" OnValidSubmit="UpdateUser" FormName="edituser">
-                <DataAnnotationsValidator />
-                <hr />
-                <ValidationSummary class="text-danger" role="alert" />
-                <div class="form-floating mb-3">
-                    <InputText @bind-Value="Input.FirstName" id="Input.FirstName" class="form-control" autocomplete="given-name" aria-required="true" placeholder="First Name" />
-                    <label for="Input.FirstName">First Name</label>
-                    <ValidationMessage For="() => Input.FirstName" class="text-danger" />
-                </div>
-                <div class="form-floating mb-3">
-                    <InputText @bind-Value="Input.MiddleName" id="Input.MiddleName" class="form-control" autocomplete="additional-name" placeholder="Middle Name" />
-                    <label for="Input.MiddleName">Middle Name</label>
-                    <ValidationMessage For="() => Input.MiddleName" class="text-danger" />
-                </div>
-                <div class="form-floating mb-3">
-                    <InputText @bind-Value="Input.LastName" id="Input.LastName" class="form-control" autocomplete="family-name" aria-required="true" placeholder="Last Name" />
-                    <label for="Input.LastName">Last Name</label>
-                    <ValidationMessage For="() => Input.LastName" class="text-danger" />
-                </div>
-                <div class="form-floating mb-3">
-                    <InputText @bind-Value="Input.PhoneNumber" id="Input.PhoneNumber" class="form-control" autocomplete="tel" placeholder="Phone Number" />
-                    <label for="Input.PhoneNumber">Phone Number</label>
-                    <ValidationMessage For="() => Input.PhoneNumber" class="text-danger" />
-                </div>
-                <div class="form-floating mb-3">
-                    <InputText @bind-Value="Input.Email" id="Input.Email" class="form-control" autocomplete="email" aria-required="true" placeholder="name@example.com" />
-                    <label for="Input.Email">Email</label>
-                    <ValidationMessage For="() => Input.Email" class="text-danger" />
-                </div>
-                @if (SelectedRole == "Owner")
-                {
-                    <label for="Input.Email">Role: Owner</label>
-                    <div class="alert alert-warning" role="alert">
-                        The Owner role cannot be changed. To change this user's role, please contact another Owner.
+@if (Host.IsError)
+{
+    <div class="alert alert-danger" role="alert">
+        @Host.ErrorMessage
+    </div>
+}
+
+@if (Input == null && Host.InProgress)
+{
+    <div class="text-center">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+}
+else if (Input != null)
+{
+    <ul class="nav nav-tabs mb-3">
+        <li class="nav-item">
+            <button class="nav-link @(ActiveTab == "profile" ? "active" : "")" type="button"
+                    @onclick='() => SetActiveTab("profile")'>
+                <i class="bi bi-person me-1"></i>Profile
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link @(ActiveTab == "organizations" ? "active" : "")" type="button"
+                    @onclick='() => SetActiveTab("organizations")'>
+                <i class="bi bi-building me-1"></i>Organizations
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link @(ActiveTab == "overrides" ? "active" : "")" type="button"
+                    @onclick='() => SetActiveTab("overrides")'>
+                <i class="bi bi-shield-lock me-1"></i>Permission Overrides
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link @(ActiveTab == "effective" ? "active" : "")" type="button"
+                    @onclick='() => SetActiveTab("effective")'>
+                <i class="bi bi-shield-check me-1"></i>Effective Permissions
+            </button>
+        </li>
+    </ul>
+
+    @* ── Profile Tab ── *@
+    @if (ActiveTab == "profile")
+    {
+        <div class="row">
+            <div class="col-lg-6">
+                <EditForm Model="Input" OnValidSubmit="UpdateUser" FormName="edituser">
+                    <DataAnnotationsValidator />
+                    <hr />
+                    <ValidationSummary class="text-danger" role="alert" />
+                    <div class="form-floating mb-3">
+                        <InputText @bind-Value="Input.FirstName" id="Input.FirstName" class="form-control" autocomplete="given-name" aria-required="true" placeholder="First Name" />
+                        <label for="Input.FirstName">First Name</label>
+                        <ValidationMessage For="() => Input.FirstName" class="text-danger" />
                     </div>
-                }
-                else
-                {
-                <div class="form-floating mb-3">
-                    <InputSelect @bind-Value="SelectedRole" id="SelectedRole" class="form-select" aria-required="true">
-                        <option value="">Select a role...</option>
-                        @foreach (var role in AvailableRoles)
-                        {
-                            <option value="@role">@role</option>
-                        }
-                    </InputSelect>
-                    <label for="SelectedRole">Role</label>
-                    @if (!string.IsNullOrEmpty(RoleError))
+                    <div class="form-floating mb-3">
+                        <InputText @bind-Value="Input.MiddleName" id="Input.MiddleName" class="form-control" autocomplete="additional-name" placeholder="Middle Name" />
+                        <label for="Input.MiddleName">Middle Name</label>
+                        <ValidationMessage For="() => Input.MiddleName" class="text-danger" />
+                    </div>
+                    <div class="form-floating mb-3">
+                        <InputText @bind-Value="Input.LastName" id="Input.LastName" class="form-control" autocomplete="family-name" aria-required="true" placeholder="Last Name" />
+                        <label for="Input.LastName">Last Name</label>
+                        <ValidationMessage For="() => Input.LastName" class="text-danger" />
+                    </div>
+                    <div class="form-floating mb-3">
+                        <InputText @bind-Value="Input.PhoneNumber" id="Input.PhoneNumber" class="form-control" autocomplete="tel" placeholder="Phone Number" />
+                        <label for="Input.PhoneNumber">Phone Number</label>
+                        <ValidationMessage For="() => Input.PhoneNumber" class="text-danger" />
+                    </div>
+                    <div class="form-floating mb-3">
+                        <InputText @bind-Value="Input.Email" id="Input.Email" class="form-control" autocomplete="email" aria-required="true" placeholder="name@example.com" />
+                        <label for="Input.Email">Email</label>
+                        <ValidationMessage For="() => Input.Email" class="text-danger" />
+                    </div>
+                    @if (SelectedRole == "Owner")
                     {
-                        <div class="text-danger">@RoleError</div>
+                        <label for="Input.Email">Role: Owner</label>
+                        <div class="alert alert-warning" role="alert">
+                            The Owner role cannot be changed. To change this user's role, please contact another Owner.
+                        </div>
                     }
-                </div>
-                }
-                <div class="mb-3">
-                    <span class="text-muted">Status: @Input.Status</span>
-                </div>
-                <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-lg btn-primary" disabled="@Host.InProgress">
-                        @if (Host.InProgress)
+                    else
+                    {
+                    <div class="form-floating mb-3">
+                        <InputSelect @bind-Value="SelectedRole" id="SelectedRole" class="form-select" aria-required="true">
+                            <option value="">Select a role...</option>
+                            @foreach (var role in AvailableRoles)
+                            {
+                                <option value="@role">@role</option>
+                            }
+                        </InputSelect>
+                        <label for="SelectedRole">Role</label>
+                        @if (!string.IsNullOrEmpty(RoleError))
                         {
-                            <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                            <div class="text-danger">@RoleError</div>
                         }
-                        Save Changes
-                    </button>
-                    <a href="/admin/users" class="btn btn-lg btn-outline-secondary">Cancel</a>
-                </div>
-            </EditForm>
-        }
-        else if (Host.InProgress)
+                    </div>
+                    }
+                    <div class="mb-3">
+                        <span class="text-muted">Status: @Input.Status</span>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-lg btn-primary" disabled="@Host.InProgress">
+                            @if (Host.InProgress)
+                            {
+                                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                            }
+                            Save Changes
+                        </button>
+                        <a href="/admin/users" class="btn btn-lg btn-outline-secondary">Cancel</a>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    }
+
+    @* ── Organizations Tab ── *@
+    @if (ActiveTab == "organizations")
+    {
+        @if (UserOrganizations == null)
         {
-            <div class="text-center">
-                <div class="spinner-border" role="status">
+            <div class="text-center py-3">
+                <div class="spinner-border spinner-border-sm" role="status">
                     <span class="visually-hidden">Loading...</span>
                 </div>
             </div>
         }
-    </div>
-</div>
+        else
+        {
+            @if (UserOrganizations.Count > 0)
+            {
+                <table class="table table-bordered table-sm">
+                    <thead>
+                        <tr>
+                            <th>Organization</th>
+                            <th>Path</th>
+                            <th style="width: 180px;">Scope</th>
+                            <th style="width: 80px;" class="text-center">Primary</th>
+                            <th style="width: 80px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var org in UserOrganizations)
+                        {
+                            <tr>
+                                <td>@org.OrganizationName</td>
+                                <td class="text-muted small">@org.OrganizationPath</td>
+                                <td>
+                                    <select class="form-select form-select-sm"
+                                            value="@org.Scope"
+                                            @onchange="(e) => OnScopeChanged(org, e)">
+                                        <option value="@OrganizationAccessScope.Self">Self</option>
+                                        <option value="@OrganizationAccessScope.WithChildren">With Children</option>
+                                    </select>
+                                </td>
+                                <td class="text-center">
+                                    <input type="radio" class="form-check-input" name="primaryOrg"
+                                           checked="@org.IsPrimary"
+                                           @onchange="() => SetPrimaryOrg(org)" />
+                                </td>
+                                <td class="text-center">
+                                    <button type="button" class="btn btn-sm btn-outline-danger"
+                                            @onclick="() => RemoveOrg(org)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="alert alert-info">No organizations assigned.</div>
+            }
+
+            <div class="d-flex gap-2 mt-3">
+                <button type="button" class="btn btn-outline-primary" @onclick="ShowAddOrgModal">
+                    <i class="bi bi-plus-circle me-1"></i>Add Organization
+                </button>
+                <button type="button" class="btn btn-primary" disabled="@Host.InProgress" @onclick="SaveOrganizations">
+                    @if (Host.InProgress)
+                    {
+                        <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                    }
+                    Save Organizations
+                </button>
+            </div>
+
+            @if (ShowOrgModal)
+            {
+                <div class="modal d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Add Organization</h5>
+                                <button type="button" class="btn-close" @onclick="CloseOrgModal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Organization</label>
+                                    <select class="form-select" @bind="NewOrgId">
+                                        <option value="">Select an organization...</option>
+                                        @if (AvailableOrganizations != null)
+                                        {
+                                            @foreach (var org in AvailableOrganizations)
+                                            {
+                                                <option value="@org.Id">@(new string('\u00A0', org.Level * 4))@org.Name</option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Scope</label>
+                                    <select class="form-select" @bind="NewOrgScope">
+                                        <option value="@OrganizationAccessScope.Self">Self</option>
+                                        <option value="@OrganizationAccessScope.WithChildren">With Children</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" @onclick="CloseOrgModal">Cancel</button>
+                                <button type="button" class="btn btn-primary" @onclick="AddOrganization"
+                                        disabled="@string.IsNullOrEmpty(NewOrgId)">Add</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    }
+
+    @* ── Permission Overrides Tab ── *@
+    @if (ActiveTab == "overrides")
+    {
+        @if (AllPermissions == null || OverrideStates == null)
+        {
+            <div class="text-center py-3">
+                <div class="spinner-border spinner-border-sm" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        }
+        else
+        {
+            <p class="text-muted mb-3">Set per-user permission overrides. <strong>Inherit</strong> uses the role default. <strong>Grant</strong> adds the permission. <strong>Deny</strong> removes it regardless of role.</p>
+
+            @foreach (var module in GroupedAllPermissions!)
+            {
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <strong>@module.Key</strong>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-sm table-bordered mb-0">
+                            <thead>
+                                <tr>
+                                    <th style="width: 200px;">Entity</th>
+                                    @foreach (var action in GetOverrideModuleActions(module.Key))
+                                    {
+                                        <th class="text-center" style="width: 140px;">@action</th>
+                                    }
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var entity in module.Value)
+                                {
+                                    <tr>
+                                        <td>@entity.Key</td>
+                                        @foreach (var action in GetOverrideModuleActions(module.Key))
+                                        {
+                                            var permission = entity.Value.FirstOrDefault(p => p.Action == action);
+                                            <td class="text-center">
+                                                @if (permission != null)
+                                                {
+                                                    <select class="form-select form-select-sm"
+                                                            value="@GetOverrideState(permission.Key)"
+                                                            @onchange="(e) => OnOverrideChanged(permission.Key, e)">
+                                                        <option value="inherit">Inherit</option>
+                                                        <option value="grant">Grant</option>
+                                                        <option value="deny">Deny</option>
+                                                    </select>
+                                                }
+                                            </td>
+                                        }
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+
+            <button type="button" class="btn btn-primary" disabled="@Host.InProgress" @onclick="SaveOverrides">
+                @if (Host.InProgress)
+                {
+                    <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                }
+                Save Permission Overrides
+            </button>
+        }
+    }
+
+    @* ── Effective Permissions Tab ── *@
+    @if (ActiveTab == "effective")
+    {
+        <EffectivePermissionsView Permissions="EffectivePermissions" />
+    }
+}

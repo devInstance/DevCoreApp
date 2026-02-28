@@ -5,11 +5,13 @@ using DevInstance.DevCoreApp.Server.Admin.Services.Background;
 using DevInstance.DevCoreApp.Server.Admin.Services.Background.Requests;
 using DevInstance.DevCoreApp.Server.Admin.Services.Exceptions;
 using DevInstance.DevCoreApp.Server.Admin.Services.Notifications.Templates;
+using DevInstance.DevCoreApp.Server.Database.Core;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Server.Database.Core.Data.Decorators;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using DevInstance.DevCoreApp.Server.EmailProcessor;
 using DevInstance.DevCoreApp.Shared.Model;
+using DevInstance.DevCoreApp.Shared.Model.UserAdmin;
 using DevInstance.DevCoreApp.Shared.Utils;
 using DevInstance.LogScope;
 using DevInstance.WebServiceToolkit.Common.Model;
@@ -28,6 +30,8 @@ public class UserProfileService : BaseService, IUserProfileService
     private IUserStore<ApplicationUser> UserStore { get; }
     private IBackgroundWorker BackgroundWorker { get; }
     private IEmailTemplateService EmailTemplateService { get; }
+    private ApplicationDbContext Db { get; }
+    private IOrganizationContextResolver OrgResolver { get; }
 
     private IScopeLog log;
 
@@ -38,7 +42,9 @@ public class UserProfileService : BaseService, IUserProfileService
                               UserManager<ApplicationUser> userManager,
                               IUserStore<ApplicationUser> userStore,
                               IBackgroundWorker backgroundWorker,
-                              IEmailTemplateService emailTemplateService)
+                              IEmailTemplateService emailTemplateService,
+                              ApplicationDbContext db,
+                              IOrganizationContextResolver orgResolver)
         : base(logManager, timeProvider, query, authorizationContext)
     {
         log = logManager.CreateLogger(this);
@@ -47,6 +53,8 @@ public class UserProfileService : BaseService, IUserProfileService
         UserStore = userStore;
         BackgroundWorker = backgroundWorker;
         EmailTemplateService = emailTemplateService;
+        Db = db;
+        OrgResolver = orgResolver;
     }
 
     public ServiceActionResult<UserProfileItem> GetCurrentUser()
@@ -353,5 +361,249 @@ public class UserProfileService : BaseService, IUserProfileService
         });
 
         l.I($"Registration email queued for {userProfile.Email}");
+    }
+
+    private async Task<(UserProfile Profile, ApplicationUser AppUser)> ResolveUserAsync(string publicId)
+    {
+        var profile = await Repository.GetUserProfilesQuery(AuthorizationContext.CurrentProfile)
+            .ByPublicId(publicId)
+            .Select()
+            .FirstOrDefaultAsync();
+
+        if (profile == null)
+            throw new RecordNotFoundException("User not found.");
+
+        var appUser = await UserManager.FindByIdAsync(profile.ApplicationUserId.ToString());
+        if (appUser == null)
+            throw new RecordNotFoundException("User account not found.");
+
+        return (profile, appUser);
+    }
+
+    public async Task<ServiceActionResult<List<UserOrganizationItem>>> GetUserOrganizationsAsync(string userId)
+    {
+        using var l = log.TraceScope();
+
+        var (_, appUser) = await ResolveUserAsync(userId);
+
+        var userOrgs = await Db.UserOrganizations
+            .Include(uo => uo.Organization)
+            .Where(uo => uo.UserId == appUser.Id)
+            .ToListAsync();
+
+        var items = userOrgs.Select(uo => new UserOrganizationItem
+        {
+            OrganizationId = uo.Organization!.PublicId,
+            OrganizationName = uo.Organization.Name,
+            OrganizationPath = uo.Organization.Path,
+            Scope = uo.Scope,
+            IsPrimary = uo.IsPrimary
+        }).ToList();
+
+        return ServiceActionResult<List<UserOrganizationItem>>.OK(items);
+    }
+
+    public async Task<ServiceActionResult<bool>> SetUserOrganizationsAsync(string userId, List<UserOrganizationItem> organizations)
+    {
+        using var l = log.TraceScope();
+
+        var (_, appUser) = await ResolveUserAsync(userId);
+
+        // Validate exactly one primary
+        var primaryCount = organizations.Count(o => o.IsPrimary);
+        if (organizations.Count > 0 && primaryCount != 1)
+            throw new BusinessRuleException("Exactly one organization must be marked as primary.");
+
+        // Remove existing assignments
+        var existing = await Db.UserOrganizations
+            .Where(uo => uo.UserId == appUser.Id)
+            .ToListAsync();
+        Db.UserOrganizations.RemoveRange(existing);
+
+        if (organizations.Count > 0)
+        {
+            // Resolve org PublicId → Guid
+            var orgPublicIds = organizations.Select(o => o.OrganizationId).ToList();
+            var orgLookup = await Db.Organizations
+                .Where(o => orgPublicIds.Contains(o.PublicId))
+                .ToDictionaryAsync(o => o.PublicId, o => o.Id);
+
+            foreach (var item in organizations)
+            {
+                if (!orgLookup.TryGetValue(item.OrganizationId, out var orgId))
+                    throw new RecordNotFoundException($"Organization '{item.OrganizationId}' not found.");
+
+                Db.UserOrganizations.Add(new UserOrganization
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = appUser.Id,
+                    OrganizationId = orgId,
+                    Scope = item.Scope,
+                    IsPrimary = item.IsPrimary
+                });
+            }
+
+            // Update primary organization on ApplicationUser
+            var primaryOrg = organizations.First(o => o.IsPrimary);
+            appUser.PrimaryOrganizationId = orgLookup[primaryOrg.OrganizationId];
+        }
+        else
+        {
+            appUser.PrimaryOrganizationId = null;
+        }
+
+        await UserManager.UpdateAsync(appUser);
+        await Db.SaveChangesAsync();
+
+        OrgResolver.InvalidateCache(appUser.Id);
+
+        l.I($"Organization assignments updated for user {userId}.");
+
+        return ServiceActionResult<bool>.OK(true);
+    }
+
+    public async Task<ServiceActionResult<List<PermissionOverrideItem>>> GetUserPermissionOverridesAsync(string userId)
+    {
+        using var l = log.TraceScope();
+
+        var (_, appUser) = await ResolveUserAsync(userId);
+
+        var overrides = await Db.UserPermissionOverrides
+            .Include(upo => upo.Permission)
+            .Where(upo => upo.UserId == appUser.Id)
+            .ToListAsync();
+
+        var items = overrides.Select(upo => new PermissionOverrideItem
+        {
+            PermissionKey = upo.Permission!.Key,
+            IsGranted = upo.IsGranted,
+            Reason = upo.Reason
+        }).ToList();
+
+        return ServiceActionResult<List<PermissionOverrideItem>>.OK(items);
+    }
+
+    public async Task<ServiceActionResult<bool>> SetUserPermissionOverridesAsync(string userId, List<PermissionOverrideItem> overrides)
+    {
+        using var l = log.TraceScope();
+
+        var (_, appUser) = await ResolveUserAsync(userId);
+
+        // Remove existing overrides
+        var existing = await Db.UserPermissionOverrides
+            .Where(upo => upo.UserId == appUser.Id)
+            .ToListAsync();
+        Db.UserPermissionOverrides.RemoveRange(existing);
+
+        if (overrides.Count > 0)
+        {
+            var permissionKeys = overrides.Select(o => o.PermissionKey).ToList();
+            var permLookup = await Db.Permissions
+                .Where(p => permissionKeys.Contains(p.Key))
+                .ToDictionaryAsync(p => p.Key, p => p.Id);
+
+            foreach (var item in overrides)
+            {
+                if (!permLookup.TryGetValue(item.PermissionKey, out var permId))
+                    continue;
+
+                Db.UserPermissionOverrides.Add(new UserPermissionOverride
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = appUser.Id,
+                    PermissionId = permId,
+                    IsGranted = item.IsGranted,
+                    Reason = item.Reason
+                });
+            }
+        }
+
+        await Db.SaveChangesAsync();
+
+        l.I($"Permission overrides updated for user {userId}.");
+
+        return ServiceActionResult<bool>.OK(true);
+    }
+
+    public async Task<ServiceActionResult<List<EffectivePermissionItem>>> GetEffectivePermissionsAsync(string userId)
+    {
+        using var l = log.TraceScope();
+
+        var (_, appUser) = await ResolveUserAsync(userId);
+
+        // Load all permissions
+        var allPermissions = await Db.Permissions
+            .OrderBy(p => p.DisplayOrder)
+            .ToListAsync();
+
+        // Get user roles
+        var roles = await UserManager.GetRolesAsync(appUser);
+
+        // Get role IDs
+        var roleIds = await Db.Roles
+            .Where(r => roles.Contains(r.Name!))
+            .Select(r => r.Id)
+            .ToListAsync();
+
+        // Get role→permission mappings (track which role grants each permission)
+        var rolePermissions = await Db.RolePermissions
+            .Where(rp => roleIds.Contains(rp.RoleId))
+            .Join(Db.Roles, rp => rp.RoleId, r => r.Id, (rp, r) => new { rp.PermissionId, RoleName = r.Name })
+            .ToListAsync();
+
+        var roleGrantsByPermId = rolePermissions
+            .GroupBy(x => x.PermissionId)
+            .ToDictionary(g => g.Key, g => g.Select(x => x.RoleName ?? "Unknown").ToList());
+
+        // Get user overrides
+        var overrides = await Db.UserPermissionOverrides
+            .Where(upo => upo.UserId == appUser.Id)
+            .ToDictionaryAsync(upo => upo.PermissionId, upo => upo);
+
+        var items = allPermissions.Select(p =>
+        {
+            var roleGrants = roleGrantsByPermId.GetValueOrDefault(p.Id);
+            var hasOverride = overrides.TryGetValue(p.Id, out var userOverride);
+
+            bool isGranted;
+            string source;
+
+            if (hasOverride && userOverride!.IsGranted)
+            {
+                isGranted = true;
+                source = roleGrants != null
+                    ? $"Override: Granted (also via Role: {string.Join(", ", roleGrants)})"
+                    : "Override: Granted";
+            }
+            else if (hasOverride && !userOverride!.IsGranted)
+            {
+                isGranted = false;
+                source = roleGrants != null
+                    ? $"Override: Denied (overrides Role: {string.Join(", ", roleGrants)})"
+                    : "Override: Denied";
+            }
+            else if (roleGrants != null)
+            {
+                isGranted = true;
+                source = $"Role: {string.Join(", ", roleGrants)}";
+            }
+            else
+            {
+                isGranted = false;
+                source = "Not granted";
+            }
+
+            return new EffectivePermissionItem
+            {
+                Key = p.Key,
+                Module = p.Module,
+                Entity = p.Entity,
+                Action = p.Action,
+                IsGranted = isGranted,
+                Source = source
+            };
+        }).ToList();
+
+        return ServiceActionResult<List<EffectivePermissionItem>>.OK(items);
     }
 }

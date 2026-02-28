@@ -47,13 +47,20 @@ public partial class NewUser
             return;
         }
 
+        string? createdUserId = null;
+
         await Host.ServiceSubmitAsync(
-            async () => await UserService.CreateUserAsync(Input, SelectedRole)
+            async () =>
+            {
+                var result = await UserService.CreateUserAsync(Input, SelectedRole);
+                createdUserId = result.Result?.Id;
+                return result;
+            }
         );
 
-        if (!Host.IsError)
+        if (!Host.IsError && !string.IsNullOrEmpty(createdUserId))
         {
-            NavigationManager.NavigateTo("/admin/users");
+            NavigationManager.NavigateTo($"/admin/users/{createdUserId}/edit");
         }
     }
 }
