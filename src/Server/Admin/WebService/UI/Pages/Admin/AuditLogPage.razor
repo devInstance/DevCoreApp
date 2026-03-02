@@ -1,0 +1,203 @@
+@page "/admin/audit-log"
+@attribute [Authorize(Policy = "System.AuditLog.View")]
+
+<PageTitle>Audit Log</PageTitle>
+
+<div class="row mb-3">
+    <div class="col col-md-6 col-lg-4 d-flex">
+        <input class="form-control" placeholder="Search audit log..." @bind="SearchTerm" @bind:event="oninput" disabled="@Host.InProgress" />
+        <button class="btn btn-primary ms-2" @onclick="OnSearch" disabled="@Host.InProgress">
+            <i class="bi bi-search"></i>
+        </button>
+    </div>
+    <div class="col col-md-6 col-lg-8">
+        <div class="d-flex align-items-center justify-content-end gap-2 flex-wrap">
+            <input class="form-control" style="width: 140px;" placeholder="Table name" @bind="TableNameFilter" disabled="@Host.InProgress" />
+            <input class="form-control" style="width: 140px;" placeholder="Record ID" @bind="RecordIdFilter" disabled="@Host.InProgress" />
+            <select class="form-select" style="width: auto;" @bind="ActionFilter" disabled="@Host.InProgress">
+                <option value="">All Actions</option>
+                <option value="0">Insert</option>
+                <option value="1">Update</option>
+                <option value="2">Delete</option>
+            </select>
+            <select class="form-select" style="width: auto;" @bind="SourceFilter" disabled="@Host.InProgress">
+                <option value="">All Sources</option>
+                <option value="0">Application</option>
+                <option value="1">Database</option>
+            </select>
+            <input type="date" class="form-control" style="width: auto;" @bind="StartDateFilter" disabled="@Host.InProgress" />
+            <input type="date" class="form-control" style="width: auto;" @bind="EndDateFilter" disabled="@Host.InProgress" />
+            <button class="btn btn-outline-primary" @onclick="OnApplyFilters" disabled="@Host.InProgress">
+                <i class="bi bi-funnel"></i> Filter
+            </button>
+        </div>
+    </div>
+</div>
+
+<HDataGrid TItem="DevInstance.DevCoreApp.Shared.Model.AuditLogs.AuditLogItem"
+           Data="AuditLogList"
+           Columns="Columns"
+           IsLoading="Host.InProgress"
+           OnSort="OnSortAsync"
+           OnPageChanged="OnPageChangedAsync"
+           OnColumnsChanged="OnColumnsChanged"
+           IdSelector="a => a.Id"
+           OnRowClick="OnRowClick">
+    <ColumnTemplates>
+        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.AuditLogs.AuditLogItem" Field="action" Context="entry">
+            <span class="badge @GetActionBadgeClass(entry.Action)">@entry.Action</span>
+        </HColumnTemplate>
+        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.AuditLogs.AuditLogItem" Field="source" Context="entry">
+            @if (entry.Source == "Database")
+            {
+                <span class="badge bg-warning text-dark">
+                    <i class="bi bi-exclamation-triangle me-1"></i>Database
+                </span>
+            }
+            else
+            {
+                <span class="badge bg-light text-dark">Application</span>
+            }
+        </HColumnTemplate>
+    </ColumnTemplates>
+    <EmptyContent>
+        <p>No audit log entries found.</p>
+    </EmptyContent>
+    <SearchContent>
+        <div class="alert alert-light">
+            Searching for <strong>@context</strong>
+            <button type="button" class="btn-close ms-2" @onclick="OnClearSearch"></button>
+        </div>
+    </SearchContent>
+</HDataGrid>
+
+<GridSettings Columns="Columns" OnSave="OnSave" PageSize="pageCount" TItem="DevInstance.DevCoreApp.Shared.Model.AuditLogs.AuditLogItem" />
+
+@if (SelectedEntry != null)
+{
+    <div class="card mt-3 @(SelectedEntry.Source == "Database" ? "border-warning" : "")">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                @SelectedEntry.TableName — @SelectedEntry.Action
+                <span class="badge @GetActionBadgeClass(SelectedEntry.Action) ms-2">@SelectedEntry.Action</span>
+                @if (SelectedEntry.Source == "Database")
+                {
+                    <span class="badge bg-warning text-dark ms-1">
+                        <i class="bi bi-exclamation-triangle me-1"></i>Changed outside application
+                    </span>
+                }
+            </h5>
+            <button class="btn-close" @onclick="ClearSelection"></button>
+        </div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <strong>Table:</strong> @SelectedEntry.TableName
+                </div>
+                <div class="col-md-3">
+                    <strong>Record ID:</strong> <code>@SelectedEntry.RecordId</code>
+                </div>
+                <div class="col-md-3">
+                    <strong>Changed At:</strong> @SelectedEntry.ChangedAt.ToString("g")
+                </div>
+                <div class="col-md-3">
+                    <strong>User:</strong> @(SelectedEntry.ChangedByUserName ?? "N/A")
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <strong>Source:</strong> @SelectedEntry.Source
+                </div>
+                <div class="col-md-3">
+                    <strong>IP Address:</strong> @(SelectedEntry.IpAddress ?? "N/A")
+                </div>
+                <div class="col-md-3">
+                    <strong>Correlation ID:</strong> <code>@(SelectedEntry.CorrelationId ?? "N/A")</code>
+                </div>
+                <div class="col-md-3"></div>
+            </div>
+
+            @if (SelectedEntry.Action == "Update" && OldValuesMap != null && NewValuesMap != null)
+            {
+                <h6>Changes</h6>
+                <table class="table table-sm table-bordered">
+                    <thead>
+                        <tr>
+                            <th style="width:25%">Property</th>
+                            <th style="width:37%">Old Value</th>
+                            <th style="width:37%">New Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var key in AllPropertyKeys)
+                        {
+                            var oldVal = OldValuesMap.GetValueOrDefault(key, "");
+                            var newVal = NewValuesMap.GetValueOrDefault(key, "");
+                            var changed = oldVal != newVal;
+                            <tr class="@(changed ? "table-warning" : "")">
+                                <td class="fw-semibold">@key</td>
+                                <td>@(string.IsNullOrEmpty(oldVal) ? "-" : oldVal)</td>
+                                <td>
+                                    @if (changed)
+                                    {
+                                        <strong>@(string.IsNullOrEmpty(newVal) ? "-" : newVal)</strong>
+                                    }
+                                    else
+                                    {
+                                        @(string.IsNullOrEmpty(newVal) ? "-" : newVal)
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else if (SelectedEntry.Action == "Insert" && NewValuesMap != null)
+            {
+                <h6>New Record Values</h6>
+                <table class="table table-sm table-bordered">
+                    <thead>
+                        <tr>
+                            <th style="width:30%">Property</th>
+                            <th style="width:70%">Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var kvp in NewValuesMap)
+                        {
+                            <tr>
+                                <td class="fw-semibold">@kvp.Key</td>
+                                <td>@(string.IsNullOrEmpty(kvp.Value) ? "-" : kvp.Value)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else if (SelectedEntry.Action == "Delete" && OldValuesMap != null)
+            {
+                <h6>Deleted Record Values</h6>
+                <table class="table table-sm table-bordered">
+                    <thead>
+                        <tr>
+                            <th style="width:30%">Property</th>
+                            <th style="width:70%">Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var kvp in OldValuesMap)
+                        {
+                            <tr>
+                                <td class="fw-semibold">@kvp.Key</td>
+                                <td>@(string.IsNullOrEmpty(kvp.Value) ? "-" : kvp.Value)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <p class="text-muted">No value data available for this entry.</p>
+            }
+        </div>
+    </div>
+}

@@ -17,4 +17,5 @@ public interface IQueryRepository
     INotificationQuery GetNotificationQuery(UserProfile currentProfile);
     IUserNotificationPreferenceQuery GetUserNotificationPreferenceQuery(UserProfile currentProfile);
     IFileRecordQuery GetFileRecordQuery(UserProfile currentProfile);
+    IAuditLogQuery GetAuditLogQuery(UserProfile currentProfile);
 }

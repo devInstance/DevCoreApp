@@ -84,4 +84,9 @@ public abstract class CoreQueryRepository : IQueryRepository
     {
         return new CoreFileRecordQuery(LogManager, TimeProvider, DB, currentProfile);
     }
+
+    public IAuditLogQuery GetAuditLogQuery(UserProfile currentProfile)
+    {
+        return new CoreAuditLogQuery(LogManager, TimeProvider, DB, currentProfile);
+    }
 }
