@@ -1,0 +1,169 @@
+@page "/admin/jobs"
+@attribute [Authorize(Policy = "System.Jobs.View")]
+
+<PageTitle>Job Dashboard</PageTitle>
+
+<div class="row mb-3">
+    <div class="col col-md-6 col-lg-4 d-flex">
+        <input class="form-control" placeholder="Search jobs..." @bind="SearchTerm" @bind:event="oninput" disabled="@Host.InProgress" />
+        <button class="btn btn-primary ms-2" @onclick="OnSearch" disabled="@Host.InProgress">
+            <i class="bi bi-search"></i>
+        </button>
+    </div>
+    <div class="col col-md-6 col-lg-8">
+        <div class="d-flex align-items-center justify-content-end gap-2">
+            <select class="form-select" style="width: auto;" @bind="StatusFilter" disabled="@Host.InProgress">
+                <option value="">All Statuses</option>
+                <option value="0">Queued</option>
+                <option value="1">Running</option>
+                <option value="2">Completed</option>
+                <option value="3">Failed</option>
+            </select>
+            <select class="form-select" style="width: auto;" @bind="TaskTypeFilter" disabled="@Host.InProgress">
+                <option value="">All Types</option>
+                <option value="SendEmail">SendEmail</option>
+                <option value="GenerateReport">GenerateReport</option>
+                <option value="DataSync">DataSync</option>
+                <option value="CleanupFiles">CleanupFiles</option>
+            </select>
+            <input type="date" class="form-control" style="width: auto;" @bind="StartDateFilter" disabled="@Host.InProgress" />
+            <input type="date" class="form-control" style="width: auto;" @bind="EndDateFilter" disabled="@Host.InProgress" />
+            <button class="btn btn-outline-primary" @onclick="OnApplyFilters" disabled="@Host.InProgress">
+                <i class="bi bi-funnel"></i> Filter
+            </button>
+        </div>
+    </div>
+</div>
+
+<HDataGrid TItem="DevInstance.DevCoreApp.Shared.Model.BackgroundTasks.BackgroundTaskItem"
+           Data="JobList"
+           Columns="Columns"
+           IsLoading="Host.InProgress"
+           OnSort="OnSortAsync"
+           OnPageChanged="OnPageChangedAsync"
+           OnColumnsChanged="OnColumnsChanged"
+           IdSelector="t => t.Id"
+           OnRowClick="OnRowClick">
+    <ColumnTemplates>
+        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.BackgroundTasks.BackgroundTaskItem" Field="status" Context="task">
+            <span class="badge @GetStatusBadgeClass(task.Status)">@task.Status</span>
+        </HColumnTemplate>
+        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.BackgroundTasks.BackgroundTaskItem" Field="retrycount" Context="task">
+            @task.RetryCount / @task.MaxRetries
+        </HColumnTemplate>
+    </ColumnTemplates>
+    <EmptyContent>
+        <p>No background tasks found.</p>
+    </EmptyContent>
+    <SearchContent>
+        <div class="alert alert-light">
+            Searching for <strong>@context</strong>
+            <button type="button" class="btn-close ms-2" @onclick="OnClearSearch"></button>
+        </div>
+    </SearchContent>
+</HDataGrid>
+
+<GridSettings Columns="Columns" OnSave="OnSave" PageSize="pageCount" TItem="DevInstance.DevCoreApp.Shared.Model.BackgroundTasks.BackgroundTaskItem" />
+
+@if (SelectedJob != null)
+{
+    <div class="card mt-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                Job Details: @SelectedJob.TaskType
+                <span class="badge @GetStatusBadgeClass(SelectedJob.Status) ms-2">@SelectedJob.Status</span>
+            </h5>
+            <button class="btn-close" @onclick="ClearSelection"></button>
+        </div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <strong>Task Type:</strong> @SelectedJob.TaskType
+                </div>
+                <div class="col-md-3">
+                    <strong>Priority:</strong> @SelectedJob.Priority
+                </div>
+                <div class="col-md-3">
+                    <strong>Retries:</strong> @SelectedJob.RetryCount / @SelectedJob.MaxRetries
+                </div>
+                <div class="col-md-3">
+                    <strong>Created By:</strong> @(SelectedJob.CreatedByName ?? "System")
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <strong>Scheduled:</strong> @SelectedJob.ScheduledAt.ToString("g")
+                </div>
+                <div class="col-md-3">
+                    <strong>Started:</strong> @(SelectedJob.StartedAt?.ToString("g") ?? "-")
+                </div>
+                <div class="col-md-3">
+                    <strong>Completed:</strong> @(SelectedJob.CompletedAt?.ToString("g") ?? "-")
+                </div>
+                <div class="col-md-3">
+                    <strong>Result Ref:</strong> @(SelectedJob.ResultReference ?? "-")
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(SelectedJob.ErrorMessage))
+            {
+                <div class="alert alert-danger mb-3">
+                    <strong>Error:</strong> @SelectedJob.ErrorMessage
+                </div>
+            }
+
+            <div class="mb-3">
+                <AuthorizeView Policy="System.Jobs.Cancel">
+                    @if (SelectedJob.Status == "Queued")
+                    {
+                        <button class="btn btn-warning me-2" @onclick="CancelJob" disabled="@Host.InProgress">
+                            <i class="bi bi-x-circle me-1"></i>Cancel
+                        </button>
+                    }
+                </AuthorizeView>
+                <AuthorizeView Policy="System.Jobs.Retry">
+                    @if (SelectedJob.Status == "Failed")
+                    {
+                        <button class="btn btn-primary me-2" @onclick="RetryJob" disabled="@Host.InProgress">
+                            <i class="bi bi-arrow-repeat me-1"></i>Retry
+                        </button>
+                    }
+                </AuthorizeView>
+            </div>
+
+            @if (SelectedJobLogs != null && SelectedJobLogs.Count > 0)
+            {
+                <h6>Execution Log</h6>
+                <table class="table table-sm table-bordered">
+                    <thead>
+                        <tr>
+                            <th style="width:8%">Attempt</th>
+                            <th style="width:12%">Status</th>
+                            <th style="width:18%">Started</th>
+                            <th style="width:18%">Completed</th>
+                            <th style="width:22%">Message</th>
+                            <th style="width:22%">Error</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var log in SelectedJobLogs)
+                        {
+                            <tr>
+                                <td>@log.Attempt</td>
+                                <td><span class="badge @GetLogStatusBadgeClass(log.Status)">@log.Status</span></td>
+                                <td>@log.StartedAt.ToString("g")</td>
+                                <td>@(log.CompletedAt?.ToString("g") ?? "-")</td>
+                                <td>@(log.Message ?? "-")</td>
+                                <td class="text-danger">@(log.ErrorMessage ?? "-")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else if (SelectedJobLogs != null)
+            {
+                <p class="text-muted">No execution logs for this task.</p>
+            }
+        </div>
+    </div>
+}
