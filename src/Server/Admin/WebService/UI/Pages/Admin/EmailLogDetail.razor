@@ -1,5 +1,5 @@
 @page "/admin/email-log/{Id}"
-@attribute [Authorize(Roles = "Owner,Admin")]
+@attribute [Authorize(Policy = "System.EmailLog.View")]
 
 <PageTitle>Email Log Detail</PageTitle>
 
@@ -18,9 +18,11 @@ else if (EmailLogEntry != null)
             <div class="d-flex justify-content-between align-items-center">
                 <h4>Email Log Detail</h4>
                 <div class="d-flex gap-2">
-                    <button class="btn btn-warning" @onclick="OnResend" disabled="@Host.InProgress">
-                        <i class="bi bi-arrow-repeat me-1"></i>Resend
-                    </button>
+                    <AuthorizeView Policy="System.EmailLog.Resend">
+                        <button class="btn btn-warning" @onclick="OnResend" disabled="@Host.InProgress">
+                            <i class="bi bi-arrow-repeat me-1"></i>Resend
+                        </button>
+                    </AuthorizeView>
                     <button class="btn btn-danger" @onclick="OnDelete" disabled="@Host.InProgress">
                         <i class="bi bi-trash me-1"></i>Delete
                     </button>
@@ -63,6 +65,20 @@ else if (EmailLogEntry != null)
             <div class="row mb-2">
                 <div class="col-md-2 fw-bold">Sent Date</div>
                 <div class="col-md-10">@(EmailLogEntry.SentDate?.ToString("g") ?? "N/A")</div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-md-2 fw-bold">Opened Date</div>
+                <div class="col-md-10">@(EmailLogEntry.OpenedDate?.ToString("g") ?? "N/A")</div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-md-2 fw-bold">Provider Message ID</div>
+                <div class="col-md-10">@(EmailLogEntry.ProviderMessageId ?? "N/A")</div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-md-2 fw-bold">Related Job</div>
+                <div class="col-md-10">
+                    <a href="admin/jobs?search=EmailLog:@EmailLogEntry.Id">View Job</a>
+                </div>
             </div>
             @if (!string.IsNullOrEmpty(EmailLogEntry.ErrorMessage))
             {

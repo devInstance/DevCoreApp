@@ -39,7 +39,7 @@ public class EmailLogService : BaseService, IEmailLogService
 
     public async Task<ServiceActionResult<ModelList<EmailLogItem>>> GetAllAsync(
         int? top, int? page, string? sortField = null, bool? isAsc = null,
-        string? search = null, int? status = null,
+        string? search = null, int? status = null, string? templateName = null,
         DateTime? startDate = null, DateTime? endDate = null)
     {
         using var l = log.TraceScope();
@@ -54,6 +54,11 @@ public class EmailLogService : BaseService, IEmailLogService
         if (status.HasValue && Enum.IsDefined(typeof(EmailLogStatus), status.Value))
         {
             query = query.ByStatus((EmailLogStatus)status.Value);
+        }
+
+        if (!string.IsNullOrEmpty(templateName))
+        {
+            query = query.ByTemplateName(templateName);
         }
 
         if (startDate.HasValue || endDate.HasValue)

@@ -30,14 +30,16 @@ public partial class EmailLog
 
     public List<ColumnDescriptor<EmailLogItem>> Columns { get; set; } = new()
     {
-        new() { Label = "From", Field = "fromaddress", ValueSelector = e => e.FromAddress, Width = "18%" },
-        new() { Label = "To", Field = "toaddress", ValueSelector = e => e.ToAddress, Width = "18%" },
-        new() { Label = "Subject", Field = "subject", ValueSelector = e => e.Subject, Width = "22%" },
-        new() { Label = "Status", Field = "status", ValueSelector = e => e.Status, Width = "10%" },
-        new() { Label = "Scheduled Date", Field = "scheduleddate", ValueSelector = e => e.ScheduledDate.ToString("g"), Width = "14%" },
-        new() { Label = "Sent Date", Field = "sentdate", ValueSelector = e => e.SentDate?.ToString("g") ?? string.Empty, Width = "14%" },
+        new() { Label = "To", Field = "toaddress", ValueSelector = e => e.ToAddress, Width = "16%" },
+        new() { Label = "Subject", Field = "subject", ValueSelector = e => e.Subject, Width = "20%" },
+        new() { Label = "Status", Field = "status", ValueSelector = e => e.Status, Width = "8%" },
+        new() { Label = "Sent Date", Field = "sentdate", ValueSelector = e => e.SentDate?.ToString("g") ?? string.Empty, Width = "12%" },
+        new() { Label = "Provider ID", Field = "providermessageid", ValueSelector = e => e.ProviderMessageId ?? string.Empty, Width = "14%" },
+        new() { Label = "Opened", Field = "openeddate", ValueSelector = e => e.OpenedDate?.ToString("g") ?? string.Empty, Width = "12%" },
+        new() { Label = "Template", Field = "templatename", ValueSelector = e => e.TemplateName ?? string.Empty, Width = "12%" },
+        new() { Label = "From", Field = "fromaddress", ValueSelector = e => e.FromAddress, IsVisible = false, Width = "16%" },
+        new() { Label = "Scheduled", Field = "scheduleddate", ValueSelector = e => e.ScheduledDate.ToString("g"), IsVisible = false, Width = "12%" },
         new() { Label = "Error", Field = "error", ValueSelector = e => e.ErrorMessage ?? string.Empty, IsVisible = false, IsSortable = false, Width = "20%" },
-        new() { Label = "Template", Field = "template", ValueSelector = e => e.TemplateName ?? string.Empty, IsVisible = false, IsSortable = false, Width = "15%" },
     };
 
     private int pageCount = 10;
@@ -46,11 +48,15 @@ public partial class EmailLog
     private bool IsAsc { get; set; } = true;
 
     private string StatusFilter { get; set; } = string.Empty;
+    private string TemplateFilter { get; set; } = string.Empty;
     private DateTime? StartDateFilter { get; set; }
     private DateTime? EndDateFilter { get; set; }
 
     private HashSet<string> SelectedIds { get; set; } = new();
     private bool GroupByStatus { get; set; }
+
+    private EmailLogItem? SelectedEmail { get; set; }
+    private bool ShowBodyPreview { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -128,7 +134,9 @@ public partial class EmailLog
     {
         await Host.ServiceReadAsync(
             async () => await EmailLogService.GetAllAsync(pageCount, page, sortField, isAsc, search,
-                GetStatusFilterValue(), StartDateFilter, EndDateFilter),
+                GetStatusFilterValue(),
+                string.IsNullOrEmpty(TemplateFilter) ? null : TemplateFilter,
+                StartDateFilter, EndDateFilter),
             (result) => EmailLogList = result
         );
     }
@@ -178,13 +186,35 @@ public partial class EmailLog
 
     public async Task OnApplyFilters()
     {
+        SelectedEmail = null;
+        ShowBodyPreview = false;
         await LoadEmailLogs(0, EmailLogList?.SortBy, EmailLogList?.IsAsc, EmailLogList?.Search);
     }
 
     private Task OnRowClick(EmailLogItem item)
     {
-        NavigationManager.NavigateTo($"admin/email-log/{item.Id}");
+        if (SelectedEmail?.Id == item.Id)
+        {
+            SelectedEmail = null;
+            ShowBodyPreview = false;
+        }
+        else
+        {
+            SelectedEmail = item;
+            ShowBodyPreview = false;
+        }
         return Task.CompletedTask;
+    }
+
+    private void ClearSelection()
+    {
+        SelectedEmail = null;
+        ShowBodyPreview = false;
+    }
+
+    private void ToggleBodyPreview()
+    {
+        ShowBodyPreview = !ShowBodyPreview;
     }
 
     private void ToggleGroupByStatus()
@@ -217,5 +247,29 @@ public partial class EmailLog
         );
 
         await LoadEmailLogs(EmailLogList?.Page ?? 0, EmailLogList?.SortBy, EmailLogList?.IsAsc, EmailLogList?.Search);
+    }
+
+    private async Task OnResendSelected()
+    {
+        if (SelectedEmail == null) return;
+
+        await Host.ServiceSubmitAsync(
+            async () => await EmailLogService.ResendAsync(SelectedEmail.Id)
+        );
+
+        SelectedEmail = null;
+        ShowBodyPreview = false;
+        await LoadEmailLogs(EmailLogList?.Page ?? 0, EmailLogList?.SortBy, EmailLogList?.IsAsc, EmailLogList?.Search);
+    }
+
+    private static string GetStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Sent" => "bg-success",
+            "Failed" => "bg-danger",
+            "Queued" => "bg-warning text-dark",
+            _ => "bg-secondary"
+        };
     }
 }

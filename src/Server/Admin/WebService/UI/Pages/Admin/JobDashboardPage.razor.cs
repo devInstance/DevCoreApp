@@ -26,6 +26,9 @@ public partial class JobDashboardPage
     [CascadingParameter]
     private IServiceExecutionHost Host { get; set; } = default!;
 
+    [SupplyParameterFromQuery(Name = "search")]
+    private string? InitialSearch { get; set; }
+
     private ModelList<BackgroundTaskItem>? JobList { get; set; }
 
     public List<ColumnDescriptor<BackgroundTaskItem>> Columns { get; set; } = new()
@@ -56,8 +59,13 @@ public partial class JobDashboardPage
 
     protected override async Task OnInitializedAsync()
     {
+        if (!string.IsNullOrEmpty(InitialSearch))
+        {
+            SearchTerm = InitialSearch;
+        }
+
         await LoadGridProfile();
-        await LoadJobs(0, SortField, IsAsc, null);
+        await LoadJobs(0, SortField, IsAsc, string.IsNullOrEmpty(SearchTerm) ? null : SearchTerm);
     }
 
     private async Task LoadGridProfile()

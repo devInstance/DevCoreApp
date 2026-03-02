@@ -24,5 +24,6 @@ public class EmailLog : DatabaseObject
     public string? ProviderMessageId { get; set; }
     public DateTime ScheduledDate { get; set; }
     public DateTime? SentDate { get; set; }
+    public DateTime? OpenedDate { get; set; }
     public string? TemplateName { get; set; }
 }

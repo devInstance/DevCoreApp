@@ -1,5 +1,5 @@
 @page "/admin/email-log"
-@attribute [Authorize(Roles = "Owner,Admin")]
+@attribute [Authorize(Policy = "System.EmailLog.View")]
 
 <PageTitle>Email Log</PageTitle>
 
@@ -18,6 +18,13 @@
                 <option value="1">Sent</option>
                 <option value="2">Failed</option>
             </select>
+            <select class="form-select" style="width: auto;" @bind="TemplateFilter" disabled="@Host.InProgress">
+                <option value="">All Templates</option>
+                <option value="Registration">Registration</option>
+                <option value="ConfirmEmail">ConfirmEmail</option>
+                <option value="PasswordResetLink">PasswordResetLink</option>
+                <option value="PasswordResetCode">PasswordResetCode</option>
+            </select>
             <input type="date" class="form-control" style="width: auto;" @bind="StartDateFilter" disabled="@Host.InProgress" />
             <input type="date" class="form-control" style="width: auto;" @bind="EndDateFilter" disabled="@Host.InProgress" />
             <button class="btn btn-outline-primary" @onclick="OnApplyFilters" disabled="@Host.InProgress">
@@ -32,9 +39,11 @@
                     <i class="bi bi-trash me-1"></i>Delete Selected (@SelectedIds.Count)
                 </button>
             }
-            <button class="btn btn-warning" @onclick="OnResendAllFailed" disabled="@Host.InProgress">
-                <i class="bi bi-arrow-repeat me-1"></i>Resend All Failed
-            </button>
+            <AuthorizeView Policy="System.EmailLog.Resend">
+                <button class="btn btn-warning" @onclick="OnResendAllFailed" disabled="@Host.InProgress">
+                    <i class="bi bi-arrow-repeat me-1"></i>Resend All Failed
+                </button>
+            </AuthorizeView>
         </div>
     </div>
 </div>
@@ -53,6 +62,11 @@
            OnRowClick="OnRowClick"
            GroupBy="@(GroupByStatus ? (e => e.Status) : null)"
            GroupsCollapsedByDefault="false">
+    <ColumnTemplates>
+        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.EmailLogItem" Field="status" Context="email">
+            <span class="badge @GetStatusBadgeClass(email.Status)">@email.Status</span>
+        </HColumnTemplate>
+    </ColumnTemplates>
     <EmptyContent>
         <p>No email log entries found.</p>
     </EmptyContent>
@@ -69,3 +83,98 @@
 </HDataGrid>
 
 <GridSettings Columns="Columns" OnSave="OnSave" PageSize="pageCount" TItem="DevInstance.DevCoreApp.Shared.Model.EmailLogItem" />
+
+@if (SelectedEmail != null)
+{
+    <div class="card mt-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                @SelectedEmail.Subject
+                <span class="badge @GetStatusBadgeClass(SelectedEmail.Status) ms-2">@SelectedEmail.Status</span>
+            </h5>
+            <button class="btn-close" @onclick="ClearSelection"></button>
+        </div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <strong>To:</strong> @SelectedEmail.ToName &lt;@SelectedEmail.ToAddress&gt;
+                </div>
+                <div class="col-md-3">
+                    <strong>From:</strong> @SelectedEmail.FromName &lt;@SelectedEmail.FromAddress&gt;
+                </div>
+                <div class="col-md-3">
+                    <strong>Template:</strong> @(SelectedEmail.TemplateName ?? "N/A")
+                </div>
+                <div class="col-md-3">
+                    <strong>Provider ID:</strong> @(SelectedEmail.ProviderMessageId ?? "N/A")
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <strong>Scheduled:</strong> @SelectedEmail.ScheduledDate.ToString("g")
+                </div>
+                <div class="col-md-3">
+                    <strong>Sent:</strong> @(SelectedEmail.SentDate?.ToString("g") ?? "-")
+                </div>
+                <div class="col-md-3">
+                    <strong>Opened:</strong> @(SelectedEmail.OpenedDate?.ToString("g") ?? "-")
+                </div>
+                <div class="col-md-3">
+                    <strong>Related Job:</strong>
+                    <a href="admin/jobs?search=EmailLog:@SelectedEmail.Id">View</a>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(SelectedEmail.ErrorMessage))
+            {
+                <div class="alert alert-danger mb-3">
+                    <strong>Error:</strong> @SelectedEmail.ErrorMessage
+                </div>
+            }
+
+            <div class="mb-3">
+                <AuthorizeView Policy="System.EmailLog.Resend">
+                    @if (SelectedEmail.Status == "Failed")
+                    {
+                        <button class="btn btn-warning me-2" @onclick="OnResendSelected" disabled="@Host.InProgress">
+                            <i class="bi bi-arrow-repeat me-1"></i>Resend
+                        </button>
+                    }
+                </AuthorizeView>
+                <button class="btn btn-outline-primary me-2" @onclick="ToggleBodyPreview" disabled="@Host.InProgress">
+                    <i class="bi bi-eye me-1"></i>@(ShowBodyPreview ? "Hide" : "Show") Body Preview
+                </button>
+                <a class="btn btn-outline-secondary" href="admin/email-log/@SelectedEmail.Id">
+                    <i class="bi bi-box-arrow-up-right me-1"></i>Full Detail
+                </a>
+            </div>
+
+            @if (ShowBodyPreview)
+            {
+                <div class="card">
+                    <div class="card-header">
+                        <strong>Email Body</strong>
+                        @if (SelectedEmail.IsHtml)
+                        {
+                            <span class="badge bg-info ms-2">HTML</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary ms-2">Plain Text</span>
+                        }
+                    </div>
+                    <div class="card-body p-0">
+                        @if (SelectedEmail.IsHtml)
+                        {
+                            <iframe srcdoc="@SelectedEmail.Content" style="width: 100%; min-height: 300px; border: none;"></iframe>
+                        }
+                        else
+                        {
+                            <pre class="p-3 mb-0" style="white-space: pre-wrap;">@SelectedEmail.Content</pre>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}

@@ -13,5 +13,6 @@ public interface IEmailLogQuery : IModelQuery<EmailLog, IEmailLogQuery>,
     IQueryable<EmailLog> Select();
 
     IEmailLogQuery ByStatus(EmailLogStatus status);
+    IEmailLogQuery ByTemplateName(string templateName);
     IEmailLogQuery ByDateRange(DateTime? start, DateTime? end);
 }

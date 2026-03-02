@@ -36,6 +36,14 @@ public class CoreEmailLogQuery : CoreDatabaseObjectQuery<EmailLog, CoreEmailLogQ
         return this;
     }
 
+    public IEmailLogQuery ByTemplateName(string templateName)
+    {
+        currentQuery = from el in currentQuery
+                       where el.TemplateName == templateName
+                       select el;
+        return this;
+    }
+
     public IEmailLogQuery ByDateRange(DateTime? start, DateTime? end)
     {
         if (start.HasValue)
@@ -117,6 +125,27 @@ public class CoreEmailLogQuery : CoreDatabaseObjectQuery<EmailLog, CoreEmailLogQ
                 ? (from el in currentQuery orderby el.Status select el)
                 : (from el in currentQuery orderby el.Status descending select el);
             SortedBy = "status";
+        }
+        else if (string.Compare(column, "templatename", true) == 0)
+        {
+            currentQuery = isAsc
+                ? (from el in currentQuery orderby el.TemplateName select el)
+                : (from el in currentQuery orderby el.TemplateName descending select el);
+            SortedBy = "templatename";
+        }
+        else if (string.Compare(column, "providermessageid", true) == 0)
+        {
+            currentQuery = isAsc
+                ? (from el in currentQuery orderby el.ProviderMessageId select el)
+                : (from el in currentQuery orderby el.ProviderMessageId descending select el);
+            SortedBy = "providermessageid";
+        }
+        else if (string.Compare(column, "openeddate", true) == 0)
+        {
+            currentQuery = isAsc
+                ? (from el in currentQuery orderby el.OpenedDate select el)
+                : (from el in currentQuery orderby el.OpenedDate descending select el);
+            SortedBy = "openeddate";
         }
         else
         {

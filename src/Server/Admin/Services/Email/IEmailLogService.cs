@@ -8,7 +8,7 @@ public interface IEmailLogService : ICRUDService<EmailLogItem>
 {
     Task<ServiceActionResult<ModelList<EmailLogItem>>> GetAllAsync(
         int? top, int? page, string? sortField = null, bool? isAsc = null,
-        string? search = null, int? status = null,
+        string? search = null, int? status = null, string? templateName = null,
         DateTime? startDate = null, DateTime? endDate = null);
 
     Task<ServiceActionResult<bool>> DeleteMultipleAsync(List<string> publicIds);

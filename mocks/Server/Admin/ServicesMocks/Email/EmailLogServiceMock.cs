@@ -39,16 +39,18 @@ public class EmailLogServiceMock : IEmailLogService
             .RuleFor(e => e.IsHtml, true)
             .RuleFor(e => e.Status, f => f.PickRandom("Sent", "Failed", "Queued"))
             .RuleFor(e => e.ErrorMessage, (f, e) => e.Status == "Failed" ? f.PickRandom("SMTP timeout", "Invalid recipient", "Connection refused") : null)
-            .RuleFor(e => e.TemplateName, f => f.PickRandom("Registration", "PasswordReset", "Welcome"))
+            .RuleFor(e => e.TemplateName, f => f.PickRandom("Registration", "ConfirmEmail", "PasswordResetLink", "PasswordResetCode"))
+            .RuleFor(e => e.ProviderMessageId, (f, e) => e.Status == "Sent" ? f.Random.AlphaNumeric(24) : null)
             .RuleFor(e => e.ScheduledDate, f => f.Date.Recent(30))
             .RuleFor(e => e.SentDate, (f, e) => e.Status == "Sent" ? e.ScheduledDate.AddSeconds(f.Random.Int(1, 30)) : null)
+            .RuleFor(e => e.OpenedDate, (f, e) => e.Status == "Sent" && f.Random.Bool(0.3f) ? e.SentDate?.AddMinutes(f.Random.Int(5, 1440)) : null)
             .RuleFor(e => e.CreateDate, (f, e) => e.ScheduledDate)
             .RuleFor(e => e.UpdateDate, (f, e) => e.SentDate ?? e.ScheduledDate);
     }
 
     public async Task<ServiceActionResult<ModelList<EmailLogItem>>> GetAllAsync(
         int? top, int? page, string? sortField = null, bool? isAsc = null,
-        string? search = null, int? status = null,
+        string? search = null, int? status = null, string? templateName = null,
         DateTime? startDate = null, DateTime? endDate = null)
     {
         var pageVal = page ?? 0;
@@ -62,6 +64,11 @@ public class EmailLogServiceMock : IEmailLogService
                 e.ToAddress.Contains(search, StringComparison.OrdinalIgnoreCase) ||
                 e.ToName.Contains(search, StringComparison.OrdinalIgnoreCase) ||
                 e.Subject.Contains(search, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (!string.IsNullOrEmpty(templateName))
+        {
+            filtered = filtered.Where(e => e.TemplateName == templateName);
         }
 
         if (startDate.HasValue)

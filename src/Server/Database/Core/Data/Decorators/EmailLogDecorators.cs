@@ -25,6 +25,7 @@ public static class EmailLogDecorators
             ProviderMessageId = emailLog.ProviderMessageId,
             ScheduledDate = emailLog.ScheduledDate,
             SentDate = emailLog.SentDate,
+            OpenedDate = emailLog.OpenedDate,
             TemplateName = emailLog.TemplateName,
             CreateDate = emailLog.CreateDate,
             UpdateDate = emailLog.UpdateDate
@@ -44,6 +45,7 @@ public static class EmailLogDecorators
         emailLog.ProviderMessageId = item.ProviderMessageId;
         emailLog.ScheduledDate = item.ScheduledDate;
         emailLog.SentDate = item.SentDate;
+        emailLog.OpenedDate = item.OpenedDate;
         emailLog.TemplateName = item.TemplateName;
 
         return emailLog;
