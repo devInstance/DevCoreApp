@@ -1,0 +1,252 @@
+@page "/admin/settings"
+@attribute [Authorize(Policy = "Admin.Settings.Edit")]
+
+<PageTitle>Settings</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <ul class="nav nav-tabs">
+            <li class="nav-item">
+                <a class="nav-link @(CurrentScope == ScopeSystem ? "active" : "")" href="#" @onclick="OnScopeSystem" @onclick:preventDefault>
+                    <i class="bi bi-globe me-1"></i> System
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(CurrentScope == ScopeTenant ? "active" : "")" href="#" @onclick="OnScopeTenant" @onclick:preventDefault>
+                    <i class="bi bi-building me-1"></i> Tenant
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(CurrentScope == ScopeOrganization ? "active" : "")" href="#" @onclick="OnScopeOrganization" @onclick:preventDefault>
+                    <i class="bi bi-diagram-3 me-1"></i> Organization
+                </a>
+            </li>
+        </ul>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+        <input class="form-control" style="width: 220px;" placeholder="Search settings..." @bind="SearchTerm" @bind:event="oninput" disabled="@Host.InProgress" />
+        <button class="btn btn-primary" @onclick="OnSearch" disabled="@Host.InProgress">
+            <i class="bi bi-search"></i>
+        </button>
+        <button class="btn btn-success" @onclick="OnAddNew" disabled="@Host.InProgress">
+            <i class="bi bi-plus-lg me-1"></i> Add
+        </button>
+    </div>
+</div>
+
+@if (Host.InProgress && Settings == null)
+{
+    <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+}
+else if (Settings != null)
+{
+    @foreach (var group in GroupedSettings)
+    {
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">
+                    <i class="bi bi-folder me-1"></i> @group.Key
+                    <span class="badge bg-secondary ms-1">@group.Count()</span>
+                </h6>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width:20%">Key</th>
+                            <th style="width:30%">Value</th>
+                            <th style="width:8%">Type</th>
+                            <th style="width:30%">Description</th>
+                            <th style="width:12%" class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var setting in group)
+                        {
+                            <tr>
+                                <td class="fw-semibold align-middle">
+                                    @setting.Key
+                                    @if (setting.IsSensitive)
+                                    {
+                                        <i class="bi bi-shield-lock text-warning ms-1" title="Sensitive"></i>
+                                    }
+                                </td>
+                                <td class="align-middle">
+                                    @if (EditingSettingId == setting.Id)
+                                    {
+                                        @if (setting.ValueType == "bool")
+                                        {
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" checked="@IsEditingTrue()"
+                                                       @onchange="OnEditBoolChanged" />
+                                                <label class="form-check-label">@(IsEditingTrue() ? "Enabled" : "Disabled")</label>
+                                            </div>
+                                        }
+                                        else if (setting.ValueType == "int")
+                                        {
+                                            <input type="number" class="form-control form-control-sm" @bind="EditingValue" />
+                                        }
+                                        else if (setting.ValueType == "json")
+                                        {
+                                            <textarea class="form-control form-control-sm font-monospace" rows="3" @bind="EditingValue"></textarea>
+                                        }
+                                        else
+                                        {
+                                            <input type="text" class="form-control form-control-sm" @bind="EditingValue" />
+                                        }
+                                    }
+                                    else if (setting.IsSensitive && !RevealedSettings.Contains(setting.Id))
+                                    {
+                                        <code class="text-muted">********</code>
+                                        <button class="btn btn-sm btn-link p-0 ms-1" @onclick="() => OnRevealToggle(setting)" title="Reveal value">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        @if (setting.ValueType == "bool")
+                                        {
+                                            <span class="badge @(setting.Value == "true" ? "bg-success" : "bg-secondary")">
+                                                @(setting.Value == "true" ? "Enabled" : "Disabled")
+                                            </span>
+                                        }
+                                        else if (setting.ValueType == "json")
+                                        {
+                                            <code class="small">@TruncateValue(setting.Value, 60)</code>
+                                        }
+                                        else
+                                        {
+                                            <span>@setting.Value</span>
+                                        }
+
+                                        @if (setting.IsSensitive && RevealedSettings.Contains(setting.Id))
+                                        {
+                                            <button class="btn btn-sm btn-link p-0 ms-1" @onclick="() => OnRevealToggle(setting)" title="Hide value">
+                                                <i class="bi bi-eye-slash"></i>
+                                            </button>
+                                        }
+                                    }
+                                </td>
+                                <td class="align-middle">
+                                    <span class="badge bg-light text-dark">@setting.ValueType</span>
+                                </td>
+                                <td class="align-middle text-muted small">
+                                    @(setting.Description ?? "\u2014")
+                                    @if (CurrentScope == ScopeOrganization && !string.IsNullOrEmpty(setting.OrganizationName))
+                                    {
+                                        <br /><span class="badge bg-info text-dark">@setting.OrganizationName</span>
+                                    }
+                                </td>
+                                <td class="align-middle text-end">
+                                    @if (EditingSettingId == setting.Id)
+                                    {
+                                        <button class="btn btn-sm btn-success me-1" @onclick="OnSaveEdit" disabled="@Host.InProgress" title="Save">
+                                            <i class="bi bi-check-lg"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-secondary" @onclick="OnCancelEdit" title="Cancel">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-sm btn-outline-primary me-1" @onclick="() => OnStartEdit(setting)" disabled="@Host.InProgress" title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger" @onclick="() => OnDelete(setting)" disabled="@Host.InProgress" title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+
+    @if (!GroupedSettings.Any())
+    {
+        <div class="alert alert-light text-center">
+            No settings found for the <strong>@CurrentScope</strong> scope.
+        </div>
+    }
+}
+
+@if (ShowAddForm)
+{
+    <div class="card mt-3 border-success">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h6 class="mb-0"><i class="bi bi-plus-circle me-1"></i> New Setting (@CurrentScope scope)</h6>
+            <button class="btn-close" @onclick="OnCancelAdd"></button>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Category</label>
+                    <input class="form-control" @bind="NewSetting.Category" placeholder="e.g. General" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Key</label>
+                    <input class="form-control" @bind="NewSetting.Key" placeholder="e.g. MaxRetries" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Value Type</label>
+                    <select class="form-select" @bind="NewSetting.ValueType">
+                        <option value="string">string</option>
+                        <option value="int">int</option>
+                        <option value="bool">bool</option>
+                        <option value="json">json</option>
+                    </select>
+                </div>
+                <div class="col-md-8">
+                    @if (NewSetting.ValueType == "bool")
+                    {
+                        <label class="form-label">Value</label>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" checked="@(NewSetting.Value == "true")"
+                                   @onchange="OnNewSettingBoolChanged" />
+                            <label class="form-check-label">@(NewSetting.Value == "true" ? "Enabled" : "Disabled")</label>
+                        </div>
+                    }
+                    else if (NewSetting.ValueType == "json")
+                    {
+                        <label class="form-label">Value</label>
+                        <textarea class="form-control font-monospace" rows="3" @bind="NewSetting.Value" placeholder="{}"></textarea>
+                    }
+                    else if (NewSetting.ValueType == "int")
+                    {
+                        <label class="form-label">Value</label>
+                        <input type="number" class="form-control" @bind="NewSetting.Value" />
+                    }
+                    else
+                    {
+                        <label class="form-label">Value</label>
+                        <input class="form-control" @bind="NewSetting.Value" />
+                    }
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Sensitive</label>
+                    <div class="form-check form-switch mt-2">
+                        <input class="form-check-input" type="checkbox" @bind="NewSetting.IsSensitive" />
+                        <label class="form-check-label">Mask value</label>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Description</label>
+                    <input class="form-control" @bind="NewSetting.Description" placeholder="Optional description" />
+                </div>
+                <div class="col-12 text-end">
+                    <button class="btn btn-outline-secondary me-2" @onclick="OnCancelAdd">Cancel</button>
+                    <button class="btn btn-success" @onclick="OnCreateSetting" disabled="@Host.InProgress">
+                        <i class="bi bi-plus-lg me-1"></i> Create
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
