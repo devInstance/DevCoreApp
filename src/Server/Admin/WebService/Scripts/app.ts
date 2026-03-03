@@ -1,14 +1,16 @@
-"use strict";
-function blazor_setTitle(title) {
+function blazor_setTitle(title: string): void {
     document.title = title;
 }
-function blazor_getCulture() {
+
+function blazor_getCulture(): string | null {
     return localStorage.getItem("BlazorCulture");
 }
-function blazor_setCulture(value) {
+
+function blazor_setCulture(value: string): void {
     localStorage.setItem("BlazorCulture", value);
 }
-function showBootstrapModal(id) {
+
+function showBootstrapModal(id: string): boolean {
     const theModal = new bootstrap.Modal("#" + id, {
         keyboard: true,
         focus: true,
@@ -16,16 +18,16 @@ function showBootstrapModal(id) {
     theModal.show();
     return true;
 }
-function dismissBootstrapModal(id) {
+
+function dismissBootstrapModal(id: string): boolean {
     const element = document.getElementById(id);
-    if (!element)
-        return false;
+    if (!element) return false;
     const modal = bootstrap.Modal.getInstance(element);
-    if (modal)
-        modal.hide();
+    if (modal) modal.hide();
     return true;
 }
-function downloadFileFromBytes(fileName, contentType, bytes) {
+
+function downloadFileFromBytes(fileName: string, contentType: string, bytes: ArrayLike<number>): void {
     const blob = new Blob([new Uint8Array(bytes)], { type: contentType });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -36,7 +38,7 @@ function downloadFileFromBytes(fileName, contentType, bytes) {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 }
+
 window.showBootstrapModal = showBootstrapModal;
 window.dismissBootstrapModal = dismissBootstrapModal;
 window.downloadFileFromBytes = downloadFileFromBytes;
-//# sourceMappingURL=app.js.map

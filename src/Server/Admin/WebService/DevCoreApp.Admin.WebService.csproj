@@ -35,6 +35,10 @@
 		<PackageReference Include="Microsoft.Extensions.Localization.Abstractions" Version="10.0.3" />
 		<PackageReference Include="System.Text.Json" Version="10.0.3" />
 		<PackageReference Include="DartSassBuilder" Version="1.1.0" />
+		<PackageReference Include="Microsoft.TypeScript.MSBuild" Version="5.*">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
 	</ItemGroup>
 
 	<ItemGroup>
