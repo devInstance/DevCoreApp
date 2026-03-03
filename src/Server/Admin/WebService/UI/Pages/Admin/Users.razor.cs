@@ -7,6 +7,7 @@ using DevInstance.DevCoreApp.Shared.Model;
 using DevInstance.DevCoreApp.Shared.Model.Settings;
 using DevInstance.WebServiceToolkit.Common.Model;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 
 namespace DevInstance.DevCoreApp.Server.Admin.WebService.UI.Pages.Admin;
 
@@ -34,11 +35,15 @@ public partial class Users
         new() { Label = "Phone", Field = "phone", ValueSelector = u => u.PhoneNumber, Width = "14%" },
         new() { Label = "Roles", Field = "roles", ValueSelector = u => u.Roles, IsSortable = false, Width = "10%" },
         new() { Label = "Status", Field = "status", ValueSelector = u => u.Status.ToString(), Width = "10%" },
-        new() { Label = "Actions", Field = "actions", ValueSelector = u => u.Id, IsSortable = false, Width = "100px" },
+        new() { Label = "Actions", Field = "actions", ValueSelector = u => u.Id, IsSortable = false, Width = "5%" },
     };
 
     private string? UserToDelete { get; set; }
     private string? UserToDeleteName { get; set; }
+
+    // Preview panel
+    private UserProfileItem? SelectedUser { get; set; }
+    private ElementReference PreviewPanelRef { get; set; }
 
     private int pageCount = 10;
     private string SearchTerm { get; set; } = string.Empty;
@@ -165,6 +170,36 @@ public partial class Users
         await LoadUsers(UserList?.Page ?? 0, args.SortBy, args.IsAscending, UserList?.Search);
     }
 
+    // ── Preview Panel ──
+
+    private Task OnRowClick(UserProfileItem user)
+    {
+        SelectedUser = SelectedUser?.Id == user.Id ? null : user;
+        return Task.CompletedTask;
+    }
+
+    private void ClosePreview()
+    {
+        SelectedUser = null;
+    }
+
+    private void OnPreviewKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape")
+        {
+            SelectedUser = null;
+        }
+    }
+
+    private static string GetInitials(UserProfileItem user)
+    {
+        var first = !string.IsNullOrEmpty(user.FirstName) ? user.FirstName[0].ToString().ToUpper() : "";
+        var last = !string.IsNullOrEmpty(user.LastName) ? user.LastName[0].ToString().ToUpper() : "";
+        return first + last;
+    }
+
+    // ── Delete Confirmation ──
+
     private void ShowDeleteConfirmation(UserProfileItem user)
     {
         UserToDelete = user.Id;
@@ -184,6 +219,12 @@ public partial class Users
         await Host.ServiceSubmitAsync(
             async () => await UserService.DeleteUserAsync(UserToDelete)
         );
+
+        // Close preview if we deleted the selected user
+        if (SelectedUser?.Id == UserToDelete)
+        {
+            SelectedUser = null;
+        }
 
         UserToDelete = null;
         UserToDeleteName = null;

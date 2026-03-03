@@ -53,8 +53,27 @@
             throw new ArgumentNullException(nameof(Model), "Model cannot be null.");
         }
 
-        IsSorted = Model.SortBy == SortField;
-        IsAsc = Model.IsAsc;
+        IsSorted = false;
+        IsAsc = true;
+
+        if (Model.SortOrder != null)
+        {
+            foreach (var entry in Model.SortOrder)
+            {
+                if (entry == SortField)
+                {
+                    IsSorted = true;
+                    IsAsc = true;
+                    break;
+                }
+                else if (entry == "-" + SortField)
+                {
+                    IsSorted = true;
+                    IsAsc = false;
+                    break;
+                }
+            }
+        }
     }
 
     private void ToggleSort()

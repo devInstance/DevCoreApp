@@ -35,6 +35,9 @@ public partial class SettingsPage
     private bool ShowAddForm { get; set; }
     private SettingItem NewSetting { get; set; } = new();
 
+    // Delete confirmation
+    private SettingItem? SettingToDelete { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
         await LoadSettings();
@@ -58,12 +61,19 @@ public partial class SettingsPage
         EditingSettingId = null;
         RevealedSettings.Clear();
         ShowAddForm = false;
+        SettingToDelete = null;
         await LoadSettings();
     }
 
     private async Task OnSearch()
     {
         EditingSettingId = null;
+        await LoadSettings();
+    }
+
+    private async Task OnClearSearch()
+    {
+        SearchTerm = string.Empty;
         await LoadSettings();
     }
 
@@ -148,12 +158,25 @@ public partial class SettingsPage
         await LoadSettings();
     }
 
-    private async Task OnDelete(SettingItem setting)
+    private void ShowDeleteConfirmation(SettingItem setting)
     {
+        SettingToDelete = setting;
+    }
+
+    private void CancelDelete()
+    {
+        SettingToDelete = null;
+    }
+
+    private async Task ConfirmDelete()
+    {
+        if (SettingToDelete == null) return;
+
         await Host.ServiceSubmitAsync(
-            async () => await SettingsAdminService.DeleteSettingAsync(setting.Id)
+            async () => await SettingsAdminService.DeleteSettingAsync(SettingToDelete.Id)
         );
 
+        SettingToDelete = null;
         await LoadSettings();
     }
 
@@ -161,5 +184,32 @@ public partial class SettingsPage
     {
         if (string.IsNullOrEmpty(value)) return string.Empty;
         return value.Length <= maxLength ? value : value[..maxLength] + "...";
+    }
+
+    private static string GetTypeBadgeClass(string valueType)
+    {
+        return valueType switch
+        {
+            "string" => "bg-primary",
+            "int" => "bg-info text-dark",
+            "bool" => "bg-warning text-dark",
+            "json" => "bg-dark",
+            _ => "bg-secondary"
+        };
+    }
+
+    private static string GetCategoryIcon(string category)
+    {
+        return category.ToLowerInvariant() switch
+        {
+            "general" => "bi-gear",
+            "email" => "bi-envelope",
+            "security" => "bi-shield-lock",
+            "jobs" => "bi-list-task",
+            "storage" => "bi-hdd",
+            "branding" => "bi-palette",
+            "features" => "bi-toggles",
+            _ => "bi-folder"
+        };
     }
 }

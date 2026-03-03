@@ -25,13 +25,29 @@
            IsLoading="Host.InProgress"
            OnSort="OnSortAsync"
            OnPageChanged="OnPageChangedAsync"
-           OnColumnsChanged="OnColumnsChanged">
+           OnColumnsChanged="OnColumnsChanged"
+           IdSelector="u => u.Id"
+           OnRowClick="OnRowClick">
     <ColumnTemplates>
+        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.UserProfileItem" Field="status" Context="user">
+            @if (user.Status == "Active")
+            {
+                <span class="badge bg-success">Active</span>
+            }
+            else if (user.Status == "Suspended")
+            {
+                <span class="badge bg-danger">Suspended</span>
+            }
+            else
+            {
+                <span class="badge bg-secondary">@user.Status</span>
+            }
+        </HColumnTemplate>
         <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.UserProfileItem" Field="actions" Context="user">
-            <a href="admin/users/@user.Id/edit" class="btn btn-sm btn-outline-primary me-1" title="Edit">
+            <a href="admin/users/@user.Id/edit" class="btn btn-sm btn-outline-primary me-1" title="Edit" @onclick:stopPropagation="true">
                 <i class="bi bi-pencil"></i>
             </a>
-            <button class="btn btn-sm btn-outline-danger" title="Delete" @onclick="() => ShowDeleteConfirmation(user)">
+            <button class="btn btn-sm btn-outline-danger" title="Delete" @onclick="() => ShowDeleteConfirmation(user)" @onclick:stopPropagation="true">
                 <i class="bi bi-trash"></i>
             </button>
         </HColumnTemplate>
@@ -48,6 +64,109 @@
 </HDataGrid>
 
 <GridSettings Columns="Columns" OnSave="OnSave" PageSize="pageCount" TItem="DevInstance.DevCoreApp.Shared.Model.UserProfileItem" />
+
+@* ── User Preview Panel ── *@
+@if (SelectedUser != null)
+{
+    <div class="user-preview-panel" @onkeydown="OnPreviewKeyDown" tabindex="0" @ref="PreviewPanelRef">
+        <div class="user-preview-header">
+            <button class="btn-close ms-auto" @onclick="ClosePreview" aria-label="Close"></button>
+        </div>
+        <div class="user-preview-body">
+            <div class="text-center mb-4">
+                <div class="user-preview-avatar">
+                    @GetInitials(SelectedUser)
+                </div>
+                <h5 class="mt-3 mb-1">@SelectedUser.FullName</h5>
+                <span class="text-muted">@SelectedUser.Email</span>
+            </div>
+
+            <div class="user-preview-section">
+                <div class="user-preview-field">
+                    <label>Status</label>
+                    <div>
+                        @if (SelectedUser.Status == "Active")
+                        {
+                            <span class="badge bg-success">Active</span>
+                        }
+                        else if (SelectedUser.Status == "Suspended")
+                        {
+                            <span class="badge bg-danger">Suspended</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">@SelectedUser.Status</span>
+                        }
+                    </div>
+                </div>
+                <div class="user-preview-field">
+                    <label>Roles</label>
+                    <div>
+                        @if (!string.IsNullOrEmpty(SelectedUser.Roles))
+                        {
+                            @foreach (var role in SelectedUser.Roles.Split(',', StringSplitOptions.TrimEntries))
+                            {
+                                <span class="badge bg-primary me-1">@role</span>
+                            }
+                        }
+                        else
+                        {
+                            <span class="text-muted">None</span>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="user-preview-section">
+                <h6 class="user-preview-section-title">Contact</h6>
+                <div class="user-preview-field">
+                    <label>Email</label>
+                    <div><a href="mailto:@SelectedUser.Email">@SelectedUser.Email</a></div>
+                </div>
+                <div class="user-preview-field">
+                    <label>Phone</label>
+                    <div>@(string.IsNullOrEmpty(SelectedUser.PhoneNumber) ? "\u2014" : SelectedUser.PhoneNumber)</div>
+                </div>
+            </div>
+
+            <div class="user-preview-section">
+                <h6 class="user-preview-section-title">Details</h6>
+                <div class="user-preview-field">
+                    <label>First Name</label>
+                    <div>@SelectedUser.FirstName</div>
+                </div>
+                @if (!string.IsNullOrEmpty(SelectedUser.MiddleName))
+                {
+                    <div class="user-preview-field">
+                        <label>Middle Name</label>
+                        <div>@SelectedUser.MiddleName</div>
+                    </div>
+                }
+                <div class="user-preview-field">
+                    <label>Last Name</label>
+                    <div>@SelectedUser.LastName</div>
+                </div>
+            </div>
+
+            <div class="user-preview-section">
+                <h6 class="user-preview-section-title">Timestamps</h6>
+                <div class="user-preview-field">
+                    <label>Created</label>
+                    <div>@SelectedUser.CreateDate.ToString("g")</div>
+                </div>
+                <div class="user-preview-field">
+                    <label>Last Updated</label>
+                    <div>@SelectedUser.UpdateDate.ToString("g")</div>
+                </div>
+            </div>
+        </div>
+        <div class="user-preview-footer">
+            <a href="admin/users/@SelectedUser.Id/edit" class="btn btn-primary w-100">
+                <i class="bi bi-pencil me-1"></i>Edit User
+            </a>
+        </div>
+    </div>
+}
 
 @if (UserToDelete != null)
 {
