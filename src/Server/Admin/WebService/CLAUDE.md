@@ -66,6 +66,9 @@ Queue emails via `IBackgroundWorker.Submit()` with a `BackgroundRequestItem` of 
 ### HDataGrid Component
 Use `HDataGrid<TItem>` for all tabular data pages. Do not write inline `<table>` markup. Full documentation: [`UI/Components/HDataGrid.md`](UI/Components/HDataGrid.md).
 
+### Import/Export Engine
+Generic CSV/Excel import and export for any entity type via handler pattern. Full documentation: [`../../Services/ImportExport/ImportExport.md`](../../Services/ImportExport/ImportExport.md).
+
 ### Roles
 Defined in `ApplicationRoles`: Owner, Admin, Manager, Employee, Client. Owner is the super-admin role and is typically excluded from user-assignable roles.
 

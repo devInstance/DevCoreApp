@@ -128,6 +128,9 @@ AutoTest.Net/
 **/Styles/app.css
 **/wwwroot/app.css
 
+# File storage uploads
+**/wwwroot/file-storage/
+
 # Installshield output folder
 [Ee]xpress/
 

@@ -180,6 +180,12 @@ Jobs are persisted to the `Jobs` table BEFORE the worker picks them up. This pre
 
 **The Worker (`DevCoreApp.Worker`) runs as a separate process.** It can be deployed and restarted independently from WebService.
 
+## File Storage
+
+Provider-based file storage with local disk (default) and S3 (stub). Configuration and usage details: [`src/Server/Storage/FileStorage.md`](src/Server/Storage/FileStorage.md).
+
+**Quick reference:** Files are uploaded via `IFileService.UploadAsync()`, metadata stored in `FileRecords` table (organization-scoped), physical files stored by `IFileStorageProvider`. Provider is registered in `Program.cs` via `AddLocalFileStorage()`. Runtime limits (max size, allowed types, soft-delete) are managed via the Settings table under the `Storage` category.
+
 ## Exception Handling
 
 - Controllers use `HandleWebRequestAsync()` from WebServiceToolkit
