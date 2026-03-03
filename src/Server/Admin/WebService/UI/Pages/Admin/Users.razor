@@ -12,6 +12,9 @@
     </div>
     <div class="col col-md-6 col-lg-8">
         <div class="float-end">
+            <button class="btn btn-outline-primary ms-2" @onclick="ShowExportDialog" disabled="@Host.InProgress">
+                <i class="bi bi-download me-1"></i>Export
+            </button>
             <a class="btn btn-primary ms-2" role="button" href="admin/users/new" disabled="@Host.InProgress">
                 <i class="bi bi-person-plus-fill me-1"></i>New User
             </a>
@@ -195,3 +198,9 @@
         </div>
     </div>
 }
+
+<ExportDialog EntityType="UserProfile"
+              Search="@SearchTerm"
+              SortBy="@GetCurrentSortBy()"
+              IsVisible="@IsExportDialogVisible"
+              OnClose="HideExportDialog" />

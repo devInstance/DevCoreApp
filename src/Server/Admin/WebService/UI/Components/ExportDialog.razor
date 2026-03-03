@@ -1,0 +1,64 @@
+@if (IsVisible)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Export @EntityType</h5>
+                    <button type="button" class="btn-close" @onclick="Close"></button>
+                </div>
+                <div class="modal-body">
+                    @if (Fields != null)
+                    {
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Select Fields</label>
+                            @foreach (var field in Fields)
+                            {
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="export_@field.Field"
+                                           checked="@SelectedFields.Contains(field.Field)"
+                                           @onchange="e => ToggleField(field.Field, (bool)(e.Value ?? false))" />
+                                    <label class="form-check-label" for="export_@field.Field">@field.Label</label>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Format</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="exportFormat" id="formatCsv"
+                                       checked="@(SelectedFormat == ExportFileFormat.Csv)"
+                                       @onchange="() => SelectedFormat = ExportFileFormat.Csv" />
+                                <label class="form-check-label" for="formatCsv">CSV</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="exportFormat" id="formatXlsx"
+                                       checked="@(SelectedFormat == ExportFileFormat.Xlsx)"
+                                       @onchange="() => SelectedFormat = ExportFileFormat.Xlsx" />
+                                <label class="form-check-label" for="formatXlsx">Excel (.xlsx)</label>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="d-flex align-items-center text-muted">
+                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                            Loading fields...
+                        </div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="Close">Cancel</button>
+                    <button type="button" class="btn btn-primary" @onclick="OnExport"
+                            disabled="@(IsExporting || SelectedFields.Count == 0)">
+                        @if (IsExporting)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                        }
+                        <i class="bi bi-download me-1"></i>Export
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}

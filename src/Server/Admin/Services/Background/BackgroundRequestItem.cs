@@ -3,7 +3,8 @@ namespace DevInstance.DevCoreApp.Server.Admin.Services.Background;
 
 public enum BackgroundRequestType
 {
-    SendEmail
+    SendEmail,
+    ImportData
 }
 
 public class BackgroundRequestItem

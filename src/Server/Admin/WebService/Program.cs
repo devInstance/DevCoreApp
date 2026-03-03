@@ -4,6 +4,8 @@ using DevInstance.DevCoreApp.Server.Admin.Services.Authentication;
 using DevInstance.DevCoreApp.Server.Admin.Services.Background;
 using DevInstance.DevCoreApp.Server.Admin.Services.Background.Tasks;
 using DevInstance.DevCoreApp.Server.Admin.Services.Background.Tasks.Handlers;
+using DevInstance.DevCoreApp.Server.Admin.Services.ImportExport;
+using DevInstance.DevCoreApp.Server.Admin.Services.ImportExport.Handlers;
 using DevInstance.DevCoreApp.Server.Admin.Services.Notifications;
 using DevInstance.DevCoreApp.Server.Admin.Services.Notifications.Templates;
 using DevInstance.DevCoreApp.Server.Admin.Services.Seeding;
@@ -35,6 +37,7 @@ using TimeProvider = DevInstance.DevCoreApp.Shared.Utils.TimeProvider; //TODO: m
 
 #if SERVICEMOCKS
 using DevInstance.DevCoreApp.Server.Admin.Services.Mocks.UserAdmin;
+using DevInstance.DevCoreApp.Server.Admin.Services.Mocks.ImportExport;
 #endif
 
 namespace DevInstance.DevCoreApp.Server.Admin.WebService;
@@ -54,6 +57,7 @@ public class Program
         builder.Services.Configure<BackgroundTaskSettings>(
             builder.Configuration.GetSection(BackgroundTaskSettings.SectionName));
         builder.Services.AddSingleton<IBackgroundTaskHandler, SendEmailTaskHandler>();
+        builder.Services.AddSingleton<IBackgroundTaskHandler, ImportDataTaskHandler>();
         builder.Services.AddSingleton<BackgroundTaskWorker>();
         builder.Services.AddSingleton<IBackgroundTaskWorker>(sp => sp.GetRequiredService<BackgroundTaskWorker>());
         builder.Services.AddSingleton<BackgroundWorker>();
@@ -163,6 +167,10 @@ public class Program
 #if !SERVICEMOCKS
         builder.Services.AddBlazorServices();
         builder.Services.AddBlazorServices(typeof(UserProfileService).Assembly);
+
+        // Import/Export handlers
+        builder.Services.AddScoped<IImportHandler, UserProfileImportHandler>();
+        builder.Services.AddScoped<IExportHandler, UserProfileExportHandler>();
 #else
         builder.Services.AddBlazorServicesMocks();
         builder.Services.AddBlazorServicesMocks(typeof(UserProfileServiceMock).Assembly);

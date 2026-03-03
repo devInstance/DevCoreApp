@@ -94,6 +94,7 @@ public class BackgroundWorker : BackgroundService, IBackgroundWorker
     private static string MapRequestType(BackgroundRequestType requestType) => requestType switch
     {
         BackgroundRequestType.SendEmail => BackgroundTaskTypes.SendEmail,
+        BackgroundRequestType.ImportData => BackgroundTaskTypes.ImportData,
         _ => requestType.ToString()
     };
 
@@ -108,6 +109,12 @@ public class BackgroundWorker : BackgroundService, IBackgroundWorker
         {
             return !string.IsNullOrEmpty(emailRequest.EmailLogId)
                 ? $"EmailLog:{emailRequest.EmailLogId}"
+                : null;
+        }
+        if (item.RequestType == BackgroundRequestType.ImportData && item.Content is ImportDataRequest importRequest)
+        {
+            return !string.IsNullOrEmpty(importRequest.SessionId)
+                ? $"ImportSession:{importRequest.SessionId}"
                 : null;
         }
         return null;

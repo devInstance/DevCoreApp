@@ -3,6 +3,7 @@ using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using DevInstance.DevCoreApp.Server.Database.Core.Models.BackgroundTasks;
 using DevInstance.DevCoreApp.Server.Database.Core.Models.Base;
 using DevInstance.DevCoreApp.Server.Database.Core.Models.Files;
+using DevInstance.DevCoreApp.Server.Database.Core.Models.ImportExport;
 using DevInstance.DevCoreApp.Server.Database.Core.Models.Notifications;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -36,6 +37,7 @@ public abstract class ApplicationDbContext : IdentityDbContext<ApplicationUser, 
     public DbSet<Notification> Notifications { get; set; }
     public DbSet<UserNotificationPreference> UserNotificationPreferences { get; set; }
     public DbSet<FileRecord> FileRecords { get; set; }
+    public DbSet<ImportSession> ImportSessions { get; set; }
 
     public ApplicationDbContext(DbContextOptions options, IOperationContext operationContext)
             : base(options)
@@ -305,6 +307,29 @@ public abstract class ApplicationDbContext : IdentityDbContext<ApplicationUser, 
             entity.HasIndex(fr => fr.OrganizationId);
             entity.HasIndex(fr => new { fr.EntityType, fr.EntityId });
             entity.HasIndex(fr => fr.StorageProvider);
+        });
+
+        builder.Entity<ImportSession>(entity =>
+        {
+            entity.Property(s => s.ColumnMappingJson)
+                .HasColumnType("jsonb");
+
+            entity.Property(s => s.ValidationResultJson)
+                .HasColumnType("jsonb");
+
+            entity.HasOne(s => s.CreatedBy)
+                .WithMany()
+                .HasForeignKey(s => s.CreatedById)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(s => s.Organization)
+                .WithMany()
+                .HasForeignKey(s => s.OrganizationId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(s => s.EntityType);
+            entity.HasIndex(s => s.Status);
+            entity.HasIndex(s => s.OrganizationId);
         });
 
         ApplyOrganizationQueryFilters(builder);

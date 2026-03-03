@@ -89,4 +89,9 @@ public abstract class CoreQueryRepository : IQueryRepository
     {
         return new CoreAuditLogQuery(LogManager, TimeProvider, DB, currentProfile);
     }
+
+    public IImportSessionQuery GetImportSessionQuery(UserProfile currentProfile)
+    {
+        return new CoreImportSessionQuery(LogManager, TimeProvider, DB, currentProfile);
+    }
 }

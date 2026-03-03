@@ -1,0 +1,246 @@
+@page "/admin/import"
+@page "/admin/import/{EntityType}"
+@attribute [Authorize(Roles = "Owner,Admin")]
+
+<PageTitle>Import Data</PageTitle>
+
+<h4 class="mb-4">Import Data</h4>
+
+@* ── Step Indicator ── *@
+<div class="d-flex mb-4">
+    @foreach (var step in Enum.GetValues<ImportWizardStep>())
+    {
+        var isActive = step == CurrentStep;
+        var isCompleted = step < CurrentStep;
+        <div class="d-flex align-items-center @(step != ImportWizardStep.Upload ? "ms-3" : "")">
+            <span class="badge @(isActive ? "bg-primary" : isCompleted ? "bg-success" : "bg-secondary") rounded-circle me-1"
+                  style="width: 28px; height: 28px; line-height: 20px; text-align: center;">
+                @((int)step + 1)
+            </span>
+            <span class="@(isActive ? "fw-bold" : "text-muted")">@GetStepLabel(step)</span>
+        </div>
+    }
+</div>
+
+@* ── Step 1: Upload ── *@
+@if (CurrentStep == ImportWizardStep.Upload)
+{
+    <div class="card">
+        <div class="card-body">
+            <div class="mb-3">
+                <label class="form-label">Entity Type</label>
+                <select class="form-select" style="max-width: 300px;" @bind="SelectedEntityType" disabled="@Host.InProgress">
+                    <option value="">Select entity type...</option>
+                    @if (EntityTypes != null)
+                    {
+                        @foreach (var type in EntityTypes)
+                        {
+                            <option value="@type">@type</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">File</label>
+                <InputFile class="form-control" style="max-width: 400px;" OnChange="OnFileSelected" accept=".csv,.xlsx"
+                           disabled="@(Host.InProgress || string.IsNullOrEmpty(SelectedEntityType))" />
+                <div class="form-text">Supported formats: CSV (.csv) and Excel (.xlsx)</div>
+            </div>
+            @if (Host.InProgress)
+            {
+                <div class="d-flex align-items-center text-muted">
+                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                    Parsing file...
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@* ── Step 2: Map Columns ── *@
+@if (CurrentStep == ImportWizardStep.MapColumns)
+{
+    <div class="card">
+        <div class="card-body">
+            <p class="text-muted mb-3">
+                Map your file columns to the target fields. Columns mapped to "Skip" will be ignored.
+            </p>
+            <table class="table table-sm" style="max-width: 700px;">
+                <thead>
+                    <tr>
+                        <th style="width: 50%;">Source Column (from file)</th>
+                        <th style="width: 50%;">Target Field</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (ColumnMappings != null)
+                    {
+                        @foreach (var mapping in ColumnMappings)
+                        {
+                            <tr>
+                                <td>@mapping.SourceColumnName</td>
+                                <td>
+                                    <select class="form-select form-select-sm" @bind="mapping.TargetField">
+                                        <option value="">— Skip —</option>
+                                        @if (ImportFields != null)
+                                        {
+                                            @foreach (var field in ImportFields)
+                                            {
+                                                <option value="@field.Field">
+                                                    @field.Label @(field.IsRequired ? "*" : "")
+                                                </option>
+                                            }
+                                        }
+                                    </select>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+            <div class="mt-3">
+                <button class="btn btn-primary" @onclick="OnValidate" disabled="@Host.InProgress">
+                    @if (Host.InProgress)
+                    {
+                        <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                    }
+                    Validate
+                </button>
+                <button class="btn btn-outline-secondary ms-2" @onclick="OnBackToUpload" disabled="@Host.InProgress">Back</button>
+            </div>
+        </div>
+    </div>
+}
+
+@* ── Step 3: Preview ── *@
+@if (CurrentStep == ImportWizardStep.Preview)
+{
+    <div class="card mb-3">
+        <div class="card-body">
+            @if (ValidationResult != null)
+            {
+                <div class="d-flex gap-3 mb-3">
+                    <span class="badge bg-info fs-6">Total: @ValidationResult.TotalRows</span>
+                    <span class="badge bg-success fs-6">Valid: @ValidationResult.ValidRows</span>
+                    <span class="badge bg-danger fs-6">Errors: @ValidationResult.ErrorRows</span>
+                </div>
+            }
+
+            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                <table class="table table-sm table-hover">
+                    <thead class="table-light sticky-top">
+                        <tr>
+                            <th style="width: 60px;">#</th>
+                            <th style="width: 80px;">Status</th>
+                            @if (ImportFields != null)
+                            {
+                                @foreach (var field in ImportFields)
+                                {
+                                    <th>@field.Label</th>
+                                }
+                            }
+                            <th>Errors</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (ValidationResult?.Rows != null)
+                        {
+                            @foreach (var row in ValidationResult.Rows)
+                            {
+                                <tr class="@(row.Status == ImportRowStatus.Error ? "table-danger" : "")">
+                                    <td>@row.RowNumber</td>
+                                    <td>
+                                        @if (row.Status == ImportRowStatus.Valid)
+                                        {
+                                            <span class="badge bg-success">Valid</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">Error</span>
+                                        }
+                                    </td>
+                                    @if (ImportFields != null)
+                                    {
+                                        @foreach (var field in ImportFields)
+                                        {
+                                            <td>@(row.Values.TryGetValue(field.Field, out var val) ? val : "")</td>
+                                        }
+                                    }
+                                    <td class="text-danger small">@string.Join("; ", row.Errors)</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mt-3">
+                <button class="btn btn-success" @onclick="OnCommit" disabled="@(Host.InProgress || ValidationResult?.ValidRows == 0)">
+                    @if (Host.InProgress)
+                    {
+                        <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                    }
+                    Import @(ValidationResult?.ValidRows ?? 0) Rows
+                </button>
+                <button class="btn btn-outline-secondary ms-2" @onclick="OnBackToMapping" disabled="@Host.InProgress">Back</button>
+            </div>
+        </div>
+    </div>
+}
+
+@* ── Step 4: Result ── *@
+@if (CurrentStep == ImportWizardStep.Result)
+{
+    <div class="card">
+        <div class="card-body">
+            @if (CommitResult != null)
+            {
+                <div class="alert @(CommitResult.ErrorRows > 0 ? "alert-warning" : "alert-success")">
+                    <h5>Import Complete</h5>
+                    <ul class="mb-0">
+                        <li><strong>Imported:</strong> @CommitResult.ImportedRows rows</li>
+                        <li><strong>Skipped (validation errors):</strong> @CommitResult.SkippedRows rows</li>
+                        @if (CommitResult.ErrorRows > 0)
+                        {
+                            <li><strong>Failed during import:</strong> @CommitResult.ErrorRows rows</li>
+                        }
+                    </ul>
+                </div>
+
+                @if (CommitResult.Errors.Count > 0)
+                {
+                    <div class="alert alert-danger">
+                        <h6>Errors:</h6>
+                        <ul class="mb-0 small">
+                            @foreach (var error in CommitResult.Errors)
+                            {
+                                <li>@error</li>
+                            }
+                        </ul>
+                    </div>
+                }
+            }
+            else if (IsBackgroundProcessing)
+            {
+                <div class="alert alert-info">
+                    <div class="d-flex align-items-center">
+                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                        <span>Import is processing in the background. The page will update automatically.</span>
+                    </div>
+                    @if (CurrentSession != null)
+                    {
+                        <div class="mt-2">
+                            <strong>Status:</strong> @CurrentSession.Status
+                            @if (CurrentSession.ImportedRows > 0)
+                            {
+                                <span class="ms-2">— @CurrentSession.ImportedRows rows imported so far</span>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+
+            <button class="btn btn-primary mt-3" @onclick="OnNewImport">New Import</button>
+        </div>
+    </div>
+}

@@ -198,6 +198,26 @@ public partial class Users
         return first + last;
     }
 
+    // ── Export Dialog ──
+
+    private bool IsExportDialogVisible { get; set; }
+
+    private void ShowExportDialog()
+    {
+        IsExportDialogVisible = true;
+    }
+
+    private void HideExportDialog()
+    {
+        IsExportDialogVisible = false;
+    }
+
+    private string[]? GetCurrentSortBy()
+    {
+        if (string.IsNullOrEmpty(SortField)) return null;
+        return new[] { (IsAsc ? "" : "-") + SortField };
+    }
+
     // ── Delete Confirmation ──
 
     private void ShowDeleteConfirmation(UserProfileItem user)

@@ -24,6 +24,9 @@
 	  <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.16.0" />
 
 	  <PackageReference Include="DevInstance.WebServiceToolkit" Version="10.1.0" />
+
+	  <PackageReference Include="CsvHelper" Version="33.*" />
+	  <PackageReference Include="ClosedXML" Version="0.104.*" />
   </ItemGroup>
 
 </Project>
