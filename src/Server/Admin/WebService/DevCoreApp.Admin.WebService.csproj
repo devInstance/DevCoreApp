@@ -35,11 +35,27 @@
 		<PackageReference Include="Microsoft.Extensions.Localization.Abstractions" Version="10.0.3" />
 		<PackageReference Include="System.Text.Json" Version="10.0.3" />
 		<PackageReference Include="DartSassBuilder" Version="1.1.0" />
-		<PackageReference Include="Microsoft.TypeScript.MSBuild" Version="5.*">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
 	</ItemGroup>
+
+	<!-- TypeScript Compilation: Sources in Scripts/, compiled JS committed to wwwroot/scripts/.
+	     Runs tsc automatically when .ts files are newer than .js output. -->
+	<PropertyGroup>
+		<TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
+	</PropertyGroup>
+	<ItemGroup>
+		<TypeScriptSource Include="Scripts\**\*.ts" Exclude="Scripts\**\*.d.ts" />
+		<TypeScriptInput Include="Scripts\**\*.ts" />
+		<TypeScriptInput Include="tsconfig.json" />
+	</ItemGroup>
+	<Target Name="CompileTypeScript" BeforeTargets="BeforeBuild"
+	        Inputs="@(TypeScriptInput)"
+	        Outputs="@(TypeScriptSource->'wwwroot\scripts\%(Filename).js')">
+		<Exec Command="tsc -p tsconfig.json" IgnoreExitCode="true">
+			<Output TaskParameter="ExitCode" PropertyName="TscExitCode" />
+		</Exec>
+		<Error Condition="'$(TscExitCode)' != '0'"
+		       Text="TypeScript files changed but compilation failed (exit code $(TscExitCode)). Install tsc (npm i -g typescript) and run: tsc -p tsconfig.json" />
+	</Target>
 
 	<ItemGroup>
 		<ProjectReference Include="..\Services\DevCoreApp.Admin.Services.csproj" />

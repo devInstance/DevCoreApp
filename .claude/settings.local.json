@@ -22,7 +22,9 @@
       "Bash(dotnet tool:*)",
       "Bash(dotnet list:*)",
       "Bash(dotnet-ildasm:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(where:*)",
+      "Bash(npm install:*)"
     ]
   }
 }
