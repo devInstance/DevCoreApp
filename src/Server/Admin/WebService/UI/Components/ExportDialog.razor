@@ -4,59 +4,166 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Export @EntityType</h5>
-                    <button type="button" class="btn-close" @onclick="Close"></button>
+                    <h5 class="modal-title">
+                        @if (ExportState == ExportPhase.Complete)
+                        {
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                        }
+                        else if (ExportState == ExportPhase.Error)
+                        {
+                            <i class="bi bi-exclamation-triangle text-danger me-2"></i>
+                        }
+                        Export @EntityType
+                    </h5>
+                    @if (ExportState != ExportPhase.Exporting)
+                    {
+                        <button type="button" class="btn-close" @onclick="Close"></button>
+                    }
                 </div>
                 <div class="modal-body">
-                    @if (Fields != null)
-                    {
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Select Fields</label>
-                            @foreach (var field in Fields)
-                            {
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="export_@field.Field"
-                                           checked="@SelectedFields.Contains(field.Field)"
-                                           @onchange="e => ToggleField(field.Field, (bool)(e.Value ?? false))" />
-                                    <label class="form-check-label" for="export_@field.Field">@field.Label</label>
-                                </div>
-                            }
-                        </div>
 
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Format</label>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="exportFormat" id="formatCsv"
-                                       checked="@(SelectedFormat == ExportFileFormat.Csv)"
-                                       @onchange="() => SelectedFormat = ExportFileFormat.Csv" />
-                                <label class="form-check-label" for="formatCsv">CSV</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="exportFormat" id="formatXlsx"
-                                       checked="@(SelectedFormat == ExportFileFormat.Xlsx)"
-                                       @onchange="() => SelectedFormat = ExportFileFormat.Xlsx" />
-                                <label class="form-check-label" for="formatXlsx">Excel (.xlsx)</label>
-                            </div>
-                        </div>
-                    }
-                    else
+                    @* ── Configuration phase ── *@
+                    @if (ExportState == ExportPhase.Configure)
                     {
-                        <div class="d-flex align-items-center text-muted">
-                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-                            Loading fields...
+                        @if (Fields != null)
+                        {
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Fields to Export</label>
+                                <div class="d-flex gap-2 mb-2">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="SelectAllFields">Select All</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="DeselectAllFields">Clear</button>
+                                </div>
+                                @foreach (var field in Fields)
+                                {
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="export_@field.Field"
+                                               checked="@SelectedFields.Contains(field.Field)"
+                                               @onchange="e => ToggleField(field.Field, (bool)(e.Value ?? false))" />
+                                        <label class="form-check-label" for="export_@field.Field">@field.Label</label>
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Format</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="exportFormat" id="formatCsv"
+                                           checked="@(SelectedFormat == ExportFileFormat.Csv)"
+                                           @onchange="() => SelectedFormat = ExportFileFormat.Csv" />
+                                    <label class="form-check-label" for="formatCsv">
+                                        <i class="bi bi-filetype-csv me-1"></i>CSV
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="exportFormat" id="formatXlsx"
+                                           checked="@(SelectedFormat == ExportFileFormat.Xlsx)"
+                                           @onchange="() => SelectedFormat = ExportFileFormat.Xlsx" />
+                                    <label class="form-check-label" for="formatXlsx">
+                                        <i class="bi bi-file-earmark-spreadsheet me-1"></i>Excel (.xlsx)
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="text-muted small">
+                                @SelectedFields.Count of @Fields.Count fields selected
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="d-flex align-items-center text-muted py-3">
+                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                Loading export options...
+                            </div>
+                        }
+                    }
+
+                    @* ── Exporting phase ── *@
+                    @if (ExportState == ExportPhase.Exporting)
+                    {
+                        <div class="py-4">
+                            <div class="text-center mb-3">
+                                <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                                    <span class="visually-hidden">Exporting...</span>
+                                </div>
+                            </div>
+                            <div class="text-center mb-3">
+                                <strong>@StatusMessage</strong>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated"
+                                     role="progressbar"
+                                     style="width: @(ProgressPercent)%"
+                                     aria-valuenow="@ProgressPercent"
+                                     aria-valuemin="0"
+                                     aria-valuemax="100">
+                                </div>
+                            </div>
+                            <div class="text-center text-muted small mt-2">
+                                @ProgressDetail
+                            </div>
                         </div>
                     }
+
+                    @* ── Complete phase ── *@
+                    @if (ExportState == ExportPhase.Complete)
+                    {
+                        <div class="py-3">
+                            <div class="alert alert-success mb-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-check-circle-fill me-2 fs-5"></i>
+                                    <div>
+                                        <div class="fw-bold">Export complete</div>
+                                        <div class="small">@ExportedFileName</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-muted small">
+                                @ExportedRowCount rows exported as @SelectedFormat.ToString().ToUpperInvariant()
+                                with @SelectedFields.Count fields.
+                            </div>
+                        </div>
+                    }
+
+                    @* ── Error phase ── *@
+                    @if (ExportState == ExportPhase.Error)
+                    {
+                        <div class="py-3">
+                            <div class="alert alert-danger mb-0">
+                                <div class="d-flex align-items-start">
+                                    <i class="bi bi-exclamation-triangle-fill me-2 mt-1"></i>
+                                    <div>
+                                        <div class="fw-bold">Export failed</div>
+                                        <div class="small mt-1">@ErrorMessage</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @onclick="Close">Cancel</button>
-                    <button type="button" class="btn btn-primary" @onclick="OnExport"
-                            disabled="@(IsExporting || SelectedFields.Count == 0)">
-                        @if (IsExporting)
-                        {
-                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
-                        }
-                        <i class="bi bi-download me-1"></i>Export
-                    </button>
+                    @if (ExportState == ExportPhase.Configure)
+                    {
+                        <button type="button" class="btn btn-secondary" @onclick="Close">Cancel</button>
+                        <button type="button" class="btn btn-primary" @onclick="OnExport"
+                                disabled="@(SelectedFields.Count == 0 || Fields == null)">
+                            <i class="bi bi-download me-1"></i>Export
+                        </button>
+                    }
+                    else if (ExportState == ExportPhase.Complete)
+                    {
+                        <button type="button" class="btn btn-outline-primary" @onclick="ResetToConfig">
+                            <i class="bi bi-arrow-repeat me-1"></i>Export Again
+                        </button>
+                        <button type="button" class="btn btn-primary" @onclick="Close">Done</button>
+                    }
+                    else if (ExportState == ExportPhase.Error)
+                    {
+                        <button type="button" class="btn btn-outline-primary" @onclick="ResetToConfig">
+                            <i class="bi bi-arrow-repeat me-1"></i>Try Again
+                        </button>
+                        <button type="button" class="btn btn-secondary" @onclick="Close">Close</button>
+                    }
                 </div>
             </div>
         </div>

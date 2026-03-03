@@ -5,6 +5,14 @@ using Microsoft.JSInterop;
 
 namespace DevInstance.DevCoreApp.Server.Admin.WebService.UI.Components;
 
+public enum ExportPhase
+{
+    Configure,
+    Exporting,
+    Complete,
+    Error
+}
+
 public partial class ExportDialog
 {
     [Parameter]
@@ -31,7 +39,14 @@ public partial class ExportDialog
     private List<ExportFieldDescriptor>? Fields { get; set; }
     private HashSet<string> SelectedFields { get; set; } = new();
     private ExportFileFormat SelectedFormat { get; set; } = ExportFileFormat.Csv;
-    private bool IsExporting { get; set; }
+
+    private ExportPhase ExportState { get; set; } = ExportPhase.Configure;
+    private string StatusMessage { get; set; } = string.Empty;
+    private string ProgressDetail { get; set; } = string.Empty;
+    private int ProgressPercent { get; set; }
+    private string? ExportedFileName { get; set; }
+    private int ExportedRowCount { get; set; }
+    private string? ErrorMessage { get; set; }
 
     protected override void OnParametersSet()
     {
@@ -60,12 +75,30 @@ public partial class ExportDialog
             SelectedFields.Remove(field);
     }
 
+    private void SelectAllFields()
+    {
+        if (Fields == null) return;
+        SelectedFields = Fields.Select(f => f.Field).ToHashSet();
+    }
+
+    private void DeselectAllFields()
+    {
+        SelectedFields.Clear();
+    }
+
     private async Task OnExport()
     {
-        IsExporting = true;
+        ExportState = ExportPhase.Exporting;
+        ErrorMessage = null;
 
         try
         {
+            // Phase 1: Preparing
+            StatusMessage = "Preparing export...";
+            ProgressDetail = $"{SelectedFields.Count} fields, {SelectedFormat.ToString().ToUpperInvariant()} format";
+            ProgressPercent = 15;
+            StateHasChanged();
+
             var request = new ExportRequestItem
             {
                 EntityType = EntityType,
@@ -75,28 +108,73 @@ public partial class ExportDialog
                 SortBy = SortBy
             };
 
+            // Phase 2: Fetching data
+            StatusMessage = "Fetching data...";
+            ProgressPercent = 35;
+            StateHasChanged();
+            await Task.Yield();
+
             var result = await ImportExportService.ExportAsync(request);
             var download = result.Result;
 
-            // Convert stream to byte array for JS download
+            // Phase 3: Generating file
+            StatusMessage = "Generating file...";
+            ProgressPercent = 70;
+            StateHasChanged();
+            await Task.Yield();
+
             using var memStream = new MemoryStream();
             await download.Stream.CopyToAsync(memStream);
             var bytes = memStream.ToArray();
 
+            ExportedFileName = download.FileName;
+            ExportedRowCount = EstimateRowCount(bytes.Length, SelectedFields.Count);
+
+            // Phase 4: Downloading
+            StatusMessage = "Downloading...";
+            ProgressPercent = 90;
+            StateHasChanged();
+            await Task.Yield();
+
             await JS.InvokeVoidAsync("downloadFileFromBytes", download.FileName, download.ContentType, bytes);
 
-            await Close();
+            // Done
+            ProgressPercent = 100;
+            ExportState = ExportPhase.Complete;
         }
-        finally
+        catch (Exception ex)
         {
-            IsExporting = false;
+            ExportState = ExportPhase.Error;
+            ErrorMessage = ex.Message;
         }
+    }
+
+    private void ResetToConfig()
+    {
+        ExportState = ExportPhase.Configure;
+        StatusMessage = string.Empty;
+        ProgressDetail = string.Empty;
+        ProgressPercent = 0;
+        ExportedFileName = null;
+        ExportedRowCount = 0;
+        ErrorMessage = null;
     }
 
     private async Task Close()
     {
+        ResetToConfig();
         Fields = null;
         SelectedFields.Clear();
         await OnClose.InvokeAsync();
     }
+
+    private static int EstimateRowCount(int byteSize, int fieldCount)
+    {
+        if (fieldCount <= 0) return 0;
+        var avgRowSize = fieldCount * 30;
+        if (avgRowSize <= 0) return 0;
+        var estimate = Math.Max(0, (byteSize / avgRowSize) - 1);
+        return estimate;
+    }
+
 }
