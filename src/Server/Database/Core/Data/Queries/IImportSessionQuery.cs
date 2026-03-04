@@ -14,4 +14,5 @@ public interface IImportSessionQuery : IModelQuery<ImportSession, IImportSession
 
     IImportSessionQuery ByEntityType(string entityType);
     IImportSessionQuery ByStatus(ImportSessionStatus status);
+    IImportSessionQuery ByFileHash(string fileHash);
 }

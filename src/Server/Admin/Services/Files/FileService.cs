@@ -51,7 +51,8 @@ public class FileService : BaseService, IFileService
 
     public async Task<ServiceActionResult<FileRecordItem>> UploadAsync(
         Stream stream, string originalName, string contentType,
-        string? entityType = null, string? entityId = null)
+        string? entityType = null, string? entityId = null,
+        Guid? organizationIdOverride = null)
     {
         using var l = log.TraceScope();
 
@@ -103,7 +104,9 @@ public class FileService : BaseService, IFileService
         fileRecord.StoragePath = uploadResult.StoragePath!;
         fileRecord.EntityType = entityType;
         fileRecord.EntityId = entityId;
-        fileRecord.OrganizationId = OperationContext.PrimaryOrganizationId ?? Guid.Empty;
+        fileRecord.OrganizationId = organizationIdOverride
+            ?? OperationContext.PrimaryOrganizationId
+            ?? Guid.Empty;
         fileRecord.CreatedBy = AuthorizationContext.CurrentProfile;
         fileRecord.UpdatedBy = AuthorizationContext.CurrentProfile;
 

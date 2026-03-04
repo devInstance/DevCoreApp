@@ -6,6 +6,8 @@ public class ImportRowPreviewItem
 {
     public int RowNumber { get; set; }
     public ImportRowStatus Status { get; set; }
+    public ImportRowAction Action { get; set; } = ImportRowAction.Create;
     public Dictionary<string, string> Values { get; set; } = new();
     public List<string> Errors { get; set; } = new();
+    public List<string> Warnings { get; set; } = new();
 }

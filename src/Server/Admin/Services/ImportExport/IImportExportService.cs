@@ -8,11 +8,14 @@ public interface IImportExportService
     // Import
     ServiceActionResult<List<string>> GetImportableEntityTypes();
     ServiceActionResult<List<ImportFieldDescriptor>> GetImportFields(string entityType);
-    Task<ServiceActionResult<(List<string> Headers, ImportSessionItem Session)>> ParseFileAsync(
-        Stream fileStream, string fileName, string entityType);
+    Task<ServiceActionResult<ImportParseResult>> ParseHeadersAsync(Stream fileStream, string fileName);
+    bool RequiresOrganizationSelection();
     Task<ServiceActionResult<ImportValidationResult>> ValidateAsync(
-        string sessionId, List<ImportColumnMappingItem> mappings);
-    Task<ServiceActionResult<ImportCommitResult>> CommitAsync(string sessionId);
+        Stream fileStream, string fileName, string entityType,
+        List<ImportColumnMappingItem> mappings, string? organizationId = null);
+    Task<ServiceActionResult<ImportCommitResult>> CommitAsync(string sessionId, List<int>? excludedRows = null);
+    Task<ServiceActionResult<bool>> RollbackAsync(string sessionId);
+    Task<ServiceActionResult<ExportDownloadResult>> GetTemplateAsync(string entityType, ExportFileFormat format);
     Task<ServiceActionResult<ImportSessionItem>> GetSessionAsync(string sessionId);
 
     // Export

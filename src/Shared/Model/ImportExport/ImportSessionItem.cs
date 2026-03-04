@@ -16,6 +16,7 @@ public class ImportSessionItem : ModelItem
     public int ValidRows { get; set; }
     public int ErrorRows { get; set; }
     public int ImportedRows { get; set; }
+    public int UpdatedRows { get; set; }
     public string ErrorMessage { get; set; }
     public DateTime CreateDate { get; set; }
     public DateTime UpdateDate { get; set; }

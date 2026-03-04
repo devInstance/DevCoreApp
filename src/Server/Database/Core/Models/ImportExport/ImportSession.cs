@@ -18,7 +18,11 @@ public class ImportSession : DatabaseObject, IOrganizationScoped
     public int ValidRows { get; set; }
     public int ErrorRows { get; set; }
     public int ImportedRows { get; set; }
+    public int UpdatedRows { get; set; }
     public string? ErrorMessage { get; set; }
+    public string? ImportedRecordIdsJson { get; set; }
+    public string? FileHash { get; set; }
+    public string? ExcludedRowsJson { get; set; }
     public Guid? CreatedById { get; set; }
 
     public UserProfile? CreatedBy { get; set; }

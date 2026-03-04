@@ -30,19 +30,47 @@ public class ImportExportController : ControllerBase
         return File(download.Stream, download.ContentType, download.FileName);
     }
 
-    [HttpPost("import/upload")]
+    [HttpGet("template")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<ImportSessionItem>> Upload(
-        IFormFile file,
-        [FromQuery] string entityType)
+    public async Task<IActionResult> GetTemplate([FromQuery] string entityType, [FromQuery] ExportFileFormat format = ExportFileFormat.Csv)
     {
-        return await this.HandleWebRequestAsync<ImportSessionItem>(async () =>
+        var result = await _importExportService.GetTemplateAsync(entityType, format);
+        var download = result.Result;
+        return File(download.Stream, download.ContentType, download.FileName);
+    }
+
+    [HttpPost("import/parse-headers")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<ImportParseResult>> ParseHeaders(IFormFile file)
+    {
+        return await this.HandleWebRequestAsync<ImportParseResult>(async () =>
         {
             using var stream = file.OpenReadStream();
-            var result = await _importExportService.ParseFileAsync(stream, file.FileName, entityType);
-            return Ok(result.Result.Session);
+            var result = await _importExportService.ParseHeadersAsync(stream, file.FileName);
+            return Ok(result.Result);
+        });
+    }
+
+    [HttpPost("import/validate")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<ImportValidationResult>> Validate(
+        IFormFile file,
+        [FromQuery] string entityType,
+        [FromForm] string mappingsJson,
+        [FromQuery] string? organizationId = null)
+    {
+        return await this.HandleWebRequestAsync<ImportValidationResult>(async () =>
+        {
+            var mappings = System.Text.Json.JsonSerializer.Deserialize<List<ImportColumnMappingItem>>(mappingsJson) ?? new();
+            using var stream = file.OpenReadStream();
+            var result = await _importExportService.ValidateAsync(stream, file.FileName, entityType, mappings, organizationId);
+            return Ok(result.Result);
         });
     }
 }

@@ -28,6 +28,7 @@ public static class ImportSessionDecorators
             ValidRows = session.ValidRows,
             ErrorRows = session.ErrorRows,
             ImportedRows = session.ImportedRows,
+            UpdatedRows = session.UpdatedRows,
             ErrorMessage = session.ErrorMessage,
             CreateDate = session.CreateDate,
             UpdateDate = session.UpdateDate

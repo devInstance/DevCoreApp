@@ -48,33 +48,45 @@ public class ImportExportServiceMock : IImportExportService
         return ServiceActionResult<List<ImportFieldDescriptor>>.OK(userProfileImportFields);
     }
 
-    public async Task<ServiceActionResult<(List<string> Headers, ImportSessionItem Session)>> ParseFileAsync(
-        Stream fileStream, string fileName, string entityType)
+    public async Task<ServiceActionResult<ImportParseResult>> ParseHeadersAsync(Stream fileStream, string fileName)
     {
         await Task.Delay(delay);
 
-        var headers = new List<string> { "Email", "First Name", "Middle Name", "Last Name", "Phone", "Role" };
-
-        currentSession = new ImportSessionItem
+        var format = fileName.EndsWith(".xlsx") ? ImportFileFormat.Xlsx : ImportFileFormat.Csv;
+        return ServiceActionResult<ImportParseResult>.OK(new ImportParseResult
         {
-            Id = IdGenerator.New(),
-            EntityType = entityType,
-            OriginalFileName = fileName,
-            FileFormat = fileName.EndsWith(".xlsx") ? ImportFileFormat.Xlsx : ImportFileFormat.Csv,
-            Status = ImportSessionStatus.Uploaded,
-            TotalRows = 15,
-            CreateDate = DateTime.UtcNow,
-            UpdateDate = DateTime.UtcNow
-        };
+            Headers = new List<string> { "Email", "First Name", "Middle Name", "Last Name", "Phone", "Role", "Department" },
+            RowCount = 15,
+            Format = format
+        });
+    }
 
-        return ServiceActionResult<(List<string> Headers, ImportSessionItem Session)>.OK(
-            (headers, currentSession));
+    public bool RequiresOrganizationSelection()
+    {
+        return false;
     }
 
     public async Task<ServiceActionResult<ImportValidationResult>> ValidateAsync(
-        string sessionId, List<ImportColumnMappingItem> mappings)
+        Stream fileStream, string fileName, string entityType,
+        List<ImportColumnMappingItem> mappings, string? organizationId = null)
     {
         await Task.Delay(delay * 2);
+
+        var sessionId = IdGenerator.New();
+
+        currentSession = new ImportSessionItem
+        {
+            Id = sessionId,
+            EntityType = entityType,
+            OriginalFileName = fileName,
+            FileFormat = fileName.EndsWith(".xlsx") ? ImportFileFormat.Xlsx : ImportFileFormat.Csv,
+            Status = ImportSessionStatus.Validated,
+            TotalRows = 15,
+            ValidRows = 12,
+            ErrorRows = 3,
+            CreateDate = DateTime.UtcNow,
+            UpdateDate = DateTime.UtcNow
+        };
 
         var faker = new Faker();
         var rows = new List<ImportRowPreviewItem>();
@@ -82,10 +94,12 @@ public class ImportExportServiceMock : IImportExportService
         for (int i = 1; i <= 15; i++)
         {
             var hasError = i % 5 == 0; // Every 5th row has an error
+            var isUpdate = i % 3 == 0 && !hasError; // Every 3rd row (non-error) is an update
             var row = new ImportRowPreviewItem
             {
                 RowNumber = i,
-                Status = hasError ? ImportRowStatus.Error : ImportRowStatus.Valid,
+                Status = hasError ? ImportRowStatus.Error : isUpdate ? ImportRowStatus.Warning : ImportRowStatus.Valid,
+                Action = isUpdate ? ImportRowAction.Update : ImportRowAction.Create,
                 Values = new Dictionary<string, string?>
                 {
                     { "Email", hasError ? "invalid-email" : faker.Internet.Email() },
@@ -95,6 +109,9 @@ public class ImportExportServiceMock : IImportExportService
                 },
                 Errors = hasError
                     ? new List<string> { "Email format is invalid.", "Role must be one of: Admin, Manager, Employee, Client." }
+                    : new List<string>(),
+                Warnings = isUpdate
+                    ? new List<string> { "User already exists and will be updated." }
                     : new List<string>()
             };
             rows.Add(row);
@@ -104,38 +121,85 @@ public class ImportExportServiceMock : IImportExportService
         {
             SessionId = sessionId,
             TotalRows = 15,
-            ValidRows = 12,
+            ValidRows = 8,
+            WarningRows = 4,
             ErrorRows = 3,
             Rows = rows
         };
 
-        if (currentSession != null)
-        {
-            currentSession.Status = ImportSessionStatus.Validated;
-            currentSession.ValidRows = 12;
-            currentSession.ErrorRows = 3;
-        }
-
         return ServiceActionResult<ImportValidationResult>.OK(lastValidation);
     }
 
-    public async Task<ServiceActionResult<ImportCommitResult>> CommitAsync(string sessionId)
+    public async Task<ServiceActionResult<ImportCommitResult>> CommitAsync(string sessionId, List<int>? excludedRows = null)
     {
         await Task.Delay(delay * 2);
 
         if (currentSession != null)
         {
             currentSession.Status = ImportSessionStatus.Completed;
-            currentSession.ImportedRows = 12;
+            currentSession.ImportedRows = 8;
+            currentSession.UpdatedRows = 4;
         }
+
+        var importedIds = Enumerable.Range(1, 8).Select(_ => IdGenerator.New()).ToList();
 
         return ServiceActionResult<ImportCommitResult>.OK(new ImportCommitResult
         {
             SessionId = sessionId,
-            ImportedRows = 12,
+            ImportedRows = 8,
+            UpdatedRows = 4,
             SkippedRows = 3,
             ErrorRows = 0,
+            ImportedRecordIds = importedIds,
             Errors = new List<string>()
+        });
+    }
+
+    public async Task<ServiceActionResult<bool>> RollbackAsync(string sessionId)
+    {
+        await Task.Delay(delay);
+
+        if (currentSession != null)
+        {
+            currentSession.Status = ImportSessionStatus.RolledBack;
+        }
+
+        return ServiceActionResult<bool>.OK(true);
+    }
+
+    public async Task<ServiceActionResult<ExportDownloadResult>> GetTemplateAsync(string entityType, ExportFileFormat format)
+    {
+        await Task.Delay(delay);
+
+        var fields = userProfileImportFields;
+        var stream = new MemoryStream();
+        var writer = new StreamWriter(stream);
+
+        var headers = fields.Select(f => f.Label).ToList();
+        await writer.WriteLineAsync(string.Join(",", headers));
+
+        // Example row
+        var exampleValues = fields.Select(f => f.DataType switch
+        {
+            "email" => "user@example.com",
+            "phone" => "+1 (555) 000-0000",
+            _ => f.IsRequired ? f.Label : ""
+        });
+        await writer.WriteLineAsync(string.Join(",", exampleValues));
+
+        await writer.FlushAsync();
+        stream.Position = 0;
+
+        var extension = format == ExportFileFormat.Xlsx ? ".xlsx" : ".csv";
+        var contentType = format == ExportFileFormat.Xlsx
+            ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            : "text/csv";
+
+        return ServiceActionResult<ExportDownloadResult>.OK(new ExportDownloadResult
+        {
+            Stream = stream,
+            ContentType = contentType,
+            FileName = $"{entityType}_Template{extension}"
         });
     }
 
@@ -157,7 +221,8 @@ public class ImportExportServiceMock : IImportExportService
             TotalRows = 15,
             ValidRows = 12,
             ErrorRows = 3,
-            ImportedRows = 12,
+            ImportedRows = 8,
+            UpdatedRows = 4,
             CreateDate = DateTime.UtcNow,
             UpdateDate = DateTime.UtcNow
         });

@@ -46,6 +46,14 @@ public class CoreImportSessionQuery : CoreDatabaseObjectQuery<ImportSession, Cor
         return this;
     }
 
+    public IImportSessionQuery ByFileHash(string fileHash)
+    {
+        currentQuery = from s in currentQuery
+                       where s.FileHash == fileHash
+                       select s;
+        return this;
+    }
+
     public IImportSessionQuery Clone()
     {
         return new CoreImportSessionQuery(currentQuery, LogManager, TimeProvider, DB, CurrentProfile);

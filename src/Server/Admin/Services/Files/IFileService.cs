@@ -10,7 +10,8 @@ public interface IFileService
 {
     Task<ServiceActionResult<FileRecordItem>> UploadAsync(
         Stream stream, string originalName, string contentType,
-        string? entityType = null, string? entityId = null);
+        string? entityType = null, string? entityId = null,
+        Guid? organizationIdOverride = null);
 
     Task<ServiceActionResult<FileDownloadResult>> DownloadAsync(string filePublicId);
 

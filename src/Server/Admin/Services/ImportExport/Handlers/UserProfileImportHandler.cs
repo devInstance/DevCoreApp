@@ -1,10 +1,12 @@
 using System.Text.RegularExpressions;
 using DevInstance.DevCoreApp.Server.Admin.Services.Authentication;
 using DevInstance.DevCoreApp.Server.Admin.Services.UserAdmin;
+using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using DevInstance.DevCoreApp.Shared.Model;
 using DevInstance.DevCoreApp.Shared.Model.ImportExport;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DevInstance.DevCoreApp.Server.Admin.Services.ImportExport.Handlers;
@@ -20,6 +22,7 @@ public class UserProfileImportHandler : IImportHandler<UserProfileItem>
     };
 
     public string EntityType => "UserProfile";
+    public string? UniqueKeyField => "Email";
 
     public List<ImportFieldDescriptor> GetFieldDescriptors()
     {
@@ -34,9 +37,9 @@ public class UserProfileImportHandler : IImportHandler<UserProfileItem>
         };
     }
 
-    public async Task<List<string>> ValidateRowAsync(Dictionary<string, string?> mappedValues, IServiceProvider scopedProvider)
+    public async Task<ImportRowValidation> ValidateRowAsync(Dictionary<string, string?> mappedValues, IServiceProvider scopedProvider)
     {
-        var errors = new List<string>();
+        var validation = new ImportRowValidation();
 
         mappedValues.TryGetValue("Email", out var email);
         mappedValues.TryGetValue("FirstName", out var firstName);
@@ -45,40 +48,45 @@ public class UserProfileImportHandler : IImportHandler<UserProfileItem>
         mappedValues.TryGetValue("Role", out var role);
 
         if (string.IsNullOrWhiteSpace(email))
-            errors.Add("Email is required.");
+            validation.Errors.Add("Email is required.");
         else if (!Regex.IsMatch(email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
-            errors.Add("Email format is invalid.");
+            validation.Errors.Add("Email format is invalid.");
 
         if (string.IsNullOrWhiteSpace(firstName))
-            errors.Add("First Name is required.");
+            validation.Errors.Add("First Name is required.");
 
         if (string.IsNullOrWhiteSpace(lastName))
-            errors.Add("Last Name is required.");
+            validation.Errors.Add("Last Name is required.");
 
         if (!string.IsNullOrWhiteSpace(phone) && !Regex.IsMatch(phone, @"^[\d\s\+\-\(\)]+$"))
-            errors.Add("Phone number format is invalid.");
+            validation.Errors.Add("Phone number format is invalid.");
 
         if (string.IsNullOrWhiteSpace(role))
-            errors.Add("Role is required.");
+            validation.Errors.Add("Role is required.");
         else if (!ValidRoles.Contains(role))
-            errors.Add($"Role must be one of: {string.Join(", ", ValidRoles)}.");
+            validation.Errors.Add($"Role must be one of: {string.Join(", ", ValidRoles)}.");
 
-        if (!string.IsNullOrWhiteSpace(email) && errors.Count == 0)
+        // Check if user already exists (for Create vs Update detection)
+        if (!string.IsNullOrWhiteSpace(email) && validation.Errors.Count == 0)
         {
             var userManager = scopedProvider.GetRequiredService<UserManager<ApplicationUser>>();
             var existingUser = await userManager.FindByEmailAsync(email);
             if (existingUser != null)
             {
-                errors.Add($"A user with email '{email}' already exists.");
+                validation.Action = ImportRowAction.Update;
+                validation.Warnings.Add($"User with email '{email}' already exists and will be updated.");
             }
         }
 
-        return errors;
+        return validation;
     }
 
     public async Task<ImportCommitResult> CommitAsync(List<Dictionary<string, string?>> validRows, IServiceProvider scopedProvider)
     {
         var userService = scopedProvider.GetRequiredService<IUserProfileService>();
+        var userManager = scopedProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var repository = scopedProvider.GetRequiredService<IQueryRepository>();
+        var authContext = scopedProvider.GetRequiredService<IAuthorizationContext>();
         var result = new ImportCommitResult();
 
         foreach (var row in validRows)
@@ -92,24 +100,66 @@ public class UserProfileImportHandler : IImportHandler<UserProfileItem>
                 row.TryGetValue("PhoneNumber", out var phone);
                 row.TryGetValue("Role", out var role);
 
-                var userItem = new UserProfileItem
-                {
-                    Email = email ?? string.Empty,
-                    FirstName = firstName ?? string.Empty,
-                    MiddleName = middleName,
-                    LastName = lastName ?? string.Empty,
-                    PhoneNumber = phone
-                };
+                var existingAppUser = !string.IsNullOrWhiteSpace(email)
+                    ? await userManager.FindByEmailAsync(email)
+                    : null;
 
-                var createResult = await userService.CreateUserAsync(userItem, role ?? "Employee");
-                if (createResult.Result != null)
+                if (existingAppUser != null)
                 {
-                    result.ImportedRows++;
+                    // Look up UserProfile by ApplicationUserId to get PublicId
+                    var profileQuery = repository.GetUserProfilesQuery(authContext.CurrentProfile);
+                    var profile = await profileQuery.ByApplicationUserId(existingAppUser.Id).Select().FirstOrDefaultAsync();
+
+                    if (profile == null)
+                    {
+                        result.ErrorRows++;
+                        result.Errors.Add($"Row with email '{email}': User profile not found.");
+                        continue;
+                    }
+
+                    var userItem = new UserProfileItem
+                    {
+                        Email = email ?? string.Empty,
+                        FirstName = firstName ?? string.Empty,
+                        MiddleName = middleName,
+                        LastName = lastName ?? string.Empty,
+                        PhoneNumber = phone
+                    };
+
+                    var updateResult = await userService.UpdateUserAsync(profile.PublicId, userItem, role ?? "Employee");
+                    if (updateResult.Result != null)
+                    {
+                        result.UpdatedRows++;
+                        result.ImportedRecordIds.Add(updateResult.Result.Id);
+                    }
+                    else
+                    {
+                        result.ErrorRows++;
+                        result.Errors.Add($"Row with email '{email}': Failed to update user.");
+                    }
                 }
                 else
                 {
-                    result.ErrorRows++;
-                    result.Errors.Add($"Row with email '{email}': Failed to create user.");
+                    var userItem = new UserProfileItem
+                    {
+                        Email = email ?? string.Empty,
+                        FirstName = firstName ?? string.Empty,
+                        MiddleName = middleName,
+                        LastName = lastName ?? string.Empty,
+                        PhoneNumber = phone
+                    };
+
+                    var createResult = await userService.CreateUserAsync(userItem, role ?? "Employee");
+                    if (createResult.Result != null)
+                    {
+                        result.ImportedRows++;
+                        result.ImportedRecordIds.Add(createResult.Result.Id);
+                    }
+                    else
+                    {
+                        result.ErrorRows++;
+                        result.Errors.Add($"Row with email '{email}': Failed to create user.");
+                    }
                 }
             }
             catch (Exception ex)
@@ -121,5 +171,15 @@ public class UserProfileImportHandler : IImportHandler<UserProfileItem>
         }
 
         return result;
+    }
+
+    public async Task RollbackAsync(List<string> recordIds, IServiceProvider scopedProvider)
+    {
+        var userService = scopedProvider.GetRequiredService<IUserProfileService>();
+
+        foreach (var id in recordIds)
+        {
+            await userService.DeleteUserAsync(id);
+        }
     }
 }

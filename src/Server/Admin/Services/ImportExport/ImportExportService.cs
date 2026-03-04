@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text.Json;
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.BlazorToolkit.Tools;
@@ -65,91 +66,117 @@ public class ImportExportService : BaseService, IImportExportService
         return ServiceActionResult<List<ImportFieldDescriptor>>.OK(handler.GetFieldDescriptors());
     }
 
-    public async Task<ServiceActionResult<(List<string> Headers, ImportSessionItem Session)>> ParseFileAsync(
-        Stream fileStream, string fileName, string entityType)
+    public async Task<ServiceActionResult<ImportParseResult>> ParseHeadersAsync(Stream fileStream, string fileName)
+    {
+        using var l = log.TraceScope();
+
+        var format = FileParserFactory.DetectFormat(fileName);
+        var parser = FileParserFactory.Create(format);
+
+        var headers = await parser.ParseHeadersAsync(fileStream);
+        fileStream.Position = 0;
+
+        var rows = await parser.ParseRowsAsync(fileStream);
+        fileStream.Position = 0;
+
+        l.I($"Parsed headers from {fileName}: {headers.Count} columns, {rows.Count} rows.");
+
+        return ServiceActionResult<ImportParseResult>.OK(new ImportParseResult
+        {
+            Headers = headers,
+            RowCount = rows.Count,
+            Format = format
+        });
+    }
+
+    public bool RequiresOrganizationSelection()
+    {
+        return OperationContext.PrimaryOrganizationId == null;
+    }
+
+    public async Task<ServiceActionResult<ImportValidationResult>> ValidateAsync(
+        Stream fileStream, string fileName, string entityType,
+        List<ImportColumnMappingItem> mappings, string? organizationId = null)
     {
         using var l = log.TraceScope();
 
         var handler = FindImportHandler(entityType);
         var format = FileParserFactory.DetectFormat(fileName);
-        var parser = FileParserFactory.Create(format);
 
-        // Copy stream to a MemoryStream so it can be read multiple times
-        var memStream = new MemoryStream();
-        await fileStream.CopyToAsync(memStream);
-        memStream.Position = 0;
+        // Resolve organization internal Guid if a PublicId was provided
+        Guid? resolvedOrgId = OperationContext.PrimaryOrganizationId;
+        if (!string.IsNullOrEmpty(organizationId))
+        {
+            var orgQuery = Repository.GetOrganizationsQuery(AuthorizationContext.CurrentProfile);
+            var org = await orgQuery.ByPublicId(organizationId).Select().FirstOrDefaultAsync();
+            if (org == null)
+                throw new RecordNotFoundException($"Organization '{organizationId}' not found.");
+            resolvedOrgId = org.Id;
+        }
 
-        // Parse headers
-        var headers = await parser.ParseHeadersAsync(memStream);
-        memStream.Position = 0;
+        // Compute file hash for duplicate detection
+        fileStream.Position = 0;
+        var fileHash = Convert.ToHexString(await SHA256.HashDataAsync(fileStream));
+        fileStream.Position = 0;
 
-        // Count rows
-        var rows = await parser.ParseRowsAsync(memStream);
-        memStream.Position = 0;
+        // Check for duplicate imports (same file + entity type in active state)
+        var dupQuery = Repository.GetImportSessionQuery(AuthorizationContext.CurrentProfile);
+        var duplicate = await dupQuery
+            .ByFileHash(fileHash)
+            .ByEntityType(entityType)
+            .Select()
+            .Where(s => s.Status != ImportSessionStatus.Failed
+                      && s.Status != ImportSessionStatus.Cancelled
+                      && s.Status != ImportSessionStatus.RolledBack)
+            .FirstOrDefaultAsync();
 
-        // Upload file via IFileService
+        if (duplicate != null)
+            throw new RecordConflictException(
+                $"This file was already imported on {duplicate.CreateDate:g} (session {duplicate.PublicId}, status: {duplicate.Status}).");
+
+        // Upload file via IFileService (deferred from Step 1)
+        fileStream.Position = 0;
         var contentType = format == ImportFileFormat.Csv
             ? "text/csv"
             : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
-        var uploadResult = await FileService.UploadAsync(memStream, fileName, contentType, "ImportSession", null);
+        var uploadResult = await FileService.UploadAsync(
+            fileStream, fileName, contentType, "ImportSession", null, resolvedOrgId);
         var fileRecordId = uploadResult.Result?.Id;
 
-        // Create ImportSession
+        // Parse rows for validation
+        fileStream.Position = 0;
+        var parser = FileParserFactory.Create(format);
+        var rows = await parser.ParseRowsAsync(fileStream);
+
+        // Create ImportSession (deferred from Step 1)
         var sessionQuery = Repository.GetImportSessionQuery(AuthorizationContext.CurrentProfile);
         var session = sessionQuery.CreateNew();
         session.EntityType = entityType;
         session.OriginalFileName = fileName;
         session.FileFormat = format;
-        session.Status = ImportSessionStatus.Uploaded;
+        session.Status = ImportSessionStatus.Mapped;
         session.FileRecordId = fileRecordId;
         session.TotalRows = rows.Count;
-        session.OrganizationId = OperationContext.PrimaryOrganizationId ?? Guid.Empty;
+        session.ColumnMappingJson = JsonSerializer.Serialize(mappings);
+        session.OrganizationId = resolvedOrgId ?? Guid.Empty;
+        session.FileHash = fileHash;
         session.CreatedById = OperationContext.UserId;
 
         await sessionQuery.AddAsync(session);
 
         l.I($"Import session created: {session.PublicId} for {entityType}, {rows.Count} rows.");
 
-        return ServiceActionResult<(List<string> Headers, ImportSessionItem Session)>.OK(
-            (headers, session.ToView()));
-    }
-
-    public async Task<ServiceActionResult<ImportValidationResult>> ValidateAsync(
-        string sessionId, List<ImportColumnMappingItem> mappings)
-    {
-        using var l = log.TraceScope();
-
-        var sessionQuery = Repository.GetImportSessionQuery(AuthorizationContext.CurrentProfile);
-        var session = await sessionQuery.ByPublicId(sessionId).Select().FirstOrDefaultAsync();
-        if (session == null)
-            throw new RecordNotFoundException("Import session not found.");
-
-        var handler = FindImportHandler(session.EntityType);
-
-        // Save column mappings
-        session.ColumnMappingJson = JsonSerializer.Serialize(mappings);
-        session.Status = ImportSessionStatus.Mapped;
-
-        // Download file and parse rows
-        if (string.IsNullOrEmpty(session.FileRecordId))
-            throw new BadRequestException("No file associated with this import session.");
-
-        var downloadResult = await FileService.DownloadAsync(session.FileRecordId);
-        var fileStream = downloadResult.Result.Stream;
-
-        var parser = FileParserFactory.Create(session.FileFormat);
-        var rows = await parser.ParseRowsAsync(fileStream);
-        var headers = await parser.ParseHeadersAsync(fileStream);
-
         // Map and validate each row
         var validationResult = new ImportValidationResult
         {
-            SessionId = sessionId,
+            SessionId = session.PublicId,
             TotalRows = rows.Count
         };
 
         var activeMappings = mappings.Where(m => m.TargetField != null).ToList();
+        var uniqueKeyField = handler.UniqueKeyField;
+        var seenKeys = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
         for (int i = 0; i < rows.Count; i++)
         {
@@ -162,27 +189,52 @@ public class ImportExportService : BaseService, IImportExportService
                 }
             }
 
-            var errors = await handler.ValidateRowAsync(mappedValues, ServiceProvider);
+            var validation = await handler.ValidateRowAsync(mappedValues, ServiceProvider);
+
+            // Detect within-file duplicates
+            if (uniqueKeyField != null
+                && mappedValues.TryGetValue(uniqueKeyField, out var keyValue)
+                && !string.IsNullOrWhiteSpace(keyValue))
+            {
+                if (seenKeys.TryGetValue(keyValue, out var firstRow))
+                {
+                    validation.Warnings.Add($"Duplicate '{uniqueKeyField}' value '{keyValue}' — first seen in row {firstRow}.");
+                }
+                else
+                {
+                    seenKeys[keyValue] = i + 1;
+                }
+            }
+
+            var status = validation.Errors.Count > 0
+                ? ImportRowStatus.Error
+                : validation.Warnings.Count > 0
+                    ? ImportRowStatus.Warning
+                    : ImportRowStatus.Valid;
 
             var preview = new ImportRowPreviewItem
             {
                 RowNumber = i + 1,
                 Values = mappedValues,
-                Errors = errors,
-                Status = errors.Count == 0 ? ImportRowStatus.Valid : ImportRowStatus.Error
+                Errors = validation.Errors,
+                Warnings = validation.Warnings,
+                Action = validation.Action,
+                Status = status
             };
 
             validationResult.Rows.Add(preview);
 
-            if (errors.Count == 0)
-                validationResult.ValidRows++;
-            else
+            if (validation.Errors.Count > 0)
                 validationResult.ErrorRows++;
+            else if (validation.Warnings.Count > 0)
+                validationResult.WarningRows++;
+            else
+                validationResult.ValidRows++;
         }
 
-        // Update session
+        // Update session with validation results
         session.Status = ImportSessionStatus.Validated;
-        session.ValidRows = validationResult.ValidRows;
+        session.ValidRows = validationResult.ValidRows + validationResult.WarningRows;
         session.ErrorRows = validationResult.ErrorRows;
         session.ValidationResultJson = JsonSerializer.Serialize(
             validationResult.Rows.Where(r => r.Status == ImportRowStatus.Error).ToList());
@@ -190,12 +242,12 @@ public class ImportExportService : BaseService, IImportExportService
         var updateQuery = Repository.GetImportSessionQuery(AuthorizationContext.CurrentProfile);
         await updateQuery.UpdateAsync(session);
 
-        l.I($"Import session {sessionId} validated: {validationResult.ValidRows} valid, {validationResult.ErrorRows} errors.");
+        l.I($"Import session {session.PublicId} validated: {validationResult.ValidRows} valid, {validationResult.ErrorRows} errors.");
 
         return ServiceActionResult<ImportValidationResult>.OK(validationResult);
     }
 
-    public async Task<ServiceActionResult<ImportCommitResult>> CommitAsync(string sessionId)
+    public async Task<ServiceActionResult<ImportCommitResult>> CommitAsync(string sessionId, List<int>? excludedRows = null)
     {
         using var l = log.TraceScope();
 
@@ -206,6 +258,14 @@ public class ImportExportService : BaseService, IImportExportService
 
         if (session.Status != ImportSessionStatus.Validated)
             throw new BadRequestException("Import session must be validated before committing.");
+
+        // Persist excluded rows so background jobs also respect them
+        if (excludedRows != null && excludedRows.Count > 0)
+        {
+            session.ExcludedRowsJson = JsonSerializer.Serialize(excludedRows);
+            var saveQuery = Repository.GetImportSessionQuery(AuthorizationContext.CurrentProfile);
+            await saveQuery.UpdateAsync(session);
+        }
 
         // For large imports, submit as background job
         if (session.ValidRows > BackgroundThreshold)
@@ -259,21 +319,37 @@ public class ImportExportService : BaseService, IImportExportService
 
         var activeMappings = mappings.Where(m => m.TargetField != null).ToList();
 
+        // Load excluded rows (1-based row numbers)
+        var excludedSet = new HashSet<int>();
+        if (!string.IsNullOrEmpty(session.ExcludedRowsJson))
+        {
+            var excluded = JsonSerializer.Deserialize<List<int>>(session.ExcludedRowsJson);
+            if (excluded != null) excludedSet = new HashSet<int>(excluded);
+        }
+
         // Build valid rows
         var validRows = new List<Dictionary<string, string?>>();
-        foreach (var row in rows)
+        var skippedByExclusion = 0;
+        for (int i = 0; i < rows.Count; i++)
         {
+            var rowNumber = i + 1;
+            if (excludedSet.Contains(rowNumber))
+            {
+                skippedByExclusion++;
+                continue;
+            }
+
             var mappedValues = new Dictionary<string, string?>();
             foreach (var mapping in activeMappings)
             {
-                if (mapping.SourceColumnIndex >= 0 && mapping.SourceColumnIndex < row.Length)
+                if (mapping.SourceColumnIndex >= 0 && mapping.SourceColumnIndex < rows[i].Length)
                 {
-                    mappedValues[mapping.TargetField!] = row[mapping.SourceColumnIndex];
+                    mappedValues[mapping.TargetField!] = rows[i][mapping.SourceColumnIndex];
                 }
             }
 
-            var errors = await handler.ValidateRowAsync(mappedValues, ServiceProvider);
-            if (errors.Count == 0)
+            var validation = await handler.ValidateRowAsync(mappedValues, ServiceProvider);
+            if (validation.Errors.Count == 0)
             {
                 validRows.Add(mappedValues);
             }
@@ -288,12 +364,18 @@ public class ImportExportService : BaseService, IImportExportService
 
             var commitResult = await handler.CommitAsync(validRows, ServiceProvider);
             commitResult.SessionId = session.PublicId;
-            commitResult.SkippedRows = session.ErrorRows;
+            commitResult.SkippedRows = session.ErrorRows + skippedByExclusion;
 
             session.ImportedRows = commitResult.ImportedRows;
+            session.UpdatedRows = commitResult.UpdatedRows;
             session.Status = commitResult.ErrorRows > 0
                 ? ImportSessionStatus.CompletedWithErrors
                 : ImportSessionStatus.Completed;
+
+            if (commitResult.ImportedRecordIds.Count > 0)
+            {
+                session.ImportedRecordIdsJson = JsonSerializer.Serialize(commitResult.ImportedRecordIds);
+            }
 
             if (commitResult.Errors.Count > 0)
             {
@@ -327,6 +409,86 @@ public class ImportExportService : BaseService, IImportExportService
             throw new RecordNotFoundException("Import session not found.");
 
         return ServiceActionResult<ImportSessionItem>.OK(session.ToView());
+    }
+
+    public async Task<ServiceActionResult<bool>> RollbackAsync(string sessionId)
+    {
+        using var l = log.TraceScope();
+
+        var sessionQuery = Repository.GetImportSessionQuery(AuthorizationContext.CurrentProfile);
+        var session = await sessionQuery.ByPublicId(sessionId).Select().FirstOrDefaultAsync();
+        if (session == null)
+            throw new RecordNotFoundException("Import session not found.");
+
+        if (session.Status != ImportSessionStatus.Completed && session.Status != ImportSessionStatus.CompletedWithErrors)
+            throw new BadRequestException("Only completed import sessions can be rolled back.");
+
+        if (string.IsNullOrEmpty(session.ImportedRecordIdsJson))
+            throw new BadRequestException("No imported record IDs found for this session.");
+
+        var recordIds = JsonSerializer.Deserialize<List<string>>(session.ImportedRecordIdsJson) ?? new();
+        if (recordIds.Count == 0)
+            throw new BadRequestException("No imported record IDs found for this session.");
+
+        var handler = FindImportHandler(session.EntityType);
+        await handler.RollbackAsync(recordIds, ServiceProvider);
+
+        session.Status = ImportSessionStatus.RolledBack;
+        var updateQuery = Repository.GetImportSessionQuery(AuthorizationContext.CurrentProfile);
+        await updateQuery.UpdateAsync(session);
+
+        l.I($"Import session {sessionId} rolled back ({recordIds.Count} records).");
+
+        return ServiceActionResult<bool>.OK(true);
+    }
+
+    public async Task<ServiceActionResult<ExportDownloadResult>> GetTemplateAsync(string entityType, ExportFileFormat format)
+    {
+        using var l = log.TraceScope();
+
+        var handler = FindImportHandler(entityType);
+        var fields = handler.GetFieldDescriptors();
+
+        var headers = fields.Select(f => f.Label).ToList();
+
+        // Create one example row with placeholder values based on DataType
+        var exampleRow = new Dictionary<string, string?>();
+        foreach (var field in fields)
+        {
+            exampleRow[field.Label] = field.DataType switch
+            {
+                "email" => "user@example.com",
+                "phone" => "+1 (555) 000-0000",
+                _ => field.IsRequired ? field.Label : ""
+            };
+        }
+
+        IFileGenerator generator = format switch
+        {
+            ExportFileFormat.Csv => new CsvFileGenerator(),
+            ExportFileFormat.Xlsx => new ExcelFileGenerator(),
+            _ => throw new BadRequestException($"Unsupported format: {format}")
+        };
+
+        var stream = await generator.GenerateAsync(headers, new List<Dictionary<string, string?>> { exampleRow });
+
+        var (contentType, extension) = format switch
+        {
+            ExportFileFormat.Csv => ("text/csv", ".csv"),
+            ExportFileFormat.Xlsx => ("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", ".xlsx"),
+            _ => ("application/octet-stream", ".bin")
+        };
+
+        var fileName = $"{entityType}_Template{extension}";
+
+        l.I($"Template generated: {fileName}");
+
+        return ServiceActionResult<ExportDownloadResult>.OK(new ExportDownloadResult
+        {
+            Stream = stream,
+            ContentType = contentType,
+            FileName = fileName
+        });
     }
 
     // ── Export ──

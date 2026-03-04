@@ -21,12 +21,20 @@ public enum ImportSessionStatus
     Completed,
     CompletedWithErrors,
     Failed,
-    Cancelled
+    Cancelled,
+    RolledBack
+}
+
+public enum ImportRowAction
+{
+    Create,
+    Update
 }
 
 public enum ImportRowStatus
 {
     Valid,
+    Warning,
     Error,
     Skipped,
     Imported
