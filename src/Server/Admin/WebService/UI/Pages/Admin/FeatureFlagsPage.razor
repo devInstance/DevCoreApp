@@ -1,0 +1,161 @@
+@page "/admin/feature-flags"
+@attribute [Authorize(Policy = "Admin.FeatureFlags.View")]
+
+<PageTitle>Feature Flags</PageTitle>
+
+<div class="row mb-3">
+    <div class="col col-md-6 col-lg-4">
+        <HSearchBar @bind-Value="SearchTerm" Placeholder="Search flags..." OnSearch="OnSearch" Disabled="Host.InProgress" />
+    </div>
+    <div class="col col-md-6 col-lg-8">
+        <div class="float-end">
+            <button class="btn btn-primary" @onclick="ShowCreateModal" disabled="@Host.InProgress">
+                <i class="bi bi-plus-lg me-1"></i>New Flag
+            </button>
+        </div>
+    </div>
+</div>
+
+@if (Host.IsError)
+{
+    <div class="alert alert-danger" role="alert">
+        @Host.ErrorMessage
+    </div>
+}
+
+<HDataGrid TItem="DevInstance.DevCoreApp.Shared.Model.FeatureFlags.FeatureFlagItem"
+           Data="FlagList"
+           Columns="Columns"
+           IsLoading="Host.InProgress"
+           OnSort="OnSortAsync"
+           OnPageChanged="OnPageChangedAsync"
+           OnColumnsChanged="OnColumnsChanged"
+           OnRowClick="OnRowClick">
+    <ColumnTemplates>
+        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.FeatureFlags.FeatureFlagItem" Field="scope" Context="flag">
+            @(flag.OrganizationName ?? "Global")
+        </HColumnTemplate>
+        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.FeatureFlags.FeatureFlagItem" Field="isenabled" Context="flag">
+            @if (flag.IsEnabled)
+            {
+                <span class="badge bg-success">On</span>
+            }
+            else
+            {
+                <span class="badge bg-secondary">Off</span>
+            }
+        </HColumnTemplate>
+        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.FeatureFlags.FeatureFlagItem" Field="rollout" Context="flag">
+            @if (flag.RolloutPercentage.HasValue)
+            {
+                @($"{flag.RolloutPercentage}%")
+            }
+            else
+            {
+                <span class="text-muted">&mdash;</span>
+            }
+        </HColumnTemplate>
+        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.FeatureFlags.FeatureFlagItem" Field="actions" Context="flag">
+            <button class="btn btn-sm btn-outline-primary me-1" title="Edit" @onclick="() => ShowEditModal(flag)" @onclick:stopPropagation="true">
+                <i class="bi bi-pencil"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-danger" title="Delete" @onclick="() => ShowDeleteConfirmation(flag)" @onclick:stopPropagation="true">
+                <i class="bi bi-trash"></i>
+            </button>
+        </HColumnTemplate>
+    </ColumnTemplates>
+    <EmptyContent>
+        <p>No feature flags found.</p>
+    </EmptyContent>
+    <SearchContent>
+        <div class="alert alert-light">
+            Searching for <strong>@context</strong>
+            <button type="button" class="btn-close ms-2" @onclick="OnClearSearch"></button>
+        </div>
+    </SearchContent>
+</HDataGrid>
+
+<GridSettings Columns="Columns" OnSave="OnSave" PageSize="pageCount" TItem="DevInstance.DevCoreApp.Shared.Model.FeatureFlags.FeatureFlagItem" />
+
+@* ---------- Create/Edit Modal ---------- *@
+@if (showModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <EditForm Model="EditItem" OnValidSubmit="OnSaveFlag">
+                    <DataAnnotationsValidator />
+                    <div class="modal-header">
+                        <h5 class="modal-title">@(isEditMode ? "Edit Feature Flag" : "New Feature Flag")</h5>
+                        <button type="button" class="btn-close" @onclick="CloseModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <ValidationSummary class="text-danger" role="alert" />
+                        <div class="form-floating mb-3">
+                            <InputText @bind-Value="EditItem.Name" id="EditItem.Name" class="form-control" placeholder="Name" />
+                            <label for="EditItem.Name">Name</label>
+                            <ValidationMessage For="() => EditItem.Name" class="text-danger" />
+                        </div>
+                        <div class="form-floating mb-3">
+                            <InputText @bind-Value="EditItem.Description" id="EditItem.Description" class="form-control" placeholder="Description" />
+                            <label for="EditItem.Description">Description</label>
+                            <ValidationMessage For="() => EditItem.Description" class="text-danger" />
+                        </div>
+                        <div class="form-check form-switch mb-3">
+                            <InputCheckbox @bind-Value="EditItem.IsEnabled" id="EditItem.IsEnabled" class="form-check-input" />
+                            <label for="EditItem.IsEnabled" class="form-check-label">Enabled</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <InputNumber @bind-Value="EditItem.RolloutPercentage" id="EditItem.RolloutPercentage" class="form-control" placeholder="Rollout %" />
+                            <label for="EditItem.RolloutPercentage">Rollout Percentage (0-100)</label>
+                            <ValidationMessage For="() => EditItem.RolloutPercentage" class="text-danger" />
+                        </div>
+                        <div class="mb-3">
+                            <label for="AllowedUsersText" class="form-label">Allowed Users (comma-separated PublicIds)</label>
+                            <InputText @bind-Value="AllowedUsersText" id="AllowedUsersText" class="form-control" placeholder="user-id-1, user-id-2" />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="CloseModal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" disabled="@Host.InProgress">
+                            @if (Host.InProgress)
+                            {
+                                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                            }
+                            @(isEditMode ? "Save Changes" : "Create")
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@* ---------- Delete Confirmation Modal ---------- *@
+@if (DeletingFlag != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Delete</h5>
+                    <button type="button" class="btn-close" @onclick="CancelDelete"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete feature flag <strong>@DeletingFlag.Name</strong>?</p>
+                    <p class="text-danger">This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CancelDelete">Cancel</button>
+                    <button type="button" class="btn btn-danger" @onclick="ConfirmDelete" disabled="@Host.InProgress">
+                        @if (Host.InProgress)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                        }
+                        Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}

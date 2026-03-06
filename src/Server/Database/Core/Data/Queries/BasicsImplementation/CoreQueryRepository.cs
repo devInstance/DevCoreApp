@@ -94,4 +94,9 @@ public abstract class CoreQueryRepository : IQueryRepository
     {
         return new CoreImportSessionQuery(LogManager, TimeProvider, DB, currentProfile);
     }
+
+    public IFeatureFlagQuery GetFeatureFlagQuery(UserProfile currentProfile)
+    {
+        return new CoreFeatureFlagQuery(LogManager, TimeProvider, DB, currentProfile);
+    }
 }

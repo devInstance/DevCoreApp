@@ -38,6 +38,7 @@ public abstract class ApplicationDbContext : IdentityDbContext<ApplicationUser, 
     public DbSet<UserNotificationPreference> UserNotificationPreferences { get; set; }
     public DbSet<FileRecord> FileRecords { get; set; }
     public DbSet<ImportSession> ImportSessions { get; set; }
+    public DbSet<FeatureFlag> FeatureFlags { get; set; }
 
     public ApplicationDbContext(DbContextOptions options, IOperationContext operationContext)
             : base(options)
@@ -330,6 +331,22 @@ public abstract class ApplicationDbContext : IdentityDbContext<ApplicationUser, 
             entity.HasIndex(s => s.EntityType);
             entity.HasIndex(s => s.Status);
             entity.HasIndex(s => s.OrganizationId);
+        });
+
+        builder.Entity<FeatureFlag>(entity =>
+        {
+            entity.Property(ff => ff.AllowedUsers)
+                .HasColumnType("jsonb");
+
+            entity.HasOne(ff => ff.Organization)
+                .WithMany()
+                .HasForeignKey(ff => ff.OrganizationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(ff => new { ff.Name, ff.OrganizationId })
+                .IsUnique();
+
+            entity.HasIndex(ff => ff.Name);
         });
 
         ApplyOrganizationQueryFilters(builder);

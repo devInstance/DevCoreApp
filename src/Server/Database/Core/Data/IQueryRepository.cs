@@ -19,4 +19,5 @@ public interface IQueryRepository
     IFileRecordQuery GetFileRecordQuery(UserProfile currentProfile);
     IAuditLogQuery GetAuditLogQuery(UserProfile currentProfile);
     IImportSessionQuery GetImportSessionQuery(UserProfile currentProfile);
+    IFeatureFlagQuery GetFeatureFlagQuery(UserProfile currentProfile);
 }

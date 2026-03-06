@@ -38,6 +38,14 @@ public static class PermissionDefinitions
             public const string Edit = "Admin.Organizations.Edit";
             public const string Delete = "Admin.Organizations.Delete";
         }
+
+        public static class FeatureFlags
+        {
+            public const string View = "Admin.FeatureFlags.View";
+            public const string Create = "Admin.FeatureFlags.Create";
+            public const string Edit = "Admin.FeatureFlags.Edit";
+            public const string Delete = "Admin.FeatureFlags.Delete";
+        }
     }
 
     public static class System
