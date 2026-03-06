@@ -5,6 +5,7 @@ using DevInstance.DevCoreApp.Server.Database.Core.Models.Base;
 using DevInstance.DevCoreApp.Server.Database.Core.Models.Files;
 using DevInstance.DevCoreApp.Server.Database.Core.Models.ImportExport;
 using DevInstance.DevCoreApp.Server.Database.Core.Models.Notifications;
+using DevInstance.DevCoreApp.Server.Database.Core.Models.Webhooks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -40,6 +41,8 @@ public abstract class ApplicationDbContext : IdentityDbContext<ApplicationUser, 
     public DbSet<ImportSession> ImportSessions { get; set; }
     public DbSet<FeatureFlag> FeatureFlags { get; set; }
     public DbSet<ApiKey> ApiKeys { get; set; }
+    public DbSet<WebhookSubscription> WebhookSubscriptions { get; set; }
+    public DbSet<WebhookDelivery> WebhookDeliveries { get; set; }
 
     public ApplicationDbContext(DbContextOptions options, IOperationContext operationContext)
             : base(options)
@@ -369,6 +372,38 @@ public abstract class ApplicationDbContext : IdentityDbContext<ApplicationUser, 
                 .IsUnique();
 
             entity.HasIndex(ak => ak.Prefix);
+        });
+
+        builder.Entity<WebhookSubscription>(entity =>
+        {
+            entity.HasOne(ws => ws.CreatedBy)
+                .WithMany()
+                .HasForeignKey(ws => ws.CreatedById)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(ws => ws.Organization)
+                .WithMany()
+                .HasForeignKey(ws => ws.OrganizationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(ws => ws.EventType);
+            entity.HasIndex(ws => new { ws.EventType, ws.IsActive });
+        });
+
+        builder.Entity<WebhookDelivery>(entity =>
+        {
+            entity.Property(wd => wd.Payload)
+                .HasColumnType("jsonb");
+
+            entity.HasOne(wd => wd.Subscription)
+                .WithMany()
+                .HasForeignKey(wd => wd.SubscriptionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(wd => wd.SubscriptionId);
+            entity.HasIndex(wd => wd.Status);
+            entity.HasIndex(wd => wd.EventType);
+            entity.HasIndex(wd => wd.NextRetryAt);
         });
 
         ApplyOrganizationQueryFilters(builder);

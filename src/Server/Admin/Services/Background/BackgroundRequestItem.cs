@@ -4,7 +4,8 @@ namespace DevInstance.DevCoreApp.Server.Admin.Services.Background;
 public enum BackgroundRequestType
 {
     SendEmail,
-    ImportData
+    ImportData,
+    DeliverWebhook
 }
 
 public class BackgroundRequestItem

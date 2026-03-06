@@ -95,6 +95,7 @@ public class BackgroundWorker : BackgroundService, IBackgroundWorker
     {
         BackgroundRequestType.SendEmail => BackgroundTaskTypes.SendEmail,
         BackgroundRequestType.ImportData => BackgroundTaskTypes.ImportData,
+        BackgroundRequestType.DeliverWebhook => BackgroundTaskTypes.DeliverWebhook,
         _ => requestType.ToString()
     };
 
@@ -115,6 +116,12 @@ public class BackgroundWorker : BackgroundService, IBackgroundWorker
         {
             return !string.IsNullOrEmpty(importRequest.SessionId)
                 ? $"ImportSession:{importRequest.SessionId}"
+                : null;
+        }
+        if (item.RequestType == BackgroundRequestType.DeliverWebhook && item.Content is WebhookDeliveryRequest webhookRequest)
+        {
+            return !string.IsNullOrEmpty(webhookRequest.DeliveryId)
+                ? $"WebhookDelivery:{webhookRequest.DeliveryId}"
                 : null;
         }
         return null;

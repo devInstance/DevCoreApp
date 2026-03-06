@@ -53,6 +53,14 @@ public static class PermissionDefinitions
             public const string Create = "Admin.ApiKeys.Create";
             public const string Revoke = "Admin.ApiKeys.Revoke";
         }
+
+        public static class Webhooks
+        {
+            public const string View = "Admin.Webhooks.View";
+            public const string Create = "Admin.Webhooks.Create";
+            public const string Edit = "Admin.Webhooks.Edit";
+            public const string Delete = "Admin.Webhooks.Delete";
+        }
     }
 
     public static class System

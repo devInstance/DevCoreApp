@@ -60,6 +60,7 @@ public class Program
             builder.Configuration.GetSection(BackgroundTaskSettings.SectionName));
         builder.Services.AddSingleton<IBackgroundTaskHandler, SendEmailTaskHandler>();
         builder.Services.AddSingleton<IBackgroundTaskHandler, ImportDataTaskHandler>();
+        builder.Services.AddSingleton<IBackgroundTaskHandler, WebhookDeliveryTaskHandler>();
         builder.Services.AddSingleton<BackgroundTaskWorker>();
         builder.Services.AddSingleton<IBackgroundTaskWorker>(sp => sp.GetRequiredService<BackgroundTaskWorker>());
         builder.Services.AddSingleton<BackgroundWorker>();
@@ -182,6 +183,11 @@ public class Program
         builder.Services.AddBlazorServicesMocks(typeof(UserProfileServiceMock).Assembly);
         builder.Services.AddBlazorServicesMocks(typeof(UserProfileService).Assembly);
 #endif
+
+        builder.Services.AddHttpClient("WebhookDelivery", client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(30);
+        });
 
         builder.Services.AddSignalR();
         builder.Services.AddScoped<INotificationHubService, NotificationHubService>();

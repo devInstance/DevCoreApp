@@ -104,4 +104,14 @@ public abstract class CoreQueryRepository : IQueryRepository
     {
         return new CoreApiKeyQuery(LogManager, TimeProvider, DB, currentProfile);
     }
+
+    public IWebhookSubscriptionQuery GetWebhookSubscriptionQuery(UserProfile currentProfile)
+    {
+        return new CoreWebhookSubscriptionQuery(LogManager, TimeProvider, DB, currentProfile);
+    }
+
+    public IWebhookDeliveryQuery GetWebhookDeliveryQuery(UserProfile currentProfile)
+    {
+        return new CoreWebhookDeliveryQuery(LogManager, TimeProvider, DB, currentProfile);
+    }
 }

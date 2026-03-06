@@ -21,4 +21,6 @@ public interface IQueryRepository
     IImportSessionQuery GetImportSessionQuery(UserProfile currentProfile);
     IFeatureFlagQuery GetFeatureFlagQuery(UserProfile currentProfile);
     IApiKeyQuery GetApiKeyQuery(UserProfile currentProfile);
+    IWebhookSubscriptionQuery GetWebhookSubscriptionQuery(UserProfile currentProfile);
+    IWebhookDeliveryQuery GetWebhookDeliveryQuery(UserProfile currentProfile);
 }
