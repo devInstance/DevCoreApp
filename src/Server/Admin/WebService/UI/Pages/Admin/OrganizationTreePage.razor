@@ -4,11 +4,8 @@
 <PageTitle>Organizations</PageTitle>
 
 <div class="row mb-3">
-    <div class="col col-md-6 col-lg-4 d-flex">
-        <input class="form-control" placeholder="Search organizations..." @bind="SearchTerm" @bind:event="oninput" disabled="@Host.InProgress" />
-        <button class="btn btn-primary ms-2" @onclick="OnSearch" disabled="@Host.InProgress">
-            <i class="bi bi-search"></i>
-        </button>
+    <div class="col col-md-6 col-lg-4">
+        <HSearchBar @bind-Value="SearchTerm" Placeholder="Search organizations..." OnSearch="OnSearch" Disabled="Host.InProgress" />
     </div>
     <div class="col col-md-6 col-lg-8">
         <div class="d-flex align-items-center justify-content-end gap-2">

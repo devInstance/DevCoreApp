@@ -47,6 +47,9 @@ public partial class Users
 
     private int pageCount = 10;
     private string SearchTerm { get; set; } = string.Empty;
+    private string SearchField { get; set; } = string.Empty;
+    private string StatusFilter { get; set; } = string.Empty;
+    private int UpdatedWithinDays { get; set; }
     private string SortField { get; set; } = string.Empty;
     private bool IsAsc { get; set; } = true;
 
@@ -148,13 +151,36 @@ public partial class Users
 
     public async Task OnSearch()
     {
-        await LoadUsers(0, UserList?.SortBy, UserList?.IsAsc, SearchTerm);
+        var search = BuildSearchString();
+        await LoadUsers(0, UserList?.SortBy, UserList?.IsAsc, search);
     }
 
     public async Task OnClearSearch()
     {
         SearchTerm = string.Empty;
+        SearchField = string.Empty;
+        StatusFilter = string.Empty;
+        UpdatedWithinDays = 0;
         await LoadUsers(0, UserList?.SortBy, UserList?.IsAsc, null);
+    }
+
+    private string? BuildSearchString()
+    {
+        var parts = new List<string>();
+
+        if (!string.IsNullOrWhiteSpace(SearchTerm))
+            parts.Add(SearchTerm.Trim());
+
+        if (!string.IsNullOrEmpty(SearchField))
+            parts.Add($"field:{SearchField}");
+
+        if (!string.IsNullOrEmpty(StatusFilter))
+            parts.Add($"status:{StatusFilter}");
+
+        if (UpdatedWithinDays > 0)
+            parts.Add($"days:{UpdatedWithinDays}");
+
+        return parts.Count > 0 ? string.Join(" | ", parts) : null;
     }
 
     public async Task OnColumnsChanged()

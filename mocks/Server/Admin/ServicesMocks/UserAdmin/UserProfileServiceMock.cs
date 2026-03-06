@@ -94,22 +94,43 @@ public class UserProfileServiceMock : IUserProfileService
         var pageVal = page ?? 0;
         var topVal = top ?? 10;
 
-        if (!string.IsNullOrEmpty(search))
+        ParseSearch(search, out var term, out var field, out var status, out var days);
+
+        var filtered = modelList.AsEnumerable();
+
+        if (!string.IsNullOrEmpty(status))
         {
-            var searchResult = modelList
-                .Where(u => u.FirstName.Contains(search, StringComparison.OrdinalIgnoreCase)
-                         || u.LastName.Contains(search, StringComparison.OrdinalIgnoreCase)
-                         || u.Email.Contains(search, StringComparison.OrdinalIgnoreCase)
-                         || (u.PhoneNumber != null && u.PhoneNumber.Contains(search, StringComparison.OrdinalIgnoreCase)))
+            filtered = filtered.Where(u => u.Status.Equals(status, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (days > 0)
+        {
+            var cutoff = DateTime.UtcNow.AddDays(-days);
+            filtered = filtered.Where(u => u.UpdateDate >= cutoff);
+        }
+
+        if (!string.IsNullOrEmpty(term))
+        {
+            filtered = field switch
+            {
+                "firstname" => filtered.Where(u => u.FirstName.Contains(term, StringComparison.OrdinalIgnoreCase)),
+                "lastname" => filtered.Where(u => u.LastName.Contains(term, StringComparison.OrdinalIgnoreCase)),
+                _ => filtered.Where(u => u.FirstName.Contains(term, StringComparison.OrdinalIgnoreCase)
+                                      || u.LastName.Contains(term, StringComparison.OrdinalIgnoreCase)
+                                      || u.Email.Contains(term, StringComparison.OrdinalIgnoreCase)
+                                      || (u.PhoneNumber != null && u.PhoneNumber.Contains(term, StringComparison.OrdinalIgnoreCase)))
+            };
+
+            var searchResult = filtered
                 .Take(topVal)
                 .Select(u => new UserProfileItem
                 {
                     Id = u.Id,
-                    Email = u.Email.Replace(search, $"<mark>{search}</mark>", StringComparison.OrdinalIgnoreCase),
-                    FirstName = u.FirstName.Replace(search, $"<mark>{search}</mark>", StringComparison.OrdinalIgnoreCase),
+                    Email = u.Email.Replace(term, $"<mark>{term}</mark>", StringComparison.OrdinalIgnoreCase),
+                    FirstName = u.FirstName.Replace(term, $"<mark>{term}</mark>", StringComparison.OrdinalIgnoreCase),
                     MiddleName = u.MiddleName,
-                    LastName = u.LastName.Replace(search, $"<mark>{search}</mark>", StringComparison.OrdinalIgnoreCase),
-                    PhoneNumber = u.PhoneNumber?.Replace(search, $"<mark>{search}</mark>", StringComparison.OrdinalIgnoreCase) ?? "",
+                    LastName = u.LastName.Replace(term, $"<mark>{term}</mark>", StringComparison.OrdinalIgnoreCase),
+                    PhoneNumber = u.PhoneNumber?.Replace(term, $"<mark>{term}</mark>", StringComparison.OrdinalIgnoreCase) ?? "",
                     Roles = u.Roles,
                     Status = u.Status,
                     CreateDate = u.CreateDate,
@@ -121,6 +142,20 @@ public class UserProfileServiceMock : IUserProfileService
                 ModelListResult.CreateList(searchResult.ToArray(), searchResult.Count, topVal, pageVal, sortBy, search, true));
         }
 
+        if (days > 0 || !string.IsNullOrEmpty(status))
+        {
+            var filteredList = filtered.ToList();
+            var dateItems = filteredList
+                .Skip(pageVal * topVal)
+                .Take(topVal)
+                .ToArray();
+
+            await Task.Delay(delay);
+
+            return ServiceActionResult<ModelList<UserProfileItem>>.OK(
+                ModelListResult.CreateList(dateItems, filteredList.Count, topVal, pageVal, sortBy, search, true));
+        }
+
         var items = modelList
             .Skip(pageVal * topVal)
             .Take(topVal)
@@ -130,6 +165,30 @@ public class UserProfileServiceMock : IUserProfileService
 
         return ServiceActionResult<ModelList<UserProfileItem>>.OK(
             ModelListResult.CreateList(items, modelList.Count, topVal, pageVal, sortBy, search));
+    }
+
+    private static void ParseSearch(string? search, out string term, out string field, out string status, out int days)
+    {
+        term = string.Empty;
+        field = string.Empty;
+        status = string.Empty;
+        days = 0;
+
+        if (string.IsNullOrEmpty(search)) return;
+
+        var parts = search.Split('|');
+        foreach (var part in parts)
+        {
+            var trimmed = part.Trim();
+            if (trimmed.StartsWith("field:", StringComparison.OrdinalIgnoreCase))
+                field = trimmed[6..];
+            else if (trimmed.StartsWith("status:", StringComparison.OrdinalIgnoreCase))
+                status = trimmed[7..];
+            else if (trimmed.StartsWith("days:", StringComparison.OrdinalIgnoreCase) && int.TryParse(trimmed[5..], out var d))
+                days = d;
+            else
+                term = trimmed;
+        }
     }
 
     public async Task<ServiceActionResult<UserProfileItem>> GetAsync(string id)

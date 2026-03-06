@@ -4,11 +4,40 @@
 <PageTitle>Users</PageTitle>
 
 <div class="row mb-3">
-    <div class="col col-md-6 col-lg-4 d-flex">
-        <input class="form-control" placeholder="Search users..." @bind="SearchTerm" @bind:event="oninput" disabled="@Host.InProgress" />
-        <button class="btn btn-primary ms-2" @onclick="OnSearch" disabled="@Host.InProgress">
-            <i class="bi bi-search"></i>
-        </button>
+    <div class="col col-md-6 col-lg-4">
+        <HSearchBar @bind-Value="SearchTerm" Placeholder="Search users..." OnSearch="OnSearch" Disabled="Host.InProgress">
+            <AdvancedContent>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Search in</label>
+                        <select class="form-select form-select-sm" @bind="SearchField" disabled="@Host.InProgress">
+                            <option value="">All fields</option>
+                            <option value="firstname">First Name</option>
+                            <option value="lastname">Last Name</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Status</label>
+                        <select class="form-select form-select-sm" @bind="StatusFilter" disabled="@Host.InProgress">
+                            <option value="">All</option>
+                            <option value="Active">Active</option>
+                            <option value="Initiated">Initiated</option>
+                            <option value="Disabled">Disabled</option>
+                            <option value="Suspended">Suspended</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Updated within</label>
+                        <select class="form-select form-select-sm" @bind="UpdatedWithinDays" disabled="@Host.InProgress">
+                            <option value="0">Any time</option>
+                            <option value="7">Last 7 days</option>
+                            <option value="30">Last 30 days</option>
+                            <option value="90">Last 90 days</option>
+                        </select>
+                    </div>
+                </div>
+            </AdvancedContent>
+        </HSearchBar>
     </div>
     <div class="col col-md-6 col-lg-8">
         <div class="float-end">
