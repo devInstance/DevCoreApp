@@ -46,6 +46,13 @@ public static class PermissionDefinitions
             public const string Edit = "Admin.FeatureFlags.Edit";
             public const string Delete = "Admin.FeatureFlags.Delete";
         }
+
+        public static class ApiKeys
+        {
+            public const string View = "Admin.ApiKeys.View";
+            public const string Create = "Admin.ApiKeys.Create";
+            public const string Revoke = "Admin.ApiKeys.Revoke";
+        }
     }
 
     public static class System

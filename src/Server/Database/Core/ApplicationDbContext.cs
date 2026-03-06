@@ -39,6 +39,7 @@ public abstract class ApplicationDbContext : IdentityDbContext<ApplicationUser, 
     public DbSet<FileRecord> FileRecords { get; set; }
     public DbSet<ImportSession> ImportSessions { get; set; }
     public DbSet<FeatureFlag> FeatureFlags { get; set; }
+    public DbSet<ApiKey> ApiKeys { get; set; }
 
     public ApplicationDbContext(DbContextOptions options, IOperationContext operationContext)
             : base(options)
@@ -347,6 +348,27 @@ public abstract class ApplicationDbContext : IdentityDbContext<ApplicationUser, 
                 .IsUnique();
 
             entity.HasIndex(ff => ff.Name);
+        });
+
+        builder.Entity<ApiKey>(entity =>
+        {
+            entity.Property(ak => ak.Scopes)
+                .HasColumnType("jsonb");
+
+            entity.HasOne(ak => ak.CreatedBy)
+                .WithMany()
+                .HasForeignKey(ak => ak.CreatedById)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(ak => ak.Organization)
+                .WithMany()
+                .HasForeignKey(ak => ak.OrganizationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(ak => ak.KeyHash)
+                .IsUnique();
+
+            entity.HasIndex(ak => ak.Prefix);
         });
 
         ApplyOrganizationQueryFilters(builder);

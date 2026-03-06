@@ -24,7 +24,8 @@
       "Bash(dotnet-ildasm:*)",
       "Bash(mkdir:*)",
       "Bash(where:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(xargs cat:*)"
     ]
   }
 }

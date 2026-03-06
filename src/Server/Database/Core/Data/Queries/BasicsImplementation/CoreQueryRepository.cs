@@ -99,4 +99,9 @@ public abstract class CoreQueryRepository : IQueryRepository
     {
         return new CoreFeatureFlagQuery(LogManager, TimeProvider, DB, currentProfile);
     }
+
+    public IApiKeyQuery GetApiKeyQuery(UserProfile currentProfile)
+    {
+        return new CoreApiKeyQuery(LogManager, TimeProvider, DB, currentProfile);
+    }
 }

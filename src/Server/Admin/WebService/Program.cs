@@ -27,6 +27,8 @@ using DevInstance.DevCoreApp.Shared.Model.Authentication;
 using DevInstance.DevCoreApp.Shared.Utils;
 using DevInstance.LogScope.Extensions.SerilogLogger;
 using DevInstance.LogScope.Formatters;
+using DevInstance.DevCoreApp.Server.Admin.WebService.Identity;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -101,6 +103,9 @@ public class Program
             {
                 options.ForwardDefaultSelector = context =>
                 {
+                    if (context.Request.Headers.ContainsKey("X-Api-Key"))
+                        return "ApiKey";
+
                     var authHeader = context.Request.Headers.Authorization.FirstOrDefault();
                     if (authHeader != null &&
                         authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
@@ -110,6 +115,7 @@ public class Program
             });
 
         authBuilder.AddIdentityCookies();
+        authBuilder.AddScheme<AuthenticationSchemeOptions, ApiKeyAuthenticationHandler>("ApiKey", null);
         authBuilder.AddJwtBearer(options =>
         {
             options.TokenValidationParameters = new TokenValidationParameters

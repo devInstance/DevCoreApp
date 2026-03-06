@@ -98,6 +98,27 @@ public class PermissionClaimsTransformation : IClaimsTransformation
             identity.AddClaim(new Claim(PermissionClaimType, key));
         }
 
+        // 4b. API key scope restriction — if this principal was authenticated via an API key,
+        //     intersect the full permission set with the key's allowed scopes.
+        var apiKeyIdClaim = identity.FindFirst("ApiKeyId")?.Value;
+        if (!string.IsNullOrEmpty(apiKeyIdClaim))
+        {
+            var apiKey = await _db.ApiKeys
+                .Where(ak => ak.PublicId == apiKeyIdClaim)
+                .Select(ak => new { ak.Scopes })
+                .FirstOrDefaultAsync();
+
+            if (apiKey?.Scopes != null && apiKey.Scopes.Count > 0)
+            {
+                var scopeSet = new HashSet<string>(apiKey.Scopes);
+                var toRemove = identity.Claims
+                    .Where(c => c.Type == PermissionClaimType && !scopeSet.Contains(c.Value))
+                    .ToList();
+                foreach (var claim in toRemove)
+                    identity.RemoveClaim(claim);
+            }
+        }
+
         // 5. Resolve organization context
         var orgContext = await _orgResolver.ResolveAsync(userId);
 

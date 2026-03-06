@@ -1,0 +1,211 @@
+@page "/admin/api-keys"
+@attribute [Authorize(Policy = "Admin.ApiKeys.View")]
+
+<PageTitle>API Keys</PageTitle>
+
+<div class="row mb-3">
+    <div class="col col-md-6 col-lg-4">
+        <HSearchBar @bind-Value="SearchTerm" Placeholder="Search keys..." OnSearch="OnSearch" Disabled="Host.InProgress" />
+    </div>
+    <div class="col col-md-6 col-lg-8">
+        <div class="float-end">
+            <AuthorizeView Policy="Admin.ApiKeys.Create">
+                <button class="btn btn-primary" @onclick="ShowCreateModal" disabled="@Host.InProgress">
+                    <i class="bi bi-plus-lg me-1"></i>New API Key
+                </button>
+            </AuthorizeView>
+        </div>
+    </div>
+</div>
+
+@if (Host.IsError)
+{
+    <div class="alert alert-danger" role="alert">
+        @Host.ErrorMessage
+    </div>
+}
+
+<HDataGrid TItem="DevInstance.DevCoreApp.Shared.Model.ApiKeys.ApiKeyItem"
+           Data="KeyList"
+           Columns="Columns"
+           IsLoading="Host.InProgress"
+           OnSort="OnSortAsync"
+           OnPageChanged="OnPageChangedAsync"
+           OnColumnsChanged="OnColumnsChanged">
+    <ColumnTemplates>
+        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.ApiKeys.ApiKeyItem" Field="prefix" Context="key">
+            <code>@key.Prefix</code>
+        </HColumnTemplate>
+        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.ApiKeys.ApiKeyItem" Field="scopes" Context="key">
+            @if (key.Scopes != null && key.Scopes.Count > 0)
+            {
+                <span class="badge bg-info">@key.Scopes.Count scopes</span>
+            }
+            else
+            {
+                <span class="text-muted">All</span>
+            }
+        </HColumnTemplate>
+        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.ApiKeys.ApiKeyItem" Field="expiresat" Context="key">
+            @if (key.ExpiresAt.HasValue)
+            {
+                @key.ExpiresAt.Value.ToString("yyyy-MM-dd")
+            }
+            else
+            {
+                <span class="text-muted">Never</span>
+            }
+        </HColumnTemplate>
+        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.ApiKeys.ApiKeyItem" Field="usedat" Context="key">
+            @if (key.LastUsedAt.HasValue)
+            {
+                @key.LastUsedAt.Value.ToString("yyyy-MM-dd HH:mm")
+            }
+            else
+            {
+                <span class="text-muted">Never</span>
+            }
+        </HColumnTemplate>
+        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.ApiKeys.ApiKeyItem" Field="status" Context="key">
+            @if (key.IsRevoked)
+            {
+                <span class="badge bg-danger">Revoked</span>
+            }
+            else if (key.ExpiresAt.HasValue && key.ExpiresAt.Value < DateTime.UtcNow)
+            {
+                <span class="badge bg-warning">Expired</span>
+            }
+            else
+            {
+                <span class="badge bg-success">Active</span>
+            }
+        </HColumnTemplate>
+        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.ApiKeys.ApiKeyItem" Field="actions" Context="key">
+            @if (!key.IsRevoked && !(key.ExpiresAt.HasValue && key.ExpiresAt.Value < DateTime.UtcNow))
+            {
+                <AuthorizeView Policy="Admin.ApiKeys.Revoke">
+                    <button class="btn btn-sm btn-outline-danger" title="Revoke" @onclick="() => ShowRevokeConfirmation(key)" @onclick:stopPropagation="true">
+                        <i class="bi bi-x-circle"></i>
+                    </button>
+                </AuthorizeView>
+            }
+        </HColumnTemplate>
+    </ColumnTemplates>
+    <EmptyContent>
+        <p>No API keys found.</p>
+    </EmptyContent>
+    <SearchContent>
+        <div class="alert alert-light">
+            Searching for <strong>@context</strong>
+            <button type="button" class="btn-close ms-2" @onclick="OnClearSearch"></button>
+        </div>
+    </SearchContent>
+</HDataGrid>
+
+<GridSettings Columns="Columns" OnSave="OnSave" PageSize="pageCount" TItem="DevInstance.DevCoreApp.Shared.Model.ApiKeys.ApiKeyItem" />
+
+@* ---------- Create Modal ---------- *@
+@if (showCreateModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <EditForm Model="CreateItem" OnValidSubmit="OnCreateKey">
+                    <DataAnnotationsValidator />
+                    <div class="modal-header">
+                        <h5 class="modal-title">New API Key</h5>
+                        <button type="button" class="btn-close" @onclick="CloseCreateModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <ValidationSummary class="text-danger" role="alert" />
+                        <div class="form-floating mb-3">
+                            <InputText @bind-Value="CreateItem.Name" id="CreateItem.Name" class="form-control" placeholder="Name" />
+                            <label for="CreateItem.Name">Name</label>
+                            <ValidationMessage For="() => CreateItem.Name" class="text-danger" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Scopes (comma-separated permission keys, leave empty for all)</label>
+                            <InputText @bind-Value="ScopesText" id="ScopesText" class="form-control" placeholder="Admin.Users.View, System.Jobs.View" />
+                        </div>
+                        <div class="form-floating mb-3">
+                            <InputDate @bind-Value="CreateItem.ExpiresAt" id="CreateItem.ExpiresAt" class="form-control" placeholder="Expires At" />
+                            <label for="CreateItem.ExpiresAt">Expires At (optional)</label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="CloseCreateModal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" disabled="@Host.InProgress">
+                            @if (Host.InProgress)
+                            {
+                                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                            }
+                            Create
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@* ---------- Show Key Modal (shown once after creation) ---------- *@
+@if (showKeyModal && createdResult != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">API Key Created</h5>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning mb-3">
+                        <i class="bi bi-exclamation-triangle me-1"></i>
+                        <strong>Copy this key now.</strong> It will not be shown again.
+                    </div>
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control font-monospace" readonly value="@createdResult.PlainTextKey" id="plainTextKeyInput" />
+                        <button class="btn btn-outline-secondary" type="button" @onclick="CopyKeyToClipboard">
+                            <i class="bi bi-clipboard"></i>
+                        </button>
+                    </div>
+                    @if (keyCopied)
+                    {
+                        <small class="text-success"><i class="bi bi-check-lg"></i> Copied!</small>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" @onclick="CloseKeyModal">Done</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@* ---------- Revoke Confirmation Modal ---------- *@
+@if (RevokingKey != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Revoke</h5>
+                    <button type="button" class="btn-close" @onclick="CancelRevoke"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to revoke API key <strong>@RevokingKey.Name</strong> (<code>@RevokingKey.Prefix</code>)?</p>
+                    <p class="text-danger">This action cannot be undone. Any integrations using this key will stop working.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CancelRevoke">Cancel</button>
+                    <button type="button" class="btn btn-danger" @onclick="ConfirmRevoke" disabled="@Host.InProgress">
+                        @if (Host.InProgress)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                        }
+                        Revoke
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
