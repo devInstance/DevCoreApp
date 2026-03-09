@@ -64,6 +64,16 @@
            IdSelector="u => u.Id"
            OnRowClick="OnRowClick">
     <ColumnTemplates>
+        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.UserProfileItem" Field="email" Context="user">
+            <div class="d-flex align-items-center gap-2">
+                <ProfilePictureUpload PictureUrl="@user.ProfilePictureThumbnailUrl"
+                                      FirstName="@user.FirstName"
+                                      LastName="@user.LastName"
+                                      AllowEdit="false"
+                                      Size="small" />
+                <span>@user.Email</span>
+            </div>
+        </HColumnTemplate>
         <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.UserProfileItem" Field="status" Context="user">
             @if (user.Status == "Active")
             {
@@ -109,9 +119,11 @@
         </div>
         <div class="user-preview-body">
             <div class="text-center mb-4">
-                <div class="user-preview-avatar">
-                    @GetInitials(SelectedUser)
-                </div>
+                <ProfilePictureUpload PictureUrl="@SelectedUser.ProfilePictureUrl"
+                                      FirstName="@SelectedUser.FirstName"
+                                      LastName="@SelectedUser.LastName"
+                                      AllowEdit="false"
+                                      Size="large" />
                 <h5 class="mt-3 mb-1">@SelectedUser.FullName</h5>
                 <span class="text-muted">@SelectedUser.Email</span>
             </div>

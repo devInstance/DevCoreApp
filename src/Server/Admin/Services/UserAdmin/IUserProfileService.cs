@@ -21,4 +21,9 @@ public interface IUserProfileService : ICRUDService<UserProfileItem>
     Task<ServiceActionResult<List<PermissionOverrideItem>>> GetUserPermissionOverridesAsync(string userId);
     Task<ServiceActionResult<bool>> SetUserPermissionOverridesAsync(string userId, List<PermissionOverrideItem> overrides);
     Task<ServiceActionResult<List<EffectivePermissionItem>>> GetEffectivePermissionsAsync(string userId);
+
+    Task<ServiceActionResult<UserProfileItem>> UploadProfilePictureAsync(string userId, Stream imageStream, string contentType);
+    Task<ServiceActionResult<bool>> DeleteProfilePictureAsync(string userId);
+    Task<ServiceActionResult<(byte[] Data, string ContentType)>> GetProfilePictureAsync(string userId);
+    Task<ServiceActionResult<(byte[] Data, string ContentType)>> GetProfilePictureThumbnailAsync(string userId);
 }

@@ -60,6 +60,15 @@ public abstract class ApplicationDbContext : IdentityDbContext<ApplicationUser, 
     {
         base.OnModelCreating(builder);
 
+        builder.Entity<UserProfile>(entity =>
+        {
+            entity.Property(up => up.ProfilePicture)
+                .HasColumnType("bytea");
+
+            entity.Property(up => up.ProfilePictureThumbnail)
+                .HasColumnType("bytea");
+        });
+
         builder.Entity<GridProfile>()
             .HasIndex(g => new { g.UserProfileId, g.GridName, g.ProfileName })
             .IsUnique();

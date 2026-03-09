@@ -18,6 +18,8 @@ public static class UserProfileDecorators
     /// <returns>A <see cref="UserProfileItem"/> view model or <c>null</c> if the profile is <c>null</c>.</returns>
     public static UserProfileItem ToView(this UserProfile profile, ApplicationUser? appUser = null, IList<string>? roles = null)
     {
+        var hasPicture = !string.IsNullOrEmpty(profile.ProfilePictureContentType);
+
         return new UserProfileItem
         {
             Id = profile.PublicId,
@@ -29,7 +31,10 @@ public static class UserProfileDecorators
             Roles = roles != null ? string.Join(", ", roles) : string.Empty,
             Status = profile.Status.ToString(),
             CreateDate = profile.CreateDate,
-            UpdateDate = profile.UpdateDate
+            UpdateDate = profile.UpdateDate,
+            HasProfilePicture = hasPicture,
+            ProfilePictureUrl = hasPicture ? $"api/users/{profile.PublicId}/profile-picture" : null,
+            ProfilePictureThumbnailUrl = hasPicture ? $"api/users/{profile.PublicId}/profile-picture/thumbnail" : null
         };
     }
 

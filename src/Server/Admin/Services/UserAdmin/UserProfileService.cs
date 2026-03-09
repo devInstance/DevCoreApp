@@ -20,6 +20,7 @@ using DevInstance.WebServiceToolkit.Database.Queries.Extensions;
 using DevInstance.WebServiceToolkit.Exceptions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using SkiaSharp;
 
 namespace DevInstance.DevCoreApp.Server.Admin.Services.UserAdmin;
 
@@ -605,5 +606,114 @@ public class UserProfileService : BaseService, IUserProfileService
         }).ToList();
 
         return ServiceActionResult<List<EffectivePermissionItem>>.OK(items);
+    }
+
+    public async Task<ServiceActionResult<UserProfileItem>> UploadProfilePictureAsync(string userId, Stream imageStream, string contentType)
+    {
+        using var l = log.TraceScope();
+
+        var allowedTypes = new[] { "image/jpeg", "image/png", "image/webp" };
+        if (!allowedTypes.Contains(contentType, StringComparer.OrdinalIgnoreCase))
+            throw new BadRequestException("Only JPEG, PNG, and WebP images are allowed.");
+
+        using var memStream = new MemoryStream();
+        await imageStream.CopyToAsync(memStream);
+
+        if (memStream.Length > 2 * 1024 * 1024)
+            throw new BadRequestException("Image must be less than 2 MB.");
+
+        var imageData = memStream.ToArray();
+        var picture = ResizeImage(imageData, 400, 400);
+        var thumbnail = ResizeImage(imageData, 48, 48);
+
+        var profilesQuery = Repository.GetUserProfilesQuery(AuthorizationContext.CurrentProfile);
+        var profile = await profilesQuery.ByPublicId(userId).Select().FirstOrDefaultAsync();
+        if (profile == null)
+            throw new RecordNotFoundException("User not found.");
+
+        profile.ProfilePicture = picture;
+        profile.ProfilePictureContentType = "image/jpeg";
+        profile.ProfilePictureThumbnail = thumbnail;
+        await profilesQuery.UpdateAsync(profile);
+
+        l.I($"Profile picture uploaded for user {userId}.");
+
+        var appUser = await UserManager.FindByIdAsync(profile.ApplicationUserId.ToString());
+        var roles = appUser != null ? await UserManager.GetRolesAsync(appUser) : null;
+        return ServiceActionResult<UserProfileItem>.OK(profile.ToView(appUser, roles));
+    }
+
+    public async Task<ServiceActionResult<bool>> DeleteProfilePictureAsync(string userId)
+    {
+        using var l = log.TraceScope();
+
+        var profilesQuery = Repository.GetUserProfilesQuery(AuthorizationContext.CurrentProfile);
+        var profile = await profilesQuery.ByPublicId(userId).Select().FirstOrDefaultAsync();
+        if (profile == null)
+            throw new RecordNotFoundException("User not found.");
+
+        profile.ProfilePicture = null;
+        profile.ProfilePictureContentType = null;
+        profile.ProfilePictureThumbnail = null;
+        await profilesQuery.UpdateAsync(profile);
+
+        l.I($"Profile picture deleted for user {userId}.");
+
+        return ServiceActionResult<bool>.OK(true);
+    }
+
+    public async Task<ServiceActionResult<(byte[] Data, string ContentType)>> GetProfilePictureAsync(string userId)
+    {
+        using var l = log.TraceScope();
+
+        var profile = await Repository.GetUserProfilesQuery(AuthorizationContext.CurrentProfile)
+            .ByPublicId(userId).Select().FirstOrDefaultAsync();
+
+        if (profile == null)
+            throw new RecordNotFoundException("User not found.");
+
+        if (profile.ProfilePicture == null || string.IsNullOrEmpty(profile.ProfilePictureContentType))
+            throw new RecordNotFoundException("No profile picture found.");
+
+        return ServiceActionResult<(byte[] Data, string ContentType)>.OK(
+            (profile.ProfilePicture, profile.ProfilePictureContentType));
+    }
+
+    public async Task<ServiceActionResult<(byte[] Data, string ContentType)>> GetProfilePictureThumbnailAsync(string userId)
+    {
+        using var l = log.TraceScope();
+
+        var profile = await Repository.GetUserProfilesQuery(AuthorizationContext.CurrentProfile)
+            .ByPublicId(userId).Select().FirstOrDefaultAsync();
+
+        if (profile == null)
+            throw new RecordNotFoundException("User not found.");
+
+        if (profile.ProfilePictureThumbnail == null || string.IsNullOrEmpty(profile.ProfilePictureContentType))
+            throw new RecordNotFoundException("No profile picture found.");
+
+        return ServiceActionResult<(byte[] Data, string ContentType)>.OK(
+            (profile.ProfilePictureThumbnail, profile.ProfilePictureContentType));
+    }
+
+    private static byte[] ResizeImage(byte[] imageData, int maxWidth, int maxHeight)
+    {
+        using var original = SKBitmap.Decode(imageData);
+        if (original == null)
+            throw new BadRequestException("Invalid image data.");
+
+        var ratioX = (double)maxWidth / original.Width;
+        var ratioY = (double)maxHeight / original.Height;
+        var ratio = Math.Min(ratioX, ratioY);
+        ratio = Math.Min(ratio, 1.0); // Don't upscale
+
+        var newWidth = (int)(original.Width * ratio);
+        var newHeight = (int)(original.Height * ratio);
+
+        using var resized = original.Resize(new SKImageInfo(newWidth, newHeight), SKFilterQuality.High);
+        using var image = SKImage.FromBitmap(resized);
+        using var data = image.Encode(SKEncodedImageFormat.Jpeg, 85);
+
+        return data.ToArray();
     }
 }

@@ -1,0 +1,52 @@
+@using Microsoft.AspNetCore.Components.Forms
+
+<div class="profile-picture-upload">
+    @if (IsUploading)
+    {
+        <div class="profile-picture-container">
+            <div class="profile-picture-placeholder">
+                <span class="spinner-border spinner-border-sm" role="status"></span>
+            </div>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(PictureUrl))
+    {
+        <div class="profile-picture-container">
+            <img src="@PictureUrl?v=@_cacheVersion" alt="Profile picture" class="profile-picture-img @SizeClass" />
+            @if (AllowEdit)
+            {
+                <div class="profile-picture-overlay">
+                    <label class="btn btn-sm btn-light me-1" title="Change picture">
+                        <i class="bi bi-camera"></i>
+                        <InputFile OnChange="OnFileSelected" accept="image/jpeg,image/png,image/webp" style="display:none" />
+                    </label>
+                    <button class="btn btn-sm btn-light" title="Remove picture" @onclick="OnRemoveClick">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="profile-picture-container">
+            <div class="profile-picture-initials @SizeClass" style="background-color: @InitialsColor">
+                @Initials
+            </div>
+            @if (AllowEdit)
+            {
+                <div class="profile-picture-overlay">
+                    <label class="btn btn-sm btn-light" title="Upload picture">
+                        <i class="bi bi-camera"></i>
+                        <InputFile OnChange="OnFileSelected" accept="image/jpeg,image/png,image/webp" style="display:none" />
+                    </label>
+                </div>
+            }
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <div class="text-danger small mt-1">@_errorMessage</div>
+    }
+</div>

@@ -59,6 +59,15 @@ else if (Input != null)
     {
         <div class="row">
             <div class="col-lg-6">
+                <div class="text-center mb-4">
+                    <ProfilePictureUpload PictureUrl="@Input.ProfilePictureUrl"
+                                          FirstName="@Input.FirstName"
+                                          LastName="@Input.LastName"
+                                          AllowEdit="true"
+                                          Size="large"
+                                          OnUpload="OnProfilePictureUpload"
+                                          OnDelete="OnProfilePictureDelete" />
+                </div>
                 <EditForm Model="Input" OnValidSubmit="UpdateUser" FormName="edituser">
                     <DataAnnotationsValidator />
                     <hr />

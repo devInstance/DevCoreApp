@@ -8,6 +8,7 @@ using DevInstance.DevCoreApp.Shared.Model.Organizations;
 using DevInstance.DevCoreApp.Shared.Model.Roles;
 using DevInstance.DevCoreApp.Shared.Model.UserAdmin;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Forms;
 
 namespace DevInstance.DevCoreApp.Server.Admin.WebService.UI.Pages.Admin;
 
@@ -118,6 +119,40 @@ public partial class EditUser
         if (!Host.IsError)
         {
             NavigationManager.NavigateTo("/admin/users");
+        }
+    }
+
+    // ── Profile Picture ──
+
+    private async Task OnProfilePictureUpload(IBrowserFile file)
+    {
+        if (Input == null) return;
+
+        using var stream = file.OpenReadStream(maxAllowedSize: 2 * 1024 * 1024);
+        await Host.ServiceReadAsync(
+            async () => await UserService.UploadProfilePictureAsync(UserId, stream, file.ContentType),
+            (updatedProfile) =>
+            {
+                Input.HasProfilePicture = updatedProfile.HasProfilePicture;
+                Input.ProfilePictureUrl = updatedProfile.ProfilePictureUrl;
+                Input.ProfilePictureThumbnailUrl = updatedProfile.ProfilePictureThumbnailUrl;
+            }
+        );
+    }
+
+    private async Task OnProfilePictureDelete()
+    {
+        if (Input == null) return;
+
+        await Host.ServiceSubmitAsync(
+            async () => await UserService.DeleteProfilePictureAsync(UserId)
+        );
+
+        if (!Host.IsError)
+        {
+            Input.HasProfilePicture = false;
+            Input.ProfilePictureUrl = null;
+            Input.ProfilePictureThumbnailUrl = null;
         }
     }
 

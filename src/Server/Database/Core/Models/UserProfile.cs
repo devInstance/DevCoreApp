@@ -1,5 +1,6 @@
 ﻿using DevInstance.DevCoreApp.Server.Database.Core.Models.Base;
 using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DevInstance.DevCoreApp.Server.Database.Core.Models;
 
@@ -33,4 +34,12 @@ public class UserProfile : DatabaseObject
     public Guid ApplicationUserId { get; set; }
 
     public UserStatus Status { get; set; }
+
+    [AuditExclude]
+    public byte[]? ProfilePicture { get; set; }
+
+    public string? ProfilePictureContentType { get; set; }
+
+    [AuditExclude]
+    public byte[]? ProfilePictureThumbnail { get; set; }
 }

@@ -34,6 +34,10 @@ public class UserProfileItem : ModelItem
     public DateTime CreateDate { get; set; }
     public DateTime UpdateDate { get; set; }
 
+    public string? ProfilePictureUrl { get; set; }
+    public string? ProfilePictureThumbnailUrl { get; set; }
+    public bool HasProfilePicture { get; set; }
+
     public string FullName
     {
         get

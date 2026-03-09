@@ -320,6 +320,46 @@ public class UserProfileServiceMock : IUserProfileService
         return ServiceActionResult<bool>.OK(true);
     }
 
+    public async Task<ServiceActionResult<UserProfileItem>> UploadProfilePictureAsync(string userId, Stream imageStream, string contentType)
+    {
+        await Task.Delay(delay);
+
+        var user = modelList.Find(i => i.Id == userId);
+        if (user == null) throw new InvalidOperationException("User not found.");
+
+        user.HasProfilePicture = true;
+        user.ProfilePictureUrl = $"api/users/{userId}/profile-picture";
+        user.ProfilePictureThumbnailUrl = $"api/users/{userId}/profile-picture/thumbnail";
+
+        return ServiceActionResult<UserProfileItem>.OK(user);
+    }
+
+    public async Task<ServiceActionResult<bool>> DeleteProfilePictureAsync(string userId)
+    {
+        await Task.Delay(delay);
+
+        var user = modelList.Find(i => i.Id == userId);
+        if (user == null) throw new InvalidOperationException("User not found.");
+
+        user.HasProfilePicture = false;
+        user.ProfilePictureUrl = null;
+        user.ProfilePictureThumbnailUrl = null;
+
+        return ServiceActionResult<bool>.OK(true);
+    }
+
+    public async Task<ServiceActionResult<(byte[] Data, string ContentType)>> GetProfilePictureAsync(string userId)
+    {
+        await Task.Delay(delay);
+        throw new InvalidOperationException("Profile picture not available in mock mode.");
+    }
+
+    public async Task<ServiceActionResult<(byte[] Data, string ContentType)>> GetProfilePictureThumbnailAsync(string userId)
+    {
+        await Task.Delay(delay);
+        throw new InvalidOperationException("Profile picture thumbnail not available in mock mode.");
+    }
+
     public async Task<ServiceActionResult<List<EffectivePermissionItem>>> GetEffectivePermissionsAsync(string userId)
     {
         await Task.Delay(delay);
