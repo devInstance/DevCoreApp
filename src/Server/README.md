@@ -1,35 +1,63 @@
-# DevCoreApp: Web API Service
-## Justification
+# DevCoreApp: Server
 
-The typical .NET Core Web API project in Visual Studio contains a "Controllers" folder, Startup.cs, and Program.cs. If authentication is chosen, it creates a database model and a "Migration" folder in the same project. This is a perfect project structure to start with.
+## Overview
 
-As development progresses, controllers can grow to an enormous size. They might directly call EF code, execute queries, send emails, etc. Moving reusable code to a "BaseController" that every controller can inherit from may help, but this approach could complicate providing sufficient unit testing coverage (if any). This is when the following structure comes to the rescue:
+The server side of DevCoreApp is split into multiple projects, each with a clear responsibility. This separation keeps dependencies explicit, improves testability, and allows teams to work on different layers independently.
 
-- ```/src/Server/Database```: Includes database providers. Please refer to the [Database ReadMe](/src/Server/Database#readme).
-- ```/src/Server/Email```: Contains email provider(s).
-- ```/src/Server/WebService```: Houses the Web App project.
-- ```/src/Server/WebService/Controller```: Contains controllers implementing the APIs.
-- ```/src/Server/WebService/Services```: Contains services (see more about the purpose of services below).
-- ```/src/Server/WebService/Authentication```: Contains authentication and authorization logic.
-- ```/src/Server/WebService/Tools```: Includes a set of classes to support the framework.
+## Project Structure
 
-## Controllers
+```
+/src/Server/
+├── Admin/
+│   ├── Services/          # Business logic, authentication, notifications
+│   └── WebService/        # Blazor SSR host, API controllers, SignalR, UI pages
+├── Database/
+│   ├── Core/              # Entities, queries, decorators, EF configuration
+│   ├── Postgres/          # PostgreSQL provider and migrations
+│   └── SqlServer/         # SQL Server provider and migrations
+├── Email/
+│   ├── Processor/         # Email abstractions and interfaces
+│   ├── MailKit/           # MailKit-based email implementation
+│   ├── Smtp/              # SMTP email implementation
+│   └── SendGrid/          # SendGrid email implementation
+└── Storage/
+    ├── Processor/         # File storage abstractions and interfaces
+    ├── Local/             # Local disk storage implementation
+    └── S3/                # AWS S3 storage implementation
+```
 
-Controllers live on the frontier of the web service. Their primary function is handling web requests. Controllers are responsible for accepting HTTP requests, reading inputs (query or request body), calling the service, returning results from the service back to the caller, and handling exceptions by converting them to HTTP codes. They "consume" a service. Any logic not directly related to HTTP should be handled by a dedicated service. Typically, controllers do not need to be unit tested.
+## Architecture
 
-## Services
+The server follows a layered architecture with strict dependency rules:
 
-A Service is a middleware component and contains all high-level logic, also known as business logic. It is the heart of the whole application and binds the controller, data access components, and other providers together. It is designed to abstract the controller from implementation details and keep the controller's code simple. In turn, the Service is protected by abstraction from details of database or other framework features implementations. The idea is that you can take a service, place it in a unit test, mock all the interfaces needed for it to operate, and it will just work without any changes.
+```
+Pages/Controllers → Services → Queries/Repository → Database
+```
 
-A Service should follow the single responsibility pattern. It should not fall into the trap of satisfying the needs of a specific controller. It should have a single purpose. For instance, a "StudentService" should include functions needed to list, create, update, and delete students but have nothing to do with teachers.
+### WebService (Admin/WebService)
 
-A typical service is located in the "Services" folder of the project. It refers to the "Tools" namespace for some basic tools for service configuration. Potentially, tools and all or some of the services can be moved into a separate assembly.
+The entry point of the application. Hosts Blazor SSR pages, API controllers, and SignalR hubs. Pages use `IServiceExecutionHost` as a cascading parameter for all service calls. Controllers use `HandleWebRequestAsync()` for consistent error handling. This project never accesses the database directly — all data access goes through Services.
 
-## Providers
-A provider is responsible for low-level data handling operations, such as SQL or LINQ queries, working with files, network requests, or sending emails. Providers offer an abstraction (a set of interfaces) and should only be accessed by services via these interfaces, rather than directly. The dependency hierarchy flows from top to bottom, with the controller dependent on the service and the service dependent on the provider. As a result, providers should be the most stable components, and any changes to them should be made with extra consideration. Conversely, controllers can be updated as frequently as needed.
+### Services (Admin/Services)
 
-The sample app currently has several providers:
+Contains all business logic. Services inherit from `BaseService`, are annotated with `[BlazorService]` for automatic DI registration, and return `ServiceActionResult<T>`. They access data through query classes obtained from `IQueryRepository`, never through `DbContext` directly.
 
-- **Identity and Authentication**: A set of interfaces implementing user and password validation and management. Interface declarations and implementations reside in the "Authentication" folder of the project. Potentially, it can be moved to a separate assembly if the authentication process gets more complicated.
-- **Email provider**: A set of interfaces for composing and sending emails wrapped into a separate assembly called "EmailProcessor." There is an implementation based on MailKit.
-- **Database providers**: Please see more in the [Database ReadMe](/src/Server/Database#readme).
+### Database
+
+The Core project defines entities, EF configuration, query classes, and decorators. Postgres and SqlServer projects contain provider-specific migrations and configuration. Query classes implement `IModelQuery<T,D>` and support pagination, search, and sorting. Decorators provide `ToView()` and `ToRecord()` extension methods for mapping between entities and ViewModels.
+
+### Email
+
+Provider-based email sending. The Processor project defines the abstractions; MailKit, Smtp, and SendGrid are swappable implementations. Emails are queued via `IBackgroundWorker` and sent asynchronously.
+
+### Storage
+
+Provider-based file storage. The Processor project defines the abstractions; Local and S3 are swappable implementations. File metadata is stored in the `FileRecords` table; physical files are managed by the active provider.
+
+## Key Principles
+
+- **Services own business logic** — pages and controllers are thin, services are where decisions happen.
+- **Query classes own data access** — services never call `DbContext` directly.
+- **Decorators own mapping** — `ToView()` converts entities to ViewModels, `ToRecord()` maps DTOs back onto entities.
+- **Providers are swappable** — database, email, and storage providers can be changed without touching business logic.
+- **Organization-scoped data** — business tables include `OrganizationId` and EF global query filters enforce data isolation automatically.
