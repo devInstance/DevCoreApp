@@ -1,5 +1,5 @@
 <div class="h-search-bar" style="position: relative;">
-    <div class="input-group bg-light rounded-3 border">
+    <div class="input-group bg-body-secondary rounded-3 border">
         <span class="input-group-text bg-transparent border-0" role="button" @onclick="HandleSearchClick">
             <i class="bi bi-search text-muted"></i>
         </span>
@@ -24,7 +24,7 @@
     @if (_isOpen && AdvancedContent != null)
     {
         <div class="h-search-bar-backdrop" @onclick="CloseDropdown"></div>
-        <div class="h-search-bar-dropdown shadow-lg rounded-3 bg-white border p-3">
+        <div class="h-search-bar-dropdown shadow-lg rounded-3 bg-body border p-3">
             @AdvancedContent
             <div class="d-flex justify-content-end mt-3">
                 <button class="btn btn-primary btn-sm" type="button" @onclick="HandleDropdownSearch">

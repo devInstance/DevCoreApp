@@ -1,0 +1,78 @@
+@inject IThemeService ThemeService
+@inject IJSRuntime JS
+
+<div class="dropdown">
+    <button class="btn btn-link dropdown-toggle p-1" type="button" data-bs-toggle="dropdown"
+            aria-expanded="false" title="Toggle theme">
+        <i class="bi @GetCurrentIcon() fs-5"></i>
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end">
+        <li>
+            <button class="dropdown-item d-flex align-items-center" @onclick='() => SetTheme("Light")'>
+                <i class="bi bi-sun me-2"></i>
+                Light
+                @if (_currentTheme == "Light")
+                {
+                    <i class="bi bi-check2 ms-auto"></i>
+                }
+            </button>
+        </li>
+        <li>
+            <button class="dropdown-item d-flex align-items-center" @onclick='() => SetTheme("Dark")'>
+                <i class="bi bi-moon me-2"></i>
+                Dark
+                @if (_currentTheme == "Dark")
+                {
+                    <i class="bi bi-check2 ms-auto"></i>
+                }
+            </button>
+        </li>
+        <li>
+            <button class="dropdown-item d-flex align-items-center" @onclick='() => SetTheme("System")'>
+                <i class="bi bi-display me-2"></i>
+                System
+                @if (_currentTheme == "System")
+                {
+                    <i class="bi bi-check2 ms-auto"></i>
+                }
+            </button>
+        </li>
+    </ul>
+</div>
+
+@code {
+    private string _currentTheme = "System";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var result = await ThemeService.GetUserThemeAsync();
+            if (result.Result != null)
+            {
+                _currentTheme = result.Result;
+            }
+
+            await JS.InvokeVoidAsync("themeInterop.setTheme", _currentTheme);
+            StateHasChanged();
+        }
+    }
+
+    private async Task SetTheme(string theme)
+    {
+        _currentTheme = theme;
+
+        // Apply immediately via JS (no page reload)
+        await JS.InvokeVoidAsync("themeInterop.setTheme", theme);
+
+        // Persist to server
+        await ThemeService.SetUserThemeAsync(theme);
+    }
+
+    private string GetCurrentIcon() => _currentTheme switch
+    {
+        "Light" => "bi-sun",
+        "Dark" => "bi-moon",
+        _ => "bi-display"
+    };
+}
