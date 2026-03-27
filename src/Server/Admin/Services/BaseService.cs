@@ -1,4 +1,5 @@
-﻿using DevInstance.LogScope;
+﻿using System;
+using DevInstance.LogScope;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Shared.Utils;
 using DevInstance.DevCoreApp.Server.Admin.Services.Authentication;
@@ -16,6 +17,17 @@ public abstract class BaseService
 
     public IAuthorizationContext AuthorizationContext { get; }
 
+    protected TimeZoneInfo? UserTimeZone
+    {
+        get
+        {
+            var tzId = AuthorizationContext.CurrentProfile?.TimeZoneId;
+            if (string.IsNullOrEmpty(tzId)) return null;
+            try { return TimeZoneInfo.FindSystemTimeZoneById(tzId); }
+            catch { return null; }
+        }
+    }
+
     public BaseService(IScopeManager logManager,
                         ITimeProvider timeProvider,
                         IQueryRepository query,
@@ -27,6 +39,4 @@ public abstract class BaseService
         Repository = query;
         AuthorizationContext = authorizationContext;
     }
-
-
 }

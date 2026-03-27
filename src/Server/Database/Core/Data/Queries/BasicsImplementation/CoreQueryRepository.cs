@@ -4,7 +4,7 @@ using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Server.Database.Core.Data.Queries;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using DevInstance.DevCoreApp.Shared.Utils;
-using NoCrast.Server.Database.Postgres.Data.Queries;
+using DevInstance.DevCoreApp.Server.Database.Core.Data.Queries;
 
 namespace DevInstance.DevCoreApp.Server.Database.Postgres.Data;
 

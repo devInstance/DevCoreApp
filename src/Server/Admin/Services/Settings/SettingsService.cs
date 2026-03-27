@@ -13,12 +13,13 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using DevInstance.BlazorToolkit.Services;
 
 namespace DevInstance.DevCoreApp.Server.Admin.Services.Settings;
 
 [BlazorService]
 [BlazorServiceMock]
-public class SettingsService : ISettingsService
+public class SettingsService : ISettingsService, ISettingsActionService
 {
     private const string CachePrefix = "settings:";
     private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(10);
@@ -275,6 +276,33 @@ public class SettingsService : ISettingsService
 
         // Also evict system-level cache for this key (covers anonymous/background reads)
         _cache.Remove($"{CachePrefix}{category}:{key}:u=:o=:t=");
+    }
+
+    async Task<ServiceActionResult<T?>> ISettingsActionService.GetAsync<T>(string category, string key) where T : default
+    {
+        try
+        {
+            return ServiceActionResult<T?>.OK(await GetAsync<T>(category, key));
+        }
+        catch(Exception ex)
+        {
+            _log.E(ex);
+            return ServiceActionResult<T?>.Failed("An error occurred while retrieving the setting.");
+        }
+    }
+
+    async Task<ServiceActionResult<T?>> ISettingsActionService.SetAsync<T>(string category, string key, T value) where T : default
+    {
+        try
+        {
+            await SetAsync<T>(category, key, value);
+            return ServiceActionResult<T?>.OK(value);
+        }
+        catch (Exception ex)
+        {
+            _log.E(ex);
+            return ServiceActionResult<T?>.Failed("An error occurred while retrieving the setting.");
+        }
     }
 
     private struct SettingsContext

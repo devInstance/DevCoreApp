@@ -8,7 +8,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace NoCrast.Server.Database.Postgres.Data.Queries;
+namespace DevInstance.DevCoreApp.Server.Database.Core.Data.Queries;
 
 public class CoreDatabaseObjectQuery<TEntity, TSelf> : CoreBaseQuery<TEntity, TSelf>
     where TEntity : DatabaseObject, new()

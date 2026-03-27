@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace DevInstance.DevCoreApp.Server.Database.Core.Models;
 
-public class Organization : DatabaseObject
+public class Organization : DatabaseEntityObject
 {
     public string Name { get; set; } = string.Empty;
     public string Code { get; set; } = string.Empty;

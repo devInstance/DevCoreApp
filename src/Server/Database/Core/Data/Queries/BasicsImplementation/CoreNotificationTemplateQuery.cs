@@ -7,7 +7,7 @@ using DevInstance.LogScope;
 using System;
 using System.Linq;
 
-namespace NoCrast.Server.Database.Postgres.Data.Queries;
+namespace DevInstance.DevCoreApp.Server.Database.Core.Data.Queries;
 
 public class CoreNotificationTemplateQuery : CoreDatabaseObjectQuery<NotificationTemplate, CoreNotificationTemplateQuery>, INotificationTemplateQuery
 {

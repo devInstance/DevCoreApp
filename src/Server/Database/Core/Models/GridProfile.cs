@@ -7,7 +7,7 @@ namespace DevInstance.DevCoreApp.Server.Database.Core.Models;
 /// Stores user's grid preferences (column visibility, order, sorting, page size)
 /// for a specific grid identified by GridName.
 /// </summary>
-public class GridProfile : DatabaseObject
+public class GridProfile : DatabaseEntityObject
 {
     /// <summary>
     /// Reference to the user who owns this profile

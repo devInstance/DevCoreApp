@@ -23,7 +23,7 @@ public enum UserStatus
 /// All other objects can refer to USerProfile and ApplicationUserId can be
 /// established once user creates an account.
 /// </summary>
-public class UserProfile : DatabaseObject
+public class UserProfile : DatabaseEntityObject
 {
     public string Email { get; set; }
     public string FirstName { get; set; }
@@ -34,6 +34,8 @@ public class UserProfile : DatabaseObject
     public Guid ApplicationUserId { get; set; }
 
     public UserStatus Status { get; set; }
+
+    public string? TimeZoneId { get; set; }
 
     [AuditExclude]
     public byte[]? ProfilePicture { get; set; }

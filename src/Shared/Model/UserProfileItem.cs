@@ -31,6 +31,9 @@ public class UserProfileItem : ModelItem
     public string Roles { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
 
+    [Display(Name = "Time Zone")]
+    public string? TimeZoneId { get; set; }
+
     public DateTime CreateDate { get; set; }
     public DateTime UpdateDate { get; set; }
 

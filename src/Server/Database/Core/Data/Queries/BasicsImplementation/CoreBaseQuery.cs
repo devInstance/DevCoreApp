@@ -3,7 +3,7 @@ using DevInstance.DevCoreApp.Server.Database.Core;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using DevInstance.DevCoreApp.Shared.Utils;
 
-namespace NoCrast.Server.Database.Postgres.Data.Queries;
+namespace DevInstance.DevCoreApp.Server.Database.Core.Data.Queries;
 
 public class CoreBaseQuery
 {

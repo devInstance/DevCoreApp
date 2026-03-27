@@ -18,7 +18,15 @@ public static class ConfigurationExtensions
     public static void AddAppIdentity(this IServiceCollection services)
     {
         services.AddHttpContextAccessor();
-        services.AddScoped<IAuthorizationContext, AuthorizationContext>();
+        services.AddScoped<AuthorizationContext>();
+        services.AddScoped<BackgroundAuthorizationContext>();
+        services.AddScoped<IAuthorizationContext>(sp =>
+        {
+            var accessor = sp.GetRequiredService<Microsoft.AspNetCore.Http.IHttpContextAccessor>();
+            if (accessor.HttpContext != null)
+                return sp.GetRequiredService<AuthorizationContext>();
+            return sp.GetRequiredService<BackgroundAuthorizationContext>();
+        });
 
         services.Configure<IdentityOptions>(options =>
         {

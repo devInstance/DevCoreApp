@@ -104,9 +104,15 @@ public class FileService : BaseService, IFileService
         fileRecord.StoragePath = uploadResult.StoragePath!;
         fileRecord.EntityType = entityType;
         fileRecord.EntityId = entityId;
-        fileRecord.OrganizationId = organizationIdOverride
-            ?? OperationContext.PrimaryOrganizationId
-            ?? Guid.Empty;
+        var orgId = organizationIdOverride ?? OperationContext.PrimaryOrganizationId;
+        if (orgId == null || orgId == Guid.Empty)
+        {
+            // Fallback: resolve root organization when no org context is available
+            var orgQuery = Repository.GetOrganizationsQuery(AuthorizationContext.CurrentProfile);
+            var rootOrg = orgQuery.Select().FirstOrDefault(o => o.ParentId == null);
+            orgId = rootOrg?.Id;
+        }
+        fileRecord.OrganizationId = orgId ?? Guid.Empty;
         fileRecord.CreatedBy = AuthorizationContext.CurrentProfile;
         fileRecord.UpdatedBy = AuthorizationContext.CurrentProfile;
 

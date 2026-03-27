@@ -8,7 +8,7 @@ using DevInstance.DevCoreApp.Shared.Model.ImportExport;
 using DevInstance.DevCoreApp.Shared.Utils;
 using DevInstance.LogScope;
 
-namespace NoCrast.Server.Database.Postgres.Data.Queries;
+namespace DevInstance.DevCoreApp.Server.Database.Core.Data.Queries;
 
 public class CoreImportSessionQuery : CoreDatabaseObjectQuery<ImportSession, CoreImportSessionQuery>, IImportSessionQuery
 {

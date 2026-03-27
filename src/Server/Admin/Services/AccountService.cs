@@ -280,6 +280,7 @@ public class AccountService : BaseService
         userProfile.PhoneNumber = input.PhoneNumber ?? "";
         userProfile.ApplicationUserId = user.Id;
         userProfile.Status = UserStatus.LIVE;
+        userProfile.TimeZoneId = input.TimeZoneId;
         await profileQuery.AddAsync(userProfile);
 
         l.I($"UserProfile created for owner with email {input.Email}.");

@@ -8,7 +8,7 @@ using DevInstance.LogScope;
 using System;
 using System.Linq;
 
-namespace NoCrast.Server.Database.Postgres.Data.Queries;
+namespace DevInstance.DevCoreApp.Server.Database.Core.Data.Queries;
 
 public class CoreBackgroundTaskLogQuery : CoreBaseQuery<BackgroundTaskLog, CoreBackgroundTaskLogQuery>, IBackgroundTaskLogQuery
 {

@@ -30,6 +30,7 @@ public static class UserProfileDecorators
             PhoneNumber = profile.PhoneNumber ?? string.Empty,
             Roles = roles != null ? string.Join(", ", roles) : string.Empty,
             Status = profile.Status.ToString(),
+            TimeZoneId = profile.TimeZoneId,
             CreateDate = profile.CreateDate,
             UpdateDate = profile.UpdateDate,
             HasProfilePicture = hasPicture,
@@ -45,6 +46,7 @@ public static class UserProfileDecorators
         profile.MiddleName = newProfile.MiddleName;
         profile.LastName = newProfile.LastName;
         profile.PhoneNumber = newProfile.PhoneNumber;
+        profile.TimeZoneId = newProfile.TimeZoneId;
 
         return profile;
     }

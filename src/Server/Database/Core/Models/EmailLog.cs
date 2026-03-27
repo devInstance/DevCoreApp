@@ -10,7 +10,7 @@ public enum EmailLogStatus
     Failed = 2
 }
 
-public class EmailLog : DatabaseObject
+public class EmailLog : DatabaseEntityObject
 {
     public string FromAddress { get; set; } = string.Empty;
     public string FromName { get; set; } = string.Empty;

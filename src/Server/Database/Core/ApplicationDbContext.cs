@@ -67,6 +67,15 @@ public abstract class ApplicationDbContext : IdentityDbContext<ApplicationUser, 
 
             entity.Property(up => up.ProfilePictureThumbnail)
                 .HasColumnType("bytea");
+
+            // Ignore self-referencing CreatedBy/UpdatedBy navigation properties.
+            // UserProfile inherits these from DatabaseEntityObject, but since they
+            // point back to UserProfile, EF Core cannot determine the dependent side.
+            // These columns don't exist in the UserProfiles table.
+            entity.Ignore(up => up.CreatedBy);
+            entity.Ignore(up => up.UpdatedBy);
+            entity.Ignore(up => up.CreatedById);
+            entity.Ignore(up => up.UpdatedById);
         });
 
         builder.Entity<GridProfile>()
@@ -367,7 +376,7 @@ public abstract class ApplicationDbContext : IdentityDbContext<ApplicationUser, 
             entity.Property(ak => ak.Scopes)
                 .HasColumnType("jsonb");
 
-            entity.HasOne(ak => ak.CreatedBy)
+            entity.HasOne<UserProfile>(ak => ak.CreatedBy)
                 .WithMany()
                 .HasForeignKey(ak => ak.CreatedById)
                 .OnDelete(DeleteBehavior.Restrict);
