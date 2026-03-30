@@ -1,6 +1,6 @@
 using DevInstance.DevCoreApp.Server.Admin.Services.Background;
 using DevInstance.DevCoreApp.Server.Database.Core;
-using DevInstance.DevCoreApp.Server.Database.Core.Models.BackgroundTasks;
+using DevInstance.DevCoreApp.Shared.Model.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 

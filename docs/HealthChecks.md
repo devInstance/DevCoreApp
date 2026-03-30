@@ -54,6 +54,8 @@ Predicate = _ => false
 
 That means it does not execute dependency checks. It only confirms that the web process is up and can respond.
 
+`/health` is intended to stay the minimal public-facing endpoint.
+
 ### Readiness
 
 ```text
@@ -67,6 +69,60 @@ This endpoint runs all checks tagged with `ready`, which currently means:
 - stuck email detection
 
 This is the endpoint to use for deployment readiness or operational dashboards.
+
+### Readiness access control
+
+`/health/ready` is no longer broadly public.
+
+The current access rule is:
+
+- local requests are allowed
+- non-local requests must include a shared secret header
+- if access is not allowed, the endpoint returns `404`
+
+This is handled by `HealthEndpointAccess`, which checks:
+
+- whether the request is loopback or local to the host
+- whether the configured header name exists
+- whether the header value exactly matches the configured secret
+
+The goal is to keep operational detail available for trusted probes without advertising the readiness surface publicly.
+
+### Readiness security configuration
+
+The access settings are configured through:
+
+```json
+"HealthEndpoints": {
+  "ReadyHeaderName": "X-Health-Key",
+  "ReadySharedSecret": ""
+}
+```
+
+### Field meanings
+
+| Key | Meaning |
+|---|---|
+| `HealthEndpoints:ReadyHeaderName` | Header name expected on non-local readiness requests |
+| `HealthEndpoints:ReadySharedSecret` | Shared secret value required for non-local readiness requests |
+
+### Practical behavior
+
+If `ReadySharedSecret` is empty:
+
+- local requests to `/health/ready` still work
+- non-local requests to `/health/ready` are denied
+
+If `ReadySharedSecret` is configured:
+
+- non-local callers must send the configured header and matching value
+
+Example:
+
+```text
+GET /health/ready
+X-Health-Key: your-secret-here
+```
 
 ## Response Format
 
@@ -240,6 +296,8 @@ This is the safer endpoint for:
 - restart policies
 - simple process liveness probes
 
+This endpoint is the one you can expose most safely if you need anonymous health visibility.
+
 ### Use `/health/ready` for readiness
 
 Use `/health/ready` when you want to know whether the application is operational enough to receive traffic.
@@ -250,11 +308,14 @@ This is the better endpoint for:
 - deployment gates
 - dashboards and monitoring alerts
 
+If the probe originates off-host, make sure it sends the configured readiness header.
+
 ## Current Strengths
 
 The current health-check implementation is strong in a few important ways:
 
 - it separates liveness from readiness
+- it keeps detailed readiness data off the public path by default
 - it returns structured JSON
 - it includes useful diagnostic data in readiness responses
 - it checks both local worker heartbeat and persisted queue state
@@ -290,16 +351,32 @@ The readiness model includes explicit email backlog monitoring, but there are no
 - import tasks
 - other future background job types
 
+### 5. Readiness protection is shared-secret based
+
+The current readiness protection is intentionally simple:
+
+- local-request allow
+- shared secret for non-local access
+
+That is practical for a starter, but teams with stricter requirements may prefer:
+
+- network allowlists
+- reverse-proxy enforcement
+- authenticated ops endpoints
+- platform-native private health probes
+
 ## Recommended Monitoring Approach
 
 For a new project using this starter:
 
 1. use `/health` for liveness probes
 2. use `/health/ready` for readiness probes
-3. monitor `Degraded` responses, not just `Unhealthy`
-4. inspect the `checks[].data` payloads when diagnosing worker or email issues
-5. keep probe frequency reasonable, especially because readiness currently performs DB work
-6. if you tune background worker timeouts, remember that health-check stale-task thresholds are not automatically kept in sync
+3. configure `HealthEndpoints:ReadySharedSecret` in non-local environments
+4. if your orchestrator probes from another host, make sure it sends the configured readiness header
+5. monitor `Degraded` responses, not just `Unhealthy`
+6. inspect the `checks[].data` payloads when diagnosing worker or email issues
+7. keep probe frequency reasonable, especially because readiness currently performs DB work
+8. if you tune background worker timeouts, remember that health-check stale-task thresholds are not automatically kept in sync
 
 ## Future Improvements
 
@@ -315,4 +392,4 @@ If a project needs a more mature operational surface later, the next logical imp
 
 The health-check system is already useful and production-shaped for a starter project. It gives clear liveness and readiness endpoints, structured results, and meaningful operational checks around the database, background worker, and queued emails.
 
-The main caveats are that the background-worker readiness check currently duplicates one timeout threshold and does more database work than an ideal lightweight probe. Those are worth knowing, but they do not prevent the current health-check system from being a strong baseline for new projects built on DevCoreApp.
+The main caveats are that the background-worker readiness check currently duplicates one timeout threshold, does more database work than an ideal lightweight probe, and protects non-local readiness access with a simple shared-secret model. Those are worth knowing, but they do not prevent the current health-check system from being a strong baseline for new projects built on DevCoreApp.

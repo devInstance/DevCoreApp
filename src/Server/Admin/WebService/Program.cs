@@ -58,6 +58,8 @@ public class Program
         // Background task infrastructure
         builder.Services.Configure<BackgroundTaskSettings>(
             builder.Configuration.GetSection(BackgroundTaskSettings.SectionName));
+        builder.Services.Configure<HealthEndpointSettings>(
+            builder.Configuration.GetSection(HealthEndpointSettings.SectionName));
         builder.Services.AddSingleton<IBackgroundTaskHandler, SendEmailTaskHandler>();
         builder.Services.AddSingleton<IBackgroundTaskHandler, ImportDataTaskHandler>();
         builder.Services.AddSingleton<IBackgroundTaskHandler, WebhookDeliveryTaskHandler>();
@@ -66,6 +68,7 @@ public class Program
         builder.Services.AddSingleton<BackgroundWorker>();
         builder.Services.AddSingleton<IBackgroundWorker>(sp => sp.GetRequiredService<BackgroundWorker>());
         builder.Services.AddHostedService(sp => sp.GetRequiredService<BackgroundWorker>());
+        builder.Services.AddSingleton<HealthEndpointAccess>();
 
         builder.Services.AddScoped<ITimeProvider, TimeProvider>();
 
@@ -236,6 +239,20 @@ public class Program
         app.UseAuthorization();
 
         app.UseAntiforgery();
+
+        app.UseWhen(
+            context => context.Request.Path.StartsWithSegments("/health/ready"),
+            branch => branch.Use(async (context, next) =>
+            {
+                var access = context.RequestServices.GetRequiredService<HealthEndpointAccess>();
+                if (!access.CanAccessReady(context))
+                {
+                    context.Response.StatusCode = StatusCodes.Status404NotFound;
+                    return;
+                }
+
+                await next();
+            }));
 
         app.MapRazorComponents<App>()
             .AddInteractiveServerRenderMode();
