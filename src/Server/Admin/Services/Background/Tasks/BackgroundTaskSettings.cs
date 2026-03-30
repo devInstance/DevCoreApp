@@ -9,4 +9,6 @@ public class BackgroundTaskSettings
     public int BaseRetryDelaySeconds { get; set; } = 30;
     public int MaxRetryDelaySeconds { get; set; } = 3600;
     public int BatchSize { get; set; } = 10;
+    public int RunningTaskTimeoutMinutes { get; set; } = 15;
+    public int RecoverySweepIntervalSeconds { get; set; } = 60;
 }

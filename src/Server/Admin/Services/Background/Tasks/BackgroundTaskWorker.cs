@@ -20,6 +20,7 @@ public class BackgroundTaskWorker : IBackgroundTaskWorker
     private readonly ConcurrentQueue<Guid> _immediateQueue = new();
     private readonly Dictionary<string, IBackgroundTaskHandler> _handlers;
     private SemaphoreSlim _concurrencySemaphore = null!;
+    private DateTime _lastRecoverySweepUtc = DateTime.MinValue;
 
     public DateTime? LastHeartbeat { get; private set; }
     public int QueueLength => _immediateQueue.Count;
@@ -49,7 +50,7 @@ public class BackgroundTaskWorker : IBackgroundTaskWorker
 
         _concurrencySemaphore = new SemaphoreSlim(_settings.MaxConcurrency, _settings.MaxConcurrency);
 
-        await RecoverStuckTasksAsync();
+        await RecoverStaleRunningTasksAsync();
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -57,6 +58,8 @@ public class BackgroundTaskWorker : IBackgroundTaskWorker
 
             try
             {
+                await RecoverStaleRunningTasksIfDueAsync();
+
                 var taskIds = await ClaimQueuedTasksAsync(stoppingToken);
 
                 if (taskIds.Count > 0)
@@ -87,7 +90,19 @@ public class BackgroundTaskWorker : IBackgroundTaskWorker
         }
     }
 
-    private async Task RecoverStuckTasksAsync()
+    private async Task RecoverStaleRunningTasksIfDueAsync()
+    {
+        var now = DateTime.UtcNow;
+        if (_lastRecoverySweepUtc != DateTime.MinValue &&
+            now - _lastRecoverySweepUtc < TimeSpan.FromSeconds(_settings.RecoverySweepIntervalSeconds))
+        {
+            return;
+        }
+
+        await RecoverStaleRunningTasksAsync();
+    }
+
+    private async Task RecoverStaleRunningTasksAsync()
     {
         using var l = _log.TraceScope();
 
@@ -98,31 +113,40 @@ public class BackgroundTaskWorker : IBackgroundTaskWorker
             operationContext.Reset();
 
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var now = DateTime.UtcNow;
+            var timeoutCutoff = now.AddMinutes(-_settings.RunningTaskTimeoutMinutes);
+
             var resetCount = await db.BackgroundTasks
-                .Where(t => t.Status == BackgroundTaskStatus.Running)
+                .Where(t => t.Status == BackgroundTaskStatus.Running &&
+                    (!t.StartedAt.HasValue || t.StartedAt < timeoutCutoff))
                 .ExecuteUpdateAsync(s => s
                     .SetProperty(t => t.Status, BackgroundTaskStatus.Queued)
-                    .SetProperty(t => t.StartedAt, (DateTime?)null));
+                    .SetProperty(t => t.StartedAt, (DateTime?)null)
+                    .SetProperty(t => t.ScheduledAt, now));
+
+            _lastRecoverySweepUtc = now;
 
             if (resetCount > 0)
             {
-                l.I($"Crash recovery: reset {resetCount} stuck Running task(s) to Queued.");
+                l.I($"Recovered {resetCount} stale Running task(s) back to Queued.");
             }
         }
         catch (Exception ex)
         {
-            l.E($"Crash recovery failed: {ex.Message}");
+            _lastRecoverySweepUtc = DateTime.UtcNow;
+            l.E($"Stale running task recovery failed: {ex.Message}");
         }
     }
 
     private async Task<List<Guid>> ClaimQueuedTasksAsync(CancellationToken cancellationToken)
     {
         var claimed = new List<Guid>();
+        var candidateIds = new HashSet<Guid>();
 
         // Drain immediate queue first
         while (_immediateQueue.TryDequeue(out var immediateId))
         {
-            claimed.Add(immediateId);
+            candidateIds.Add(immediateId);
         }
 
         // Poll database for queued tasks
@@ -142,6 +166,11 @@ public class BackgroundTaskWorker : IBackgroundTaskWorker
             .ToListAsync(cancellationToken);
 
         foreach (var candidateId in candidates)
+        {
+            candidateIds.Add(candidateId);
+        }
+
+        foreach (var candidateId in candidateIds)
         {
             // Atomic claim: only update if still Queued (prevents double-processing)
             var updated = await db.BackgroundTasks
@@ -186,6 +215,12 @@ public class BackgroundTaskWorker : IBackgroundTaskWorker
         if (task == null)
         {
             _log.E($"Background task {taskId} not found.");
+            return;
+        }
+
+        if (task.Status != BackgroundTaskStatus.Running)
+        {
+            _log.I($"Background task {task.PublicId} is in status {task.Status}, not Running. Skipping execution.");
             return;
         }
 
