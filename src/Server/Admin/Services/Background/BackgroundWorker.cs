@@ -106,6 +106,7 @@ public class BackgroundWorker : BackgroundService, IBackgroundWorker
 
     private static int GetMaxRetries(BackgroundRequestType requestType) => requestType switch
     {
+        BackgroundRequestType.SendEmail => 1,
         BackgroundRequestType.DeliverWebhook => 5,
         _ => 3
     };

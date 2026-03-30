@@ -42,8 +42,19 @@ public class SendEmailTaskHandler : IBackgroundTaskHandler
             return;
         }
 
+        if (emailLog.Status == EmailLogStatus.Sent && emailLog.SentDate.HasValue)
+        {
+            l.I($"Email log entry {emailLog.PublicId} is already marked as Sent. Skipping duplicate send.");
+            return;
+        }
+
         try
         {
+            if (emailRequest.To.Count != 1)
+            {
+                throw new InvalidOperationException("Email requests must contain exactly one recipient.");
+            }
+
             var emailSenderService = scopedProvider.GetRequiredService<IEmailSenderService>();
             var result = await emailSenderService.SendAsync(emailRequest);
 

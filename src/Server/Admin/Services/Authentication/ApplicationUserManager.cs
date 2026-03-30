@@ -24,6 +24,11 @@ public class ApplicationUserManager : IApplicationUserManager
         return UserManager.CreateAsync(user, password);
     }
 
+    public Task<IdentityResult> CreateAsync(ApplicationUser user)
+    {
+        return UserManager.CreateAsync(user);
+    }
+
     public Task<IdentityResult> DeleteAsync(ApplicationUser user)
     {
         return UserManager.DeleteAsync(user);

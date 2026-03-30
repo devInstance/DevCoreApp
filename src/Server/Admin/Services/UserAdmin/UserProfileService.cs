@@ -18,8 +18,11 @@ using DevInstance.WebServiceToolkit.Common.Model;
 using DevInstance.WebServiceToolkit.Common.Tools;
 using DevInstance.WebServiceToolkit.Database.Queries.Extensions;
 using DevInstance.WebServiceToolkit.Exceptions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
+using System.Text;
 using SkiaSharp;
 
 namespace DevInstance.DevCoreApp.Server.Admin.Services.UserAdmin;
@@ -33,6 +36,7 @@ public class UserProfileService : BaseService, IUserProfileService
     private IEmailTemplateService EmailTemplateService { get; }
     private ApplicationDbContext Db { get; }
     private IOrganizationContextResolver OrgResolver { get; }
+    private IHttpContextAccessor HttpContextAccessor { get; }
 
     private IScopeLog log;
 
@@ -45,7 +49,8 @@ public class UserProfileService : BaseService, IUserProfileService
                               IBackgroundWorker backgroundWorker,
                               IEmailTemplateService emailTemplateService,
                               ApplicationDbContext db,
-                              IOrganizationContextResolver orgResolver)
+                              IOrganizationContextResolver orgResolver,
+                              IHttpContextAccessor httpContextAccessor)
         : base(logManager, timeProvider, query, authorizationContext)
     {
         log = logManager.CreateLogger(this);
@@ -56,6 +61,7 @@ public class UserProfileService : BaseService, IUserProfileService
         EmailTemplateService = emailTemplateService;
         Db = db;
         OrgResolver = orgResolver;
+        HttpContextAccessor = httpContextAccessor;
     }
 
     public ServiceActionResult<UserProfileItem> GetCurrentUser()
@@ -163,14 +169,12 @@ public class UserProfileService : BaseService, IUserProfileService
             throw new RecordConflictException("A user with this email address already exists.");
         }
 
-        // Create ApplicationUser with a temporary random password
+        // Create ApplicationUser without a password. The invited user will set it after confirming email.
         var user = Activator.CreateInstance<ApplicationUser>();
         user.Email = newUser.Email;
         user.UserName = newUser.Email;
 
-        var tempPassword = IdGenerator.New();
-
-        var result = await UserManager.CreateAsync(user, tempPassword);
+        var result = await UserManager.CreateAsync(user);
         if (!result.Succeeded)
         {
             throw new BusinessRuleException(
@@ -332,12 +336,14 @@ public class UserProfileService : BaseService, IUserProfileService
     {
         using var l = log.TraceScope();
 
-        var token = await UserManager.GeneratePasswordResetTokenAsync(user);
+        var token = await UserManager.GenerateEmailConfirmationTokenAsync(user);
+        var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+        var link = BuildRegistrationConfirmationLink(user.Id.ToString(), encodedToken);
 
         var result = await EmailTemplateService.RenderAsync(EmailTemplateName.Registration, new Dictionary<string, string>
         {
             ["FirstName"] = userProfile.FirstName,
-            ["Link"] = token
+            ["Link"] = link
         });
 
         // TODO: We should not instantiate EmailRequest here directly, but use a factory or builder pattern
@@ -362,6 +368,15 @@ public class UserProfileService : BaseService, IUserProfileService
         });
 
         l.I($"Registration email queued for {userProfile.Email}");
+    }
+
+    private string BuildRegistrationConfirmationLink(string userId, string code)
+    {
+        var httpContext = HttpContextAccessor.HttpContext
+            ?? throw new InvalidOperationException("Cannot build registration confirmation link without an active HTTP request.");
+
+        var baseUri = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
+        return $"{baseUri}/account/confirm-email?userId={Uri.EscapeDataString(userId)}&code={Uri.EscapeDataString(code)}";
     }
 
     private async Task<(UserProfile Profile, ApplicationUser AppUser)> ResolveUserAsync(string publicId)

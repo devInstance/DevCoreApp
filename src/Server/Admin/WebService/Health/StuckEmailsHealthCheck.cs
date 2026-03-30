@@ -23,7 +23,7 @@ public class StuckEmailsHealthCheck : IHealthCheck
         {
             var cutoff = DateTime.UtcNow - StuckThreshold;
             var stuckCount = await _dbContext.EmailLogs
-                .Where(e => e.Status == EmailLogStatus.Queued && e.CreateDate < cutoff)
+                .Where(e => e.Status == EmailLogStatus.Queued && e.ScheduledDate < cutoff)
                 .CountAsync(cancellationToken);
 
             var data = new Dictionary<string, object>

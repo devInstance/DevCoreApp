@@ -28,6 +28,8 @@ public interface IApplicationUserManager
 
     Task<IdentityResult> DeleteAsync(ApplicationUser user);
 
+    Task<IdentityResult> CreateAsync(ApplicationUser user);
+
     Task<IdentityResult> CreateAsync(ApplicationUser user, string password);
 
     Task<IdentityResult> UpdateAsync(ApplicationUser user);

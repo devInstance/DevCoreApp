@@ -21,6 +21,9 @@ public class EmailSenderService : IEmailSenderService
     {
         using var l = log.TraceScope();
 
+        if (request.To.Count != 1)
+            throw new InvalidOperationException("Email requests must contain exactly one recipient.");
+
         var result = await _emailProvider.SendAsync(request);
         if (result.Success)
         {
