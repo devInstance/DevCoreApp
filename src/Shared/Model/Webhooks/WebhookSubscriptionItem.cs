@@ -20,9 +20,15 @@ public class WebhookSubscriptionItem : ModelItem
     [Display(Name = "Active")]
     public bool IsActive { get; set; } = true;
 
+    [Display(Name = "Organization")]
+    public string? OrganizationId { get; set; }
+
     public string? CreatedByName { get; set; }
 
     public string? OrganizationName { get; set; }
+
+    [Display(Name = "Signing Secret")]
+    public string? Secret { get; set; }
 
     public DateTime CreateDate { get; set; }
 

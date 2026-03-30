@@ -61,15 +61,26 @@ public class FeatureFlagService : IFeatureFlagService
 
         var currentUserId = _operationContext?.UserId;
         var currentOrgId = _operationContext?.PrimaryOrganizationId;
+        string? currentUserPublicId = null;
 
         // 1. User allowlist check
         if (currentUserId.HasValue)
         {
-            var userPublicId = currentUserId.Value.ToString();
+            currentUserPublicId = await _repository.GetUserProfilesQuery(null!)
+                .Select()
+                .Where(u => u.Id == currentUserId.Value)
+                .Select(u => u.PublicId)
+                .FirstOrDefaultAsync();
+
+            var userId = currentUserId.Value.ToString();
             foreach (var flag in flags)
             {
-                if (flag.AllowedUsers != null && flag.AllowedUsers.Contains(userPublicId))
+                if (flag.AllowedUsers != null &&
+                    (flag.AllowedUsers.Contains(userId) ||
+                     (!string.IsNullOrWhiteSpace(currentUserPublicId) && flag.AllowedUsers.Contains(currentUserPublicId))))
+                {
                     return true;
+                }
             }
         }
 
@@ -84,6 +95,9 @@ public class FeatureFlagService : IFeatureFlagService
         // 3. Global flag (OrganizationId == null)
         var globalFlag = flags.FirstOrDefault(f => f.OrganizationId == null);
         if (globalFlag == null)
+            return false;
+
+        if (!globalFlag.IsEnabled)
             return false;
 
         if (globalFlag.RolloutPercentage == null || globalFlag.RolloutPercentage >= 100)

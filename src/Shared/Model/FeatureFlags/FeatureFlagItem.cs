@@ -19,6 +19,8 @@ public class FeatureFlagItem : ModelItem
     [Display(Name = "Enabled")]
     public bool IsEnabled { get; set; }
 
+    public string? OrganizationId { get; set; }
+
     public string? OrganizationName { get; set; }
 
     [Range(0, 100)]

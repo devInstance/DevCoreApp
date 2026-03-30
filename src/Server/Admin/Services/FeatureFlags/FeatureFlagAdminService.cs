@@ -21,14 +21,17 @@ namespace DevInstance.DevCoreApp.Server.Admin.Services.FeatureFlags;
 public class FeatureFlagAdminService : BaseService, IFeatureFlagAdminService
 {
     private IScopeLog log;
+    private readonly IFeatureFlagService? featureFlagService;
 
     public FeatureFlagAdminService(IScopeManager logManager,
                                     ITimeProvider timeProvider,
                                     IQueryRepository query,
-                                    IAuthorizationContext authorizationContext)
+                                    IAuthorizationContext authorizationContext,
+                                    IFeatureFlagService? featureFlagService = null)
         : base(logManager, timeProvider, query, authorizationContext)
     {
         log = logManager.CreateLogger(this);
+        this.featureFlagService = featureFlagService;
     }
 
     public async Task<ServiceActionResult<ModelList<FeatureFlagItem>>> GetFlagsAsync(
@@ -86,12 +89,15 @@ public class FeatureFlagAdminService : BaseService, IFeatureFlagAdminService
         var query = Repository.GetFeatureFlagQuery(AuthorizationContext.CurrentProfile);
         var flag = query.CreateNew();
         flag.ToRecord(item);
+        flag.OrganizationId = await ResolveOrganizationIdAsync(item.OrganizationId);
 
         await query.AddAsync(flag);
+        featureFlagService?.InvalidateCache(flag.Name);
 
         l.I($"Feature flag created: {flag.Name}");
 
-        return ServiceActionResult<FeatureFlagItem>.OK(flag.ToView());
+        var created = await LoadFlagAsync(flag.PublicId);
+        return ServiceActionResult<FeatureFlagItem>.OK(created.ToView());
     }
 
     public async Task<ServiceActionResult<FeatureFlagItem>> UpdateFlagAsync(string id, FeatureFlagItem item)
@@ -106,12 +112,18 @@ public class FeatureFlagAdminService : BaseService, IFeatureFlagAdminService
             throw new RecordNotFoundException("Feature flag not found.");
         }
 
+        var oldName = flag.Name;
         flag.ToRecord(item);
+        flag.OrganizationId = await ResolveOrganizationIdAsync(item.OrganizationId);
         await query.UpdateAsync(flag);
+        featureFlagService?.InvalidateCache(oldName);
+        if (!string.Equals(oldName, flag.Name, StringComparison.Ordinal))
+            featureFlagService?.InvalidateCache(flag.Name);
 
         l.I($"Feature flag updated: {flag.Name}");
 
-        return ServiceActionResult<FeatureFlagItem>.OK(flag.ToView());
+        var updated = await LoadFlagAsync(flag.PublicId);
+        return ServiceActionResult<FeatureFlagItem>.OK(updated.ToView());
     }
 
     public async Task<ServiceActionResult<bool>> DeleteFlagAsync(string id)
@@ -127,9 +139,35 @@ public class FeatureFlagAdminService : BaseService, IFeatureFlagAdminService
         }
 
         await query.RemoveAsync(flag);
+        featureFlagService?.InvalidateCache(flag.Name);
 
         l.I($"Feature flag deleted: {flag.Name}");
 
         return ServiceActionResult<bool>.OK(true);
+    }
+
+    private async Task<Guid?> ResolveOrganizationIdAsync(string? organizationPublicId)
+    {
+        if (string.IsNullOrWhiteSpace(organizationPublicId))
+            return null;
+
+        var organization = await Repository.GetOrganizationsQuery(AuthorizationContext.CurrentProfile)
+            .ByPublicId(organizationPublicId)
+            .Select()
+            .FirstOrDefaultAsync();
+
+        if (organization == null)
+            throw new RecordNotFoundException("Organization not found.");
+
+        return organization.Id;
+    }
+
+    private async Task<Server.Database.Core.Models.FeatureFlag> LoadFlagAsync(string publicId)
+    {
+        return await Repository.GetFeatureFlagQuery(AuthorizationContext.CurrentProfile)
+            .ByPublicId(publicId)
+            .Select()
+            .Include(ff => ff.Organization)
+            .FirstAsync();
     }
 }

@@ -33,28 +33,36 @@ public class WebhookAdminServiceMock : IWebhookAdminService
             {
                 Id = IdGenerator.New(), EventType = WebhookEventTypes.UserCreated,
                 Url = "https://api.example.com/webhooks/users", IsActive = true,
+                OrganizationId = "org-acme",
                 CreatedByName = "John Doe", OrganizationName = "Acme Corp",
+                Secret = "mock-secret-user-created",
                 CreateDate = now.AddDays(-30), UpdateDate = now.AddDays(-5)
             },
             new()
             {
                 Id = IdGenerator.New(), EventType = WebhookEventTypes.UserUpdated,
                 Url = "https://api.example.com/webhooks/users", IsActive = true,
+                OrganizationId = "org-acme",
                 CreatedByName = "John Doe", OrganizationName = "Acme Corp",
+                Secret = "mock-secret-user-updated",
                 CreateDate = now.AddDays(-30), UpdateDate = now.AddDays(-5)
             },
             new()
             {
                 Id = IdGenerator.New(), EventType = WebhookEventTypes.OrganizationCreated,
                 Url = "https://hooks.slack.com/services/T00/B00/xxx", IsActive = true,
+                OrganizationId = "org-east",
                 CreatedByName = "Jane Smith", OrganizationName = "East Region",
+                Secret = "mock-secret-org-created",
                 CreateDate = now.AddDays(-14), UpdateDate = now.AddDays(-14)
             },
             new()
             {
                 Id = IdGenerator.New(), EventType = WebhookEventTypes.UserDeleted,
                 Url = "https://old-system.internal/notify", IsActive = false,
+                OrganizationId = "org-acme",
                 CreatedByName = "Admin User", OrganizationName = "Acme Corp",
+                Secret = "mock-secret-user-deleted",
                 CreateDate = now.AddDays(-60), UpdateDate = now.AddDays(-10)
             },
         };
@@ -148,6 +156,7 @@ public class WebhookAdminServiceMock : IWebhookAdminService
         item.UpdateDate = DateTime.UtcNow;
         item.CreatedByName = "Current User";
         item.OrganizationName = "Acme Corp";
+        item.Secret = "mock-generated-secret";
         _subscriptions.Insert(0, item);
 
         return ServiceActionResult<WebhookSubscriptionItem>.OK(item);
@@ -165,6 +174,7 @@ public class WebhookAdminServiceMock : IWebhookAdminService
         existing.EventType = item.EventType;
         existing.Url = item.Url;
         existing.IsActive = item.IsActive;
+        existing.OrganizationId = item.OrganizationId;
         existing.UpdateDate = DateTime.UtcNow;
 
         return ServiceActionResult<WebhookSubscriptionItem>.OK(existing);

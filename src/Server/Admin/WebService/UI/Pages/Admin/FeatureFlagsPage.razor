@@ -106,13 +106,21 @@
                             <label for="EditItem.IsEnabled" class="form-check-label">Enabled</label>
                         </div>
                         <div class="form-floating mb-3">
+                            <InputText @bind-Value="EditItem.OrganizationId" id="EditItem.OrganizationId" class="form-control" placeholder="Organization PublicId" />
+                            <label for="EditItem.OrganizationId">Organization PublicId (optional)</label>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(EditItem.OrganizationName))
+                        {
+                            <div class="form-text mb-3">Resolved organization: @EditItem.OrganizationName</div>
+                        }
+                        <div class="form-floating mb-3">
                             <InputNumber @bind-Value="EditItem.RolloutPercentage" id="EditItem.RolloutPercentage" class="form-control" placeholder="Rollout %" />
                             <label for="EditItem.RolloutPercentage">Rollout Percentage (0-100)</label>
                             <ValidationMessage For="() => EditItem.RolloutPercentage" class="text-danger" />
                         </div>
                         <div class="mb-3">
-                            <label for="AllowedUsersText" class="form-label">Allowed Users (comma-separated PublicIds)</label>
-                            <InputText @bind-Value="AllowedUsersText" id="AllowedUsersText" class="form-control" placeholder="user-id-1, user-id-2" />
+                            <label for="AllowedUsersText" class="form-label">Allowed Users (comma-separated PublicIds or internal profile GUIDs)</label>
+                            <InputText @bind-Value="AllowedUsersText" id="AllowedUsersText" class="form-control" placeholder="public-id-1, guid-2" />
                         </div>
                     </div>
                     <div class="modal-footer">

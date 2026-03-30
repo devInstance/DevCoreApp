@@ -59,7 +59,7 @@ public class BackgroundWorker : BackgroundService, IBackgroundWorker
         task.TaskType = MapRequestType(item.RequestType);
         task.Payload = SerializePayload(item.Content);
         task.Status = BackgroundTaskStatus.Queued;
-        task.MaxRetries = 3;
+        task.MaxRetries = GetMaxRetries(item.RequestType);
         task.ScheduledAt = DateTime.UtcNow;
         task.ResultReference = ExtractResultReference(item);
 
@@ -103,6 +103,12 @@ public class BackgroundWorker : BackgroundService, IBackgroundWorker
     {
         return JsonSerializer.Serialize(content, content.GetType());
     }
+
+    private static int GetMaxRetries(BackgroundRequestType requestType) => requestType switch
+    {
+        BackgroundRequestType.DeliverWebhook => 5,
+        _ => 3
+    };
 
     private static string? ExtractResultReference(BackgroundRequestItem item)
     {

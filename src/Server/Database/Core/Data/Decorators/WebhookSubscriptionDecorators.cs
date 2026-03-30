@@ -13,6 +13,7 @@ public static class WebhookSubscriptionDecorators
             EventType = subscription.EventType,
             Url = subscription.Url,
             IsActive = subscription.IsActive,
+            OrganizationId = subscription.Organization?.PublicId,
             CreatedByName = subscription.CreatedBy != null
                 ? $"{subscription.CreatedBy.FirstName} {subscription.CreatedBy.LastName}".Trim()
                 : null,
@@ -20,6 +21,13 @@ public static class WebhookSubscriptionDecorators
             CreateDate = subscription.CreateDate,
             UpdateDate = subscription.UpdateDate
         };
+    }
+
+    public static WebhookSubscriptionItem ToViewWithSecret(this WebhookSubscription subscription)
+    {
+        var item = subscription.ToView();
+        item.Secret = subscription.Secret;
+        return item;
     }
 
     public static WebhookSubscription ToRecord(this WebhookSubscription subscription, WebhookSubscriptionItem item)

@@ -4,6 +4,7 @@ using DevInstance.DevCoreApp.Server.Database.Core;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Server.Database.Core.Models.BackgroundTasks;
 using DevInstance.DevCoreApp.Shared.Model.Common;
+using DevInstance.DevCoreApp.Shared.Model.Webhooks;
 using DevInstance.LogScope;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -250,11 +251,41 @@ public class BackgroundTaskWorker : IBackgroundTaskWorker
             {
                 task.Status = BackgroundTaskStatus.Failed;
                 task.CompletedAt = DateTime.UtcNow;
+                await MarkWebhookDeliveryFailedAsync(repository, task, ex.Message);
             }
 
             db.BackgroundTasks.Update(task);
             await db.SaveChangesAsync(cancellationToken);
         }
+    }
+
+    private static async Task MarkWebhookDeliveryFailedAsync(
+        IQueryRepository repository,
+        BackgroundTask task,
+        string errorMessage)
+    {
+        if (task.TaskType != BackgroundTaskTypes.DeliverWebhook ||
+            string.IsNullOrWhiteSpace(task.ResultReference) ||
+            !task.ResultReference.StartsWith("WebhookDelivery:", StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        var deliveryPublicId = task.ResultReference["WebhookDelivery:".Length..];
+        if (string.IsNullOrWhiteSpace(deliveryPublicId))
+            return;
+
+        var deliveryQuery = repository.GetWebhookDeliveryQuery(null!);
+        var delivery = await deliveryQuery.ByPublicId(deliveryPublicId).Select().FirstOrDefaultAsync();
+        if (delivery == null)
+            return;
+
+        delivery.Status = WebhookDeliveryStatus.Failed;
+        delivery.NextRetryAt = null;
+        if (string.IsNullOrWhiteSpace(delivery.ResponseBody))
+            delivery.ResponseBody = errorMessage;
+
+        await deliveryQuery.UpdateAsync(delivery);
     }
 
     private static async Task FailTaskAsync(ApplicationDbContext db, BackgroundTask task, string errorMessage, CancellationToken cancellationToken)

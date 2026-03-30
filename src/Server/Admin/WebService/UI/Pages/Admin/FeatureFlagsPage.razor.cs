@@ -196,6 +196,7 @@ public partial class FeatureFlagsPage
             Name = flag.Name,
             Description = flag.Description,
             IsEnabled = flag.IsEnabled,
+            OrganizationId = flag.OrganizationId,
             RolloutPercentage = flag.RolloutPercentage,
             AllowedUsers = flag.AllowedUsers != null ? new List<string>(flag.AllowedUsers) : null,
             OrganizationName = flag.OrganizationName

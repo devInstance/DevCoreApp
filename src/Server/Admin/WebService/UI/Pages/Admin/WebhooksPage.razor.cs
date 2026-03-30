@@ -49,6 +49,7 @@ public partial class WebhooksPage
     private bool isEditMode;
     private WebhookSubscriptionItem EditItem { get; set; } = new();
     private string? editingId;
+    private bool showSecretNotice;
 
     // Delete modal state
     private WebhookSubscriptionItem? DeletingSub { get; set; }
@@ -172,8 +173,7 @@ public partial class WebhooksPage
 
     private Task OnRowClick(WebhookSubscriptionItem item)
     {
-        ShowEditModal(item);
-        return Task.CompletedTask;
+        return ShowEditModalAsync(item);
     }
 
     // ---------- Create/Edit Modal ----------
@@ -183,20 +183,23 @@ public partial class WebhooksPage
         EditItem = new WebhookSubscriptionItem { IsActive = true };
         editingId = null;
         isEditMode = false;
+        showSecretNotice = false;
         showModal = true;
     }
 
-    private void ShowEditModal(WebhookSubscriptionItem sub)
+    private async Task ShowEditModalAsync(WebhookSubscriptionItem sub)
     {
-        EditItem = new WebhookSubscriptionItem
-        {
-            Id = sub.Id,
-            EventType = sub.EventType,
-            Url = sub.Url,
-            IsActive = sub.IsActive
-        };
+        await Host.ServiceReadAsync(
+            async () => await WebhookService.GetSubscriptionAsync(sub.Id),
+            result => EditItem = result
+        );
+
+        if (Host.IsError)
+            return;
+
         editingId = sub.Id;
         isEditMode = true;
+        showSecretNotice = false;
         showModal = true;
     }
 
@@ -204,26 +207,39 @@ public partial class WebhooksPage
     {
         showModal = false;
         editingId = null;
+        showSecretNotice = false;
     }
 
     private async Task OnSaveSubscription()
     {
         if (isEditMode && editingId != null)
         {
-            await Host.ServiceSubmitAsync(
-                async () => await WebhookService.UpdateSubscriptionAsync(editingId, EditItem)
+            await Host.ServiceReadAsync(
+                async () => await WebhookService.UpdateSubscriptionAsync(editingId, EditItem),
+                result => EditItem = result
             );
         }
         else
         {
-            await Host.ServiceSubmitAsync(
-                async () => await WebhookService.CreateSubscriptionAsync(EditItem)
+            await Host.ServiceReadAsync(
+                async () => await WebhookService.CreateSubscriptionAsync(EditItem),
+                result => EditItem = result
             );
         }
 
         if (!Host.IsError)
         {
-            CloseModal();
+            if (!isEditMode)
+            {
+                isEditMode = true;
+                editingId = EditItem.Id;
+                showSecretNotice = !string.IsNullOrWhiteSpace(EditItem.Secret);
+            }
+            else
+            {
+                CloseModal();
+            }
+
             await LoadSubscriptions(0, SortField, IsAsc, null);
         }
     }

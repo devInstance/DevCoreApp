@@ -49,7 +49,7 @@
         </HColumnTemplate>
         <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.Webhooks.WebhookSubscriptionItem" Field="actions" Context="sub">
             <AuthorizeView Policy="Admin.Webhooks.Edit">
-                <button class="btn btn-sm btn-outline-primary me-1" title="Edit" @onclick="() => ShowEditModal(sub)" @onclick:stopPropagation="true">
+                <button class="btn btn-sm btn-outline-primary me-1" title="Edit" @onclick="() => ShowEditModalAsync(sub)" @onclick:stopPropagation="true">
                     <i class="bi bi-pencil"></i>
                 </button>
             </AuthorizeView>
@@ -103,19 +103,40 @@
                             <label for="EditItem.Url">URL</label>
                             <ValidationMessage For="() => EditItem.Url" class="text-danger" />
                         </div>
+                        <div class="form-floating mb-3">
+                            <InputText @bind-Value="EditItem.OrganizationId" id="EditItem.OrganizationId" class="form-control" placeholder="Organization PublicId" />
+                            <label for="EditItem.OrganizationId">Organization PublicId (optional)</label>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(EditItem.OrganizationName))
+                        {
+                            <div class="form-text mb-3">Resolved organization: @EditItem.OrganizationName</div>
+                        }
                         <div class="form-check form-switch mb-3">
                             <InputCheckbox @bind-Value="EditItem.IsActive" id="EditItem.IsActive" class="form-check-input" />
                             <label for="EditItem.IsActive" class="form-check-label">Active</label>
                         </div>
+                        @if (!string.IsNullOrWhiteSpace(EditItem.Secret))
+                        {
+                            @if (showSecretNotice)
+                            {
+                                <div class="alert alert-warning" role="alert">
+                                    Save this signing secret now. It is required for webhook signature verification.
+                                </div>
+                            }
+                            <div class="form-floating mb-3">
+                                <InputText @bind-Value="EditItem.Secret" id="EditItem.Secret" class="form-control font-monospace" readonly />
+                                <label for="EditItem.Secret">Signing Secret</label>
+                            </div>
+                        }
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" @onclick="CloseModal">Cancel</button>
+                        <button type="button" class="btn btn-secondary" @onclick="CloseModal">@(showSecretNotice ? "Close" : "Cancel")</button>
                         <button type="submit" class="btn btn-primary" disabled="@Host.InProgress">
                             @if (Host.InProgress)
                             {
                                 <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
                             }
-                            @(isEditMode ? "Save Changes" : "Create")
+                            @(showSecretNotice ? "Save Changes" : isEditMode ? "Save Changes" : "Create")
                         </button>
                     </div>
                 </EditForm>

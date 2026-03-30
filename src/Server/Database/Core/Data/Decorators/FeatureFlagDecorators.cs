@@ -13,6 +13,7 @@ public static class FeatureFlagDecorators
             Name = flag.Name,
             Description = flag.Description,
             IsEnabled = flag.IsEnabled,
+            OrganizationId = flag.Organization?.PublicId,
             OrganizationName = flag.Organization?.Name,
             RolloutPercentage = flag.RolloutPercentage,
             AllowedUsers = flag.AllowedUsers,
