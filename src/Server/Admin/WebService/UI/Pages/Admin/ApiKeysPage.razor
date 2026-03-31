@@ -43,6 +43,16 @@
             }
             else
             {
+                <span class="text-muted">None</span>
+            }
+        </HColumnTemplate>
+        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.ApiKeys.ApiKeyItem" Field="organization" Context="key">
+            @if (!string.IsNullOrWhiteSpace(key.OrganizationName))
+            {
+                @key.OrganizationName
+            }
+            else
+            {
                 <span class="text-muted">All</span>
             }
         </HColumnTemplate>
@@ -124,8 +134,12 @@
                             <ValidationMessage For="() => CreateItem.Name" class="text-danger" />
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Scopes (comma-separated permission keys, leave empty for all)</label>
+                            <label class="form-label">Scopes (comma-separated permission keys, leave empty to snapshot the creator's current permissions)</label>
                             <InputText @bind-Value="ScopesText" id="ScopesText" class="form-control" placeholder="Admin.Users.View, System.Jobs.View" />
+                        </div>
+                        <div class="form-floating mb-3">
+                            <InputText @bind-Value="CreateItem.OrganizationId" id="CreateItem.OrganizationId" class="form-control" placeholder="Organization Public ID" />
+                            <label for="CreateItem.OrganizationId">Organization Public ID (optional)</label>
                         </div>
                         <div class="form-floating mb-3">
                             <InputDate @bind-Value="CreateItem.ExpiresAt" id="CreateItem.ExpiresAt" class="form-control" placeholder="Expires At" />

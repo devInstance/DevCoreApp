@@ -18,6 +18,11 @@ public class ApiKeyItem : ModelItem
     [Display(Name = "Scopes")]
     public List<string>? Scopes { get; set; }
 
+    [Display(Name = "Organization")]
+    public string? OrganizationId { get; set; }
+
+    public string? OrganizationName { get; set; }
+
     [Display(Name = "Expires At")]
     public DateTime? ExpiresAt { get; set; }
 

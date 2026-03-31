@@ -64,6 +64,9 @@ public class ApiKeyAuthenticationHandler : AuthenticationHandler<AuthenticationS
         if (appUser == null)
             return AuthenticateResult.Fail("API key owner not found.");
 
+        if (appUser.Status != Database.Core.Models.AccountStatus.Active)
+            return AuthenticateResult.Fail("API key owner is not active.");
+
         // Build claims identity
         var claims = new List<Claim>
         {

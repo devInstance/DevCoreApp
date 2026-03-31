@@ -1,6 +1,7 @@
 using System.Text;
 using DevInstance.BlazorToolkit.Tools;
 using DevInstance.DevCoreApp.Server.Admin.Services.Authentication;
+using DevInstance.DevCoreApp.Server.Admin.Services.ApiKeys;
 using DevInstance.DevCoreApp.Server.Admin.Services.Background;
 using DevInstance.DevCoreApp.Server.Admin.Services.Background.Tasks;
 using DevInstance.DevCoreApp.Server.Admin.Services.Background.Tasks.Handlers;
@@ -71,6 +72,7 @@ public class Program
         builder.Services.AddSingleton<HealthEndpointAccess>();
 
         builder.Services.AddScoped<ITimeProvider, TimeProvider>();
+        builder.Services.AddScoped<IApiKeyPermissionSnapshotService, ApiKeyPermissionSnapshotService>();
 
 #if DEBUG
         builder.Services.AddSerilogScopeLogging(LogScope.LogLevel.TRACE, new DefaultFormattersOptions { ShowThreadNumber = true });
@@ -107,13 +109,13 @@ public class Program
             {
                 options.ForwardDefaultSelector = context =>
                 {
-                    if (context.Request.Headers.ContainsKey("X-Api-Key"))
-                        return "ApiKey";
-
                     var authHeader = context.Request.Headers.Authorization.FirstOrDefault();
                     if (authHeader != null &&
                         authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
                         return JwtBearerDefaults.AuthenticationScheme;
+
+                    if (context.Request.Headers.ContainsKey("X-Api-Key"))
+                        return "ApiKey";
                     return IdentityConstants.ApplicationScheme;
                 };
             });
@@ -155,6 +157,7 @@ public class Program
         builder.Services.AddScoped<IDataSeeder, OrganizationDataSeeder>();
         builder.Services.AddScoped<IDataSeeder, SettingsDataSeeder>();
         builder.Services.AddScoped<IDataSeeder, PermissionSeeder>();
+        builder.Services.AddScoped<IDataSeeder, ApiKeyDataSeeder>();
 
 #if DEBUG || SERVICEMOCKS
         builder.Services.AddDatabaseDeveloperPageExceptionFilter();

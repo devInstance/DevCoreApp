@@ -37,8 +37,9 @@ public partial class ApiKeysPage
     {
         new() { Label = "Name", Field = "name", ValueSelector = k => k.Name, Width = "20%" },
         new() { Label = "Prefix", Field = "prefix", ValueSelector = k => k.Prefix, IsSortable = false, Width = "12%" },
-        new() { Label = "Scopes", Field = "scopes", ValueSelector = k => k.Scopes?.Count.ToString() ?? "All", IsSortable = false, Width = "15%" },
-        new() { Label = "Created By", Field = "createdby", ValueSelector = k => k.CreatedByName ?? "", IsSortable = false, Width = "15%" },
+        new() { Label = "Scopes", Field = "scopes", ValueSelector = k => k.Scopes?.Count.ToString() ?? "0", IsSortable = false, Width = "12%" },
+        new() { Label = "Organization", Field = "organization", ValueSelector = k => k.OrganizationName ?? "All", IsSortable = false, Width = "16%" },
+        new() { Label = "Created By", Field = "createdby", ValueSelector = k => k.CreatedByName ?? "", IsSortable = false, Width = "14%" },
         new() { Label = "Expires", Field = "expiresat", ValueSelector = k => k.ExpiresAt?.ToString("yyyy-MM-dd") ?? "Never", Width = "13%" },
         new() { Label = "Last Used", Field = "usedat", ValueSelector = k => k.LastUsedAt?.ToString("yyyy-MM-dd") ?? "Never", Width = "13%" },
         new() { Label = "Status", Field = "status", ValueSelector = k => k.IsRevoked ? "Revoked" : "Active", IsSortable = false, Width = "80px" },

@@ -12,6 +12,7 @@ using DevInstance.WebServiceToolkit.Database.Queries.Extensions;
 using DevInstance.WebServiceToolkit.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -23,14 +24,17 @@ namespace DevInstance.DevCoreApp.Server.Admin.Services.ApiKeys;
 public class ApiKeyAdminService : BaseService, IApiKeyAdminService
 {
     private IScopeLog log;
+    private readonly IApiKeyPermissionSnapshotService permissionSnapshotService;
 
     public ApiKeyAdminService(IScopeManager logManager,
                                ITimeProvider timeProvider,
                                IQueryRepository query,
-                               IAuthorizationContext authorizationContext)
+                               IAuthorizationContext authorizationContext,
+                               IApiKeyPermissionSnapshotService permissionSnapshotService)
         : base(logManager, timeProvider, query, authorizationContext)
     {
         log = logManager.CreateLogger(this);
+        this.permissionSnapshotService = permissionSnapshotService;
     }
 
     public async Task<ServiceActionResult<ModelList<ApiKeyItem>>> GetKeysAsync(
@@ -53,6 +57,7 @@ public class ApiKeyAdminService : BaseService, IApiKeyAdminService
         var totalCount = await query.Clone().Select().CountAsync();
         var keys = await query.Paginate(top, page).Select()
             .Include(ak => ak.CreatedBy)
+            .Include(ak => ak.Organization)
             .ToListAsync();
 
         var items = keys.Select(ak => ak.ToView()).ToArray();
@@ -74,6 +79,8 @@ public class ApiKeyAdminService : BaseService, IApiKeyAdminService
         var query = Repository.GetApiKeyQuery(AuthorizationContext.CurrentProfile);
         var apiKey = query.CreateNew();
         apiKey.ToRecord(item);
+        apiKey.Scopes = await ResolveScopesAsync(item.Scopes);
+        apiKey.OrganizationId = await ResolveOrganizationIdAsync(item.OrganizationId);
         apiKey.KeyHash = keyHash;
         apiKey.Prefix = prefix;
         apiKey.CreatedById = AuthorizationContext.CurrentProfile.Id;
@@ -83,7 +90,7 @@ public class ApiKeyAdminService : BaseService, IApiKeyAdminService
 
         var result = new ApiKeyCreateResult
         {
-            Key = apiKey.ToView(),
+            Key = (await LoadKeyAsync(apiKey.PublicId)).ToView(),
             PlainTextKey = plainTextKey
         };
 
@@ -116,5 +123,46 @@ public class ApiKeyAdminService : BaseService, IApiKeyAdminService
     {
         var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(plainTextKey));
         return Convert.ToHexStringLower(bytes);
+    }
+
+    private async Task<List<string>> ResolveScopesAsync(List<string>? requestedScopes)
+    {
+        if (requestedScopes != null && requestedScopes.Count > 0)
+        {
+            return requestedScopes
+                .Where(scope => !string.IsNullOrWhiteSpace(scope))
+                .Select(scope => scope.Trim())
+                .Distinct(StringComparer.Ordinal)
+                .OrderBy(scope => scope, StringComparer.Ordinal)
+                .ToList();
+        }
+
+        return await permissionSnapshotService.GetEffectivePermissionsAsync(AuthorizationContext.CurrentProfile.Id);
+    }
+
+    private async Task<Guid?> ResolveOrganizationIdAsync(string? organizationPublicId)
+    {
+        if (string.IsNullOrWhiteSpace(organizationPublicId))
+            return null;
+
+        var organization = await Repository.GetOrganizationsQuery(AuthorizationContext.CurrentProfile)
+            .ByPublicId(organizationPublicId)
+            .Select()
+            .FirstOrDefaultAsync();
+
+        if (organization == null)
+            throw new RecordNotFoundException("Organization not found.");
+
+        return organization.Id;
+    }
+
+    private async Task<Database.Core.Models.ApiKey> LoadKeyAsync(string publicId)
+    {
+        return await Repository.GetApiKeyQuery(AuthorizationContext.CurrentProfile)
+            .ByPublicId(publicId)
+            .Select()
+            .Include(ak => ak.CreatedBy)
+            .Include(ak => ak.Organization)
+            .FirstAsync();
     }
 }

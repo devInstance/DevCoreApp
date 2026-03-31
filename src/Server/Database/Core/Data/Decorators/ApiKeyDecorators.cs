@@ -13,6 +13,8 @@ public static class ApiKeyDecorators
             Name = key.Name,
             Prefix = key.Prefix,
             Scopes = key.Scopes,
+            OrganizationId = key.Organization?.PublicId,
+            OrganizationName = key.Organization?.Name,
             ExpiresAt = key.ExpiresAt,
             LastUsedAt = key.LastUsedAt,
             IsRevoked = key.IsRevoked,

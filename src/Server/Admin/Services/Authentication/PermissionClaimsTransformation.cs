@@ -56,6 +56,29 @@ public class PermissionClaimsTransformation : IClaimsTransformation
         if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
             return principal;
 
+        var apiKeyIdClaim = identity.FindFirst("ApiKeyId")?.Value;
+        if (!string.IsNullOrEmpty(apiKeyIdClaim))
+        {
+            var apiKey = await _db.ApiKeys
+                .Where(ak => ak.PublicId == apiKeyIdClaim)
+                .Select(ak => new { ak.Scopes })
+                .FirstOrDefaultAsync();
+
+            if (apiKey?.Scopes != null)
+            {
+                foreach (var key in apiKey.Scopes
+                    .Where(k => !string.IsNullOrWhiteSpace(k))
+                    .Distinct(StringComparer.Ordinal))
+                {
+                    identity.AddClaim(new Claim(PermissionClaimType, key));
+                }
+            }
+
+            await AddOrganizationClaimsAsync(identity, userId);
+            identity.AddClaim(new Claim(PermissionsLoadedClaimType, "true"));
+            return principal;
+        }
+
         // 1. Collect role names from existing claims
         var roleNames = identity.Claims
             .Where(c => c.Type == identity.RoleClaimType)
@@ -98,28 +121,17 @@ public class PermissionClaimsTransformation : IClaimsTransformation
             identity.AddClaim(new Claim(PermissionClaimType, key));
         }
 
-        // 4b. API key scope restriction — if this principal was authenticated via an API key,
-        //     intersect the full permission set with the key's allowed scopes.
-        var apiKeyIdClaim = identity.FindFirst("ApiKeyId")?.Value;
-        if (!string.IsNullOrEmpty(apiKeyIdClaim))
-        {
-            var apiKey = await _db.ApiKeys
-                .Where(ak => ak.PublicId == apiKeyIdClaim)
-                .Select(ak => new { ak.Scopes })
-                .FirstOrDefaultAsync();
-
-            if (apiKey?.Scopes != null && apiKey.Scopes.Count > 0)
-            {
-                var scopeSet = new HashSet<string>(apiKey.Scopes);
-                var toRemove = identity.Claims
-                    .Where(c => c.Type == PermissionClaimType && !scopeSet.Contains(c.Value))
-                    .ToList();
-                foreach (var claim in toRemove)
-                    identity.RemoveClaim(claim);
-            }
-        }
-
         // 5. Resolve organization context
+        await AddOrganizationClaimsAsync(identity, userId);
+
+        // 6. Mark as loaded
+        identity.AddClaim(new Claim(PermissionsLoadedClaimType, "true"));
+
+        return principal;
+    }
+
+    private async Task AddOrganizationClaimsAsync(ClaimsIdentity identity, Guid userId)
+    {
         var orgContext = await _orgResolver.ResolveAsync(userId);
 
         if (orgContext.PrimaryOrganizationId.HasValue)
@@ -135,10 +147,5 @@ public class PermissionClaimsTransformation : IClaimsTransformation
                 VisibleOrganizationClaimType,
                 orgId.ToString()));
         }
-
-        // 6. Mark as loaded
-        identity.AddClaim(new Claim(PermissionsLoadedClaimType, "true"));
-
-        return principal;
     }
 }
