@@ -26,3 +26,20 @@ The repository is organized in the following way:
   - ```/src/Client```: Contains code that executes on the client side (Blazor WebAssembly).
 -	```/tests```: A collection of unit tests with a structure that mirrors the "src" folder.
 -	```/mocks```: Mock service implementations for UI development without a database.
+
+# Documentation
+
+Developer-facing feature and operational documentation lives in the [`docs`](/docs) folder.
+
+- [API Keys](/docs/ApiKeys.md)
+- [Background Tasks](/docs/BackgroundTasks.md)
+- [Email System](/docs/EmailSystem.md)
+- [Feature Flags](/docs/FeatureFlags.md)
+- [Health Checks](/docs/HealthChecks.md)
+- [Operation Context](/docs/OperationContext.md)
+- [Settings](/docs/Settings.md)
+- [Webhooks](/docs/Webhooks.md)
+
+General reference material:
+
+- [Specification](/docs/Specification.md)
