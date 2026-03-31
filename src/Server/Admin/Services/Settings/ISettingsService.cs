@@ -4,10 +4,11 @@ using System.Threading.Tasks;
 namespace DevInstance.DevCoreApp.Server.Admin.Services.Settings;
 
 /// <summary>
-/// Application settings service with four-tier resolution.
+/// Application settings service with scoped resolution.
 ///
-/// Resolution order: User → Organization → Tenant → System.
-/// The most specific scope that has a value for (category, key) wins.
+/// Current runtime resolution order: User → Organization → System.
+/// Tenant-level records exist in the data model for future expansion, but
+/// tenant context resolution is not currently wired into the runtime path.
 ///
 /// Results are cached in memory and invalidated on write.
 /// </summary>
@@ -21,7 +22,7 @@ public interface ISettingsService
 
     /// <summary>
     /// Sets a setting value at the most specific scope available for the current context.
-    /// If userId is resolved, sets at user scope; otherwise falls back to org, tenant, then system.
+    /// If userId is resolved, sets at user scope; otherwise falls back to org then system.
     /// To set at a specific scope, use the overload with explicit scope parameters.
     /// </summary>
     Task SetAsync<T>(string category, string key, T value);

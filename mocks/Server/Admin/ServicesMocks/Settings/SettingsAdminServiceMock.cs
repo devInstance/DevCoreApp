@@ -46,16 +46,6 @@ public class SettingsAdminServiceMock : ISettingsAdminService
             new SettingItem { Id = Guid.NewGuid().ToString(), Category = "Storage", Key = "ConnectionString", Value = "DefaultEndpointsProtocol=https;AccountName=devcore", ValueType = "string", Description = "Storage provider connection string", IsSensitive = true, Scope = "System" },
         });
 
-        // Tenant settings
-        settings.AddRange(new[]
-        {
-            new SettingItem { Id = Guid.NewGuid().ToString(), Category = "Branding", Key = "CompanyName", Value = "Acme Corporation", ValueType = "string", Description = "Tenant company name for branding", Scope = "Tenant" },
-            new SettingItem { Id = Guid.NewGuid().ToString(), Category = "Branding", Key = "PrimaryColor", Value = "#0d6efd", ValueType = "string", Description = "Primary brand color (hex)", Scope = "Tenant" },
-            new SettingItem { Id = Guid.NewGuid().ToString(), Category = "Branding", Key = "LogoUrl", Value = "/images/logo.png", ValueType = "string", Description = "URL to the tenant logo", Scope = "Tenant" },
-            new SettingItem { Id = Guid.NewGuid().ToString(), Category = "Features", Key = "EnableNotifications", Value = "true", ValueType = "bool", Description = "Enable in-app notifications for this tenant", Scope = "Tenant" },
-            new SettingItem { Id = Guid.NewGuid().ToString(), Category = "Features", Key = "MaxUsersAllowed", Value = "50", ValueType = "int", Description = "Maximum number of users allowed for the tenant", Scope = "Tenant" },
-        });
-
         // Organization settings
         var orgId1 = Guid.NewGuid().ToString();
         var orgId2 = Guid.NewGuid().ToString();
@@ -102,7 +92,10 @@ public class SettingsAdminServiceMock : ISettingsAdminService
         var item = _settings.Find(s => s.Id == id);
         if (item == null) throw new InvalidOperationException("Setting not found.");
 
-        item.Value = newValue;
+        if (!(item.IsSensitive && newValue == string.Empty))
+        {
+            item.Value = newValue;
+        }
 
         return ServiceActionResult<SettingItem>.OK(item);
     }

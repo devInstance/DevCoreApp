@@ -19,9 +19,10 @@ namespace DevInstance.DevCoreApp.Server.Admin.Services.Settings;
 
 [BlazorService]
 [BlazorServiceMock]
-public class SettingsService : ISettingsService, ISettingsActionService
+public class SettingsService : ISettingsService, ISettingsActionService, ISettingsCacheInvalidator
 {
     private const string CachePrefix = "settings:";
+    private const string CacheVersionPrefix = "settings-version:";
     private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(10);
 
     private readonly ApplicationDbContext _dbContext;
@@ -118,7 +119,7 @@ public class SettingsService : ISettingsService, ISettingsActionService
 
         await _dbContext.SaveChangesAsync();
 
-        InvalidateCache(category, key);
+        Invalidate(category, key);
 
         l.I($"Setting saved: {category}.{key}");
     }
@@ -160,7 +161,8 @@ public class SettingsService : ISettingsService, ISettingsActionService
     }
 
     /// <summary>
-    /// Resolves the current user/org/tenant context from the HTTP request.
+    /// Resolves the current user/org context from the HTTP request.
+    /// Tenant-level settings remain reserved for future expansion.
     /// </summary>
     private SettingsContext ResolveContext()
     {
@@ -179,13 +181,14 @@ public class SettingsService : ISettingsService, ISettingsActionService
         {
             UserId = applicationUserId,
             OrganizationId = _operationContext?.PrimaryOrganizationId,
-            TenantId = null, // Tenant resolution not yet implemented
+            TenantId = null,
         };
     }
 
     /// <summary>
     /// Queries the database for a single setting, trying tiers in order:
-    /// User → Organization → Tenant → System. Returns the first match.
+    /// User → Organization → System. Tenant remains unused until context
+    /// resolution is implemented.
     /// </summary>
     private async Task<Setting?> ResolveSettingAsync(string category, string key, SettingsContext context)
     {
@@ -204,6 +207,7 @@ public class SettingsService : ISettingsService, ISettingsActionService
     /// <summary>
     /// From a set of candidate settings for the same key, pick the most specific tier.
     /// Priority: User (1) → Organization (2) → Tenant (3) → System (4).
+    /// Tenant is currently only relevant for explicit writes, not implicit resolution.
     /// </summary>
     private static Setting? PickMostSpecific(IEnumerable<Setting> candidates, SettingsContext context)
     {
@@ -262,20 +266,31 @@ public class SettingsService : ISettingsService, ISettingsActionService
 
     private static string BuildCacheKey(string category, string key, SettingsContext context)
     {
-        return $"{CachePrefix}{category}:{key}:u={context.UserId}:o={context.OrganizationId}:t={context.TenantId}";
+        return $"{CachePrefix}{category}:{key}:v={GetCacheVersion(category, key)}:u={context.UserId}:o={context.OrganizationId}:t={context.TenantId}";
     }
 
-    private void InvalidateCache(string category, string key)
+    public void Invalidate(string category, string key)
     {
-        // IMemoryCache doesn't support prefix-based eviction. Remove entries for all
-        // possible scope combinations by evicting the token that covers this (category, key).
-        // For a production system, consider IDistributedCache or a cache-aside pattern.
-        // Here we use a simple approach: evict by known context.
-        var context = ResolveContext();
-        _cache.Remove(BuildCacheKey(category, key, context));
+        var versionKey = BuildCacheVersionKey(category, key);
+        var currentVersion = GetCacheVersion(category, key);
+        _cache.Set(versionKey, currentVersion + 1);
+    }
 
-        // Also evict system-level cache for this key (covers anonymous/background reads)
-        _cache.Remove($"{CachePrefix}{category}:{key}:u=:o=:t=");
+    private static string BuildCacheVersionKey(string category, string key)
+    {
+        return $"{CacheVersionPrefix}{category}:{key}";
+    }
+
+    private int GetCacheVersion(string category, string key)
+    {
+        var versionKey = BuildCacheVersionKey(category, key);
+        if (_cache.TryGetValue<int>(versionKey, out var version))
+        {
+            return version;
+        }
+
+        _cache.Set(versionKey, 0);
+        return 0;
     }
 
     async Task<ServiceActionResult<T?>> ISettingsActionService.GetAsync<T>(string category, string key) where T : default

@@ -14,15 +14,18 @@ namespace DevInstance.DevCoreApp.Server.Admin.Services.Settings;
 [BlazorService]
 public class SettingsAdminService : BaseService, ISettingsAdminService
 {
+    private readonly ISettingsCacheInvalidator _cacheInvalidator;
     private IScopeLog log;
 
     public SettingsAdminService(IScopeManager logManager,
                                 ITimeProvider timeProvider,
                                 IQueryRepository query,
-                                IAuthorizationContext authorizationContext)
+                                IAuthorizationContext authorizationContext,
+                                ISettingsCacheInvalidator cacheInvalidator)
         : base(logManager, timeProvider, query, authorizationContext)
     {
         log = logManager.CreateLogger(this);
+        _cacheInvalidator = cacheInvalidator;
     }
 
     public async Task<ServiceActionResult<List<SettingItem>>> GetAllByScopeAsync(
@@ -37,12 +40,6 @@ public class SettingsAdminService : BaseService, ISettingsAdminService
             case "System":
                 query = query.SystemOnly();
                 break;
-            case "Tenant":
-                query = query.ByUserId(null).ByOrganizationId(null);
-                // Tenant-scoped: TenantId is non-null, others null
-                // SystemOnly filters TenantId==null too, so we just filter User+Org null
-                // and exclude system (where TenantId is also null) by post-filtering
-                break;
             case "Organization":
                 if (!string.IsNullOrEmpty(organizationId) && Guid.TryParse(organizationId, out var orgGuid))
                 {
@@ -54,6 +51,11 @@ public class SettingsAdminService : BaseService, ISettingsAdminService
                     query = query.ByUserId(null);
                 }
                 break;
+            case "Tenant":
+            case "User":
+                throw new BadRequestException($"The {scope} settings scope is not exposed in the admin UI yet.");
+            default:
+                throw new BadRequestException("Unsupported settings scope.");
         }
 
         if (!string.IsNullOrEmpty(search))
@@ -64,12 +66,6 @@ public class SettingsAdminService : BaseService, ISettingsAdminService
         query = query.SortBy("category", true);
 
         var settings = await query.Select().ToListAsync();
-
-        // Post-filter for Tenant scope: exclude system-level entries (TenantId is null)
-        if (scope == "Tenant")
-        {
-            settings = settings.Where(s => s.TenantId != null).ToList();
-        }
 
         // Post-filter for Organization scope without specific org: only include org-scoped
         if (scope == "Organization" && string.IsNullOrEmpty(organizationId))
@@ -108,8 +104,12 @@ public class SettingsAdminService : BaseService, ISettingsAdminService
             throw new RecordNotFoundException("Setting not found.");
         }
 
-        setting.Value = newValue;
+        if (!(setting.IsSensitive && newValue == string.Empty))
+        {
+            setting.Value = newValue;
+        }
         await query.UpdateAsync(setting);
+        _cacheInvalidator.Invalidate(setting.Category, setting.Key);
 
         l.I($"Setting updated: {setting.Category}.{setting.Key}");
 
@@ -139,8 +139,8 @@ public class SettingsAdminService : BaseService, ISettingsAdminService
                 }
                 break;
             case "Tenant":
-                // Tenant resolution — for now we'd need the tenant ID from context
-                break;
+            case "User":
+                throw new BadRequestException($"The {item.Scope} settings scope is not exposed in the admin UI yet.");
             case "System":
             default:
                 // All scope FKs remain null
@@ -148,6 +148,7 @@ public class SettingsAdminService : BaseService, ISettingsAdminService
         }
 
         await query.AddAsync(setting);
+        _cacheInvalidator.Invalidate(setting.Category, setting.Key);
 
         l.I($"Setting created: {setting.Category}.{setting.Key} at scope {item.Scope}");
 
@@ -171,9 +172,12 @@ public class SettingsAdminService : BaseService, ISettingsAdminService
             throw new RecordNotFoundException("Setting not found.");
         }
 
+        var cacheCategory = setting.Category;
+        var cacheKey = setting.Key;
         await query.RemoveAsync(setting);
+        _cacheInvalidator.Invalidate(cacheCategory, cacheKey);
 
-        l.I($"Setting deleted: {setting.Category}.{setting.Key}");
+        l.I($"Setting deleted: {cacheCategory}.{cacheKey}");
 
         return ServiceActionResult<bool>.OK(true);
     }

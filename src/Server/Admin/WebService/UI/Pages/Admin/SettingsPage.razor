@@ -1,5 +1,5 @@
 @page "/admin/settings"
-@attribute [Authorize(Policy = "Admin.Settings.Edit")]
+@attribute [Authorize(Policy = "Admin.Settings.View")]
 
 <PageTitle>Settings</PageTitle>
 
@@ -13,16 +13,15 @@
                 <button type="button" class="btn @(CurrentScope == ScopeSystem ? "btn-primary" : "btn-outline-primary")" @onclick="OnScopeSystem" disabled="@Host.InProgress">
                     <i class="bi bi-globe me-1"></i>System
                 </button>
-                <button type="button" class="btn @(CurrentScope == ScopeTenant ? "btn-primary" : "btn-outline-primary")" @onclick="OnScopeTenant" disabled="@Host.InProgress">
-                    <i class="bi bi-building me-1"></i>Tenant
-                </button>
                 <button type="button" class="btn @(CurrentScope == ScopeOrganization ? "btn-primary" : "btn-outline-primary")" @onclick="OnScopeOrganization" disabled="@Host.InProgress">
                     <i class="bi bi-diagram-3 me-1"></i>Organization
                 </button>
             </div>
-            <button class="btn btn-success" @onclick="OnAddNew" disabled="@Host.InProgress">
-                <i class="bi bi-plus-lg me-1"></i>New Setting
-            </button>
+            <AuthorizeView Policy="Admin.Settings.Edit">
+                <button class="btn btn-success" @onclick="OnAddNew" disabled="@Host.InProgress">
+                    <i class="bi bi-plus-lg me-1"></i>New Setting
+                </button>
+            </AuthorizeView>
         </div>
     </div>
 </div>
@@ -35,6 +34,7 @@
     </div>
 }
 
+<AuthorizeView Policy="Admin.Settings.Edit">
 @if (ShowAddForm)
 {
     <div class="card mb-3">
@@ -112,6 +112,7 @@
         </div>
     </div>
 }
+</AuthorizeView>
 
 @if (Host.InProgress && Settings == null)
 {
@@ -254,14 +255,16 @@ else if (Settings != null)
                                         }
                                         else
                                         {
-                                            <div class="btn-group btn-group-sm">
-                                                <button class="btn btn-outline-primary" @onclick="() => OnStartEdit(setting)" disabled="@Host.InProgress" title="Edit">
-                                                    <i class="bi bi-pencil"></i>
-                                                </button>
-                                                <button class="btn btn-outline-danger" @onclick="() => ShowDeleteConfirmation(setting)" disabled="@Host.InProgress" title="Delete">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </div>
+                                            <AuthorizeView Policy="Admin.Settings.Edit">
+                                                <div class="btn-group btn-group-sm">
+                                                    <button class="btn btn-outline-primary" @onclick="() => OnStartEdit(setting)" disabled="@Host.InProgress" title="Edit">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </button>
+                                                    <button class="btn btn-outline-danger" @onclick="() => ShowDeleteConfirmation(setting)" disabled="@Host.InProgress" title="Delete">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </AuthorizeView>
                                         }
                                     </td>
                                 </tr>
@@ -292,6 +295,7 @@ else if (Settings != null)
     }
 }
 
+<AuthorizeView Policy="Admin.Settings.Edit">
 @if (SettingToDelete != null)
 {
     <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
@@ -319,3 +323,4 @@ else if (Settings != null)
         </div>
     </div>
 }
+</AuthorizeView>
