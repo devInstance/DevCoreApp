@@ -8,7 +8,6 @@ namespace DevInstance.DevCoreApp.Server.Admin.WebService.UI.Pages.Admin;
 public partial class SettingsPage
 {
     private const string ScopeSystem = "System";
-    private const string ScopeTenant = "Tenant";
     private const string ScopeOrganization = "Organization";
 
     [Inject]
@@ -52,7 +51,6 @@ public partial class SettingsPage
     }
 
     private Task OnScopeSystem() => OnScopeChanged(ScopeSystem);
-    private Task OnScopeTenant() => OnScopeChanged(ScopeTenant);
     private Task OnScopeOrganization() => OnScopeChanged(ScopeOrganization);
 
     private async Task OnScopeChanged(string scope)

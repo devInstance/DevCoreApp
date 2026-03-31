@@ -7,7 +7,7 @@ public interface ISettingsAdminService
 {
     /// <summary>
     /// Gets all settings at the specified scope.
-    /// scope: "System", "Tenant", or "Organization".
+    /// scope: "System" or "Organization".
     /// organizationId: required when scope is "Organization".
     /// </summary>
     Task<ServiceActionResult<List<SettingItem>>> GetAllByScopeAsync(
