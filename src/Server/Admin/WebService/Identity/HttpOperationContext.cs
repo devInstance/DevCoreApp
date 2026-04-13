@@ -1,7 +1,9 @@
+using DevInstance.DevCoreApp.Server.Admin.Services.Authentication;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using Microsoft.AspNetCore.Identity;
 using System.Diagnostics;
+using System.Security.Claims;
 
 namespace DevInstance.DevCoreApp.Server.Admin.WebService.Identity;
 
@@ -75,9 +77,32 @@ public class HttpOperationContext : IOperationContext
         }
     }
 
-    public Guid? PrimaryOrganizationId => null;
+    public Guid? PrimaryOrganizationId
+    {
+        get
+        {
+            var claim = _httpContextAccessor.HttpContext?.User
+                ?.FindFirst(PermissionClaimsTransformation.PrimaryOrganizationClaimType);
+            return claim != null && Guid.TryParse(claim.Value, out var id) ? id : null;
+        }
+    }
 
-    public IReadOnlySet<Guid> VisibleOrganizationIds => EmptyOrgSet;
+    public IReadOnlySet<Guid> VisibleOrganizationIds
+    {
+        get
+        {
+            var user = _httpContextAccessor.HttpContext?.User;
+            if (user == null) return EmptyOrgSet;
+
+            var ids = new HashSet<Guid>();
+            foreach (var claim in user.FindAll(PermissionClaimsTransformation.VisibleOrganizationClaimType))
+            {
+                if (Guid.TryParse(claim.Value, out var id))
+                    ids.Add(id);
+            }
+            return ids.Count == 0 ? EmptyOrgSet : ids;
+        }
+    }
 
     public string? IpAddress =>
         _httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString();
