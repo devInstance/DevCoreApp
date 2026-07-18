@@ -23,4 +23,9 @@ public interface IQueryRepository
     IApiKeyQuery GetApiKeyQuery(UserProfile currentProfile);
     IWebhookSubscriptionQuery GetWebhookSubscriptionQuery(UserProfile currentProfile);
     IWebhookDeliveryQuery GetWebhookDeliveryQuery(UserProfile currentProfile);
+    IRefreshTokenQuery GetRefreshTokenQuery(UserProfile currentProfile);
+    IUserOrganizationQuery GetUserOrganizationQuery(UserProfile currentProfile);
+    IPermissionQuery GetPermissionQuery(UserProfile currentProfile);
+    IUserPermissionOverrideQuery GetUserPermissionOverrideQuery(UserProfile currentProfile);
+    IRolePermissionQuery GetRolePermissionQuery(UserProfile currentProfile);
 }

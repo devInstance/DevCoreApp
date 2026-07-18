@@ -114,4 +114,29 @@ public abstract class CoreQueryRepository : IQueryRepository
     {
         return new CoreWebhookDeliveryQuery(LogManager, TimeProvider, DB, currentProfile);
     }
+
+    public IRefreshTokenQuery GetRefreshTokenQuery(UserProfile currentProfile)
+    {
+        return new CoreRefreshTokenQuery(LogManager, TimeProvider, DB, currentProfile);
+    }
+
+    public IUserOrganizationQuery GetUserOrganizationQuery(UserProfile currentProfile)
+    {
+        return new CoreUserOrganizationQuery(LogManager, TimeProvider, DB, currentProfile);
+    }
+
+    public IPermissionQuery GetPermissionQuery(UserProfile currentProfile)
+    {
+        return new CorePermissionQuery(LogManager, TimeProvider, DB, currentProfile);
+    }
+
+    public IUserPermissionOverrideQuery GetUserPermissionOverrideQuery(UserProfile currentProfile)
+    {
+        return new CoreUserPermissionOverrideQuery(LogManager, TimeProvider, DB, currentProfile);
+    }
+
+    public IRolePermissionQuery GetRolePermissionQuery(UserProfile currentProfile)
+    {
+        return new CoreRolePermissionQuery(LogManager, TimeProvider, DB, currentProfile);
+    }
 }

@@ -1,4 +1,6 @@
+using System;
 using System.Linq;
+using System.Threading.Tasks;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using DevInstance.WebServiceToolkit.Database.Queries;
 
@@ -12,6 +14,9 @@ public interface IApiKeyQuery : IModelQuery<ApiKey, IApiKeyQuery>,
     IQueryable<ApiKey> Select();
 
     IApiKeyQuery ByKeyHash(string keyHash);
-    IApiKeyQuery ByCreatedById(System.Guid userId);
+    IApiKeyQuery ByCreatedById(Guid userId);
     IApiKeyQuery ActiveOnly();
+
+    /// <summary>Sets LastUsedAt on the key with the given PublicId and saves (no-op if missing).</summary>
+    Task TouchLastUsedAsync(string publicId, DateTime lastUsedAt);
 }

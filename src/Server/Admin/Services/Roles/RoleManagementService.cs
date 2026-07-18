@@ -1,7 +1,7 @@
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.BlazorToolkit.Tools;
 using DevInstance.DevCoreApp.Server.Admin.Services.Exceptions;
-using DevInstance.DevCoreApp.Server.Database.Core;
+using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using DevInstance.DevCoreApp.Shared.Model.Roles;
 using DevInstance.LogScope;
@@ -22,23 +22,23 @@ public class RoleManagementService : IRoleManagementService
 {
     private readonly IScopeLog log;
     private readonly RoleManager<ApplicationRole> _roleManager;
-    private readonly ApplicationDbContext _db;
+    private readonly IQueryRepository _repository;
 
     public RoleManagementService(
         IScopeManager logManager,
         RoleManager<ApplicationRole> roleManager,
-        ApplicationDbContext db)
+        IQueryRepository repository)
     {
         log = logManager.CreateLogger(this);
         _roleManager = roleManager;
-        _db = db;
+        _repository = repository;
     }
 
     public async Task<ServiceActionResult<ModelList<RoleItem>>> GetRolesAsync(int? top, int? page, string[]? sortBy, string? search)
     {
         using var l = log.TraceScope();
 
-        var query = _db.Roles.AsQueryable();
+        var query = _roleManager.Roles;
 
         if (!string.IsNullOrEmpty(search))
         {
@@ -64,11 +64,8 @@ public class RoleManagementService : IRoleManagementService
         var roles = await query.Skip(pageVal * topVal).Take(topVal).ToListAsync();
 
         var roleIds = roles.Select(r => r.Id).ToList();
-        var permissionCounts = await _db.RolePermissions
-            .Where(rp => roleIds.Contains(rp.RoleId))
-            .GroupBy(rp => rp.RoleId)
-            .Select(g => new { RoleId = g.Key, Count = g.Count() })
-            .ToDictionaryAsync(x => x.RoleId, x => x.Count);
+        var permissionCounts = await _repository.GetRolePermissionQuery(null!)
+            .CountByRoleIdsAsync(roleIds);
 
         var items = roles.Select(r => new RoleItem
         {
@@ -94,7 +91,7 @@ public class RoleManagementService : IRoleManagementService
         if (role == null)
             throw new RecordNotFoundException("Role not found.");
 
-        var permissionCount = await _db.RolePermissions.CountAsync(rp => rp.RoleId == guid);
+        var permissionCount = await _repository.GetRolePermissionQuery(null!).CountForRoleIdAsync(guid);
 
         return ServiceActionResult<RoleItem>.OK(new RoleItem
         {
@@ -168,7 +165,7 @@ public class RoleManagementService : IRoleManagementService
         if (!result.Succeeded)
             throw new BadRequestException(string.Join("; ", result.Errors.Select(e => e.Description)));
 
-        var permissionCount = await _db.RolePermissions.CountAsync(rp => rp.RoleId == role.Id);
+        var permissionCount = await _repository.GetRolePermissionQuery(null!).CountForRoleIdAsync(role.Id);
 
         l.I($"Role updated: {role.Name}");
 
@@ -193,16 +190,12 @@ public class RoleManagementService : IRoleManagementService
         if (role.IsSystemRole)
             throw new BusinessRuleException("System roles cannot be deleted.");
 
-        var hasUsers = await _db.UserRoles.AnyAsync(ur => ur.RoleId == role.Id);
+        var hasUsers = await _repository.GetRolePermissionQuery(null!).RoleHasUsersAsync(role.Id);
         if (hasUsers)
             throw new BusinessRuleException("Cannot delete a role that has users assigned to it. Remove all users from this role first.");
 
         // Remove role permissions first
-        var rolePermissions = await _db.RolePermissions
-            .Where(rp => rp.RoleId == role.Id)
-            .ToListAsync();
-        _db.RolePermissions.RemoveRange(rolePermissions);
-        await _db.SaveChangesAsync();
+        await _repository.GetRolePermissionQuery(null!).RemoveAllForRoleAsync(role.Id);
 
         var result = await _roleManager.DeleteAsync(role);
         if (!result.Succeeded)
@@ -217,8 +210,9 @@ public class RoleManagementService : IRoleManagementService
     {
         using var l = log.TraceScope();
 
-        var permissions = await _db.Permissions
-            .OrderBy(p => p.DisplayOrder)
+        var permissions = await _repository.GetPermissionQuery(null!)
+            .OrderedByDisplayOrder()
+            .Select()
             .ToListAsync();
 
         var items = permissions.Select(p => new PermissionItem
@@ -246,12 +240,9 @@ public class RoleManagementService : IRoleManagementService
         if (role == null)
             throw new RecordNotFoundException("Role not found.");
 
-        var keys = await _db.RolePermissions
-            .Where(rp => rp.RoleId == guid)
-            .Join(_db.Permissions, rp => rp.PermissionId, p => p.Id, (rp, p) => p.Key)
-            .ToListAsync();
+        var keys = await _repository.GetRolePermissionQuery(null!).GetPermissionKeysForRoleIdAsync(guid);
 
-        return ServiceActionResult<List<string>>.OK(keys);
+        return ServiceActionResult<List<string>>.OK(keys.ToList());
     }
 
     public async Task<ServiceActionResult<bool>> SetRolePermissionsAsync(string roleId, RolePermissionsRequest request)
@@ -269,31 +260,8 @@ public class RoleManagementService : IRoleManagementService
             throw new BusinessRuleException("Permissions for system roles are managed automatically and cannot be modified.");
 
         // Full replace: remove existing, add new
-        var existingMappings = await _db.RolePermissions
-            .Where(rp => rp.RoleId == guid)
-            .ToListAsync();
-        _db.RolePermissions.RemoveRange(existingMappings);
-
-        if (request.PermissionKeys.Count > 0)
-        {
-            var permissionsByKey = await _db.Permissions
-                .Where(p => request.PermissionKeys.Contains(p.Key))
-                .ToDictionaryAsync(p => p.Key, p => p.Id);
-
-            foreach (var key in request.PermissionKeys)
-            {
-                if (permissionsByKey.TryGetValue(key, out var permissionId))
-                {
-                    _db.RolePermissions.Add(new RolePermission
-                    {
-                        RoleId = guid,
-                        PermissionId = permissionId
-                    });
-                }
-            }
-        }
-
-        await _db.SaveChangesAsync();
+        await _repository.GetRolePermissionQuery(null!)
+            .ReplaceRolePermissionsAsync(guid, request.PermissionKeys);
 
         l.I($"Role permissions updated for: {role.Name} ({request.PermissionKeys.Count} permissions)");
 

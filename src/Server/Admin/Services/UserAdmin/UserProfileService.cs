@@ -5,7 +5,6 @@ using DevInstance.DevCoreApp.Server.Admin.Services.Background;
 using DevInstance.DevCoreApp.Server.Admin.Services.Background.Requests;
 using DevInstance.DevCoreApp.Server.Admin.Services.Exceptions;
 using DevInstance.DevCoreApp.Server.Admin.Services.Notifications.Templates;
-using DevInstance.DevCoreApp.Server.Database.Core;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Server.Database.Core.Data.Decorators;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
@@ -34,7 +33,6 @@ public class UserProfileService : BaseService, IUserProfileService
     private IUserStore<ApplicationUser> UserStore { get; }
     private IBackgroundWorker BackgroundWorker { get; }
     private IEmailTemplateService EmailTemplateService { get; }
-    private ApplicationDbContext Db { get; }
     private IOrganizationContextResolver OrgResolver { get; }
     private IHttpContextAccessor HttpContextAccessor { get; }
 
@@ -48,7 +46,6 @@ public class UserProfileService : BaseService, IUserProfileService
                               IUserStore<ApplicationUser> userStore,
                               IBackgroundWorker backgroundWorker,
                               IEmailTemplateService emailTemplateService,
-                              ApplicationDbContext db,
                               IOrganizationContextResolver orgResolver,
                               IHttpContextAccessor httpContextAccessor)
         : base(logManager, timeProvider, query, authorizationContext)
@@ -59,7 +56,6 @@ public class UserProfileService : BaseService, IUserProfileService
         UserStore = userStore;
         BackgroundWorker = backgroundWorker;
         EmailTemplateService = emailTemplateService;
-        Db = db;
         OrgResolver = orgResolver;
         HttpContextAccessor = httpContextAccessor;
     }
@@ -402,9 +398,10 @@ public class UserProfileService : BaseService, IUserProfileService
 
         var (_, appUser) = await ResolveUserAsync(userId);
 
-        var userOrgs = await Db.UserOrganizations
-            .Include(uo => uo.Organization)
-            .Where(uo => uo.UserId == appUser.Id)
+        var userOrgs = await Repository.GetUserOrganizationQuery(AuthorizationContext.CurrentProfile)
+            .ByUserId(appUser.Id)
+            .IncludeOrganization()
+            .Select()
             .ToListAsync();
 
         var items = userOrgs.Select(uo => new UserOrganizationItem
@@ -430,18 +427,17 @@ public class UserProfileService : BaseService, IUserProfileService
         if (organizations.Count > 0 && primaryCount != 1)
             throw new BusinessRuleException("Exactly one organization must be marked as primary.");
 
-        // Remove existing assignments
-        var existing = await Db.UserOrganizations
-            .Where(uo => uo.UserId == appUser.Id)
-            .ToListAsync();
-        Db.UserOrganizations.RemoveRange(existing);
+        // Resolve + validate the new assignments before touching the database.
+        var userOrgQuery = Repository.GetUserOrganizationQuery(AuthorizationContext.CurrentProfile);
+        var newAssignments = new List<UserOrganization>();
 
         if (organizations.Count > 0)
         {
             // Resolve org PublicId → Guid
             var orgPublicIds = organizations.Select(o => o.OrganizationId).ToList();
-            var orgLookup = await Db.Organizations
-                .Where(o => orgPublicIds.Contains(o.PublicId))
+            var orgLookup = await Repository.GetOrganizationsQuery(AuthorizationContext.CurrentProfile)
+                .ByPublicIds(orgPublicIds)
+                .Select()
                 .ToDictionaryAsync(o => o.PublicId, o => o.Id);
 
             foreach (var item in organizations)
@@ -449,14 +445,12 @@ public class UserProfileService : BaseService, IUserProfileService
                 if (!orgLookup.TryGetValue(item.OrganizationId, out var orgId))
                     throw new RecordNotFoundException($"Organization '{item.OrganizationId}' not found.");
 
-                Db.UserOrganizations.Add(new UserOrganization
-                {
-                    Id = Guid.NewGuid(),
-                    UserId = appUser.Id,
-                    OrganizationId = orgId,
-                    Scope = item.Scope,
-                    IsPrimary = item.IsPrimary
-                });
+                var assignment = userOrgQuery.CreateNew();
+                assignment.UserId = appUser.Id;
+                assignment.OrganizationId = orgId;
+                assignment.Scope = item.Scope;
+                assignment.IsPrimary = item.IsPrimary;
+                newAssignments.Add(assignment);
             }
 
             // Update primary organization on ApplicationUser
@@ -468,8 +462,8 @@ public class UserProfileService : BaseService, IUserProfileService
             appUser.PrimaryOrganizationId = null;
         }
 
+        await userOrgQuery.ReplaceForUserAsync(appUser.Id, newAssignments);
         await UserManager.UpdateAsync(appUser);
-        await Db.SaveChangesAsync();
 
         OrgResolver.InvalidateCache(appUser.Id);
 
@@ -484,9 +478,10 @@ public class UserProfileService : BaseService, IUserProfileService
 
         var (_, appUser) = await ResolveUserAsync(userId);
 
-        var overrides = await Db.UserPermissionOverrides
-            .Include(upo => upo.Permission)
-            .Where(upo => upo.UserId == appUser.Id)
+        var overrides = await Repository.GetUserPermissionOverrideQuery(AuthorizationContext.CurrentProfile)
+            .ByUserId(appUser.Id)
+            .IncludePermission()
+            .Select()
             .ToListAsync();
 
         var items = overrides.Select(upo => new PermissionOverrideItem
@@ -505,17 +500,15 @@ public class UserProfileService : BaseService, IUserProfileService
 
         var (_, appUser) = await ResolveUserAsync(userId);
 
-        // Remove existing overrides
-        var existing = await Db.UserPermissionOverrides
-            .Where(upo => upo.UserId == appUser.Id)
-            .ToListAsync();
-        Db.UserPermissionOverrides.RemoveRange(existing);
+        var overrideQuery = Repository.GetUserPermissionOverrideQuery(AuthorizationContext.CurrentProfile);
+        var newOverrides = new List<UserPermissionOverride>();
 
         if (overrides.Count > 0)
         {
             var permissionKeys = overrides.Select(o => o.PermissionKey).ToList();
-            var permLookup = await Db.Permissions
-                .Where(p => permissionKeys.Contains(p.Key))
+            var permLookup = await Repository.GetPermissionQuery(AuthorizationContext.CurrentProfile)
+                .ByKeys(permissionKeys)
+                .Select()
                 .ToDictionaryAsync(p => p.Key, p => p.Id);
 
             foreach (var item in overrides)
@@ -523,18 +516,16 @@ public class UserProfileService : BaseService, IUserProfileService
                 if (!permLookup.TryGetValue(item.PermissionKey, out var permId))
                     continue;
 
-                Db.UserPermissionOverrides.Add(new UserPermissionOverride
-                {
-                    Id = Guid.NewGuid(),
-                    UserId = appUser.Id,
-                    PermissionId = permId,
-                    IsGranted = item.IsGranted,
-                    Reason = item.Reason
-                });
+                var record = overrideQuery.CreateNew();
+                record.UserId = appUser.Id;
+                record.PermissionId = permId;
+                record.IsGranted = item.IsGranted;
+                record.Reason = item.Reason;
+                newOverrides.Add(record);
             }
         }
 
-        await Db.SaveChangesAsync();
+        await overrideQuery.ReplaceForUserAsync(appUser.Id, newOverrides);
 
         l.I($"Permission overrides updated for user {userId}.");
 
@@ -548,33 +539,32 @@ public class UserProfileService : BaseService, IUserProfileService
         var (_, appUser) = await ResolveUserAsync(userId);
 
         // Load all permissions
-        var allPermissions = await Db.Permissions
-            .OrderBy(p => p.DisplayOrder)
+        var allPermissions = await Repository.GetPermissionQuery(AuthorizationContext.CurrentProfile)
+            .OrderedByDisplayOrder()
+            .Select()
             .ToListAsync();
 
         // Get user roles
         var roles = await UserManager.GetRolesAsync(appUser);
 
+        var rolePermissionQuery = Repository.GetRolePermissionQuery(AuthorizationContext.CurrentProfile);
+
         // Get role IDs
-        var roleIds = await Db.Roles
-            .Where(r => roles.Contains(r.Name!))
-            .Select(r => r.Id)
-            .ToListAsync();
+        var roleIds = await rolePermissionQuery.GetRoleIdsByNamesAsync(roles.ToList());
 
         // Get role→permission mappings (track which role grants each permission)
-        var rolePermissions = await Db.RolePermissions
-            .Where(rp => roleIds.Contains(rp.RoleId))
-            .Join(Db.Roles, rp => rp.RoleId, r => r.Id, (rp, r) => new { rp.PermissionId, RoleName = r.Name })
-            .ToListAsync();
+        var rolePermissions = await rolePermissionQuery.GetRolePermissionGrantsForRoleIdsAsync(roleIds);
 
         var roleGrantsByPermId = rolePermissions
             .GroupBy(x => x.PermissionId)
             .ToDictionary(g => g.Key, g => g.Select(x => x.RoleName ?? "Unknown").ToList());
 
         // Get user overrides
-        var overrides = await Db.UserPermissionOverrides
-            .Where(upo => upo.UserId == appUser.Id)
-            .ToDictionaryAsync(upo => upo.PermissionId, upo => upo);
+        var overrides = (await Repository.GetUserPermissionOverrideQuery(AuthorizationContext.CurrentProfile)
+            .ByUserId(appUser.Id)
+            .Select()
+            .ToListAsync())
+            .ToDictionary(upo => upo.PermissionId, upo => upo);
 
         var items = allPermissions.Select(p =>
         {

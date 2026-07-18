@@ -1,4 +1,4 @@
-using DevInstance.DevCoreApp.Server.Database.Core;
+using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Shared.Model.Common;
 using DevInstance.LogScope;
 using Microsoft.EntityFrameworkCore;
@@ -8,18 +8,18 @@ namespace DevInstance.DevCoreApp.Server.Admin.Services.Authentication;
 
 public class OrganizationContextResolver : IOrganizationContextResolver
 {
-    private readonly ApplicationDbContext _db;
+    private readonly IQueryRepository _repository;
     private readonly IMemoryCache _cache;
     private readonly IScopeLog _log;
 
     private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(30);
 
     public OrganizationContextResolver(
-        ApplicationDbContext db,
+        IQueryRepository repository,
         IMemoryCache cache,
         IScopeManager logManager)
     {
-        _db = db;
+        _repository = repository;
         _cache = cache;
         _log = logManager.CreateLogger(this);
     }
@@ -33,9 +33,10 @@ public class OrganizationContextResolver : IOrganizationContextResolver
             return cached!;
         }
 
-        var assignments = await _db.UserOrganizations
-            .Include(uo => uo.Organization)
-            .Where(uo => uo.UserId == userId)
+        var assignments = await _repository.GetUserOrganizationQuery(null!)
+            .ByUserId(userId)
+            .IncludeOrganization()
+            .Select()
             .ToListAsync();
 
         if (assignments.Count == 0)
@@ -67,8 +68,9 @@ public class OrganizationContextResolver : IOrganizationContextResolver
                 var parentPath = assignment.Organization.Path;
                 var pathPrefix = parentPath + "/";
 
-                var descendantIds = await _db.Organizations
-                    .Where(o => o.Path.StartsWith(pathPrefix))
+                var descendantIds = await _repository.GetOrganizationsQuery(null!)
+                    .ByPathPrefix(pathPrefix)
+                    .Select()
                     .Select(o => o.Id)
                     .ToListAsync();
 

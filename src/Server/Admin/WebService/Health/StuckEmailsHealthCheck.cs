@@ -1,18 +1,16 @@
-using DevInstance.DevCoreApp.Server.Database.Core;
-using DevInstance.DevCoreApp.Server.Database.Core.Models;
-using Microsoft.EntityFrameworkCore;
+using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace DevInstance.DevCoreApp.Server.Admin.WebService.Health;
 
 public class StuckEmailsHealthCheck : IHealthCheck
 {
-    private readonly ApplicationDbContext _dbContext;
+    private readonly IQueryRepository _repository;
     private static readonly TimeSpan StuckThreshold = TimeSpan.FromMinutes(30);
 
-    public StuckEmailsHealthCheck(ApplicationDbContext dbContext)
+    public StuckEmailsHealthCheck(IQueryRepository repository)
     {
-        _dbContext = dbContext;
+        _repository = repository;
     }
 
     public async Task<HealthCheckResult> CheckHealthAsync(
@@ -22,9 +20,8 @@ public class StuckEmailsHealthCheck : IHealthCheck
         try
         {
             var cutoff = DateTime.UtcNow - StuckThreshold;
-            var stuckCount = await _dbContext.EmailLogs
-                .Where(e => e.Status == EmailLogStatus.Queued && e.ScheduledDate < cutoff)
-                .CountAsync(cancellationToken);
+            var stuckCount = await _repository.GetEmailLogQuery(null!)
+                .CountStuckQueuedAsync(cutoff, cancellationToken);
 
             var data = new Dictionary<string, object>
             {

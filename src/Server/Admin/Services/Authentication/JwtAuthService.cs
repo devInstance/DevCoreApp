@@ -2,7 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using DevInstance.DevCoreApp.Server.Database.Core;
+using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.DevCoreApp.Shared.Model.Authentication;
@@ -20,7 +20,7 @@ public class JwtAuthService : IJwtAuthService
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly SignInManager<ApplicationUser> _signInManager;
-    private readonly ApplicationDbContext _dbContext;
+    private readonly IQueryRepository _repository;
     private readonly JwtSettings _jwtSettings;
     private readonly IScopeLog _log;
 
@@ -28,13 +28,13 @@ public class JwtAuthService : IJwtAuthService
         IScopeManager logManager,
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
-        ApplicationDbContext dbContext,
+        IQueryRepository repository,
         IOptions<JwtSettings> jwtSettings)
     {
         _log = logManager.CreateLogger(this);
         _userManager = userManager;
         _signInManager = signInManager;
-        _dbContext = dbContext;
+        _repository = repository;
         _jwtSettings = jwtSettings.Value;
     }
 
@@ -89,8 +89,10 @@ public class JwtAuthService : IJwtAuthService
         using var l = _log.TraceScope();
 
         var tokenHash = HashToken(refreshToken);
-        var storedToken = await _dbContext.RefreshTokens
-            .FirstOrDefaultAsync(rt => rt.TokenHash == tokenHash);
+        var storedToken = await _repository.GetRefreshTokenQuery(null!)
+            .ByTokenHash(tokenHash)
+            .Select()
+            .FirstOrDefaultAsync();
 
         if (storedToken == null)
         {
@@ -131,18 +133,16 @@ public class JwtAuthService : IJwtAuthService
         storedToken.RevokedByIp = ipAddress;
         storedToken.ReplacedByTokenHash = newTokenHash;
 
-        var newRefreshToken = new RefreshToken
-        {
-            Id = Guid.NewGuid(),
-            UserId = storedToken.UserId,
-            TokenHash = newTokenHash,
-            ExpiresAt = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpirationDays),
-            CreatedAt = DateTime.UtcNow,
-            CreatedByIp = ipAddress
-        };
+        var refreshTokenQuery = _repository.GetRefreshTokenQuery(null!);
+        var newRefreshToken = refreshTokenQuery.CreateNew();
+        newRefreshToken.UserId = storedToken.UserId;
+        newRefreshToken.TokenHash = newTokenHash;
+        newRefreshToken.ExpiresAt = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpirationDays);
+        newRefreshToken.CreatedAt = DateTime.UtcNow;
+        newRefreshToken.CreatedByIp = ipAddress;
 
-        _dbContext.RefreshTokens.Add(newRefreshToken);
-        await _dbContext.SaveChangesAsync();
+        // AddAsync saves in one go, flushing the revoke fields stamped on storedToken above.
+        await refreshTokenQuery.AddAsync(newRefreshToken);
 
         var roles = await _userManager.GetRolesAsync(user);
         var expiresAt = DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenExpirationMinutes);
@@ -159,8 +159,11 @@ public class JwtAuthService : IJwtAuthService
         using var l = _log.TraceScope();
 
         var tokenHash = HashToken(refreshToken);
-        var storedToken = await _dbContext.RefreshTokens
-            .FirstOrDefaultAsync(rt => rt.TokenHash == tokenHash);
+        var refreshTokenQuery = _repository.GetRefreshTokenQuery(null!);
+        var storedToken = await refreshTokenQuery
+            .ByTokenHash(tokenHash)
+            .Select()
+            .FirstOrDefaultAsync();
 
         if (storedToken == null || !storedToken.IsActive)
         {
@@ -170,7 +173,7 @@ public class JwtAuthService : IJwtAuthService
 
         storedToken.RevokedAt = DateTime.UtcNow;
         storedToken.RevokedByIp = ipAddress;
-        await _dbContext.SaveChangesAsync();
+        await refreshTokenQuery.UpdateAsync(storedToken);
 
         l.I($"Refresh token revoked for user {storedToken.UserId}");
 
@@ -209,35 +212,23 @@ public class JwtAuthService : IJwtAuthService
         var rawToken = GenerateSecureToken();
         var tokenHash = HashToken(rawToken);
 
-        var refreshToken = new RefreshToken
-        {
-            Id = Guid.NewGuid(),
-            UserId = userId,
-            TokenHash = tokenHash,
-            ExpiresAt = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpirationDays),
-            CreatedAt = DateTime.UtcNow,
-            CreatedByIp = ipAddress
-        };
+        var refreshTokenQuery = _repository.GetRefreshTokenQuery(null!);
+        var refreshToken = refreshTokenQuery.CreateNew();
+        refreshToken.UserId = userId;
+        refreshToken.TokenHash = tokenHash;
+        refreshToken.ExpiresAt = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpirationDays);
+        refreshToken.CreatedAt = DateTime.UtcNow;
+        refreshToken.CreatedByIp = ipAddress;
 
-        _dbContext.RefreshTokens.Add(refreshToken);
-        await _dbContext.SaveChangesAsync();
+        await refreshTokenQuery.AddAsync(refreshToken);
 
         return rawToken;
     }
 
     private async Task RevokeAllUserTokensAsync(Guid userId, string? ipAddress)
     {
-        var activeTokens = await _dbContext.RefreshTokens
-            .Where(rt => rt.UserId == userId && rt.RevokedAt == null)
-            .ToListAsync();
-
-        foreach (var token in activeTokens)
-        {
-            token.RevokedAt = DateTime.UtcNow;
-            token.RevokedByIp = ipAddress;
-        }
-
-        await _dbContext.SaveChangesAsync();
+        await _repository.GetRefreshTokenQuery(null!)
+            .RevokeAllActiveForUserAsync(userId, ipAddress, DateTime.UtcNow);
     }
 
     private static string GenerateSecureToken()
@@ -259,18 +250,15 @@ public class JwtAuthService : IJwtAuthService
         if (!userId.HasValue)
             return;
 
-        var entry = new UserLoginHistory
-        {
-            Id = Guid.NewGuid(),
-            UserId = userId.Value,
-            LoginAt = DateTime.UtcNow,
-            IpAddress = ipAddress,
-            UserAgent = userAgent,
-            Success = success,
-            FailureReason = failureReason
-        };
+        var loginHistoryQuery = _repository.GetUserLoginHistoryQuery(null!);
+        var entry = loginHistoryQuery.CreateNew();
+        entry.UserId = userId.Value;
+        entry.LoginAt = DateTime.UtcNow;
+        entry.IpAddress = ipAddress;
+        entry.UserAgent = userAgent;
+        entry.Success = success;
+        entry.FailureReason = failureReason;
 
-        _dbContext.UserLoginHistories.Add(entry);
-        await _dbContext.SaveChangesAsync();
+        await loginHistoryQuery.AddAsync(entry);
     }
 }

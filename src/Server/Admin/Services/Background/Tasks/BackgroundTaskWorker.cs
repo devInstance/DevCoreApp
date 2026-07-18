@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using DevInstance.DevCoreApp.Server.Admin.Services.Background;
-using DevInstance.DevCoreApp.Server.Database.Core;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
+using DevInstance.DevCoreApp.Server.Database.Core.Data.Queries;
 using DevInstance.DevCoreApp.Server.Database.Core.Models.BackgroundTasks;
 using DevInstance.DevCoreApp.Shared.Model.Common;
 using DevInstance.DevCoreApp.Shared.Model.Webhooks;
@@ -112,17 +112,12 @@ public class BackgroundTaskWorker : IBackgroundTaskWorker
             var operationContext = scope.ServiceProvider.GetRequiredService<BackgroundOperationContext>();
             operationContext.Reset();
 
-            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var repository = scope.ServiceProvider.GetRequiredService<IQueryRepository>();
             var now = DateTime.UtcNow;
             var timeoutCutoff = now.AddMinutes(-_settings.RunningTaskTimeoutMinutes);
 
-            var resetCount = await db.BackgroundTasks
-                .Where(t => t.Status == BackgroundTaskStatus.Running &&
-                    (!t.StartedAt.HasValue || t.StartedAt < timeoutCutoff))
-                .ExecuteUpdateAsync(s => s
-                    .SetProperty(t => t.Status, BackgroundTaskStatus.Queued)
-                    .SetProperty(t => t.StartedAt, (DateTime?)null)
-                    .SetProperty(t => t.ScheduledAt, now));
+            var resetCount = await repository.GetBackgroundTaskQuery(null!)
+                .RecoverStuckRunningAsync(timeoutCutoff, now);
 
             _lastRecoverySweepUtc = now;
 
@@ -154,16 +149,11 @@ public class BackgroundTaskWorker : IBackgroundTaskWorker
         var operationContext = scope.ServiceProvider.GetRequiredService<BackgroundOperationContext>();
         operationContext.Reset();
 
-        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var repository = scope.ServiceProvider.GetRequiredService<IQueryRepository>();
         var now = DateTime.UtcNow;
 
-        var candidates = await db.BackgroundTasks
-            .Where(t => t.Status == BackgroundTaskStatus.Queued && t.ScheduledAt <= now)
-            .OrderBy(t => t.Priority)
-            .ThenBy(t => t.CreateDate)
-            .Take(_settings.BatchSize)
-            .Select(t => t.Id)
-            .ToListAsync(cancellationToken);
+        var candidates = await repository.GetBackgroundTaskQuery(null!)
+            .SelectQueuedCandidateIdsAsync(now, _settings.BatchSize, cancellationToken);
 
         foreach (var candidateId in candidates)
         {
@@ -173,13 +163,10 @@ public class BackgroundTaskWorker : IBackgroundTaskWorker
         foreach (var candidateId in candidateIds)
         {
             // Atomic claim: only update if still Queued (prevents double-processing)
-            var updated = await db.BackgroundTasks
-                .Where(t => t.Id == candidateId && t.Status == BackgroundTaskStatus.Queued)
-                .ExecuteUpdateAsync(s => s
-                    .SetProperty(t => t.Status, BackgroundTaskStatus.Running)
-                    .SetProperty(t => t.StartedAt, now), cancellationToken);
+            var claimedOk = await repository.GetBackgroundTaskQuery(null!)
+                .TryClaimAsync(candidateId, now, cancellationToken);
 
-            if (updated > 0)
+            if (claimedOk)
             {
                 claimed.Add(candidateId);
             }
@@ -209,9 +196,9 @@ public class BackgroundTaskWorker : IBackgroundTaskWorker
         operationContext.Reset();
 
         var repository = scope.ServiceProvider.GetRequiredService<IQueryRepository>();
-        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var taskQuery = repository.GetBackgroundTaskQuery(null!);
 
-        var task = await db.BackgroundTasks.FindAsync([taskId], cancellationToken);
+        var task = await taskQuery.FindByIdAsync(taskId, cancellationToken);
         if (task == null)
         {
             _log.E($"Background task {taskId} not found.");
@@ -227,7 +214,7 @@ public class BackgroundTaskWorker : IBackgroundTaskWorker
         if (!_handlers.TryGetValue(task.TaskType, out var handler))
         {
             _log.E($"No handler registered for task type '{task.TaskType}'.");
-            await FailTaskAsync(db, task, $"No handler registered for task type '{task.TaskType}'.", cancellationToken);
+            await FailTaskAsync(taskQuery, task, $"No handler registered for task type '{task.TaskType}'.");
             return;
         }
 
@@ -247,8 +234,7 @@ public class BackgroundTaskWorker : IBackgroundTaskWorker
             task.Status = BackgroundTaskStatus.Completed;
             task.CompletedAt = DateTime.UtcNow;
             task.ErrorMessage = null;
-            db.BackgroundTasks.Update(task);
-            await db.SaveChangesAsync(cancellationToken);
+            await taskQuery.UpdateAsync(task);
 
             // Mark log completed
             taskLog.Status = BackgroundTaskLogStatus.Completed;
@@ -289,8 +275,7 @@ public class BackgroundTaskWorker : IBackgroundTaskWorker
                 await MarkWebhookDeliveryFailedAsync(repository, task, ex.Message);
             }
 
-            db.BackgroundTasks.Update(task);
-            await db.SaveChangesAsync(cancellationToken);
+            await taskQuery.UpdateAsync(task);
         }
     }
 
@@ -323,12 +308,11 @@ public class BackgroundTaskWorker : IBackgroundTaskWorker
         await deliveryQuery.UpdateAsync(delivery);
     }
 
-    private static async Task FailTaskAsync(ApplicationDbContext db, BackgroundTask task, string errorMessage, CancellationToken cancellationToken)
+    private static async Task FailTaskAsync(IBackgroundTaskQuery taskQuery, BackgroundTask task, string errorMessage)
     {
         task.Status = BackgroundTaskStatus.Failed;
         task.ErrorMessage = errorMessage;
         task.CompletedAt = DateTime.UtcNow;
-        db.BackgroundTasks.Update(task);
-        await db.SaveChangesAsync(cancellationToken);
+        await taskQuery.UpdateAsync(task);
     }
 }

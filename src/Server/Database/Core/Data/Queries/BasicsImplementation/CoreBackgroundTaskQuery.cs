@@ -5,8 +5,12 @@ using DevInstance.DevCoreApp.Server.Database.Core.Models.BackgroundTasks;
 using DevInstance.DevCoreApp.Shared.Model.Common;
 using DevInstance.DevCoreApp.Shared.Utils;
 using DevInstance.LogScope;
+using Microsoft.EntityFrameworkCore;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace DevInstance.DevCoreApp.Server.Database.Core.Data.Queries;
 
@@ -142,5 +146,63 @@ public class CoreBackgroundTaskQuery : CoreDatabaseObjectQuery<BackgroundTask, C
         }
 
         return this;
+    }
+
+    public async Task<int> RecoverStuckRunningAsync(DateTime timeoutCutoff, DateTime now)
+    {
+        return await DB.BackgroundTasks
+            .Where(t => t.Status == BackgroundTaskStatus.Running &&
+                (!t.StartedAt.HasValue || t.StartedAt < timeoutCutoff))
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(t => t.Status, BackgroundTaskStatus.Queued)
+                .SetProperty(t => t.StartedAt, (DateTime?)null)
+                .SetProperty(t => t.ScheduledAt, now));
+    }
+
+    public async Task<IReadOnlyList<Guid>> SelectQueuedCandidateIdsAsync(DateTime now, int batchSize, CancellationToken cancellationToken)
+    {
+        return await DB.BackgroundTasks
+            .Where(t => t.Status == BackgroundTaskStatus.Queued && t.ScheduledAt <= now)
+            .OrderBy(t => t.Priority)
+            .ThenBy(t => t.CreateDate)
+            .Take(batchSize)
+            .Select(t => t.Id)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<bool> TryClaimAsync(Guid id, DateTime now, CancellationToken cancellationToken)
+    {
+        var updated = await DB.BackgroundTasks
+            .Where(t => t.Id == id && t.Status == BackgroundTaskStatus.Queued)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(t => t.Status, BackgroundTaskStatus.Running)
+                .SetProperty(t => t.StartedAt, now), cancellationToken);
+
+        return updated > 0;
+    }
+
+    public async Task<BackgroundTask?> FindByIdAsync(Guid id, CancellationToken cancellationToken)
+    {
+        return await DB.BackgroundTasks.FindAsync([id], cancellationToken);
+    }
+
+    public async Task<int> CountByStatusAsync(BackgroundTaskStatus status, CancellationToken cancellationToken)
+    {
+        return await DB.BackgroundTasks.CountAsync(t => t.Status == status, cancellationToken);
+    }
+
+    public async Task<int> CountDueQueuedAsync(DateTime now, CancellationToken cancellationToken)
+    {
+        return await DB.BackgroundTasks
+            .Where(t => t.Status == BackgroundTaskStatus.Queued && t.ScheduledAt <= now)
+            .CountAsync(cancellationToken);
+    }
+
+    public async Task<int> CountStaleRunningAsync(DateTime staleRunningCutoff, CancellationToken cancellationToken)
+    {
+        return await DB.BackgroundTasks
+            .Where(t => t.Status == BackgroundTaskStatus.Running &&
+                (!t.StartedAt.HasValue || t.StartedAt < staleRunningCutoff))
+            .CountAsync(cancellationToken);
     }
 }

@@ -1,7 +1,6 @@
 using DevInstance.DevCoreApp.Server.Admin.Services.Background;
-using DevInstance.DevCoreApp.Server.Database.Core;
+using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Shared.Model.Common;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace DevInstance.DevCoreApp.Server.Admin.WebService.Health;
@@ -9,14 +8,14 @@ namespace DevInstance.DevCoreApp.Server.Admin.WebService.Health;
 public class BackgroundWorkerHealthCheck : IHealthCheck
 {
     private readonly IBackgroundWorker _worker;
-    private readonly ApplicationDbContext _dbContext;
+    private readonly IQueryRepository _repository;
     private static readonly TimeSpan HeartbeatThreshold = TimeSpan.FromMinutes(2);
     private static readonly TimeSpan StaleRunningThreshold = TimeSpan.FromMinutes(15);
 
-    public BackgroundWorkerHealthCheck(IBackgroundWorker worker, ApplicationDbContext dbContext)
+    public BackgroundWorkerHealthCheck(IBackgroundWorker worker, IQueryRepository repository)
     {
         _worker = worker;
-        _dbContext = dbContext;
+        _repository = repository;
     }
 
     public async Task<HealthCheckResult> CheckHealthAsync(
@@ -25,19 +24,11 @@ public class BackgroundWorkerHealthCheck : IHealthCheck
     {
         var now = DateTime.UtcNow;
         var staleRunningCutoff = now - StaleRunningThreshold;
-        var dbQueuedCount = await _dbContext.BackgroundTasks
-            .Where(t => t.Status == BackgroundTaskStatus.Queued)
-            .CountAsync(cancellationToken);
-        var dbDueQueuedCount = await _dbContext.BackgroundTasks
-            .Where(t => t.Status == BackgroundTaskStatus.Queued && t.ScheduledAt <= now)
-            .CountAsync(cancellationToken);
-        var dbRunningCount = await _dbContext.BackgroundTasks
-            .Where(t => t.Status == BackgroundTaskStatus.Running)
-            .CountAsync(cancellationToken);
-        var dbStaleRunningCount = await _dbContext.BackgroundTasks
-            .Where(t => t.Status == BackgroundTaskStatus.Running &&
-                (!t.StartedAt.HasValue || t.StartedAt < staleRunningCutoff))
-            .CountAsync(cancellationToken);
+        var taskQuery = _repository.GetBackgroundTaskQuery(null!);
+        var dbQueuedCount = await taskQuery.CountByStatusAsync(BackgroundTaskStatus.Queued, cancellationToken);
+        var dbDueQueuedCount = await taskQuery.CountDueQueuedAsync(now, cancellationToken);
+        var dbRunningCount = await taskQuery.CountByStatusAsync(BackgroundTaskStatus.Running, cancellationToken);
+        var dbStaleRunningCount = await taskQuery.CountStaleRunningAsync(staleRunningCutoff, cancellationToken);
 
         var data = new Dictionary<string, object>
         {

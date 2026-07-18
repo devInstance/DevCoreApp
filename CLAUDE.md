@@ -15,6 +15,35 @@ DevCoreApp is a reusable starter template for custom ERP and CRM applications. I
 - DevInstance.WebServiceToolkit — server-side utilities (`[WebService]`, `[QueryModel]`, `ModelItem`, `ModelList<T>`, `HandleWebRequestAsync()`, `IModelQuery<T,D>`)
 - DevInstance.LogScope — scope-based logging (`IScopeManager`, `IScopeLog`)
 
+## Build, Test, and Run Commands
+
+The solution file is `DevInstance.DevCoreApp.slnx` (the modern `.slnx` XML format — there is no `.sln`). All commands run from the repo root.
+
+```bash
+# Restore + build the whole solution
+dotnet build DevInstance.DevCoreApp.slnx
+
+# Run the Admin web app (Blazor SSR host + API). Needs a reachable database (see below).
+dotnet run --project src/Server/Admin/WebService/DevCoreApp.Admin.WebService.csproj
+
+# Run the app against in-memory mock services — no database/Identity/email needed.
+# The SERVICEMOCKS preprocessor symbol swaps real services for [BlazorServiceMock] ones.
+dotnet run -c ServiceMocks --project src/Server/Admin/WebService/DevCoreApp.Admin.WebService.csproj
+
+# Run all tests (xUnit v3)
+dotnet test DevInstance.DevCoreApp.slnx
+
+# Run one test project
+dotnet test tests/Server/WebService/WebService.Tests.csproj
+
+# Run a single test (or class) by name filter
+dotnet test tests/Server/WebService/WebService.Tests.csproj --filter "FullyQualifiedName~MyTestClass.MyTestMethod"
+```
+
+- Three build configurations exist: `Debug`, `Release`, and `ServiceMocks`. CI (`azure-pipelines-ci.yml`) builds `Release` and runs `**/tests/**/*[Tt]ests.csproj`.
+- **Database provider is selected at runtime** via `Database:Provider` in `appsettings.json` (`Postgres` — default — or `SqlServer`), with connection strings under `ConnectionStrings:PostgresConnection` / `:SqlServerConnection`. The `Database/` solution folder splits into `Core` (provider-agnostic) plus `Postgres` and `SqlServer` projects.
+- After changing entities, **do not** scaffold EF migrations yourself — see the rule in "Things To Never Do".
+
 ## Solution Structure
 
 ```
@@ -96,12 +125,28 @@ DatabaseEntityObject : DatabaseObject
 
 Services NEVER call `DbContext` directly. All data access goes through query classes.
 
+**Per-operation unit of work (Blazor Server concurrency safety).** A Blazor interactive-Server
+circuit shares ONE DI scope, so a scoped `DbContext` is shared by every component on the page.
+Components initialize concurrently, so two of them querying at once run two operations on one
+context → EF/Npgsql throw *"A second operation was started on this context instance"* /
+*"Connection is not open"*. The fix: each service method opens its **own** short-lived context
+from a factory. Inject `IQueryRepositoryFactory` (exposed as `BaseService.RepositoryFactory`) and
+open one unit of work per method:
+
 ```
-Service
-  → Repository.Get{Entity}Query(AuthorizationContext.CurrentProfile)
-    → returns query class implementing IModelQuery<T,D>
-      → supports .Top(), .Page(), .Search(), .Sort() via IQPageable, IQSearchable, IQSortable
+Service method
+  → await using var repo = RepositoryFactory.Create();   // owns a fresh short-lived context
+    → repo.Get{Entity}Query(AuthorizationContext.CurrentProfile)
+      → returns query class implementing IModelQuery<T,D>
+        → supports .Top(), .Page(), .Search(), .Sort() via IQPageable, IQSearchable, IQSortable
 ```
+
+- **One `repo` per public method** — every query in the method shares it, so read → create →
+  `SaveChangesAsync` stays one unit of work. Private data-touching helpers take an
+  `IQueryRepository repo` parameter (callers pass theirs); never open a second `repo` in a helper.
+- Background workers, seeders, and auth-pipeline code that already run one operation per DI scope
+  may keep the scoped `IQueryRepository`.
+- Full rationale, infrastructure, and service-writing rules: [`src/Server/Database/UnitOfWork.md`](src/Server/Database/UnitOfWork.md).
 
 **Decorators** convert between entities and ViewModels. They are extension methods, not services:
 - `entity.ToView()` → returns `{Entity}Item` ViewModel
@@ -237,6 +282,7 @@ Shared/
 
 - Never expose `Id` (Guid PK) to the client — use `PublicId`
 - Never call `DbContext` directly from a service — use query classes
+- Never share one `DbContext`/repository across a Blazor circuit — open a per-operation `await using var repo = RepositoryFactory.Create();` in each service method (see Data Access Pattern → [`UnitOfWork.md`](src/Server/Database/UnitOfWork.md)). Never inject the scoped `ApplicationDbContext` into a Blazor-facing service.
 - Never instantiate entities directly with `new Entity { ... }` — use `query.CreateNew()` instead (seeders are the only exception)
 - Never inject `DbContext` or database types into pages or controllers
 - Never add ASP.NET Core HTTP dependencies to the Database project

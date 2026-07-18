@@ -41,6 +41,14 @@ public class CoreUserProfilesQuery : CoreDatabaseObjectQuery<UserProfile, CoreUs
         return new CoreUserProfilesQuery(currentQuery, LogManager, TimeProvider, DB, CurrentProfile);
     }
 
+    public IUserProfilesQuery ById(Guid id)
+    {
+        currentQuery = from pr in currentQuery
+                       where pr.Id == id
+                       select pr;
+        return this;
+    }
+
     public IUserProfilesQuery ByApplicationUserId(Guid id)
     {
         currentQuery = from pr in currentQuery

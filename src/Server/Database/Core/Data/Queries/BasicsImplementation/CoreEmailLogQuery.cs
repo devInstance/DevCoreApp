@@ -3,8 +3,11 @@ using DevInstance.DevCoreApp.Server.Database.Core.Data.Queries;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using DevInstance.DevCoreApp.Shared.Utils;
 using DevInstance.LogScope;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace DevInstance.DevCoreApp.Server.Database.Core.Data.Queries;
 
@@ -64,6 +67,13 @@ public class CoreEmailLogQuery : CoreDatabaseObjectQuery<EmailLog, CoreEmailLogQ
     public IEmailLogQuery Clone()
     {
         return new CoreEmailLogQuery(currentQuery, LogManager, TimeProvider, DB, CurrentProfile);
+    }
+
+    public async Task<int> CountStuckQueuedAsync(DateTime cutoff, CancellationToken cancellationToken)
+    {
+        return await DB.EmailLogs
+            .Where(e => e.Status == EmailLogStatus.Queued && e.ScheduledDate < cutoff)
+            .CountAsync(cancellationToken);
     }
 
     public IEmailLogQuery Search(string search)

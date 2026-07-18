@@ -13,6 +13,7 @@ public interface IUserProfilesQuery : IModelQuery<UserProfile, IUserProfilesQuer
     IQueryable<UserProfile> Select();
 
     IUserProfilesQuery ByLastName(string lastName);
+    IUserProfilesQuery ById(Guid id);
     IUserProfilesQuery ByApplicationUserId(Guid id);
     IUserProfilesQuery ByOrganizationId(Guid organizationId);
 }

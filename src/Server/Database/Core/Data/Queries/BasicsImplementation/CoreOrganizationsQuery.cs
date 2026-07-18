@@ -4,6 +4,7 @@ using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using DevInstance.DevCoreApp.Shared.Utils;
 using DevInstance.LogScope;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace DevInstance.DevCoreApp.Server.Database.Core.Data.Queries;
@@ -40,6 +41,14 @@ public class CoreOrganizationsQuery : CoreDatabaseObjectQuery<Organization, Core
     {
         currentQuery = from o in currentQuery
                        where o.Path.StartsWith(pathPrefix)
+                       select o;
+        return this;
+    }
+
+    public IOrganizationsQuery ByPublicIds(IEnumerable<string> publicIds)
+    {
+        currentQuery = from o in currentQuery
+                       where publicIds.Contains(o.PublicId)
                        select o;
         return this;
     }

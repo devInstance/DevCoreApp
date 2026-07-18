@@ -1,10 +1,12 @@
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using DevInstance.DevCoreApp.Server.Database.Core;
 using DevInstance.DevCoreApp.Server.Database.Core.Data.Queries;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using DevInstance.DevCoreApp.Shared.Utils;
 using DevInstance.LogScope;
+using Microsoft.EntityFrameworkCore;
 
 namespace DevInstance.DevCoreApp.Server.Database.Core.Data.Queries;
 
@@ -55,6 +57,18 @@ public class CoreApiKeyQuery : CoreDatabaseObjectQuery<ApiKey, CoreApiKeyQuery>,
     public IApiKeyQuery Clone()
     {
         return new CoreApiKeyQuery(currentQuery, LogManager, TimeProvider, DB, CurrentProfile);
+    }
+
+    public async Task TouchLastUsedAsync(string publicId, DateTime lastUsedAt)
+    {
+        var key = await (from ak in DB.ApiKeys
+                         where ak.PublicId == publicId
+                         select ak).FirstOrDefaultAsync();
+        if (key != null)
+        {
+            key.LastUsedAt = lastUsedAt;
+            await DB.SaveChangesAsync();
+        }
     }
 
     public IApiKeyQuery Search(string search)

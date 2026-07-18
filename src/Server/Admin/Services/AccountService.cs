@@ -24,7 +24,6 @@ public class AccountService : BaseService
     private readonly UserManager<ApplicationUser> userManager;
     private readonly IUserStore<ApplicationUser> userStore;
     private readonly IEmailSender<ApplicationUser> emailSender;
-    private readonly ApplicationDbContext dbContext;
     private readonly IHttpContextAccessor httpContextAccessor;
     private readonly IScopeLog log;
 
@@ -37,7 +36,6 @@ public class AccountService : BaseService
         UserManager<ApplicationUser> userManager,
         IUserStore<ApplicationUser> userStore,
         IEmailSender<ApplicationUser> emailSender,
-        ApplicationDbContext dbContext,
         IHttpContextAccessor httpContextAccessor)
         : base(logManager, timeProvider, query, authorizationContext)
     {
@@ -46,7 +44,6 @@ public class AccountService : BaseService
         this.userManager = userManager;
         this.userStore = userStore;
         this.emailSender = emailSender;
-        this.dbContext = dbContext;
         this.httpContextAccessor = httpContextAccessor;
     }
 

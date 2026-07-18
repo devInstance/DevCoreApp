@@ -1,4 +1,4 @@
-using DevInstance.DevCoreApp.Server.Database.Core;
+using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -32,14 +32,14 @@ public class PermissionClaimsTransformation : IClaimsTransformation
     public const string VisibleOrganizationClaimType = "VisibleOrganization";
     public const string PrimaryOrganizationClaimType = "PrimaryOrganization";
 
-    private readonly ApplicationDbContext _db;
+    private readonly IQueryRepository _repository;
     private readonly IOrganizationContextResolver _orgResolver;
 
     public PermissionClaimsTransformation(
-        ApplicationDbContext db,
+        IQueryRepository repository,
         IOrganizationContextResolver orgResolver)
     {
-        _db = db;
+        _repository = repository;
         _orgResolver = orgResolver;
     }
 
@@ -59,9 +59,9 @@ public class PermissionClaimsTransformation : IClaimsTransformation
         var apiKeyIdClaim = identity.FindFirst("ApiKeyId")?.Value;
         if (!string.IsNullOrEmpty(apiKeyIdClaim))
         {
-            var apiKey = await _db.ApiKeys
-                .Where(ak => ak.PublicId == apiKeyIdClaim)
-                .Select(ak => new { ak.Scopes })
+            var apiKey = await _repository.GetApiKeyQuery(null!)
+                .ByPublicId(apiKeyIdClaim)
+                .Select()
                 .FirstOrDefaultAsync();
 
             if (apiKey?.Scopes != null)
@@ -90,10 +90,8 @@ public class PermissionClaimsTransformation : IClaimsTransformation
 
         if (roleNames.Count > 0)
         {
-            var rolePermissionKeys = await _db.RolePermissions
-                .Where(rp => rp.Role != null && roleNames.Contains(rp.Role.Name!))
-                .Select(rp => rp.Permission!.Key)
-                .ToListAsync();
+            var rolePermissionKeys = await _repository.GetRolePermissionQuery(null!)
+                .GetPermissionKeysForRoleNamesAsync(roleNames);
 
             foreach (var key in rolePermissionKeys)
             {
@@ -102,17 +100,18 @@ public class PermissionClaimsTransformation : IClaimsTransformation
         }
 
         // 3. Apply user-level overrides (grants and denials)
-        var overrides = await _db.UserPermissionOverrides
-            .Where(upo => upo.UserId == userId)
-            .Select(upo => new { upo.Permission!.Key, upo.IsGranted })
+        var overrides = await _repository.GetUserPermissionOverrideQuery(null!)
+            .ByUserId(userId)
+            .IncludePermission()
+            .Select()
             .ToListAsync();
 
         foreach (var ov in overrides)
         {
             if (ov.IsGranted)
-                permissionKeys.Add(ov.Key);
+                permissionKeys.Add(ov.Permission!.Key);
             else
-                permissionKeys.Remove(ov.Key);
+                permissionKeys.Remove(ov.Permission!.Key);
         }
 
         // 4. Add permission claims

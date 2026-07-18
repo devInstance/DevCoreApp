@@ -5,7 +5,6 @@ using System.Security.Claims;
 using System.Text.Json;
 using System.Threading.Tasks;
 using DevInstance.BlazorToolkit.Tools;
-using DevInstance.DevCoreApp.Server.Database.Core;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using DevInstance.LogScope;
@@ -25,7 +24,6 @@ public class SettingsService : ISettingsService, ISettingsActionService, ISettin
     private const string CacheVersionPrefix = "settings-version:";
     private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(10);
 
-    private readonly ApplicationDbContext _dbContext;
     private readonly IQueryRepository _repository;
     private readonly IOperationContext _operationContext;
     private readonly IHttpContextAccessor _httpContextAccessor;
@@ -35,7 +33,6 @@ public class SettingsService : ISettingsService, ISettingsActionService, ISettin
 
     public SettingsService(
         IScopeManager logManager,
-        ApplicationDbContext dbContext,
         IQueryRepository repository,
         IOperationContext operationContext,
         IHttpContextAccessor httpContextAccessor,
@@ -43,7 +40,6 @@ public class SettingsService : ISettingsService, ISettingsActionService, ISettin
         IMemoryCache cache)
     {
         _log = logManager.CreateLogger(this);
-        _dbContext = dbContext;
         _repository = repository;
         _operationContext = operationContext;
         _httpContextAccessor = httpContextAccessor;
@@ -89,19 +85,19 @@ public class SettingsService : ISettingsService, ISettingsActionService, ISettin
         var serializedValue = SerializeValue(value);
         var valueType = InferValueType<T>();
 
-        var existing = await _dbContext.Settings
-            .FirstOrDefaultAsync(s =>
-                s.Category == category &&
-                s.Key == key &&
-                s.TenantId == tenantId &&
-                s.OrganizationId == organizationId &&
-                s.UserId == userId);
+        var existing = await _repository.GetSettingsQuery(null!)
+            .ByCategoryAndKey(category, key)
+            .ByTenantId(tenantId)
+            .ByOrganizationId(organizationId)
+            .ByUserId(userId)
+            .Select()
+            .FirstOrDefaultAsync();
 
         if (existing != null)
         {
             existing.Value = serializedValue;
             existing.ValueType = valueType;
-            _dbContext.Settings.Update(existing);
+            await _repository.GetSettingsQuery(null!).UpdateAsync(existing);
         }
         else
         {
@@ -114,10 +110,8 @@ public class SettingsService : ISettingsService, ISettingsActionService, ISettin
             setting.Key = key;
             setting.Value = serializedValue;
             setting.ValueType = valueType;
-            _dbContext.Settings.Add(setting);
+            await settingsQuery.AddAsync(setting);
         }
-
-        await _dbContext.SaveChangesAsync();
 
         Invalidate(category, key);
 
@@ -130,18 +124,10 @@ public class SettingsService : ISettingsService, ISettingsActionService, ISettin
 
         var context = ResolveContext();
 
-        // Load all settings for this category across all applicable scopes
-        var allSettings = await _dbContext.Settings
-            .Where(s => s.Category == category)
-            .Where(s =>
-                // System scope
-                (s.TenantId == null && s.OrganizationId == null && s.UserId == null) ||
-                // Tenant scope
-                (context.TenantId != null && s.TenantId == context.TenantId && s.OrganizationId == null && s.UserId == null) ||
-                // Organization scope
-                (context.OrganizationId != null && s.OrganizationId == context.OrganizationId && s.UserId == null) ||
-                // User scope
-                (context.UserId != null && s.UserId == context.UserId))
+        // Load all settings for this category; PickMostSpecific selects the right tier per key.
+        var allSettings = await _repository.GetSettingsQuery(null!)
+            .ByCategory(category)
+            .Select()
             .ToListAsync();
 
         // Group by key, pick the most specific tier per key
@@ -192,13 +178,9 @@ public class SettingsService : ISettingsService, ISettingsActionService, ISettin
     /// </summary>
     private async Task<Setting?> ResolveSettingAsync(string category, string key, SettingsContext context)
     {
-        var candidates = await _dbContext.Settings
-            .Where(s => s.Category == category && s.Key == key)
-            .Where(s =>
-                (s.TenantId == null && s.OrganizationId == null && s.UserId == null) ||
-                (context.TenantId != null && s.TenantId == context.TenantId && s.OrganizationId == null && s.UserId == null) ||
-                (context.OrganizationId != null && s.OrganizationId == context.OrganizationId && s.UserId == null) ||
-                (context.UserId != null && s.UserId == context.UserId))
+        var candidates = await _repository.GetSettingsQuery(null!)
+            .ByCategoryAndKey(category, key)
+            .Select()
             .ToListAsync();
 
         return PickMostSpecific(candidates, context);

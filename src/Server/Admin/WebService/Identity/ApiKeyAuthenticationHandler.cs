@@ -1,4 +1,4 @@
-using DevInstance.DevCoreApp.Server.Database.Core;
+using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -14,18 +14,18 @@ public class ApiKeyAuthenticationHandler : AuthenticationHandler<AuthenticationS
 {
     private const string ApiKeyHeaderName = "X-Api-Key";
 
-    private readonly ApplicationDbContext _db;
+    private readonly IQueryRepository _repository;
     private readonly IServiceProvider _serviceProvider;
 
     public ApiKeyAuthenticationHandler(
         IOptionsMonitor<AuthenticationSchemeOptions> options,
         ILoggerFactory logger,
         UrlEncoder encoder,
-        ApplicationDbContext db,
+        IQueryRepository repository,
         IServiceProvider serviceProvider)
         : base(options, logger, encoder)
     {
-        _db = db;
+        _repository = repository;
         _serviceProvider = serviceProvider;
     }
 
@@ -41,9 +41,11 @@ public class ApiKeyAuthenticationHandler : AuthenticationHandler<AuthenticationS
         // Hash the key and look it up
         var keyHash = HashKey(apiKeyValue);
 
-        var apiKey = await _db.ApiKeys
+        var apiKey = await _repository.GetApiKeyQuery(null!)
+            .ByKeyHash(keyHash)
+            .Select()
             .Include(ak => ak.CreatedBy)
-            .FirstOrDefaultAsync(ak => ak.KeyHash == keyHash);
+            .FirstOrDefaultAsync();
 
         if (apiKey == null)
             return AuthenticateResult.Fail("Invalid API key.");
@@ -91,13 +93,8 @@ public class ApiKeyAuthenticationHandler : AuthenticationHandler<AuthenticationS
         _ = Task.Run(async () =>
         {
             using var scope = _serviceProvider.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-            var key = await db.ApiKeys.FirstOrDefaultAsync(ak => ak.PublicId == keyPublicId);
-            if (key != null)
-            {
-                key.LastUsedAt = DateTime.UtcNow;
-                await db.SaveChangesAsync();
-            }
+            var repository = scope.ServiceProvider.GetRequiredService<IQueryRepository>();
+            await repository.GetApiKeyQuery(null!).TouchLastUsedAsync(keyPublicId, DateTime.UtcNow);
         });
 
         return AuthenticateResult.Success(ticket);
