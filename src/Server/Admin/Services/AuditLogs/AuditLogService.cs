@@ -21,9 +21,9 @@ public class AuditLogService : BaseService, IAuditLogService
 
     public AuditLogService(IScopeManager logManager,
                            ITimeProvider timeProvider,
-                           IQueryRepository query,
+                              IQueryRepositoryFactory repositoryFactory,
                            IAuthorizationContext authorizationContext)
-        : base(logManager, timeProvider, query, authorizationContext)
+        : base(logManager, timeProvider, repositoryFactory, authorizationContext)
     {
         log = logManager.CreateLogger(this);
     }
@@ -36,7 +36,9 @@ public class AuditLogService : BaseService, IAuditLogService
     {
         using var l = log.TraceScope();
 
-        var query = Repository.GetAuditLogQuery(AuthorizationContext.CurrentProfile);
+        await using var repo = RepositoryFactory.Create();
+
+        var query = repo.GetAuditLogQuery(AuthorizationContext.CurrentProfile);
 
         if (!string.IsNullOrEmpty(search))
         {
@@ -86,7 +88,7 @@ public class AuditLogService : BaseService, IAuditLogService
 
         if (userIds.Count > 0)
         {
-            var userQuery = Repository.GetUserProfilesQuery(AuthorizationContext.CurrentProfile);
+            var userQuery = repo.GetUserProfilesQuery(AuthorizationContext.CurrentProfile);
             var users = await userQuery.Select()
                 .Where(u => userIds.Contains(u.Id))
                 .Select(u => new { u.Id, u.FirstName, u.LastName })

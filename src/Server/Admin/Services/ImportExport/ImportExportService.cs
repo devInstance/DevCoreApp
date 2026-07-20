@@ -33,7 +33,7 @@ public class ImportExportService : BaseService, IImportExportService
 
     public ImportExportService(IScopeManager logManager,
                                ITimeProvider timeProvider,
-                               IQueryRepository query,
+                              IQueryRepositoryFactory repositoryFactory,
                                IAuthorizationContext authorizationContext,
                                IFileService fileService,
                                IOperationContext operationContext,
@@ -41,7 +41,7 @@ public class ImportExportService : BaseService, IImportExportService
                                IEnumerable<IExportHandler> exportHandlers,
                                IBackgroundWorker backgroundWorker,
                                IServiceProvider serviceProvider)
-        : base(logManager, timeProvider, query, authorizationContext)
+        : base(logManager, timeProvider, repositoryFactory, authorizationContext)
     {
         log = logManager.CreateLogger(this);
         FileService = fileService;
@@ -103,11 +103,13 @@ public class ImportExportService : BaseService, IImportExportService
         var handler = FindImportHandler(entityType);
         var format = FileParserFactory.DetectFormat(fileName);
 
+        await using var repo = RepositoryFactory.Create();
+
         // Resolve organization internal Guid if a PublicId was provided
         Guid? resolvedOrgId = OperationContext.PrimaryOrganizationId;
         if (!string.IsNullOrEmpty(organizationId))
         {
-            var orgQuery = Repository.GetOrganizationsQuery(AuthorizationContext.CurrentProfile);
+            var orgQuery = repo.GetOrganizationsQuery(AuthorizationContext.CurrentProfile);
             var org = await orgQuery.ByPublicId(organizationId).Select().FirstOrDefaultAsync();
             if (org == null)
                 throw new RecordNotFoundException($"Organization '{organizationId}' not found.");
@@ -120,7 +122,7 @@ public class ImportExportService : BaseService, IImportExportService
         fileStream.Position = 0;
 
         // Check for duplicate imports (same file + entity type in active state)
-        var dupQuery = Repository.GetImportSessionQuery(AuthorizationContext.CurrentProfile);
+        var dupQuery = repo.GetImportSessionQuery(AuthorizationContext.CurrentProfile);
         var duplicate = await dupQuery
             .ByFileHash(fileHash)
             .ByEntityType(entityType)
@@ -150,7 +152,7 @@ public class ImportExportService : BaseService, IImportExportService
         var rows = await parser.ParseRowsAsync(fileStream);
 
         // Create ImportSession (deferred from Step 1)
-        var sessionQuery = Repository.GetImportSessionQuery(AuthorizationContext.CurrentProfile);
+        var sessionQuery = repo.GetImportSessionQuery(AuthorizationContext.CurrentProfile);
         var session = sessionQuery.CreateNew();
         session.EntityType = entityType;
         session.OriginalFileName = fileName;
@@ -239,7 +241,7 @@ public class ImportExportService : BaseService, IImportExportService
         session.ValidationResultJson = JsonSerializer.Serialize(
             validationResult.Rows.Where(r => r.Status == ImportRowStatus.Error).ToList());
 
-        var updateQuery = Repository.GetImportSessionQuery(AuthorizationContext.CurrentProfile);
+        var updateQuery = repo.GetImportSessionQuery(AuthorizationContext.CurrentProfile);
         await updateQuery.UpdateAsync(session);
 
         l.I($"Import session {session.PublicId} validated: {validationResult.ValidRows} valid, {validationResult.ErrorRows} errors.");
@@ -251,7 +253,9 @@ public class ImportExportService : BaseService, IImportExportService
     {
         using var l = log.TraceScope();
 
-        var sessionQuery = Repository.GetImportSessionQuery(AuthorizationContext.CurrentProfile);
+        await using var repo = RepositoryFactory.Create();
+
+        var sessionQuery = repo.GetImportSessionQuery(AuthorizationContext.CurrentProfile);
         var session = await sessionQuery.ByPublicId(sessionId).Select().FirstOrDefaultAsync();
         if (session == null)
             throw new RecordNotFoundException("Import session not found.");
@@ -263,7 +267,7 @@ public class ImportExportService : BaseService, IImportExportService
         if (excludedRows != null && excludedRows.Count > 0)
         {
             session.ExcludedRowsJson = JsonSerializer.Serialize(excludedRows);
-            var saveQuery = Repository.GetImportSessionQuery(AuthorizationContext.CurrentProfile);
+            var saveQuery = repo.GetImportSessionQuery(AuthorizationContext.CurrentProfile);
             await saveQuery.UpdateAsync(session);
         }
 
@@ -271,7 +275,7 @@ public class ImportExportService : BaseService, IImportExportService
         if (session.ValidRows > BackgroundThreshold)
         {
             session.Status = ImportSessionStatus.Processing;
-            var updateQuery = Repository.GetImportSessionQuery(AuthorizationContext.CurrentProfile);
+            var updateQuery = repo.GetImportSessionQuery(AuthorizationContext.CurrentProfile);
             await updateQuery.UpdateAsync(session);
 
             BackgroundWorker.Submit(new BackgroundRequestItem
@@ -292,12 +296,23 @@ public class ImportExportService : BaseService, IImportExportService
             });
         }
 
-        // Inline commit for small imports
-        return await CommitInternalAsync(session);
+        // Inline commit for small imports — same repo as the load above so the
+        // load-then-save stays one unit of work.
+        return await CommitInternalAsync(session, repo);
+    }
+
+    // Standalone/background entry point (e.g. ImportDataTaskHandler). Owns a fresh
+    // unit of work for the whole commit.
+    internal async Task<ServiceActionResult<ImportCommitResult>> CommitInternalAsync(
+        DevInstance.DevCoreApp.Server.Database.Core.Models.ImportExport.ImportSession session)
+    {
+        await using var repo = RepositoryFactory.Create();
+        return await CommitInternalAsync(session, repo);
     }
 
     internal async Task<ServiceActionResult<ImportCommitResult>> CommitInternalAsync(
-        DevInstance.DevCoreApp.Server.Database.Core.Models.ImportExport.ImportSession session)
+        DevInstance.DevCoreApp.Server.Database.Core.Models.ImportExport.ImportSession session,
+        IQueryRepository repo)
     {
         using var l = log.TraceScope();
 
@@ -359,7 +374,7 @@ public class ImportExportService : BaseService, IImportExportService
         try
         {
             session.Status = ImportSessionStatus.Processing;
-            var updateQuery1 = Repository.GetImportSessionQuery(AuthorizationContext.CurrentProfile);
+            var updateQuery1 = repo.GetImportSessionQuery(AuthorizationContext.CurrentProfile);
             await updateQuery1.UpdateAsync(session);
 
             var commitResult = await handler.CommitAsync(validRows, ServiceProvider);
@@ -382,7 +397,7 @@ public class ImportExportService : BaseService, IImportExportService
                 session.ErrorMessage = string.Join("; ", commitResult.Errors.Take(10));
             }
 
-            var updateQuery2 = Repository.GetImportSessionQuery(AuthorizationContext.CurrentProfile);
+            var updateQuery2 = repo.GetImportSessionQuery(AuthorizationContext.CurrentProfile);
             await updateQuery2.UpdateAsync(session);
 
             l.I($"Import session {session.PublicId} committed: {commitResult.ImportedRows} imported, {commitResult.ErrorRows} errors.");
@@ -393,7 +408,7 @@ public class ImportExportService : BaseService, IImportExportService
         {
             session.Status = ImportSessionStatus.Failed;
             session.ErrorMessage = ex.Message;
-            var updateQuery = Repository.GetImportSessionQuery(AuthorizationContext.CurrentProfile);
+            var updateQuery = repo.GetImportSessionQuery(AuthorizationContext.CurrentProfile);
             await updateQuery.UpdateAsync(session);
 
             l.E($"Import session {session.PublicId} failed: {ex.Message}");
@@ -403,7 +418,8 @@ public class ImportExportService : BaseService, IImportExportService
 
     public async Task<ServiceActionResult<ImportSessionItem>> GetSessionAsync(string sessionId)
     {
-        var sessionQuery = Repository.GetImportSessionQuery(AuthorizationContext.CurrentProfile);
+        await using var repo = RepositoryFactory.Create();
+        var sessionQuery = repo.GetImportSessionQuery(AuthorizationContext.CurrentProfile);
         var session = await sessionQuery.ByPublicId(sessionId).Select().FirstOrDefaultAsync();
         if (session == null)
             throw new RecordNotFoundException("Import session not found.");
@@ -415,7 +431,9 @@ public class ImportExportService : BaseService, IImportExportService
     {
         using var l = log.TraceScope();
 
-        var sessionQuery = Repository.GetImportSessionQuery(AuthorizationContext.CurrentProfile);
+        await using var repo = RepositoryFactory.Create();
+
+        var sessionQuery = repo.GetImportSessionQuery(AuthorizationContext.CurrentProfile);
         var session = await sessionQuery.ByPublicId(sessionId).Select().FirstOrDefaultAsync();
         if (session == null)
             throw new RecordNotFoundException("Import session not found.");
@@ -434,7 +452,7 @@ public class ImportExportService : BaseService, IImportExportService
         await handler.RollbackAsync(recordIds, ServiceProvider);
 
         session.Status = ImportSessionStatus.RolledBack;
-        var updateQuery = Repository.GetImportSessionQuery(AuthorizationContext.CurrentProfile);
+        var updateQuery = repo.GetImportSessionQuery(AuthorizationContext.CurrentProfile);
         await updateQuery.UpdateAsync(session);
 
         l.I($"Import session {sessionId} rolled back ({recordIds.Count} records).");

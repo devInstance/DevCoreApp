@@ -17,9 +17,9 @@ public class GridProfileService : BaseService
 {
     public GridProfileService(IScopeManager logManager,
                               ITimeProvider timeProvider,
-                              IQueryRepository query,
+                              IQueryRepositoryFactory repositoryFactory,
                               IAuthorizationContext authorizationContext)
-        : base(logManager, timeProvider, query, authorizationContext)
+        : base(logManager, timeProvider, repositoryFactory, authorizationContext)
     {
     }
 
@@ -30,8 +30,10 @@ public class GridProfileService : BaseService
     /// </summary>
     public async Task<ServiceActionResult<GridProfileItem?>> GetAsync(string gridName, string profileName = "Default")
     {
+        await using var repo = RepositoryFactory.Create();
+
         // First, try to find user's local profile
-        var profile = await Repository
+        var profile = await repo
             .GetGridProfilesQuery(AuthorizationContext.CurrentProfile)
             .ByUserProfileId(AuthorizationContext.CurrentProfile.Id)
             .ByGridName(gridName)
@@ -43,7 +45,7 @@ public class GridProfileService : BaseService
         // If no local profile, try to find a global profile
         if (profile == null)
         {
-            profile = await Repository
+            profile = await repo
                 .GetGridProfilesQuery(AuthorizationContext.CurrentProfile)
                 .ByGridName(gridName)
                 .ByProfileName(profileName)
@@ -74,7 +76,8 @@ public class GridProfileService : BaseService
                 "Only Owner, Admin, or Manager can edit global profiles.");
         }
 
-        var query = Repository.GetGridProfilesQuery(AuthorizationContext.CurrentProfile);
+        await using var repo = RepositoryFactory.Create();
+        var query = repo.GetGridProfilesQuery(AuthorizationContext.CurrentProfile);
 
         // Build the query to find existing profile
         var searchQuery = query.Clone()

@@ -34,12 +34,12 @@ public class NotificationService : BaseService, INotificationService
 
     public NotificationService(IScopeManager logManager,
                                ITimeProvider timeProvider,
-                               IQueryRepository query,
+                              IQueryRepositoryFactory repositoryFactory,
                                IAuthorizationContext authorizationContext,
                                UserManager<ApplicationUser> userManager,
                                IBackgroundWorker backgroundWorker,
                                INotificationHubService notificationHub)
-        : base(logManager, timeProvider, query, authorizationContext)
+        : base(logManager, timeProvider, repositoryFactory, authorizationContext)
     {
         log = logManager.CreateLogger(this);
         UserManager = userManager;
@@ -53,7 +53,9 @@ public class NotificationService : BaseService, INotificationService
     {
         using var l = log.TraceScope();
 
-        var userProfile = await Repository.GetUserProfilesQuery(null)
+        await using var repo = RepositoryFactory.Create();
+
+        var userProfile = await repo.GetUserProfilesQuery(null)
             .Select()
             .FirstOrDefaultAsync(u => u.Id == userProfileId);
 
@@ -67,7 +69,7 @@ public class NotificationService : BaseService, INotificationService
 
         if (!string.IsNullOrEmpty(category))
         {
-            var preference = await Repository.GetUserNotificationPreferenceQuery(null)
+            var preference = await repo.GetUserNotificationPreferenceQuery(null)
                 .ByUserProfileId(userProfileId)
                 .ByCategory(category)
                 .Select()
@@ -91,7 +93,7 @@ public class NotificationService : BaseService, INotificationService
         {
             var organizationId = await GetUserPrimaryOrganizationIdAsync(userProfile);
 
-            var notificationQuery = Repository.GetNotificationQuery(null);
+            var notificationQuery = repo.GetNotificationQuery(null);
             var notification = notificationQuery.CreateNew();
             notification.UserProfileId = userProfileId;
             notification.OrganizationId = organizationId;
@@ -109,7 +111,7 @@ public class NotificationService : BaseService, INotificationService
             await NotificationHub.SendNotificationAsync(
                 userProfile.ApplicationUserId, notificationItem);
 
-            var unreadCount = await Repository.GetNotificationQuery(null)
+            var unreadCount = await repo.GetNotificationQuery(null)
                 .ByUserProfileId(userProfileId)
                 .ByIsRead(false)
                 .Select()
@@ -134,12 +136,14 @@ public class NotificationService : BaseService, INotificationService
     {
         using var l = log.TraceScope();
 
+        await using var repo = RepositoryFactory.Create();
+
         var usersInRole = await UserManager.GetUsersInRoleAsync(roleName);
         int sentCount = 0;
 
         foreach (var appUser in usersInRole)
         {
-            var userProfile = await Repository.GetUserProfilesQuery(null)
+            var userProfile = await repo.GetUserProfilesQuery(null)
                 .ByApplicationUserId(appUser.Id)
                 .Select()
                 .FirstOrDefaultAsync();
@@ -161,7 +165,9 @@ public class NotificationService : BaseService, INotificationService
     {
         using var l = log.TraceScope();
 
-        var userProfiles = await Repository.GetUserProfilesQuery(null)
+        await using var repo = RepositoryFactory.Create();
+
+        var userProfiles = await repo.GetUserProfilesQuery(null)
             .ByOrganizationId(organizationId)
             .Select()
             .ToListAsync();
@@ -182,7 +188,9 @@ public class NotificationService : BaseService, INotificationService
     {
         using var l = log.TraceScope();
 
-        var query = Repository.GetNotificationQuery(AuthorizationContext.CurrentProfile);
+        await using var repo = RepositoryFactory.Create();
+
+        var query = repo.GetNotificationQuery(AuthorizationContext.CurrentProfile);
         var notification = await query
             .ByPublicId(notificationId)
             .Select()
@@ -197,13 +205,13 @@ public class NotificationService : BaseService, INotificationService
         notification.ReadAt = TimeProvider.CurrentTime;
         await query.UpdateAsync(notification);
 
-        var userProfile = await Repository.GetUserProfilesQuery(null)
+        var userProfile = await repo.GetUserProfilesQuery(null)
             .Select()
             .FirstOrDefaultAsync(u => u.Id == notification.UserProfileId);
 
         if (userProfile != null)
         {
-            var unreadCount = await Repository.GetNotificationQuery(null)
+            var unreadCount = await repo.GetNotificationQuery(null)
                 .ByUserProfileId(notification.UserProfileId)
                 .ByIsRead(false)
                 .Select()
@@ -221,7 +229,9 @@ public class NotificationService : BaseService, INotificationService
     {
         using var l = log.TraceScope();
 
-        var unreadNotifications = await Repository.GetNotificationQuery(null)
+        await using var repo = RepositoryFactory.Create();
+
+        var unreadNotifications = await repo.GetNotificationQuery(null)
             .ByUserProfileId(userProfileId)
             .ByIsRead(false)
             .Select()
@@ -232,11 +242,11 @@ public class NotificationService : BaseService, INotificationService
         {
             notification.IsRead = true;
             notification.ReadAt = now;
-            var updateQuery = Repository.GetNotificationQuery(null);
+            var updateQuery = repo.GetNotificationQuery(null);
             await updateQuery.UpdateAsync(notification);
         }
 
-        var userProfile = await Repository.GetUserProfilesQuery(null)
+        var userProfile = await repo.GetUserProfilesQuery(null)
             .Select()
             .FirstOrDefaultAsync(u => u.Id == userProfileId);
 
@@ -254,7 +264,9 @@ public class NotificationService : BaseService, INotificationService
     {
         using var l = log.TraceScope();
 
-        var count = await Repository.GetNotificationQuery(null)
+        await using var repo = RepositoryFactory.Create();
+
+        var count = await repo.GetNotificationQuery(null)
             .ByUserProfileId(userProfileId)
             .ByIsRead(false)
             .Select()
@@ -268,7 +280,9 @@ public class NotificationService : BaseService, INotificationService
     {
         using var l = log.TraceScope();
 
-        var query = Repository.GetNotificationQuery(null)
+        await using var repo = RepositoryFactory.Create();
+
+        var query = repo.GetNotificationQuery(null)
             .ByUserProfileId(userProfileId)
             .SortBy("createdate", false);
 

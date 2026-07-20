@@ -36,12 +36,12 @@ public class FileService : BaseService, IFileService
 
     public FileService(IScopeManager logManager,
                        ITimeProvider timeProvider,
-                       IQueryRepository query,
+                              IQueryRepositoryFactory repositoryFactory,
                        IAuthorizationContext authorizationContext,
                        IFileStorageProvider storageProvider,
                        ISettingsService settingsService,
                        IOperationContext operationContext)
-        : base(logManager, timeProvider, query, authorizationContext)
+        : base(logManager, timeProvider, repositoryFactory, authorizationContext)
     {
         log = logManager.CreateLogger(this);
         StorageProvider = storageProvider;
@@ -94,7 +94,8 @@ public class FileService : BaseService, IFileService
         }
 
         // Create FileRecord
-        var fileQuery = Repository.GetFileRecordQuery(AuthorizationContext.CurrentProfile);
+        await using var repo = RepositoryFactory.Create();
+        var fileQuery = repo.GetFileRecordQuery(AuthorizationContext.CurrentProfile);
         var fileRecord = fileQuery.CreateNew();
         fileRecord.OriginalName = originalName;
         fileRecord.FileName = Path.GetFileName(uploadResult.StoragePath!);
@@ -108,7 +109,7 @@ public class FileService : BaseService, IFileService
         if (orgId == null || orgId == Guid.Empty)
         {
             // Fallback: resolve root organization when no org context is available
-            var orgQuery = Repository.GetOrganizationsQuery(AuthorizationContext.CurrentProfile);
+            var orgQuery = repo.GetOrganizationsQuery(AuthorizationContext.CurrentProfile);
             var rootOrg = orgQuery.Select().FirstOrDefault(o => o.ParentId == null);
             orgId = rootOrg?.Id;
         }
@@ -126,7 +127,8 @@ public class FileService : BaseService, IFileService
     {
         using var l = log.TraceScope();
 
-        var fileQuery = Repository.GetFileRecordQuery(AuthorizationContext.CurrentProfile);
+        await using var repo = RepositoryFactory.Create();
+        var fileQuery = repo.GetFileRecordQuery(AuthorizationContext.CurrentProfile);
         var fileRecord = await fileQuery.ByPublicId(filePublicId).Select().FirstOrDefaultAsync();
 
         if (fileRecord == null)
@@ -147,7 +149,8 @@ public class FileService : BaseService, IFileService
     {
         using var l = log.TraceScope();
 
-        var fileQuery = Repository.GetFileRecordQuery(AuthorizationContext.CurrentProfile);
+        await using var repo = RepositoryFactory.Create();
+        var fileQuery = repo.GetFileRecordQuery(AuthorizationContext.CurrentProfile);
         var fileRecord = await fileQuery.ByPublicId(filePublicId).Select().FirstOrDefaultAsync();
 
         if (fileRecord == null)
@@ -176,7 +179,8 @@ public class FileService : BaseService, IFileService
     {
         using var l = log.TraceScope();
 
-        var fileQuery = Repository.GetFileRecordQuery(AuthorizationContext.CurrentProfile);
+        await using var repo = RepositoryFactory.Create();
+        var fileQuery = repo.GetFileRecordQuery(AuthorizationContext.CurrentProfile);
         var fileRecord = await fileQuery.ByPublicId(filePublicId).Select().FirstOrDefaultAsync();
 
         if (fileRecord == null)

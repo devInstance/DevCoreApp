@@ -25,9 +25,9 @@ public class WebhookAdminService : BaseService, IWebhookAdminService
 
     public WebhookAdminService(IScopeManager logManager,
                                 ITimeProvider timeProvider,
-                                IQueryRepository query,
+                              IQueryRepositoryFactory repositoryFactory,
                                 IAuthorizationContext authorizationContext)
-        : base(logManager, timeProvider, query, authorizationContext)
+        : base(logManager, timeProvider, repositoryFactory, authorizationContext)
     {
         log = logManager.CreateLogger(this);
     }
@@ -37,7 +37,8 @@ public class WebhookAdminService : BaseService, IWebhookAdminService
     {
         using var l = log.TraceScope();
 
-        var query = Repository.GetWebhookSubscriptionQuery(AuthorizationContext.CurrentProfile);
+        await using var repo = RepositoryFactory.Create();
+        var query = repo.GetWebhookSubscriptionQuery(AuthorizationContext.CurrentProfile);
 
         if (!string.IsNullOrEmpty(search))
             query = query.Search(search);
@@ -65,7 +66,8 @@ public class WebhookAdminService : BaseService, IWebhookAdminService
     {
         using var l = log.TraceScope();
 
-        var subscription = await Repository.GetWebhookSubscriptionQuery(AuthorizationContext.CurrentProfile)
+        await using var repo = RepositoryFactory.Create();
+        var subscription = await repo.GetWebhookSubscriptionQuery(AuthorizationContext.CurrentProfile)
             .ByPublicId(id).Select()
             .Include(ws => ws.CreatedBy)
             .Include(ws => ws.Organization)
@@ -81,17 +83,18 @@ public class WebhookAdminService : BaseService, IWebhookAdminService
     {
         using var l = log.TraceScope();
 
-        var query = Repository.GetWebhookSubscriptionQuery(AuthorizationContext.CurrentProfile);
+        await using var repo = RepositoryFactory.Create();
+        var query = repo.GetWebhookSubscriptionQuery(AuthorizationContext.CurrentProfile);
         var subscription = query.CreateNew();
         subscription.ToRecord(item);
-        subscription.OrganizationId = await ResolveOrganizationIdAsync(item.OrganizationId);
+        subscription.OrganizationId = await ResolveOrganizationIdAsync(repo, item.OrganizationId);
         subscription.Secret = GenerateSecret();
         subscription.CreatedById = AuthorizationContext.CurrentProfile.Id;
 
         await query.AddAsync(subscription);
         l.I($"Webhook subscription created: {subscription.EventType} -> {subscription.Url}");
 
-        var created = await LoadSubscriptionAsync(subscription.PublicId);
+        var created = await LoadSubscriptionAsync(repo, subscription.PublicId);
         return ServiceActionResult<WebhookSubscriptionItem>.OK(created.ToViewWithSecret());
     }
 
@@ -99,18 +102,19 @@ public class WebhookAdminService : BaseService, IWebhookAdminService
     {
         using var l = log.TraceScope();
 
-        var query = Repository.GetWebhookSubscriptionQuery(AuthorizationContext.CurrentProfile);
+        await using var repo = RepositoryFactory.Create();
+        var query = repo.GetWebhookSubscriptionQuery(AuthorizationContext.CurrentProfile);
         var subscription = await query.ByPublicId(id).Select().FirstOrDefaultAsync();
 
         if (subscription == null)
             throw new RecordNotFoundException("Webhook subscription not found.");
 
         subscription.ToRecord(item);
-        subscription.OrganizationId = await ResolveOrganizationIdAsync(item.OrganizationId);
+        subscription.OrganizationId = await ResolveOrganizationIdAsync(repo, item.OrganizationId);
         await query.UpdateAsync(subscription);
         l.I($"Webhook subscription updated: {subscription.EventType} -> {subscription.Url}");
 
-        var updated = await LoadSubscriptionAsync(subscription.PublicId);
+        var updated = await LoadSubscriptionAsync(repo, subscription.PublicId);
         return ServiceActionResult<WebhookSubscriptionItem>.OK(updated.ToViewWithSecret());
     }
 
@@ -118,7 +122,8 @@ public class WebhookAdminService : BaseService, IWebhookAdminService
     {
         using var l = log.TraceScope();
 
-        var query = Repository.GetWebhookSubscriptionQuery(AuthorizationContext.CurrentProfile);
+        await using var repo = RepositoryFactory.Create();
+        var query = repo.GetWebhookSubscriptionQuery(AuthorizationContext.CurrentProfile);
         var subscription = await query.ByPublicId(id).Select().FirstOrDefaultAsync();
 
         if (subscription == null)
@@ -135,11 +140,12 @@ public class WebhookAdminService : BaseService, IWebhookAdminService
     {
         using var l = log.TraceScope();
 
-        var query = Repository.GetWebhookDeliveryQuery(AuthorizationContext.CurrentProfile);
+        await using var repo = RepositoryFactory.Create();
+        var query = repo.GetWebhookDeliveryQuery(AuthorizationContext.CurrentProfile);
 
         if (!string.IsNullOrEmpty(subscriptionId))
         {
-            var subscription = await Repository.GetWebhookSubscriptionQuery(AuthorizationContext.CurrentProfile)
+            var subscription = await repo.GetWebhookSubscriptionQuery(AuthorizationContext.CurrentProfile)
                 .ByPublicId(subscriptionId).Select().FirstOrDefaultAsync();
 
             if (subscription != null)
@@ -170,12 +176,12 @@ public class WebhookAdminService : BaseService, IWebhookAdminService
         return Convert.ToBase64String(bytes);
     }
 
-    private async Task<Guid?> ResolveOrganizationIdAsync(string? organizationPublicId)
+    private async Task<Guid?> ResolveOrganizationIdAsync(IQueryRepository repo, string? organizationPublicId)
     {
         if (string.IsNullOrWhiteSpace(organizationPublicId))
             return null;
 
-        var organization = await Repository.GetOrganizationsQuery(AuthorizationContext.CurrentProfile)
+        var organization = await repo.GetOrganizationsQuery(AuthorizationContext.CurrentProfile)
             .ByPublicId(organizationPublicId)
             .Select()
             .FirstOrDefaultAsync();
@@ -186,9 +192,9 @@ public class WebhookAdminService : BaseService, IWebhookAdminService
         return organization.Id;
     }
 
-    private async Task<Database.Core.Models.Webhooks.WebhookSubscription> LoadSubscriptionAsync(string publicId)
+    private async Task<Database.Core.Models.Webhooks.WebhookSubscription> LoadSubscriptionAsync(IQueryRepository repo, string publicId)
     {
-        var subscription = await Repository.GetWebhookSubscriptionQuery(AuthorizationContext.CurrentProfile)
+        var subscription = await repo.GetWebhookSubscriptionQuery(AuthorizationContext.CurrentProfile)
             .ByPublicId(publicId)
             .Select()
             .Include(ws => ws.CreatedBy)

@@ -25,10 +25,10 @@ public class FeatureFlagAdminService : BaseService, IFeatureFlagAdminService
 
     public FeatureFlagAdminService(IScopeManager logManager,
                                     ITimeProvider timeProvider,
-                                    IQueryRepository query,
+                              IQueryRepositoryFactory repositoryFactory,
                                     IAuthorizationContext authorizationContext,
                                     IFeatureFlagService? featureFlagService = null)
-        : base(logManager, timeProvider, query, authorizationContext)
+        : base(logManager, timeProvider, repositoryFactory, authorizationContext)
     {
         log = logManager.CreateLogger(this);
         this.featureFlagService = featureFlagService;
@@ -39,7 +39,8 @@ public class FeatureFlagAdminService : BaseService, IFeatureFlagAdminService
     {
         using var l = log.TraceScope();
 
-        var query = Repository.GetFeatureFlagQuery(AuthorizationContext.CurrentProfile);
+        await using var repo = RepositoryFactory.Create();
+        var query = repo.GetFeatureFlagQuery(AuthorizationContext.CurrentProfile);
 
         if (!string.IsNullOrEmpty(search))
         {
@@ -68,7 +69,8 @@ public class FeatureFlagAdminService : BaseService, IFeatureFlagAdminService
     {
         using var l = log.TraceScope();
 
-        var flag = await Repository.GetFeatureFlagQuery(AuthorizationContext.CurrentProfile)
+        await using var repo = RepositoryFactory.Create();
+        var flag = await repo.GetFeatureFlagQuery(AuthorizationContext.CurrentProfile)
             .ByPublicId(id)
             .Select()
             .Include(ff => ff.Organization)
@@ -86,17 +88,18 @@ public class FeatureFlagAdminService : BaseService, IFeatureFlagAdminService
     {
         using var l = log.TraceScope();
 
-        var query = Repository.GetFeatureFlagQuery(AuthorizationContext.CurrentProfile);
+        await using var repo = RepositoryFactory.Create();
+        var query = repo.GetFeatureFlagQuery(AuthorizationContext.CurrentProfile);
         var flag = query.CreateNew();
         flag.ToRecord(item);
-        flag.OrganizationId = await ResolveOrganizationIdAsync(item.OrganizationId);
+        flag.OrganizationId = await ResolveOrganizationIdAsync(repo, item.OrganizationId);
 
         await query.AddAsync(flag);
         featureFlagService?.InvalidateCache(flag.Name);
 
         l.I($"Feature flag created: {flag.Name}");
 
-        var created = await LoadFlagAsync(flag.PublicId);
+        var created = await LoadFlagAsync(repo, flag.PublicId);
         return ServiceActionResult<FeatureFlagItem>.OK(created.ToView());
     }
 
@@ -104,7 +107,8 @@ public class FeatureFlagAdminService : BaseService, IFeatureFlagAdminService
     {
         using var l = log.TraceScope();
 
-        var query = Repository.GetFeatureFlagQuery(AuthorizationContext.CurrentProfile);
+        await using var repo = RepositoryFactory.Create();
+        var query = repo.GetFeatureFlagQuery(AuthorizationContext.CurrentProfile);
         var flag = await query.ByPublicId(id).Select().FirstOrDefaultAsync();
 
         if (flag == null)
@@ -114,7 +118,7 @@ public class FeatureFlagAdminService : BaseService, IFeatureFlagAdminService
 
         var oldName = flag.Name;
         flag.ToRecord(item);
-        flag.OrganizationId = await ResolveOrganizationIdAsync(item.OrganizationId);
+        flag.OrganizationId = await ResolveOrganizationIdAsync(repo, item.OrganizationId);
         await query.UpdateAsync(flag);
         featureFlagService?.InvalidateCache(oldName);
         if (!string.Equals(oldName, flag.Name, StringComparison.Ordinal))
@@ -122,7 +126,7 @@ public class FeatureFlagAdminService : BaseService, IFeatureFlagAdminService
 
         l.I($"Feature flag updated: {flag.Name}");
 
-        var updated = await LoadFlagAsync(flag.PublicId);
+        var updated = await LoadFlagAsync(repo, flag.PublicId);
         return ServiceActionResult<FeatureFlagItem>.OK(updated.ToView());
     }
 
@@ -130,7 +134,8 @@ public class FeatureFlagAdminService : BaseService, IFeatureFlagAdminService
     {
         using var l = log.TraceScope();
 
-        var query = Repository.GetFeatureFlagQuery(AuthorizationContext.CurrentProfile);
+        await using var repo = RepositoryFactory.Create();
+        var query = repo.GetFeatureFlagQuery(AuthorizationContext.CurrentProfile);
         var flag = await query.ByPublicId(id).Select().FirstOrDefaultAsync();
 
         if (flag == null)
@@ -146,12 +151,12 @@ public class FeatureFlagAdminService : BaseService, IFeatureFlagAdminService
         return ServiceActionResult<bool>.OK(true);
     }
 
-    private async Task<Guid?> ResolveOrganizationIdAsync(string? organizationPublicId)
+    private async Task<Guid?> ResolveOrganizationIdAsync(IQueryRepository repo, string? organizationPublicId)
     {
         if (string.IsNullOrWhiteSpace(organizationPublicId))
             return null;
 
-        var organization = await Repository.GetOrganizationsQuery(AuthorizationContext.CurrentProfile)
+        var organization = await repo.GetOrganizationsQuery(AuthorizationContext.CurrentProfile)
             .ByPublicId(organizationPublicId)
             .Select()
             .FirstOrDefaultAsync();
@@ -162,9 +167,9 @@ public class FeatureFlagAdminService : BaseService, IFeatureFlagAdminService
         return organization.Id;
     }
 
-    private async Task<Server.Database.Core.Models.FeatureFlag> LoadFlagAsync(string publicId)
+    private async Task<Server.Database.Core.Models.FeatureFlag> LoadFlagAsync(IQueryRepository repo, string publicId)
     {
-        return await Repository.GetFeatureFlagQuery(AuthorizationContext.CurrentProfile)
+        return await repo.GetFeatureFlagQuery(AuthorizationContext.CurrentProfile)
             .ByPublicId(publicId)
             .Select()
             .Include(ff => ff.Organization)

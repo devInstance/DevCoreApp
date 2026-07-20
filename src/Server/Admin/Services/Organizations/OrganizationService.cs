@@ -27,9 +27,9 @@ public class OrganizationService : BaseService, IOrganizationService
 
     public OrganizationService(IScopeManager logManager,
                                ITimeProvider timeProvider,
-                               IQueryRepository query,
+                              IQueryRepositoryFactory repositoryFactory,
                                IAuthorizationContext authorizationContext)
-        : base(logManager, timeProvider, query, authorizationContext)
+        : base(logManager, timeProvider, repositoryFactory, authorizationContext)
     {
         log = logManager.CreateLogger(this);
     }
@@ -40,7 +40,8 @@ public class OrganizationService : BaseService, IOrganizationService
     {
         using var l = log.TraceScope();
 
-        var query = Repository.GetOrganizationsQuery(AuthorizationContext.CurrentProfile);
+        await using var repo = RepositoryFactory.Create();
+        var query = repo.GetOrganizationsQuery(AuthorizationContext.CurrentProfile);
 
         if (!string.IsNullOrEmpty(search))
             query = query.Search(search);
@@ -71,7 +72,8 @@ public class OrganizationService : BaseService, IOrganizationService
     {
         using var l = log.TraceScope();
 
-        var orgs = await Repository.GetOrganizationsQuery(AuthorizationContext.CurrentProfile)
+        await using var repo = RepositoryFactory.Create();
+        var orgs = await repo.GetOrganizationsQuery(AuthorizationContext.CurrentProfile)
             .SortBy("Path", true)
             .Select()
             .Include(o => o.Parent)
@@ -85,7 +87,8 @@ public class OrganizationService : BaseService, IOrganizationService
     {
         using var l = log.TraceScope();
 
-        var org = await Repository.GetOrganizationsQuery(AuthorizationContext.CurrentProfile)
+        await using var repo = RepositoryFactory.Create();
+        var org = await repo.GetOrganizationsQuery(AuthorizationContext.CurrentProfile)
             .ByPublicId(publicId)
             .Select()
             .Include(o => o.Parent)
@@ -101,7 +104,8 @@ public class OrganizationService : BaseService, IOrganizationService
     {
         using var l = log.TraceScope();
 
-        var query = Repository.GetOrganizationsQuery(AuthorizationContext.CurrentProfile);
+        await using var repo = RepositoryFactory.Create();
+        var query = repo.GetOrganizationsQuery(AuthorizationContext.CurrentProfile);
 
         // Validate code uniqueness
         var existing = await query.Clone().ByCode(item.Code).Select().FirstOrDefaultAsync();
@@ -146,7 +150,8 @@ public class OrganizationService : BaseService, IOrganizationService
     {
         using var l = log.TraceScope();
 
-        var query = Repository.GetOrganizationsQuery(AuthorizationContext.CurrentProfile);
+        await using var repo = RepositoryFactory.Create();
+        var query = repo.GetOrganizationsQuery(AuthorizationContext.CurrentProfile);
         var org = await query.ByPublicId(publicId).Select()
             .Include(o => o.Parent)
             .FirstOrDefaultAsync();
@@ -158,7 +163,7 @@ public class OrganizationService : BaseService, IOrganizationService
         var codeChanged = !string.Equals(org.Code, item.Code, StringComparison.Ordinal);
         if (codeChanged)
         {
-            var duplicate = await Repository.GetOrganizationsQuery(AuthorizationContext.CurrentProfile)
+            var duplicate = await repo.GetOrganizationsQuery(AuthorizationContext.CurrentProfile)
                 .ByCode(item.Code).Select().FirstOrDefaultAsync();
             if (duplicate != null && duplicate.Id != org.Id)
                 throw new RecordConflictException($"An organization with code '{item.Code}' already exists.");
@@ -176,7 +181,7 @@ public class OrganizationService : BaseService, IOrganizationService
             var parentPath = org.Parent != null ? org.Parent.Path : string.Empty;
             org.Path = $"{parentPath}/{item.Code}";
             await query.UpdateAsync(org);
-            await RecomputeSubtreePathsAsync(oldPath, org.Path);
+            await RecomputeSubtreePathsAsync(repo, oldPath, org.Path);
         }
         else
         {
@@ -191,7 +196,8 @@ public class OrganizationService : BaseService, IOrganizationService
     {
         using var l = log.TraceScope();
 
-        var query = Repository.GetOrganizationsQuery(AuthorizationContext.CurrentProfile);
+        await using var repo = RepositoryFactory.Create();
+        var query = repo.GetOrganizationsQuery(AuthorizationContext.CurrentProfile);
         var org = await query.ByPublicId(publicId).Select().FirstOrDefaultAsync();
 
         if (org == null)
@@ -211,7 +217,8 @@ public class OrganizationService : BaseService, IOrganizationService
     {
         using var l = log.TraceScope();
 
-        var query = Repository.GetOrganizationsQuery(AuthorizationContext.CurrentProfile);
+        await using var repo = RepositoryFactory.Create();
+        var query = repo.GetOrganizationsQuery(AuthorizationContext.CurrentProfile);
         var org = await query.ByPublicId(publicId).Select().FirstOrDefaultAsync();
 
         if (org == null)
@@ -220,7 +227,7 @@ public class OrganizationService : BaseService, IOrganizationService
         if (org.Level == 0)
             throw new BusinessRuleException("Cannot move the root organization.");
 
-        var newParent = await Repository.GetOrganizationsQuery(AuthorizationContext.CurrentProfile)
+        var newParent = await repo.GetOrganizationsQuery(AuthorizationContext.CurrentProfile)
             .ByPublicId(newParentPublicId).Select().FirstOrDefaultAsync();
 
         if (newParent == null)
@@ -236,16 +243,16 @@ public class OrganizationService : BaseService, IOrganizationService
         org.Path = $"{newParent.Path}/{org.Code}";
 
         await query.UpdateAsync(org);
-        await RecomputeSubtreePathsAsync(oldPath, org.Path);
+        await RecomputeSubtreePathsAsync(repo, oldPath, org.Path);
 
         l.I($"Organization moved: {org.Name} to {newParent.Path}");
         return ServiceActionResult<OrganizationItem>.OK(org.ToView());
     }
 
-    private async Task RecomputeSubtreePathsAsync(string oldPathPrefix, string newPathPrefix)
+    private async Task RecomputeSubtreePathsAsync(IQueryRepository repo, string oldPathPrefix, string newPathPrefix)
     {
         // Find all descendants whose path starts with the old prefix
-        var descendants = await Repository.GetOrganizationsQuery(AuthorizationContext.CurrentProfile)
+        var descendants = await repo.GetOrganizationsQuery(AuthorizationContext.CurrentProfile)
             .ByPathPrefix(oldPathPrefix + "/")
             .Select()
             .ToListAsync();
@@ -262,7 +269,7 @@ public class OrganizationService : BaseService, IOrganizationService
             // Batch update
             foreach (var descendant in descendants)
             {
-                var updateQuery = Repository.GetOrganizationsQuery(AuthorizationContext.CurrentProfile);
+                var updateQuery = repo.GetOrganizationsQuery(AuthorizationContext.CurrentProfile);
                 await updateQuery.UpdateAsync(descendant);
             }
         }

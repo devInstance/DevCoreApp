@@ -40,7 +40,7 @@ public class UserProfileService : BaseService, IUserProfileService
 
     public UserProfileService(IScopeManager logManager,
                               ITimeProvider timeProvider,
-                              IQueryRepository query,
+                              IQueryRepositoryFactory repositoryFactory,
                               IAuthorizationContext authorizationContext,
                               UserManager<ApplicationUser> userManager,
                               IUserStore<ApplicationUser> userStore,
@@ -48,7 +48,7 @@ public class UserProfileService : BaseService, IUserProfileService
                               IEmailTemplateService emailTemplateService,
                               IOrganizationContextResolver orgResolver,
                               IHttpContextAccessor httpContextAccessor)
-        : base(logManager, timeProvider, query, authorizationContext)
+        : base(logManager, timeProvider, repositoryFactory, authorizationContext)
     {
         log = logManager.CreateLogger(this);
 
@@ -69,7 +69,8 @@ public class UserProfileService : BaseService, IUserProfileService
     {
         var profile = AuthorizationContext.CurrentProfile;
         profile.ToRecord(newProfile);
-        await Repository.GetUserProfilesQuery(AuthorizationContext.CurrentProfile).UpdateAsync(profile);
+        await using var repo = RepositoryFactory.Create();
+        await repo.GetUserProfilesQuery(AuthorizationContext.CurrentProfile).UpdateAsync(profile);
 
         return ServiceActionResult<UserProfileItem>.OK(profile.ToView());
     }
@@ -78,7 +79,8 @@ public class UserProfileService : BaseService, IUserProfileService
     {
         using var l = log.TraceScope();
 
-        var profilesQuery = Repository.GetUserProfilesQuery(AuthorizationContext.CurrentProfile);
+        await using var repo = RepositoryFactory.Create();
+        var profilesQuery = repo.GetUserProfilesQuery(AuthorizationContext.CurrentProfile);
 
         if (!string.IsNullOrEmpty(search))
         {
@@ -187,7 +189,8 @@ public class UserProfileService : BaseService, IUserProfileService
         }
 
         // Create UserProfile with INITIATED status
-        var profilesQuery = Repository.GetUserProfilesQuery(AuthorizationContext.CurrentProfile);
+        await using var repo = RepositoryFactory.Create();
+        var profilesQuery = repo.GetUserProfilesQuery(AuthorizationContext.CurrentProfile);
         var userProfile = profilesQuery.CreateNew();
         userProfile.ToRecord(newUser);
         userProfile.ApplicationUserId = user.Id;
@@ -207,7 +210,8 @@ public class UserProfileService : BaseService, IUserProfileService
     {
         using var l = log.TraceScope();
 
-        var profile = await Repository.GetUserProfilesQuery(AuthorizationContext.CurrentProfile)
+        await using var repo = RepositoryFactory.Create();
+        var profile = await repo.GetUserProfilesQuery(AuthorizationContext.CurrentProfile)
             .ByPublicId(publicId)
             .Select()
             .FirstOrDefaultAsync();
@@ -237,7 +241,8 @@ public class UserProfileService : BaseService, IUserProfileService
             throw new BadRequestException("Please select a role.");
         }
 
-        var profilesQuery = Repository.GetUserProfilesQuery(AuthorizationContext.CurrentProfile);
+        await using var repo = RepositoryFactory.Create();
+        var profilesQuery = repo.GetUserProfilesQuery(AuthorizationContext.CurrentProfile);
         var profile = await profilesQuery.ByPublicId(publicId).Select().FirstOrDefaultAsync();
 
         if (profile == null)
@@ -282,9 +287,9 @@ public class UserProfileService : BaseService, IUserProfileService
             }
         }
 
-        // Update profile
+        // Update profile — same repo as the load above so the tracked entity saves in one unit of work.
         profile.ToRecord(updatedUser);
-        var updateQuery = Repository.GetUserProfilesQuery(AuthorizationContext.CurrentProfile);
+        var updateQuery = repo.GetUserProfilesQuery(AuthorizationContext.CurrentProfile);
         await updateQuery.UpdateAsync(profile);
 
         l.I($"User {publicId} updated successfully.");
@@ -297,7 +302,8 @@ public class UserProfileService : BaseService, IUserProfileService
     {
         using var l = log.TraceScope();
 
-        var profilesQuery = Repository.GetUserProfilesQuery(AuthorizationContext.CurrentProfile);
+        await using var repo = RepositoryFactory.Create();
+        var profilesQuery = repo.GetUserProfilesQuery(AuthorizationContext.CurrentProfile);
         var profile = await profilesQuery.ByPublicId(publicId).Select().FirstOrDefaultAsync();
 
         if (profile == null)
@@ -375,9 +381,11 @@ public class UserProfileService : BaseService, IUserProfileService
         return $"{baseUri}/account/confirm-email?userId={Uri.EscapeDataString(userId)}&code={Uri.EscapeDataString(code)}";
     }
 
-    private async Task<(UserProfile Profile, ApplicationUser AppUser)> ResolveUserAsync(string publicId)
+    // Read-only resolve helper. Takes the caller's repo so it shares the caller's unit of work
+    // (the caller may go on to write in the same repo). Never opens its own.
+    private async Task<(UserProfile Profile, ApplicationUser AppUser)> ResolveUserAsync(IQueryRepository repo, string publicId)
     {
-        var profile = await Repository.GetUserProfilesQuery(AuthorizationContext.CurrentProfile)
+        var profile = await repo.GetUserProfilesQuery(AuthorizationContext.CurrentProfile)
             .ByPublicId(publicId)
             .Select()
             .FirstOrDefaultAsync();
@@ -396,9 +404,10 @@ public class UserProfileService : BaseService, IUserProfileService
     {
         using var l = log.TraceScope();
 
-        var (_, appUser) = await ResolveUserAsync(userId);
+        await using var repo = RepositoryFactory.Create();
+        var (_, appUser) = await ResolveUserAsync(repo, userId);
 
-        var userOrgs = await Repository.GetUserOrganizationQuery(AuthorizationContext.CurrentProfile)
+        var userOrgs = await repo.GetUserOrganizationQuery(AuthorizationContext.CurrentProfile)
             .ByUserId(appUser.Id)
             .IncludeOrganization()
             .Select()
@@ -420,7 +429,8 @@ public class UserProfileService : BaseService, IUserProfileService
     {
         using var l = log.TraceScope();
 
-        var (_, appUser) = await ResolveUserAsync(userId);
+        await using var repo = RepositoryFactory.Create();
+        var (_, appUser) = await ResolveUserAsync(repo, userId);
 
         // Validate exactly one primary
         var primaryCount = organizations.Count(o => o.IsPrimary);
@@ -428,14 +438,14 @@ public class UserProfileService : BaseService, IUserProfileService
             throw new BusinessRuleException("Exactly one organization must be marked as primary.");
 
         // Resolve + validate the new assignments before touching the database.
-        var userOrgQuery = Repository.GetUserOrganizationQuery(AuthorizationContext.CurrentProfile);
+        var userOrgQuery = repo.GetUserOrganizationQuery(AuthorizationContext.CurrentProfile);
         var newAssignments = new List<UserOrganization>();
 
         if (organizations.Count > 0)
         {
             // Resolve org PublicId → Guid
             var orgPublicIds = organizations.Select(o => o.OrganizationId).ToList();
-            var orgLookup = await Repository.GetOrganizationsQuery(AuthorizationContext.CurrentProfile)
+            var orgLookup = await repo.GetOrganizationsQuery(AuthorizationContext.CurrentProfile)
                 .ByPublicIds(orgPublicIds)
                 .Select()
                 .ToDictionaryAsync(o => o.PublicId, o => o.Id);
@@ -476,9 +486,10 @@ public class UserProfileService : BaseService, IUserProfileService
     {
         using var l = log.TraceScope();
 
-        var (_, appUser) = await ResolveUserAsync(userId);
+        await using var repo = RepositoryFactory.Create();
+        var (_, appUser) = await ResolveUserAsync(repo, userId);
 
-        var overrides = await Repository.GetUserPermissionOverrideQuery(AuthorizationContext.CurrentProfile)
+        var overrides = await repo.GetUserPermissionOverrideQuery(AuthorizationContext.CurrentProfile)
             .ByUserId(appUser.Id)
             .IncludePermission()
             .Select()
@@ -498,15 +509,16 @@ public class UserProfileService : BaseService, IUserProfileService
     {
         using var l = log.TraceScope();
 
-        var (_, appUser) = await ResolveUserAsync(userId);
+        await using var repo = RepositoryFactory.Create();
+        var (_, appUser) = await ResolveUserAsync(repo, userId);
 
-        var overrideQuery = Repository.GetUserPermissionOverrideQuery(AuthorizationContext.CurrentProfile);
+        var overrideQuery = repo.GetUserPermissionOverrideQuery(AuthorizationContext.CurrentProfile);
         var newOverrides = new List<UserPermissionOverride>();
 
         if (overrides.Count > 0)
         {
             var permissionKeys = overrides.Select(o => o.PermissionKey).ToList();
-            var permLookup = await Repository.GetPermissionQuery(AuthorizationContext.CurrentProfile)
+            var permLookup = await repo.GetPermissionQuery(AuthorizationContext.CurrentProfile)
                 .ByKeys(permissionKeys)
                 .Select()
                 .ToDictionaryAsync(p => p.Key, p => p.Id);
@@ -536,10 +548,11 @@ public class UserProfileService : BaseService, IUserProfileService
     {
         using var l = log.TraceScope();
 
-        var (_, appUser) = await ResolveUserAsync(userId);
+        await using var repo = RepositoryFactory.Create();
+        var (_, appUser) = await ResolveUserAsync(repo, userId);
 
         // Load all permissions
-        var allPermissions = await Repository.GetPermissionQuery(AuthorizationContext.CurrentProfile)
+        var allPermissions = await repo.GetPermissionQuery(AuthorizationContext.CurrentProfile)
             .OrderedByDisplayOrder()
             .Select()
             .ToListAsync();
@@ -547,7 +560,7 @@ public class UserProfileService : BaseService, IUserProfileService
         // Get user roles
         var roles = await UserManager.GetRolesAsync(appUser);
 
-        var rolePermissionQuery = Repository.GetRolePermissionQuery(AuthorizationContext.CurrentProfile);
+        var rolePermissionQuery = repo.GetRolePermissionQuery(AuthorizationContext.CurrentProfile);
 
         // Get role IDs
         var roleIds = await rolePermissionQuery.GetRoleIdsByNamesAsync(roles.ToList());
@@ -560,7 +573,7 @@ public class UserProfileService : BaseService, IUserProfileService
             .ToDictionary(g => g.Key, g => g.Select(x => x.RoleName ?? "Unknown").ToList());
 
         // Get user overrides
-        var overrides = (await Repository.GetUserPermissionOverrideQuery(AuthorizationContext.CurrentProfile)
+        var overrides = (await repo.GetUserPermissionOverrideQuery(AuthorizationContext.CurrentProfile)
             .ByUserId(appUser.Id)
             .Select()
             .ToListAsync())
@@ -631,7 +644,8 @@ public class UserProfileService : BaseService, IUserProfileService
         var picture = ResizeImage(imageData, 400, 400);
         var thumbnail = ResizeImage(imageData, 48, 48);
 
-        var profilesQuery = Repository.GetUserProfilesQuery(AuthorizationContext.CurrentProfile);
+        await using var repo = RepositoryFactory.Create();
+        var profilesQuery = repo.GetUserProfilesQuery(AuthorizationContext.CurrentProfile);
         var profile = await profilesQuery.ByPublicId(userId).Select().FirstOrDefaultAsync();
         if (profile == null)
             throw new RecordNotFoundException("User not found.");
@@ -652,7 +666,8 @@ public class UserProfileService : BaseService, IUserProfileService
     {
         using var l = log.TraceScope();
 
-        var profilesQuery = Repository.GetUserProfilesQuery(AuthorizationContext.CurrentProfile);
+        await using var repo = RepositoryFactory.Create();
+        var profilesQuery = repo.GetUserProfilesQuery(AuthorizationContext.CurrentProfile);
         var profile = await profilesQuery.ByPublicId(userId).Select().FirstOrDefaultAsync();
         if (profile == null)
             throw new RecordNotFoundException("User not found.");
@@ -671,7 +686,8 @@ public class UserProfileService : BaseService, IUserProfileService
     {
         using var l = log.TraceScope();
 
-        var profile = await Repository.GetUserProfilesQuery(AuthorizationContext.CurrentProfile)
+        await using var repo = RepositoryFactory.Create();
+        var profile = await repo.GetUserProfilesQuery(AuthorizationContext.CurrentProfile)
             .ByPublicId(userId).Select().FirstOrDefaultAsync();
 
         if (profile == null)
@@ -688,7 +704,8 @@ public class UserProfileService : BaseService, IUserProfileService
     {
         using var l = log.TraceScope();
 
-        var profile = await Repository.GetUserProfilesQuery(AuthorizationContext.CurrentProfile)
+        await using var repo = RepositoryFactory.Create();
+        var profile = await repo.GetUserProfilesQuery(AuthorizationContext.CurrentProfile)
             .ByPublicId(userId).Select().FirstOrDefaultAsync();
 
         if (profile == null)

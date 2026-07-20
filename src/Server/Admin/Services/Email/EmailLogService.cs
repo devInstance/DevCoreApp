@@ -28,10 +28,10 @@ public class EmailLogService : BaseService, IEmailLogService
 
     public EmailLogService(IScopeManager logManager,
                            ITimeProvider timeProvider,
-                           IQueryRepository query,
+                              IQueryRepositoryFactory repositoryFactory,
                            IAuthorizationContext authorizationContext,
                            IBackgroundWorker backgroundWorker)
-        : base(logManager, timeProvider, query, authorizationContext)
+        : base(logManager, timeProvider, repositoryFactory, authorizationContext)
     {
         log = logManager.CreateLogger(this);
         BackgroundWorker = backgroundWorker;
@@ -44,7 +44,8 @@ public class EmailLogService : BaseService, IEmailLogService
     {
         using var l = log.TraceScope();
 
-        var query = Repository.GetEmailLogQuery(AuthorizationContext.CurrentProfile);
+        await using var repo = RepositoryFactory.Create();
+        var query = repo.GetEmailLogQuery(AuthorizationContext.CurrentProfile);
 
         if (!string.IsNullOrEmpty(search))
         {
@@ -100,7 +101,8 @@ public class EmailLogService : BaseService, IEmailLogService
     {
         using var l = log.TraceScope();
 
-        var emailLog = await Repository.GetEmailLogQuery(AuthorizationContext.CurrentProfile)
+        await using var repo = RepositoryFactory.Create();
+        var emailLog = await repo.GetEmailLogQuery(AuthorizationContext.CurrentProfile)
             .ByPublicId(publicId)
             .Select()
             .FirstOrDefaultAsync();
@@ -127,7 +129,8 @@ public class EmailLogService : BaseService, IEmailLogService
     {
         using var l = log.TraceScope();
 
-        var query = Repository.GetEmailLogQuery(AuthorizationContext.CurrentProfile);
+        await using var repo = RepositoryFactory.Create();
+        var query = repo.GetEmailLogQuery(AuthorizationContext.CurrentProfile);
         var emailLog = await query.ByPublicId(publicId).Select().FirstOrDefaultAsync();
 
         if (emailLog == null)
@@ -146,9 +149,10 @@ public class EmailLogService : BaseService, IEmailLogService
     {
         using var l = log.TraceScope();
 
+        await using var repo = RepositoryFactory.Create();
         foreach (var publicId in publicIds)
         {
-            var query = Repository.GetEmailLogQuery(AuthorizationContext.CurrentProfile);
+            var query = repo.GetEmailLogQuery(AuthorizationContext.CurrentProfile);
             var emailLog = await query.ByPublicId(publicId).Select().FirstOrDefaultAsync();
 
             if (emailLog != null)
@@ -165,7 +169,8 @@ public class EmailLogService : BaseService, IEmailLogService
     {
         using var l = log.TraceScope();
 
-        var query = Repository.GetEmailLogQuery(AuthorizationContext.CurrentProfile);
+        await using var repo = RepositoryFactory.Create();
+        var query = repo.GetEmailLogQuery(AuthorizationContext.CurrentProfile);
         var emailLog = await query.ByPublicId(publicId).Select().FirstOrDefaultAsync();
 
         if (emailLog == null)
@@ -208,7 +213,8 @@ public class EmailLogService : BaseService, IEmailLogService
     {
         using var l = log.TraceScope();
 
-        var query = Repository.GetEmailLogQuery(AuthorizationContext.CurrentProfile)
+        await using var repo = RepositoryFactory.Create();
+        var query = repo.GetEmailLogQuery(AuthorizationContext.CurrentProfile)
             .ByStatus(EmailLogStatus.Failed);
 
         if (!string.IsNullOrEmpty(search))
@@ -231,7 +237,7 @@ public class EmailLogService : BaseService, IEmailLogService
             emailLog.SentDate = null;
             emailLog.ScheduledDate = TimeProvider.CurrentTime;
 
-            var updateQuery = Repository.GetEmailLogQuery(AuthorizationContext.CurrentProfile);
+            var updateQuery = repo.GetEmailLogQuery(AuthorizationContext.CurrentProfile);
             await updateQuery.UpdateAsync(emailLog);
 
             var emailRequest = new EmailRequest

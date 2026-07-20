@@ -1,9 +1,13 @@
-﻿using DevInstance.DevCoreApp.Server.Database.Core.Data.Queries;
+﻿using System;
+using DevInstance.DevCoreApp.Server.Database.Core.Data.Queries;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
 
 namespace DevInstance.DevCoreApp.Server.Database.Core.Data;
 
-public interface IQueryRepository
+// IAsyncDisposable so a repository created per-operation via IQueryRepositoryFactory
+// disposes the short-lived DbContext it owns. The DI-scoped registration owns no context
+// and its DisposeAsync is a no-op (see CoreQueryRepository.ownsContext).
+public interface IQueryRepository : IAsyncDisposable
 {
     IUserProfilesQuery GetUserProfilesQuery(UserProfile currentProfile);
     IGridProfilesQuery GetGridProfilesQuery(UserProfile currentProfile);

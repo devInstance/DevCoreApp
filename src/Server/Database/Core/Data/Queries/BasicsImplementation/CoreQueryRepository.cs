@@ -1,4 +1,6 @@
-﻿using DevInstance.LogScope;
+﻿using System;
+using System.Threading.Tasks;
+using DevInstance.LogScope;
 using DevInstance.DevCoreApp.Server.Database.Core;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Server.Database.Core.Data.Queries;
@@ -8,21 +10,47 @@ using DevInstance.DevCoreApp.Server.Database.Core.Data.Queries;
 
 namespace DevInstance.DevCoreApp.Server.Database.Postgres.Data;
 
-public abstract class CoreQueryRepository : IQueryRepository
+// Implements IDisposable in addition to IQueryRepository's IAsyncDisposable so the DI-scoped
+// registration can be torn down by a SYNCHRONOUSLY-disposed scope (e.g. `using var scope =
+// provider.CreateScope()` in migrate/seed code). A service that is only IAsyncDisposable throws
+// "type only implements IAsyncDisposable" when a sync scope disposes it. Both dispose paths are
+// no-ops unless this repository owns its context (factory path).
+public class CoreQueryRepository : IQueryRepository, IDisposable
 {
     protected ApplicationDbContext DB { get; }
     public ITimeProvider TimeProvider { get; }
 
     private IScopeLog log;
     private IScopeManager LogManager;
+    private readonly bool _ownsContext;
 
-    public CoreQueryRepository(IScopeManager logManager, ITimeProvider timeProvider, ApplicationDbContext dB)
+    public CoreQueryRepository(IScopeManager logManager, ITimeProvider timeProvider, ApplicationDbContext dB, bool ownsContext = false)
     {
         LogManager = logManager;
         log = logManager.CreateLogger(this);
 
         TimeProvider = timeProvider;
         DB = dB;
+        _ownsContext = ownsContext;
+    }
+
+    // Disposes the context only when this repository created it (factory path, ownsContext: true).
+    // The DI-scoped registration passes ownsContext: false — DI owns and disposes that context.
+    public async ValueTask DisposeAsync()
+    {
+        if (_ownsContext)
+        {
+            await DB.DisposeAsync();
+        }
+    }
+
+    // Synchronous counterpart for sync scope disposal (see class remark). Same ownership rule.
+    public void Dispose()
+    {
+        if (_ownsContext)
+        {
+            DB.Dispose();
+        }
     }
 
     public IUserProfilesQuery GetUserProfilesQuery(UserProfile currentProfile)

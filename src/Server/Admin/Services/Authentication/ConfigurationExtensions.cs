@@ -83,7 +83,7 @@ public static class ConfigurationExtensions
     /// </summary>
     public static async Task MigrateAndSeedAsync(this IServiceProvider serviceProvider)
     {
-        using var scope = serviceProvider.CreateScope();
+        await using var scope = serviceProvider.CreateAsyncScope();
         var services = scope.ServiceProvider;
 
         // Apply pending migrations

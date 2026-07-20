@@ -13,7 +13,12 @@ public abstract class BaseService
     private IScopeLog log;
 
     public ITimeProvider TimeProvider { get; }
-    public IQueryRepository Repository { get; }
+
+    // Per-operation unit of work. Blazor-facing service methods open one via
+    // `await using var repo = RepositoryFactory.Create();` so concurrent components on a
+    // circuit never share a context. The old shared scoped `Repository` is intentionally
+    // gone — do not reintroduce a scoped IQueryRepository here. See src/Server/Database/UnitOfWork.md.
+    public IQueryRepositoryFactory RepositoryFactory { get; }
 
     public IAuthorizationContext AuthorizationContext { get; }
 
@@ -30,13 +35,13 @@ public abstract class BaseService
 
     public BaseService(IScopeManager logManager,
                         ITimeProvider timeProvider,
-                        IQueryRepository query,
+                        IQueryRepositoryFactory repositoryFactory,
                         IAuthorizationContext authorizationContext)
     {
         log = logManager.CreateLogger(this);
 
         TimeProvider = timeProvider;
-        Repository = query;
+        RepositoryFactory = repositoryFactory;
         AuthorizationContext = authorizationContext;
     }
 }

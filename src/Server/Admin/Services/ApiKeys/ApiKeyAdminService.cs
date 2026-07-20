@@ -28,10 +28,10 @@ public class ApiKeyAdminService : BaseService, IApiKeyAdminService
 
     public ApiKeyAdminService(IScopeManager logManager,
                                ITimeProvider timeProvider,
-                               IQueryRepository query,
+                              IQueryRepositoryFactory repositoryFactory,
                                IAuthorizationContext authorizationContext,
                                IApiKeyPermissionSnapshotService permissionSnapshotService)
-        : base(logManager, timeProvider, query, authorizationContext)
+        : base(logManager, timeProvider, repositoryFactory, authorizationContext)
     {
         log = logManager.CreateLogger(this);
         this.permissionSnapshotService = permissionSnapshotService;
@@ -42,7 +42,8 @@ public class ApiKeyAdminService : BaseService, IApiKeyAdminService
     {
         using var l = log.TraceScope();
 
-        var query = Repository.GetApiKeyQuery(AuthorizationContext.CurrentProfile);
+        await using var repo = RepositoryFactory.Create();
+        var query = repo.GetApiKeyQuery(AuthorizationContext.CurrentProfile);
 
         if (!string.IsNullOrEmpty(search))
             query = query.Search(search);
@@ -76,11 +77,12 @@ public class ApiKeyAdminService : BaseService, IApiKeyAdminService
         var prefix = plainTextKey[..8];
         var keyHash = HashKey(plainTextKey);
 
-        var query = Repository.GetApiKeyQuery(AuthorizationContext.CurrentProfile);
+        await using var repo = RepositoryFactory.Create();
+        var query = repo.GetApiKeyQuery(AuthorizationContext.CurrentProfile);
         var apiKey = query.CreateNew();
         apiKey.ToRecord(item);
         apiKey.Scopes = await ResolveScopesAsync(item.Scopes);
-        apiKey.OrganizationId = await ResolveOrganizationIdAsync(item.OrganizationId);
+        apiKey.OrganizationId = await ResolveOrganizationIdAsync(repo, item.OrganizationId);
         apiKey.KeyHash = keyHash;
         apiKey.Prefix = prefix;
         apiKey.CreatedById = AuthorizationContext.CurrentProfile.Id;
@@ -90,7 +92,7 @@ public class ApiKeyAdminService : BaseService, IApiKeyAdminService
 
         var result = new ApiKeyCreateResult
         {
-            Key = (await LoadKeyAsync(apiKey.PublicId)).ToView(),
+            Key = (await LoadKeyAsync(repo, apiKey.PublicId)).ToView(),
             PlainTextKey = plainTextKey
         };
 
@@ -101,7 +103,8 @@ public class ApiKeyAdminService : BaseService, IApiKeyAdminService
     {
         using var l = log.TraceScope();
 
-        var query = Repository.GetApiKeyQuery(AuthorizationContext.CurrentProfile);
+        await using var repo = RepositoryFactory.Create();
+        var query = repo.GetApiKeyQuery(AuthorizationContext.CurrentProfile);
         var apiKey = await query.ByPublicId(id).Select().FirstOrDefaultAsync();
 
         if (apiKey == null)
@@ -140,12 +143,12 @@ public class ApiKeyAdminService : BaseService, IApiKeyAdminService
         return await permissionSnapshotService.GetEffectivePermissionsAsync(AuthorizationContext.CurrentProfile.Id);
     }
 
-    private async Task<Guid?> ResolveOrganizationIdAsync(string? organizationPublicId)
+    private async Task<Guid?> ResolveOrganizationIdAsync(IQueryRepository repo, string? organizationPublicId)
     {
         if (string.IsNullOrWhiteSpace(organizationPublicId))
             return null;
 
-        var organization = await Repository.GetOrganizationsQuery(AuthorizationContext.CurrentProfile)
+        var organization = await repo.GetOrganizationsQuery(AuthorizationContext.CurrentProfile)
             .ByPublicId(organizationPublicId)
             .Select()
             .FirstOrDefaultAsync();
@@ -156,9 +159,9 @@ public class ApiKeyAdminService : BaseService, IApiKeyAdminService
         return organization.Id;
     }
 
-    private async Task<Database.Core.Models.ApiKey> LoadKeyAsync(string publicId)
+    private async Task<Database.Core.Models.ApiKey> LoadKeyAsync(IQueryRepository repo, string publicId)
     {
-        return await Repository.GetApiKeyQuery(AuthorizationContext.CurrentProfile)
+        return await repo.GetApiKeyQuery(AuthorizationContext.CurrentProfile)
             .ByPublicId(publicId)
             .Select()
             .Include(ak => ak.CreatedBy)

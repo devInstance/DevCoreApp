@@ -23,8 +23,8 @@ public interface ITestBaseServiceQuery : /*IModelQuery<TestBaseServiceEntity, IT
 
 internal class TestBaseService : BaseService
 {
-    public TestBaseService(IScopeManager logManager, ITimeProvider timeProvider, IQueryRepository query, IAuthorizationContext authorizationContext) 
-        : base(logManager, timeProvider, query, authorizationContext)
+    public TestBaseService(IScopeManager logManager, ITimeProvider timeProvider, IQueryRepositoryFactory repositoryFactory, IAuthorizationContext authorizationContext)
+        : base(logManager, timeProvider, repositoryFactory, authorizationContext)
     {
     }
 

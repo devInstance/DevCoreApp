@@ -22,9 +22,9 @@ public class JobDashboardService : BaseService, IJobDashboardService
 
     public JobDashboardService(IScopeManager logManager,
                                ITimeProvider timeProvider,
-                               IQueryRepository query,
+                              IQueryRepositoryFactory repositoryFactory,
                                IAuthorizationContext authorizationContext)
-        : base(logManager, timeProvider, query, authorizationContext)
+        : base(logManager, timeProvider, repositoryFactory, authorizationContext)
     {
         log = logManager.CreateLogger(this);
     }
@@ -36,7 +36,8 @@ public class JobDashboardService : BaseService, IJobDashboardService
     {
         using var l = log.TraceScope();
 
-        var query = Repository.GetBackgroundTaskQuery(AuthorizationContext.CurrentProfile);
+        await using var repo = RepositoryFactory.Create();
+        var query = repo.GetBackgroundTaskQuery(AuthorizationContext.CurrentProfile);
 
         if (!string.IsNullOrEmpty(search))
         {
@@ -81,7 +82,8 @@ public class JobDashboardService : BaseService, IJobDashboardService
     {
         using var l = log.TraceScope();
 
-        var task = await Repository.GetBackgroundTaskQuery(AuthorizationContext.CurrentProfile)
+        await using var repo = RepositoryFactory.Create();
+        var task = await repo.GetBackgroundTaskQuery(AuthorizationContext.CurrentProfile)
             .ByPublicId(jobPublicId)
             .Select()
             .FirstOrDefaultAsync();
@@ -91,7 +93,7 @@ public class JobDashboardService : BaseService, IJobDashboardService
             throw new RecordNotFoundException("Background task not found.");
         }
 
-        var logs = await Repository.GetBackgroundTaskLogQuery(AuthorizationContext.CurrentProfile)
+        var logs = await repo.GetBackgroundTaskLogQuery(AuthorizationContext.CurrentProfile)
             .ByBackgroundTaskId(task.Id)
             .SortBy("startedat", false)
             .Select()
@@ -105,7 +107,8 @@ public class JobDashboardService : BaseService, IJobDashboardService
     {
         using var l = log.TraceScope();
 
-        var query = Repository.GetBackgroundTaskQuery(AuthorizationContext.CurrentProfile);
+        await using var repo = RepositoryFactory.Create();
+        var query = repo.GetBackgroundTaskQuery(AuthorizationContext.CurrentProfile);
         var task = await query.ByPublicId(jobPublicId).Select().FirstOrDefaultAsync();
 
         if (task == null)
@@ -131,7 +134,8 @@ public class JobDashboardService : BaseService, IJobDashboardService
     {
         using var l = log.TraceScope();
 
-        var query = Repository.GetBackgroundTaskQuery(AuthorizationContext.CurrentProfile);
+        await using var repo = RepositoryFactory.Create();
+        var query = repo.GetBackgroundTaskQuery(AuthorizationContext.CurrentProfile);
         var task = await query.ByPublicId(jobPublicId)
             .Select()
             .FirstOrDefaultAsync();
@@ -146,7 +150,7 @@ public class JobDashboardService : BaseService, IJobDashboardService
             throw new BadRequestException("Only failed tasks can be retried.");
         }
 
-        var newQuery = Repository.GetBackgroundTaskQuery(AuthorizationContext.CurrentProfile);
+        var newQuery = repo.GetBackgroundTaskQuery(AuthorizationContext.CurrentProfile);
         var newTask = newQuery.CreateNew();
         newTask.TaskType = task.TaskType;
         newTask.Payload = task.Payload;

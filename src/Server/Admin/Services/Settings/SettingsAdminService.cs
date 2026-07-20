@@ -19,10 +19,10 @@ public class SettingsAdminService : BaseService, ISettingsAdminService
 
     public SettingsAdminService(IScopeManager logManager,
                                 ITimeProvider timeProvider,
-                                IQueryRepository query,
+                              IQueryRepositoryFactory repositoryFactory,
                                 IAuthorizationContext authorizationContext,
                                 ISettingsCacheInvalidator cacheInvalidator)
-        : base(logManager, timeProvider, query, authorizationContext)
+        : base(logManager, timeProvider, repositoryFactory, authorizationContext)
     {
         log = logManager.CreateLogger(this);
         _cacheInvalidator = cacheInvalidator;
@@ -33,7 +33,8 @@ public class SettingsAdminService : BaseService, ISettingsAdminService
     {
         using var l = log.TraceScope();
 
-        var query = Repository.GetSettingsQuery(AuthorizationContext.CurrentProfile);
+        await using var repo = RepositoryFactory.Create();
+        var query = repo.GetSettingsQuery(AuthorizationContext.CurrentProfile);
 
         switch (scope)
         {
@@ -96,7 +97,8 @@ public class SettingsAdminService : BaseService, ISettingsAdminService
             throw new BadRequestException("Invalid setting ID.");
         }
 
-        var query = Repository.GetSettingsQuery(AuthorizationContext.CurrentProfile);
+        await using var repo = RepositoryFactory.Create();
+        var query = repo.GetSettingsQuery(AuthorizationContext.CurrentProfile);
         var setting = await query.ByPublicId(id).Select().FirstOrDefaultAsync();
 
         if (setting == null)
@@ -120,7 +122,8 @@ public class SettingsAdminService : BaseService, ISettingsAdminService
     {
         using var l = log.TraceScope();
 
-        var query = Repository.GetSettingsQuery(AuthorizationContext.CurrentProfile);
+        await using var repo = RepositoryFactory.Create();
+        var query = repo.GetSettingsQuery(AuthorizationContext.CurrentProfile);
         var setting = query.CreateNew();
 
         setting.Category = item.Category;
@@ -164,7 +167,8 @@ public class SettingsAdminService : BaseService, ISettingsAdminService
             throw new BadRequestException("Invalid setting ID.");
         }
 
-        var query = Repository.GetSettingsQuery(AuthorizationContext.CurrentProfile);
+        await using var repo = RepositoryFactory.Create();
+        var query = repo.GetSettingsQuery(AuthorizationContext.CurrentProfile);
         var setting = await query.ByPublicId(id).Select().FirstOrDefaultAsync();
 
         if (setting == null)

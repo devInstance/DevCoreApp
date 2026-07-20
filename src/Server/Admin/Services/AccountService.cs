@@ -30,14 +30,14 @@ public class AccountService : BaseService
     public AccountService(
         IScopeManager logManager,
         ITimeProvider timeProvider,
-        IQueryRepository query,
+                              IQueryRepositoryFactory repositoryFactory,
         IAuthorizationContext authorizationContext,
         SignInManager<ApplicationUser> signInManager,
         UserManager<ApplicationUser> userManager,
         IUserStore<ApplicationUser> userStore,
         IEmailSender<ApplicationUser> emailSender,
         IHttpContextAccessor httpContextAccessor)
-        : base(logManager, timeProvider, query, authorizationContext)
+        : base(logManager, timeProvider, repositoryFactory, authorizationContext)
     {
         log = logManager.CreateLogger(this);
         this.signInManager = signInManager;
@@ -268,7 +268,8 @@ public class AccountService : BaseService
         }
 
         // Create UserProfile
-        var profileQuery = Repository.GetUserProfilesQuery(null!);
+        await using var repo = RepositoryFactory.Create();
+        var profileQuery = repo.GetUserProfilesQuery(null!);
         var userProfile = profileQuery.CreateNew();
         userProfile.Email = input.Email;
         userProfile.FirstName = input.FirstName;
@@ -294,7 +295,8 @@ public class AccountService : BaseService
 
     private async Task RecordLoginAttemptAsync(Guid userId, string? ipAddress, string? userAgent, bool success, string? failureReason)
     {
-        var query = Repository.GetUserLoginHistoryQuery(null!);
+        await using var repo = RepositoryFactory.Create();
+        var query = repo.GetUserLoginHistoryQuery(null!);
         var entry = query.CreateNew();
         entry.UserId = userId;
         entry.IpAddress = ipAddress;
