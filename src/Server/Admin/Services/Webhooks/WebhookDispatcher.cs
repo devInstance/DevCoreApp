@@ -17,16 +17,19 @@ public class WebhookDispatcher : IWebhookDispatcher
 {
     private readonly IQueryRepository _repository;
     private readonly IBackgroundWorker _backgroundWorker;
+    private readonly IOperationContext _operationContext;
     private readonly IScopeLog _log;
 
     public WebhookDispatcher(
         IScopeManager logManager,
         IQueryRepository repository,
-        IBackgroundWorker backgroundWorker)
+        IBackgroundWorker backgroundWorker,
+        IOperationContext operationContext)
     {
         _log = logManager.CreateLogger(this);
         _repository = repository;
         _backgroundWorker = backgroundWorker;
+        _operationContext = operationContext;
     }
 
     public async Task DispatchAsync(string eventType, object eventPayload)
@@ -70,7 +73,8 @@ public class WebhookDispatcher : IWebhookDispatcher
                     SubscriptionPublicId = subscription.PublicId,
                     EventType = eventType,
                     Payload = payloadJson
-                }
+                },
+                OrganizationId = _operationContext.PrimaryOrganizationId
             });
 
             l.I($"Webhook delivery queued: {subscription.Url} for event '{eventType}' (delivery: {delivery.PublicId})");

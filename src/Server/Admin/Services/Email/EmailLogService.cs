@@ -24,17 +24,21 @@ public class EmailLogService : BaseService, IEmailLogService
 {
     private IBackgroundWorker BackgroundWorker { get; }
 
+    private readonly IOperationContext OperationContext;
+
     private IScopeLog log;
 
     public EmailLogService(IScopeManager logManager,
                            ITimeProvider timeProvider,
                               IQueryRepositoryFactory repositoryFactory,
                            IAuthorizationContext authorizationContext,
-                           IBackgroundWorker backgroundWorker)
+                           IBackgroundWorker backgroundWorker,
+                           IOperationContext operationContext)
         : base(logManager, timeProvider, repositoryFactory, authorizationContext)
     {
         log = logManager.CreateLogger(this);
         BackgroundWorker = backgroundWorker;
+        OperationContext = operationContext;
     }
 
     public async Task<ServiceActionResult<ModelList<EmailLogItem>>> GetAllAsync(
@@ -201,7 +205,8 @@ public class EmailLogService : BaseService, IEmailLogService
         BackgroundWorker.Submit(new BackgroundRequestItem
         {
             RequestType = BackgroundRequestType.SendEmail,
-            Content = emailRequest
+            Content = emailRequest,
+            OrganizationId = OperationContext.PrimaryOrganizationId
         });
 
         l.I($"Email log entry {publicId} re-queued for sending.");
@@ -257,7 +262,8 @@ public class EmailLogService : BaseService, IEmailLogService
             BackgroundWorker.Submit(new BackgroundRequestItem
             {
                 RequestType = BackgroundRequestType.SendEmail,
-                Content = emailRequest
+                Content = emailRequest,
+                OrganizationId = OperationContext.PrimaryOrganizationId
             });
 
             count++;

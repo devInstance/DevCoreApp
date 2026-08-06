@@ -37,6 +37,15 @@ public class BackgroundWorker : BackgroundService, IBackgroundWorker
         var operationContext = scope.ServiceProvider.GetRequiredService<BackgroundOperationContext>();
         operationContext.Reset();
 
+        // Seed the submitter's organization so anything written while building this row (and the
+        // OrganizationStampInterceptor) resolves the right scope. Reset() above cleared it, and
+        // this scope has no ambient HTTP context to recover it from.
+        if (item.OrganizationId.HasValue && item.OrganizationId.Value != Guid.Empty)
+        {
+            operationContext.PrimaryOrganizationId = item.OrganizationId.Value;
+            operationContext.SetVisibleOrganizationIds(new[] { item.OrganizationId.Value });
+        }
+
         var repository = scope.ServiceProvider.GetRequiredService<IQueryRepository>();
 
         // For SendEmail requests, ensure EmailLog exists before creating the BackgroundTask
@@ -62,6 +71,7 @@ public class BackgroundWorker : BackgroundService, IBackgroundWorker
         task.MaxRetries = GetMaxRetries(item.RequestType);
         task.ScheduledAt = DateTime.UtcNow;
         task.ResultReference = ExtractResultReference(item);
+        task.OrganizationId = item.OrganizationId ?? Guid.Empty;
 
         await query.AddAsync(task);
 

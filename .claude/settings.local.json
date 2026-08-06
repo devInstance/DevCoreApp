@@ -25,7 +25,13 @@
       "Bash(mkdir:*)",
       "Bash(where:*)",
       "Bash(npm install:*)",
-      "Bash(xargs cat:*)"
+      "Bash(xargs cat:*)",
+      "Bash(bash \"C:/Users/yfran/AppData/Local/Temp/claude/C--Projects-devInstance-DevCoreApp/e9b62a08-ceb7-4bc5-b0b7-ed790b676ae6/scratchpad/compare.sh\")",
+      "Bash(bash \"C:/Users/yfran/AppData/Local/Temp/claude/C--Projects-devInstance-DevCoreApp/e9b62a08-ceb7-4bc5-b0b7-ed790b676ae6/scratchpad/d.sh\" src/Server/Admin/Services/BaseService.cs src/Server/Database/Core/Data/IAppDbContextFactory.cs src/Server/Database/Core/Data/IQueryRepositoryFactory.cs src/Server/Database/Core/Data/Queries/BasicsImplementation/QueryRepositoryFactory.cs src/Server/Database/Core/Data/IOperationContext.cs)",
+      "Bash(bash \"C:/Users/yfran/AppData/Local/Temp/claude/C--Projects-devInstance-DevCoreApp/e9b62a08-ceb7-4bc5-b0b7-ed790b676ae6/scratchpad/d.sh\" src/Server/Database/Core/ApplicationDbContext.cs src/Server/Database/Core/Data/Queries/BasicsImplementation/CoreDatabaseObjectQuery.cs src/Server/Admin/Services/Background/Tasks/BackgroundTaskSettings.cs)",
+      "Bash(bash \"C:/Users/yfran/AppData/Local/Temp/claude/C--Projects-devInstance-DevCoreApp/e9b62a08-ceb7-4bc5-b0b7-ed790b676ae6/scratchpad/d.sh\" src/Server/Admin/Services/Background/Tasks/BackgroundTaskWorker.cs)",
+      "Bash(bash \"C:/Users/yfran/AppData/Local/Temp/claude/C--Projects-devInstance-DevCoreApp/e9b62a08-ceb7-4bc5-b0b7-ed790b676ae6/scratchpad/d.sh\" src/Server/Admin/Services/Authentication/PermissionClaimsTransformation.cs src/Shared/Utils/DateTimeExtensions.cs)",
+      "Bash(bash \"C:/Users/yfran/AppData/Local/Temp/claude/C--Projects-devInstance-DevCoreApp/e9b62a08-ceb7-4bc5-b0b7-ed790b676ae6/scratchpad/d.sh\" src/Shared/Utils/DateTimeExtensions.cs src/Server/Admin/Services/Background/BackgroundWorker.cs)"
     ]
   }
 }

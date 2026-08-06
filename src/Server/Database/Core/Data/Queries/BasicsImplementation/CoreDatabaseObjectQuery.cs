@@ -35,21 +35,49 @@ public class CoreDatabaseObjectQuery<TEntity, TSelf> : CoreBaseQuery<TEntity, TS
     {
         DateTime now = TimeProvider.CurrentTime;
 
-        return new TEntity
+        var entity = new TEntity
         {
             Id = Guid.NewGuid(),
             PublicId = IdGenerator.New(),
             CreateDate = now,
             UpdateDate = now,
         };
+
+        StampCreatedBy(entity);
+
+        return entity;
     }
 
     public override async Task UpdateAsync(TEntity record)
     {
         DateTime now = TimeProvider.CurrentTime;
         record.UpdateDate = now;
+        StampUpdatedBy(record);
         DB.Set<TEntity>().Update(record);
         await DB.SaveChangesAsync();
+    }
+
+    // Set the scalar FKs, NEVER the CreatedBy/UpdatedBy navigations. Each service opens its own
+    // short-lived context (per-operation unit of work), and CurrentProfile was materialized by a
+    // DIFFERENT context — see AuthorizationContext, which resolves it through the DI-scoped
+    // IQueryRepository. Assigning the navigation would pull that untracked UserProfile into this
+    // context's Added graph, so SaveChanges would try to INSERT the user and fail with a
+    // duplicate key ("An error occurred while saving the entity changes").
+    private void StampCreatedBy(TEntity entity)
+    {
+        if (entity is DatabaseEntityObject entityObject)
+        {
+            entityObject.CreatedById = CurrentProfile?.Id;
+            entityObject.UpdatedById = CurrentProfile?.Id;
+        }
+    }
+
+    private void StampUpdatedBy(TEntity entity)
+    {
+        if (entity is DatabaseEntityObject entityObject && CurrentProfile != null)
+        {
+            entityObject.UpdatedById = CurrentProfile.Id;
+        }
     }
 
     protected TSelf ByPublicIdHelper(string id)

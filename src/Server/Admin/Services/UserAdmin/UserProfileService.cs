@@ -35,6 +35,7 @@ public class UserProfileService : BaseService, IUserProfileService
     private IEmailTemplateService EmailTemplateService { get; }
     private IOrganizationContextResolver OrgResolver { get; }
     private IHttpContextAccessor HttpContextAccessor { get; }
+    private IOperationContext OperationContext { get; }
 
     private IScopeLog log;
 
@@ -47,7 +48,8 @@ public class UserProfileService : BaseService, IUserProfileService
                               IBackgroundWorker backgroundWorker,
                               IEmailTemplateService emailTemplateService,
                               IOrganizationContextResolver orgResolver,
-                              IHttpContextAccessor httpContextAccessor)
+                              IHttpContextAccessor httpContextAccessor,
+                              IOperationContext operationContext)
         : base(logManager, timeProvider, repositoryFactory, authorizationContext)
     {
         log = logManager.CreateLogger(this);
@@ -58,6 +60,7 @@ public class UserProfileService : BaseService, IUserProfileService
         EmailTemplateService = emailTemplateService;
         OrgResolver = orgResolver;
         HttpContextAccessor = httpContextAccessor;
+        OperationContext = operationContext;
     }
 
     public ServiceActionResult<UserProfileItem> GetCurrentUser()
@@ -366,7 +369,8 @@ public class UserProfileService : BaseService, IUserProfileService
         BackgroundWorker.Submit(new BackgroundRequestItem
         {
             RequestType = BackgroundRequestType.SendEmail,
-            Content = emailRequest
+            Content = emailRequest,
+            OrganizationId = OperationContext.PrimaryOrganizationId
         });
 
         l.I($"Registration email queued for {userProfile.Email}");

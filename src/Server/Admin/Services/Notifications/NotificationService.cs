@@ -31,6 +31,7 @@ public class NotificationService : BaseService, INotificationService
     private readonly UserManager<ApplicationUser> UserManager;
     private readonly IBackgroundWorker BackgroundWorker;
     private readonly INotificationHubService NotificationHub;
+    private readonly IOperationContext OperationContext;
 
     public NotificationService(IScopeManager logManager,
                                ITimeProvider timeProvider,
@@ -38,13 +39,15 @@ public class NotificationService : BaseService, INotificationService
                                IAuthorizationContext authorizationContext,
                                UserManager<ApplicationUser> userManager,
                                IBackgroundWorker backgroundWorker,
-                               INotificationHubService notificationHub)
+                               INotificationHubService notificationHub,
+                               IOperationContext operationContext)
         : base(logManager, timeProvider, repositoryFactory, authorizationContext)
     {
         log = logManager.CreateLogger(this);
         UserManager = userManager;
         BackgroundWorker = backgroundWorker;
         NotificationHub = notificationHub;
+        OperationContext = operationContext;
     }
 
     public async Task<ServiceActionResult<NotificationItem>> SendAsync(
@@ -327,7 +330,8 @@ public class NotificationService : BaseService, INotificationService
         await BackgroundWorker.SubmitAsync(new BackgroundRequestItem
         {
             RequestType = BackgroundRequestType.SendEmail,
-            Content = emailRequest
+            Content = emailRequest,
+            OrganizationId = OperationContext.PrimaryOrganizationId
         });
     }
 }

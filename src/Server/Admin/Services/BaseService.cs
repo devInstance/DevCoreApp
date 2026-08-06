@@ -22,15 +22,18 @@ public abstract class BaseService
 
     public IAuthorizationContext AuthorizationContext { get; }
 
-    protected TimeZoneInfo? UserTimeZone
+    protected TimeZoneInfo? UserTimeZone => ResolveTimeZone(AuthorizationContext.CurrentProfile?.TimeZoneId);
+
+    /// <summary>
+    /// Resolves a TimeZoneInfo from a stored TimeZoneId, returning null for an unset or
+    /// unrecognized id rather than throwing. Static so callers outside a service instance
+    /// (background handlers, mappers) can reuse the same lenient behavior.
+    /// </summary>
+    protected static TimeZoneInfo? ResolveTimeZone(string? timeZoneId)
     {
-        get
-        {
-            var tzId = AuthorizationContext.CurrentProfile?.TimeZoneId;
-            if (string.IsNullOrEmpty(tzId)) return null;
-            try { return TimeZoneInfo.FindSystemTimeZoneById(tzId); }
-            catch { return null; }
-        }
+        if (string.IsNullOrEmpty(timeZoneId)) return null;
+        try { return TimeZoneInfo.FindSystemTimeZoneById(timeZoneId); }
+        catch { return null; }
     }
 
     public BaseService(IScopeManager logManager,

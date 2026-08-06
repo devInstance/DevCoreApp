@@ -66,6 +66,9 @@ public class IdentityEmailSender : IEmailSender<ApplicationUser>
             TemplateName = templateName
         };
 
+        // No OrganizationId: this sender is a singleton serving unauthenticated Identity flows
+        // (confirmation, password reset), where no organization context exists. The task row is
+        // written unscoped — see BackgroundRequestItem.OrganizationId.
         _backgroundWorker.Submit(new BackgroundRequestItem
         {
             RequestType = BackgroundRequestType.SendEmail,

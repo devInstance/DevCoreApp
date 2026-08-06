@@ -281,7 +281,8 @@ public class ImportExportService : BaseService, IImportExportService
             BackgroundWorker.Submit(new BackgroundRequestItem
             {
                 RequestType = BackgroundRequestType.ImportData,
-                Content = new ImportDataRequest { SessionId = sessionId }
+                Content = new ImportDataRequest { SessionId = sessionId },
+                OrganizationId = OperationContext.PrimaryOrganizationId
             });
 
             l.I($"Import session {sessionId} submitted as background job ({session.ValidRows} rows).");

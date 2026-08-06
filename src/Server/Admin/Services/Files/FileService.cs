@@ -114,8 +114,8 @@ public class FileService : BaseService, IFileService
             orgId = rootOrg?.Id;
         }
         fileRecord.OrganizationId = orgId ?? Guid.Empty;
-        fileRecord.CreatedBy = AuthorizationContext.CurrentProfile;
-        fileRecord.UpdatedBy = AuthorizationContext.CurrentProfile;
+        // CreatedBy/UpdatedBy are stamped as scalar FKs by CreateNew() — never assign the
+        // navigation here (it belongs to another context and EF would try to INSERT it).
 
         await fileQuery.AddAsync(fileRecord);
 
@@ -161,7 +161,6 @@ public class FileService : BaseService, IFileService
         if (softDelete)
         {
             fileRecord.IsActive = false;
-            fileRecord.UpdatedBy = AuthorizationContext.CurrentProfile;
             await fileQuery.UpdateAsync(fileRecord);
             l.I($"File soft-deleted: {fileRecord.OriginalName}");
         }

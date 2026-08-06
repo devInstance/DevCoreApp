@@ -53,7 +53,9 @@ public abstract class ApplicationDbContext : IdentityDbContext<ApplicationUser, 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         base.OnConfiguring(optionsBuilder);
-        optionsBuilder.AddInterceptors(new AuditInterceptor(_operationContext));
+        optionsBuilder.AddInterceptors(
+            new AuditInterceptor(_operationContext),
+            new OrganizationStampInterceptor(_operationContext));
     }
 
     protected override void OnModelCreating(ModelBuilder builder)
