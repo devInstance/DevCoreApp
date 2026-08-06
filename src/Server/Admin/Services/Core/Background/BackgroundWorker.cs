@@ -1,0 +1,146 @@
+using System.Text.Json;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.Background.Requests;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.Background.Tasks;
+using DevInstance.DevCoreApp.Server.Database.Core.Data;
+using DevInstance.DevCoreApp.Server.Database.Core.Data.Decorators;
+using DevInstance.DevCoreApp.Shared.Model.Core.Common;
+using DevInstance.LogScope;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+
+namespace DevInstance.DevCoreApp.Server.Admin.Services.Core.Background;
+
+public class BackgroundWorker : BackgroundService, IBackgroundWorker
+{
+    private readonly IServiceScopeFactory _scopeFactory;
+    private readonly IBackgroundTaskWorker _taskWorker;
+    private readonly IScopeLog _log;
+
+    public DateTime? LastHeartbeat => _taskWorker.LastHeartbeat;
+    public int QueueLength => _taskWorker.QueueLength;
+
+    public BackgroundWorker(
+        IServiceScopeFactory scopeFactory,
+        IBackgroundTaskWorker taskWorker,
+        IScopeManager logManager)
+    {
+        _scopeFactory = scopeFactory;
+        _taskWorker = taskWorker;
+        _log = logManager.CreateLogger(this);
+    }
+
+    public async Task SubmitAsync(BackgroundRequestItem item)
+    {
+        using var log = _log.TraceScope();
+
+        using var scope = _scopeFactory.CreateScope();
+        var operationContext = scope.ServiceProvider.GetRequiredService<BackgroundOperationContext>();
+        operationContext.Reset();
+
+        // Seed the submitter's organization so anything written while building this row (and the
+        // OrganizationStampInterceptor) resolves the right scope. Reset() above cleared it, and
+        // this scope has no ambient HTTP context to recover it from.
+        if (item.OrganizationId.HasValue && item.OrganizationId.Value != Guid.Empty)
+        {
+            operationContext.PrimaryOrganizationId = item.OrganizationId.Value;
+            operationContext.SetVisibleOrganizationIds(new[] { item.OrganizationId.Value });
+        }
+
+        var repository = scope.ServiceProvider.GetRequiredService<IQueryRepository>();
+
+        // For SendEmail requests, ensure EmailLog exists before creating the BackgroundTask
+        if (item.RequestType == BackgroundRequestType.SendEmail && item.Content is EmailRequest emailRequest)
+        {
+            if (string.IsNullOrEmpty(emailRequest.EmailLogId))
+            {
+                var emailLogQuery = repository.GetEmailLogQuery(null!);
+                var emailLog = emailLogQuery.CreateNew();
+                emailLog.ToRecord(emailRequest, emailRequest.TemplateName, DateTime.UtcNow);
+                await emailLogQuery.AddAsync(emailLog);
+
+                emailRequest.EmailLogId = emailLog.PublicId;
+            }
+        }
+
+        var query = repository.GetBackgroundTaskQuery(null!);
+        var task = query.CreateNew();
+
+        task.TaskType = MapRequestType(item.RequestType);
+        task.Payload = SerializePayload(item.Content);
+        task.Status = BackgroundTaskStatus.Queued;
+        task.MaxRetries = GetMaxRetries(item.RequestType);
+        task.ScheduledAt = DateTime.UtcNow;
+        task.ResultReference = ExtractResultReference(item);
+        task.OrganizationId = item.OrganizationId ?? Guid.Empty;
+
+        await query.AddAsync(task);
+
+        _taskWorker.Enqueue(task.Id);
+    }
+
+    public void Submit(BackgroundRequestItem item)
+    {
+        using var log = _log.TraceScope();
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await SubmitAsync(item);
+            }
+            catch (Exception ex)
+            {
+                _log.E($"Failed to persist background task: {ex.Message}");
+            }
+        });
+    }
+
+    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        using var log = _log.TraceScope();
+        return _taskWorker.ExecuteAsync(stoppingToken);
+    }
+
+    private static string MapRequestType(BackgroundRequestType requestType) => requestType switch
+    {
+        BackgroundRequestType.SendEmail => BackgroundTaskTypes.SendEmail,
+        BackgroundRequestType.ImportData => BackgroundTaskTypes.ImportData,
+        BackgroundRequestType.DeliverWebhook => BackgroundTaskTypes.DeliverWebhook,
+        _ => requestType.ToString()
+    };
+
+    private static string SerializePayload(object content)
+    {
+        return JsonSerializer.Serialize(content, content.GetType());
+    }
+
+    private static int GetMaxRetries(BackgroundRequestType requestType) => requestType switch
+    {
+        BackgroundRequestType.SendEmail => 1,
+        BackgroundRequestType.DeliverWebhook => 5,
+        _ => 3
+    };
+
+    private static string? ExtractResultReference(BackgroundRequestItem item)
+    {
+        if (item.RequestType == BackgroundRequestType.SendEmail && item.Content is EmailRequest emailRequest)
+        {
+            return !string.IsNullOrEmpty(emailRequest.EmailLogId)
+                ? $"EmailLog:{emailRequest.EmailLogId}"
+                : null;
+        }
+        if (item.RequestType == BackgroundRequestType.ImportData && item.Content is ImportDataRequest importRequest)
+        {
+            return !string.IsNullOrEmpty(importRequest.SessionId)
+                ? $"ImportSession:{importRequest.SessionId}"
+                : null;
+        }
+        if (item.RequestType == BackgroundRequestType.DeliverWebhook && item.Content is WebhookDeliveryRequest webhookRequest)
+        {
+            return !string.IsNullOrEmpty(webhookRequest.DeliveryId)
+                ? $"WebhookDelivery:{webhookRequest.DeliveryId}"
+                : null;
+        }
+        return null;
+    }
+}

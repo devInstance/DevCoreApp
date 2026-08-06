@@ -1,21 +1,21 @@
 using System.Text;
 using DevInstance.BlazorToolkit.Tools;
-using DevInstance.DevCoreApp.Server.Admin.Services.Authentication;
-using DevInstance.DevCoreApp.Server.Admin.Services.ApiKeys;
-using DevInstance.DevCoreApp.Server.Admin.Services.Background;
-using DevInstance.DevCoreApp.Server.Admin.Services.Background.Tasks;
-using DevInstance.DevCoreApp.Server.Admin.Services.Background.Tasks.Handlers;
-using DevInstance.DevCoreApp.Server.Admin.Services.ImportExport;
-using DevInstance.DevCoreApp.Server.Admin.Services.ImportExport.Handlers;
-using DevInstance.DevCoreApp.Server.Admin.Services.Notifications;
-using DevInstance.DevCoreApp.Server.Admin.Services.Notifications.Templates;
-using DevInstance.DevCoreApp.Server.Admin.Services.Seeding;
-using DevInstance.DevCoreApp.Server.Admin.Services.UserAdmin;
-using DevInstance.DevCoreApp.Server.Admin.WebService.Hubs;
-using DevInstance.DevCoreApp.Server.Admin.WebService.Identity;
-using DevInstance.DevCoreApp.Server.Admin.WebService.Logging;
-using DevInstance.DevCoreApp.Server.Admin.WebService.Health;
-using DevInstance.DevCoreApp.Server.Admin.WebService.Middleware;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.Authentication;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.ApiKeys;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.Background;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.Background.Tasks;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.Background.Tasks.Handlers;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.ImportExport;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.ImportExport.Handlers;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.Notifications;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.Notifications.Templates;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.Seeding;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.UserAdmin;
+using DevInstance.DevCoreApp.Server.Admin.WebService.Core.Hubs;
+using DevInstance.DevCoreApp.Server.Admin.WebService.Core.Identity;
+using DevInstance.DevCoreApp.Server.Admin.WebService.Core.Logging;
+using DevInstance.DevCoreApp.Server.Admin.WebService.Core.Health;
+using DevInstance.DevCoreApp.Server.Admin.WebService.Core.Middleware;
 using DevInstance.DevCoreApp.Server.Admin.WebService.UI;
 using DevInstance.DevCoreApp.Server.Database.Core;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
@@ -24,11 +24,11 @@ using DevInstance.DevCoreApp.Server.Database.Postgres;
 using DevInstance.DevCoreApp.Server.Database.SqlServer;
 using DevInstance.DevCoreApp.Server.EmailProcessor.MailKit;
 using DevInstance.DevCoreApp.Server.StorageProcessor.Local;
-using DevInstance.DevCoreApp.Shared.Model.Authentication;
-using DevInstance.DevCoreApp.Shared.Utils;
+using DevInstance.DevCoreApp.Shared.Model.Core.Authentication;
+using DevInstance.DevCoreApp.Shared.Utils.Core;
 using DevInstance.LogScope.Extensions.SerilogLogger;
 using DevInstance.LogScope.Formatters;
-using DevInstance.DevCoreApp.Server.Admin.WebService.Identity;
+using DevInstance.DevCoreApp.Server.Admin.WebService.Core.Identity;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -36,11 +36,11 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
-using TimeProvider = DevInstance.DevCoreApp.Shared.Utils.TimeProvider; //TODO: migrate to standard TimeProvider
+using TimeProvider = DevInstance.DevCoreApp.Shared.Utils.Core.TimeProvider; //TODO: migrate to standard TimeProvider
 
 #if SERVICEMOCKS
-using DevInstance.DevCoreApp.Server.Admin.Services.Mocks.UserAdmin;
-using DevInstance.DevCoreApp.Server.Admin.Services.Mocks.ImportExport;
+using DevInstance.DevCoreApp.Server.Admin.Services.Mocks.Core.UserAdmin;
+using DevInstance.DevCoreApp.Server.Admin.Services.Mocks.Core.ImportExport;
 #endif
 
 namespace DevInstance.DevCoreApp.Server.Admin.WebService;

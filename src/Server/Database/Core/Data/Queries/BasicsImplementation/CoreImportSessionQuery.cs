@@ -4,8 +4,8 @@ using DevInstance.DevCoreApp.Server.Database.Core;
 using DevInstance.DevCoreApp.Server.Database.Core.Data.Queries;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using DevInstance.DevCoreApp.Server.Database.Core.Models.ImportExport;
-using DevInstance.DevCoreApp.Shared.Model.ImportExport;
-using DevInstance.DevCoreApp.Shared.Utils;
+using DevInstance.DevCoreApp.Shared.Model.Core.ImportExport;
+using DevInstance.DevCoreApp.Shared.Utils.Core;
 using DevInstance.LogScope;
 
 namespace DevInstance.DevCoreApp.Server.Database.Core.Data.Queries;

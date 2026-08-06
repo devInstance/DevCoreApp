@@ -56,11 +56,11 @@ The settings feature is split across the persisted data model, runtime resolutio
 | Data model | Stores scoped settings rows | `src/Server/Database/Core/Models/Setting.cs` |
 | Query layer | Filters and searches setting records | `src/Server/Database/Core/Data/Queries/BasicsImplementation/CoreSettingsQuery.cs` |
 | Decorators | Maps DB rows to admin DTOs | `src/Server/Database/Core/Data/Decorators/SettingDecorators.cs` |
-| Runtime service | Resolves effective values for application code | `src/Server/Admin/Services/Settings/SettingsService.cs` |
-| Cache invalidation | Invalidates cached runtime lookups after writes | `src/Server/Admin/Services/Settings/ISettingsCacheInvalidator.cs` |
-| Admin CRUD service | Lists and mutates DB setting rows | `src/Server/Admin/Services/Settings/SettingsAdminService.cs` |
-| Admin UI | Displays and edits settings | `src/Server/Admin/WebService/UI/Pages/Admin/SettingsPage.razor` |
-| Seeder | Creates default settings already used by runtime features | `src/Server/Admin/Services/Seeding/SettingsDataSeeder.cs` |
+| Runtime service | Resolves effective values for application code | `src/Server/Admin/Services/Core/Settings/SettingsService.cs` |
+| Cache invalidation | Invalidates cached runtime lookups after writes | `src/Server/Admin/Services/Core/Settings/ISettingsCacheInvalidator.cs` |
+| Admin CRUD service | Lists and mutates DB setting rows | `src/Server/Admin/Services/Core/Settings/SettingsAdminService.cs` |
+| Admin UI | Displays and edits settings | `src/Server/Admin/WebService/Core/UI/Pages/Admin/SettingsPage.razor` |
+| Seeder | Creates default settings already used by runtime features | `src/Server/Admin/Services/Core/Seeding/SettingsDataSeeder.cs` |
 
 ## Data Model
 

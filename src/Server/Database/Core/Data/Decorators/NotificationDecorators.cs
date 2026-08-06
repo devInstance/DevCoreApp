@@ -1,7 +1,7 @@
 using System;
 using DevInstance.DevCoreApp.Server.Database.Core.Models.Notifications;
-using DevInstance.DevCoreApp.Shared.Model.Common;
-using DevInstance.DevCoreApp.Shared.Model.Notifications;
+using DevInstance.DevCoreApp.Shared.Model.Core.Common;
+using DevInstance.DevCoreApp.Shared.Model.Core.Notifications;
 
 namespace DevInstance.DevCoreApp.Server.Database.Core.Data.Decorators;
 

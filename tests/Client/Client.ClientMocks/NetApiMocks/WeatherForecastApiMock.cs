@@ -1,5 +1,5 @@
 ﻿using DevInstance.DevCoreApp.Client.Net.Api;
-using DevInstance.DevCoreApp.Shared.Model;
+using DevInstance.DevCoreApp.Shared.Model.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;

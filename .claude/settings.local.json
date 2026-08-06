@@ -31,7 +31,8 @@
       "Bash(bash \"C:/Users/yfran/AppData/Local/Temp/claude/C--Projects-devInstance-DevCoreApp/e9b62a08-ceb7-4bc5-b0b7-ed790b676ae6/scratchpad/d.sh\" src/Server/Database/Core/ApplicationDbContext.cs src/Server/Database/Core/Data/Queries/BasicsImplementation/CoreDatabaseObjectQuery.cs src/Server/Admin/Services/Background/Tasks/BackgroundTaskSettings.cs)",
       "Bash(bash \"C:/Users/yfran/AppData/Local/Temp/claude/C--Projects-devInstance-DevCoreApp/e9b62a08-ceb7-4bc5-b0b7-ed790b676ae6/scratchpad/d.sh\" src/Server/Admin/Services/Background/Tasks/BackgroundTaskWorker.cs)",
       "Bash(bash \"C:/Users/yfran/AppData/Local/Temp/claude/C--Projects-devInstance-DevCoreApp/e9b62a08-ceb7-4bc5-b0b7-ed790b676ae6/scratchpad/d.sh\" src/Server/Admin/Services/Authentication/PermissionClaimsTransformation.cs src/Shared/Utils/DateTimeExtensions.cs)",
-      "Bash(bash \"C:/Users/yfran/AppData/Local/Temp/claude/C--Projects-devInstance-DevCoreApp/e9b62a08-ceb7-4bc5-b0b7-ed790b676ae6/scratchpad/d.sh\" src/Shared/Utils/DateTimeExtensions.cs src/Server/Admin/Services/Background/BackgroundWorker.cs)"
+      "Bash(bash \"C:/Users/yfran/AppData/Local/Temp/claude/C--Projects-devInstance-DevCoreApp/e9b62a08-ceb7-4bc5-b0b7-ed790b676ae6/scratchpad/d.sh\" src/Shared/Utils/DateTimeExtensions.cs src/Server/Admin/Services/Background/BackgroundWorker.cs)",
+      "Bash(sort -k2)"
     ]
   }
 }

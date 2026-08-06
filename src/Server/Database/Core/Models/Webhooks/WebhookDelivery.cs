@@ -1,6 +1,6 @@
 using System;
 using DevInstance.DevCoreApp.Server.Database.Core.Models.Base;
-using DevInstance.DevCoreApp.Shared.Model.Webhooks;
+using DevInstance.DevCoreApp.Shared.Model.Core.Webhooks;
 
 namespace DevInstance.DevCoreApp.Server.Database.Core.Models.Webhooks;
 

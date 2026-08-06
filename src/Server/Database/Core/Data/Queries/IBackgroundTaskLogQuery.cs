@@ -1,5 +1,5 @@
 using DevInstance.DevCoreApp.Server.Database.Core.Models.BackgroundTasks;
-using DevInstance.DevCoreApp.Shared.Model.Common;
+using DevInstance.DevCoreApp.Shared.Model.Core.Common;
 using DevInstance.WebServiceToolkit.Database.Queries;
 using System;
 using System.Linq;

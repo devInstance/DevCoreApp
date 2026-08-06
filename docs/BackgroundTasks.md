@@ -30,14 +30,14 @@ The system is split across job submission, persisted task records, worker execut
 
 | Area | Responsibility | Main files |
 |---|---|---|
-| Submission API | Persists jobs and enqueues immediate processing | `src/Server/Admin/Services/Background/BackgroundWorker.cs` |
-| Worker engine | Claims, runs, retries, and recovers tasks | `src/Server/Admin/Services/Background/Tasks/BackgroundTaskWorker.cs` |
-| Settings | Configurable concurrency, polling, retry, and recovery behavior | `src/Server/Admin/Services/Background/Tasks/BackgroundTaskSettings.cs` |
-| Task handlers | Implements actual job logic by task type | `src/Server/Admin/Services/Background/Tasks/Handlers/*.cs` |
+| Submission API | Persists jobs and enqueues immediate processing | `src/Server/Admin/Services/Core/Background/BackgroundWorker.cs` |
+| Worker engine | Claims, runs, retries, and recovers tasks | `src/Server/Admin/Services/Core/Background/Tasks/BackgroundTaskWorker.cs` |
+| Settings | Configurable concurrency, polling, retry, and recovery behavior | `src/Server/Admin/Services/Core/Background/Tasks/BackgroundTaskSettings.cs` |
+| Task handlers | Implements actual job logic by task type | `src/Server/Admin/Services/Core/Background/Tasks/Handlers/*.cs` |
 | Data model | Stores jobs and per-attempt logs | `src/Server/Database/Core/Models/BackgroundTasks/BackgroundTask.cs`, `src/Server/Database/Core/Models/BackgroundTasks/BackgroundTaskLog.cs` |
-| Query/admin service | Lists and manages jobs in the admin app | `src/Server/Admin/Services/BackgroundTasks/JobDashboardService.cs` |
-| Admin UI | Job dashboard and per-job logs | `src/Server/Admin/WebService/UI/Pages/Admin/JobDashboardPage.razor` |
-| Health checks | Reports worker heartbeat and queue state | `src/Server/Admin/WebService/Health/BackgroundWorkerHealthCheck.cs` |
+| Query/admin service | Lists and manages jobs in the admin app | `src/Server/Admin/Services/Core/BackgroundTasks/JobDashboardService.cs` |
+| Admin UI | Job dashboard and per-job logs | `src/Server/Admin/WebService/Core/UI/Pages/Admin/JobDashboardPage.razor` |
+| Health checks | Reports worker heartbeat and queue state | `src/Server/Admin/WebService/Core/Health/BackgroundWorkerHealthCheck.cs` |
 
 ## Core Flow
 

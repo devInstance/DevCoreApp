@@ -101,7 +101,7 @@ public interface IFileStorageProvider
 
 ## Service Layer
 
-`IFileService` (`src/Server/Admin/Services/Files/`) wraps the provider with business logic:
+`IFileService` (`src/Server/Admin/Services/Core/Files/`) wraps the provider with business logic:
 
 - **Validation** — checks content type and file size against runtime Settings before upload
 - **Organization scoping** — sets `OrganizationId` on every `FileRecord` from `IOperationContext`
@@ -142,7 +142,7 @@ src/Server/Storage/
     ConfigurationExtensions.cs
     StorageProcessor.S3.csproj
 
-src/Server/Admin/Services/Files/      # Business logic
+src/Server/Admin/Services/Core/Files/      # Business logic
   IFileService.cs
   FileService.cs
   FileDownloadResult.cs
@@ -153,7 +153,7 @@ src/Server/Database/Core/
   Data/Queries/BasicsImplementation/CoreFileRecordQuery.cs
   Data/Decorators/FileRecordDecorators.cs
 
-src/Shared/Model/Files/
+src/Shared/Model/Core/Files/
   FileRecordItem.cs                   # ViewModel
 
 src/Server/Admin/WebService/

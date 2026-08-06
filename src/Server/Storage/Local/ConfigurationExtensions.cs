@@ -2,6 +2,9 @@ using System.IO;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
+using DevInstance.DevCoreApp.Server.StorageProcessor.Core;
+using DevInstance.DevCoreApp.Server.StorageProcessor.Local.Core;
+
 namespace DevInstance.DevCoreApp.Server.StorageProcessor.Local
 {
     public static class ConfigurationExtensions

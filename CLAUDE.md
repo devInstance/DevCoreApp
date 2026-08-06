@@ -56,26 +56,38 @@ Folder names on disk are short; **assembly/namespace names are long**. The root 
 everything is `DevInstance.DevCoreApp.{Server|Shared|Client}...` — that prefix is what forks
 rename, and what the migration "sync key" strips (see [Cross-Project Sync](#cross-project-sync-migration-inout)).
 
+Inside each project, `Core/` holds shared template code and `App/` holds product code — see
+[Shared Core vs Product Code](#shared-core-vs-product-code) for the rules.
+
 ```
 DevCoreApp/
 ├── src/
 │   ├── Client/
 │   │   ├── DevCoreApp.Client/       # Blazor WASM app (standalone — NOT hosted by WebService today)
-│   │   └── Client.Services/         # → DevInstance.DevCoreApp.Client.Services (API clients)
+│   │   │   ├── Core/{UI,Extensions}/
+│   │   │   └── Program.cs, App.razor, _Imports.razor   # host shell, no marker
+│   │   └── Client.Services/Core/    # → DevInstance.DevCoreApp.Client.Services.Core (API clients)
 │   ├── Server/
 │   │   ├── Admin/
 │   │   │   ├── Services/            # → DevCoreApp.Admin.Services  (business logic, auth, background)
+│   │   │   │   ├── Core/<Feature>/  # ApiKeys, Authentication, Background, ImportExport, …
+│   │   │   │   └── BaseService.cs, ICRUDService.cs     # host shell, no marker
 │   │   │   └── WebService/          # → DevCoreApp.Admin.WebService (Blazor SSR host + API + SignalR)
+│   │   │       ├── Core/{Controllers,Health,Hubs,Identity,Logging,Middleware}/
+│   │   │       ├── Core/UI/{Components,Layout,Model,Pages}/
+│   │   │       └── Program.cs, _Imports.razor, UI/{App,Routes}.razor   # host shell
 │   │   ├── Database/
 │   │   │   ├── Core/                # Provider-agnostic: entities, queries, decorators, interceptors
+│   │   │   │                        #   already the shared root — no second Core (see Rule 3)
 │   │   │   ├── Postgres/            # PostgresApplicationDbContext + its own Migrations/
 │   │   │   └── SqlServer/           # SqlServerApplicationDbContext + its own Migrations/
 │   │   ├── Email/                   # Processor (abstraction) + MailKit / SendGrid / Smtp providers
 │   │   └── Storage/                 # Processor (abstraction) + Local / S3 providers
+│   │                                #   each: Core/ + ConfigurationExtensions.cs at the root
 │   └── Shared/
-│       ├── Model/                   # ViewModels/DTOs by feature → DevCoreApp.Shared.Model.<Feature>
-│       └── Utils/                   # Shared helpers (ITimeProvider, etc.)
-├── mocks/Server/Admin/ServicesMocks/ # [BlazorServiceMock] services for UI development
+│       ├── Model/Core/<Feature>/    # ViewModels/DTOs → DevCoreApp.Shared.Model.Core.<Feature>
+│       └── Utils/Core/              # Shared helpers (ITimeProvider, etc.)
+├── mocks/Server/Admin/ServicesMocks/Core/  # [BlazorServiceMock] services for UI development
 ├── tests/                            # Mirrors src/ (xUnit v3 — see Build, Test, and Run Commands)
 └── docs/
 ```
@@ -110,9 +122,9 @@ touching startup). It serves four kinds of traffic, each with a different auth p
 
 | Entry point | Wiring | Auth |
 |---|---|---|
-| Blazor SSR pages (`UI/Pages/**`) | `MapRazorComponents<App>().AddInteractiveServerRenderMode()` | Identity cookies |
-| REST API (`Controllers/**`) | `MapControllers()` | JWT bearer, or `X-Api-Key` |
-| SignalR (`Hubs/NotificationHub`) | `MapHub<NotificationHub>("/hubs/notifications")` | JWT via `?access_token=` |
+| Blazor SSR pages (`Core/UI/Pages/**`) | `MapRazorComponents<App>().AddInteractiveServerRenderMode()` | Identity cookies |
+| REST API (`Core/Controllers/**`) | `MapControllers()` | JWT bearer, or `X-Api-Key` |
+| SignalR (`Core/Hubs/NotificationHub`) | `MapHub<NotificationHub>("/hubs/notifications")` | JWT via `?access_token=` |
 | Health | `MapHealthChecks("/health")`, `/health/ready` | `HealthEndpointAccess` gate |
 
 **Auth scheme selection is dynamic.** The default scheme is a policy scheme named `"Smart"` whose
@@ -129,22 +141,50 @@ paths, falling through to the `/Error` page for the rest.
 
 ## Shared Core vs Product Code
 
-DevCoreApp is a **template**. Downstream products (**ThreadIQ**, **Tentrie**, …) are forks of it. To keep shared template code updatable across all forks, code is split by a marker segment placed **directly above the feature**:
+DevCoreApp is a **template**. Downstream products (**ThreadIQ**, **Tentrie**, …) are forks of it. To keep shared template code updatable across all forks, every file sits in an unambiguous *shared* or *product* location. Six rules define it.
 
-- **Shared / template code** → folder `.../<Layer>/Core/<Feature>/`, namespace `...<Layer>.Core.<Feature>`
-  - e.g. `Admin.Services.Core.ApiKeys`, `Admin.WebService.Core.ApiKeys`, `Shared.Core.ApiKeys`
-- **Product-specific code** → folder `.../<Layer>/App/<Feature>/`, namespace `...<Layer>.App.<Feature>`
-  - e.g. `Admin.Services.App.Jobs`
+**Rule 1 — the marker is the first segment under the project root namespace.**
 
-The split applies in: `Shared`, `Database/Core`, `Admin.Services`, `Admin.WebService`, `Email/*`, `Storage/*`, `Client`, `Client.Services`. It uses **namespace + folders inside the existing assemblies** — no new `.csproj`, the dependency graph is unchanged.
+```
+<ProjectRootNamespace>.Core.<rest>     shared / template code
+<ProjectRootNamespace>.App.<feature>   product-specific code
+```
 
-**Database exception.** The provider-agnostic `Database/Core` project already *is* the shared root — do **not** double it to `Core.Core`. Shared code keeps `Server.Database.Core.<...>` as-is; product entities go under `Server.Database.Core.App.Models.<Entity>`. The `Postgres`/`SqlServer` provider projects are untouched by this split.
+The folder layout mirrors the namespace exactly — `<ProjectDir>/Core/<rest>`:
 
-**Sync key.** A file's cross-repo identity is its namespace with the `DevInstance.{Product}` prefix stripped (e.g. `Server.Database.Core.Models.ApiKey`). Files with the same sync key and **no `.App.` segment** are the *same shared surface* and must stay in lockstep across DevCoreApp/ThreadIQ/Tentrie. Anything containing `.App.` is local and never synced.
+| File | Namespace |
+|---|---|
+| `src/Server/Admin/Services/Core/ApiKeys/ApiKeyAdminService.cs` | `…Server.Admin.Services.Core.ApiKeys` |
+| `src/Server/Admin/WebService/Core/Controllers/FileController.cs` | `…Server.Admin.WebService.Core.Controllers` |
+| `src/Server/Admin/WebService/Core/UI/Pages/Admin/Users.razor` | `…Server.Admin.WebService.Core.UI.Pages.Admin` |
+| `src/Shared/Model/Core/ApiKeys/ApiKeyItem.cs` | `…Shared.Model.Core.ApiKeys` |
+| `src/Server/Admin/Services/App/Jobs/JobService.cs` | `…Server.Admin.Services.App.Jobs` |
 
-> The bulk move of existing files into `Core/` folders is a separate, deferred migration. This section describes the **target** convention that all *new* code must follow now.
+The split uses **namespaces + folders inside the existing assemblies** — no new `.csproj`, the dependency graph is unchanged. Assembly identity (`<RootNamespace>` / `<AssemblyName>`) never gains a `Core` segment.
 
-### Marking project-specific deviations
+**Rule 2 — files directly at a project root keep the root namespace and get no marker.** These are the host/entry/shell files the framework or convention pins in place. They are shared surface by definition; a fork that must change one fences it (Rule 6) instead of moving it.
+
+```
+Admin.WebService/   Program.cs, _Imports.razor, UI/App.razor, UI/Routes.razor,
+                    appsettings*.json, wwwroot/, Styles/, Scripts/
+Admin.Services/     BaseService.cs, ICRUDService.cs
+Client/             Program.cs, App.razor, _Imports.razor, wwwroot/
+Email/*, Storage/*  ConfigurationExtensions.cs
+```
+
+Note `_Imports.razor` lives at the **WebService project root**, not in `UI/`. A `_Imports.razor` only cascades to its own folder and below, so from `UI/` it would not reach the components under `Core/UI/`.
+
+**Rule 3 — `Database/Core` is exempt.** That project already *is* the shared root — do **not** double it to `Core.Core`. Shared code keeps `Server.Database.Core.<...>` as-is; product entities go under `Server.Database.Core.App.Models.<Entity>`. The `Postgres`/`SqlServer` provider projects are untouched by this split (they hold provider plumbing plus generated migrations).
+
+**Rule 4 — the operative sync rule is `.App.`, not `Core`.** A file is *local* if and only if its namespace contains an `.App.` segment. Everything else is shared surface. This is why Rules 2 and 3 can omit the marker without breaking anything — `Core` is a locator convenience, not the source of truth.
+
+**Rule 5 — sync key.** A file's cross-repo identity is its namespace with the `DevInstance.{Product}` prefix stripped (e.g. `Server.Database.Core.Models.ApiKey`, `Server.Admin.Services.Core.ApiKeys.ApiKeyAdminService`). Files with the same sync key and no `.App.` segment are the *same shared surface* and must stay in lockstep across DevCoreApp/ThreadIQ/Tentrie.
+
+**Rule 6** is the deviation fence, below.
+
+Each project that can host product code carries an empty `App/` folder marking where it goes. Leaf projects without one (the `Email/*` and `Storage/*` providers) create `App/` on first use.
+
+### Rule 6 — marking project-specific deviations
 
 When a fork must edit a **shared (`Core`) file in place** (the change can't go in an `App/` file), fence it so upstream updates don't overwrite it and it never gets ported back:
 
@@ -180,7 +220,7 @@ Deep-dive docs for individual features and subsystems live in [`docs/`](docs/):
 - [Health Checks](docs/HealthChecks.md) · [Operation Context](docs/OperationContext.md) · [Settings](docs/Settings.md) · [Webhooks](docs/Webhooks.md)
 - [Specification](docs/Specification.md) — overall product spec
 
-Subsystem guides also live next to the code: [`src/Server/Database/UnitOfWork.md`](src/Server/Database/UnitOfWork.md), [`src/Server/Storage/FileStorage.md`](src/Server/Storage/FileStorage.md), [`src/Server/Admin/Services/ImportExport/ImportExport.md`](src/Server/Admin/Services/ImportExport/ImportExport.md), [`src/Server/Admin/WebService/UI/Components/HDataGrid.md`](src/Server/Admin/WebService/UI/Components/HDataGrid.md), and the WebService-specific [`src/Server/Admin/WebService/CLAUDE.md`](src/Server/Admin/WebService/CLAUDE.md).
+Subsystem guides also live next to the code: [`src/Server/Database/UnitOfWork.md`](src/Server/Database/UnitOfWork.md), [`src/Server/Storage/FileStorage.md`](src/Server/Storage/FileStorage.md), [`src/Server/Admin/Services/Core/ImportExport/ImportExport.md`](src/Server/Admin/Services/Core/ImportExport/ImportExport.md), [`src/Server/Admin/WebService/Core/UI/Components/HDataGrid.md`](src/Server/Admin/WebService/Core/UI/Components/HDataGrid.md), and the WebService-specific [`src/Server/Admin/WebService/CLAUDE.md`](src/Server/Admin/WebService/CLAUDE.md).
 
 ## Naming Conventions
 
@@ -299,7 +339,7 @@ ASP.NET Identity handles roles. DevCoreApp adds a permission layer on top via cl
 new permission needs **no** `AddPolicy` call — just the constant, the seeded row, and the attribute.
 
 **Permission keys use `Module.Entity.Action` format.** Define them as constants in
-`PermissionDefinitions` (`src/Shared/Model/Permissions/PermissionDefinitions.cs`), which
+`PermissionDefinitions` (`src/Shared/Model/Core/Permissions/PermissionDefinitions.cs`), which
 `PermissionSeeder` reflects over to populate the `Permissions` table:
 ```csharp
 public static class Sales
@@ -364,22 +404,29 @@ Provider-based file storage with local disk (default) and S3 (stub). Configurati
 `Admin.Services`, `Shared/Model`, and the WebService UI use **vertical slices** — group by feature,
 not by technical layer:
 
+Feature folders sit under the `Core/` (shared) or `App/` (product) marker — invoices as a
+product feature of a fork would be:
+
 ```
-Admin.Services/Invoices/        InvoiceService.cs, InvoiceValidator.cs
-Shared/Model/Invoices/          InvoiceItem.cs, InvoiceCreateRequest.cs
-Admin.WebService/UI/Pages/…     InvoiceListPage.razor, InvoiceDetailPage.razor
-Admin.WebService/Controllers/   InvoiceController.cs
+Admin.Services/App/Invoices/          InvoiceService.cs, InvoiceValidator.cs
+Shared/Model/App/Invoices/            InvoiceItem.cs, InvoiceCreateRequest.cs
+Admin.WebService/App/UI/Pages/…       InvoiceListPage.razor, InvoiceDetailPage.razor
+Admin.WebService/App/Controllers/     InvoiceController.cs
 ```
 
-**`Database/Core` is the exception — it is grouped by kind, not by feature.** Match the existing
-layout when adding an entity:
+The same feature as *shared template* code would use `Core/` in place of `App/` in each path.
+
+**`Database/Core` is the exception — it is grouped by kind, not by feature, and carries no `Core`
+marker (Rule 3).** Match the existing layout when adding an entity; product entities go under
+`App/Models/<Entity>`:
 
 ```
 Database/Core/
 ├── ApplicationDbContext.cs              # Org global query filter (IOrganizationScoped), model config
-├── Models/                              # Entities: Organization.cs, ApiKey.cs, …
+├── Models/                              # Shared entities: Organization.cs, ApiKey.cs, …
 │   ├── Base/                            # DatabaseBaseObject / DatabaseObject / DatabaseEntityObject
 │   └── <Feature>/                       # Sub-folder only when a feature has several entities
+├── App/Models/                          # Product entities → Server.Database.Core.App.Models.<Entity>
 └── Data/
     ├── Queries/IInvoiceQuery.cs                        # Query interface
     ├── Queries/BasicsImplementation/CoreInvoiceQuery.cs # Implementation (Core prefix)

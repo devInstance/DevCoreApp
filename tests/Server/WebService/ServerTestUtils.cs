@@ -1,4 +1,4 @@
-﻿using DevInstance.DevCoreApp.Server.Admin.Services.Authentication;
+﻿using DevInstance.DevCoreApp.Server.Admin.Services.Core.Authentication;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using Moq;
 using System.Threading.Tasks;

@@ -1,5 +1,5 @@
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
-using DevInstance.DevCoreApp.Shared.Model.Settings;
+using DevInstance.DevCoreApp.Shared.Model.Core.Settings;
 
 namespace DevInstance.DevCoreApp.Server.Database.Core.Data.Decorators;
 

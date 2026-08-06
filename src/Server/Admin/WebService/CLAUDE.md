@@ -69,10 +69,10 @@ Queue emails via `IBackgroundWorker.Submit()` with a `BackgroundRequestItem` of 
 - To add a new template: add a constant to `EmailTemplateName`, register in `EmailTemplateRepository`, create the HTML file in `wwwroot/email-templates/`
 
 ### HDataGrid Component
-Use `HDataGrid<TItem>` for all tabular data pages. Do not write inline `<table>` markup. Full documentation: [`UI/Components/HDataGrid.md`](UI/Components/HDataGrid.md).
+Use `HDataGrid<TItem>` for all tabular data pages. Do not write inline `<table>` markup. Full documentation: [`Core/UI/Components/HDataGrid.md`](Core/UI/Components/HDataGrid.md).
 
 ### Import/Export Engine
-Generic CSV/Excel import and export for any entity type via handler pattern. Full documentation: [`../../Services/ImportExport/ImportExport.md`](../../Services/ImportExport/ImportExport.md).
+Generic CSV/Excel import and export for any entity type via handler pattern. Full documentation: [`../../Services/Core/ImportExport/ImportExport.md`](../../Services/Core/ImportExport/ImportExport.md).
 
 ### Roles
 Defined in `ApplicationRoles`: Owner, Admin, Manager, Employee, Client. Owner is the super-admin role and is typically excluded from user-assignable roles.
