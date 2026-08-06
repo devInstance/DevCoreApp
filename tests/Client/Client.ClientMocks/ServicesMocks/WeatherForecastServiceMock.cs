@@ -1,5 +1,5 @@
-﻿using DevInstance.DevCoreApp.Client.Services;
-using DevInstance.DevCoreApp.Client.Services.Api;
+﻿using DevInstance.DevCoreApp.Client.Services.Core;
+using DevInstance.DevCoreApp.Client.Services.Core.Api;
 using DevInstance.DevCoreApp.Shared.Model.Core;
 using System;
 using System.Collections.Generic;

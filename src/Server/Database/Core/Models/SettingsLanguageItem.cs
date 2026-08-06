@@ -1,6 +1,6 @@
 ﻿using System.Globalization;
 
-namespace DevInstance.DevCoreApp.Client.Services
+namespace DevInstance.DevCoreApp.Client.Services.Core
 {
     public class SettingsLanguageItem
     {

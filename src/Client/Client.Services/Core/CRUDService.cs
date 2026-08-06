@@ -4,7 +4,7 @@ using DevInstance.BlazorToolkit.Services.Wasm;
 using DevInstance.LogScope;
 using DevInstance.WebServiceToolkit.Common.Model;
 
-namespace DevInstance.DevCoreApp.Client.Services;
+namespace DevInstance.DevCoreApp.Client.Services.Core;
 
 public delegate Task DataUpdate<T>(T item);
 

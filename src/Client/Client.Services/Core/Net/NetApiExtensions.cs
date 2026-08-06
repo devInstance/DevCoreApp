@@ -1,7 +1,7 @@
-﻿using DevInstance.DevCoreApp.Client.Services.Net.Api;
+﻿using DevInstance.DevCoreApp.Client.Services.Core.Net.Api;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace DevInstance.DevCoreApp.Client.Services.Net;
+namespace DevInstance.DevCoreApp.Client.Services.Core.Net;
 
 public static class NetApiExtensions
 {

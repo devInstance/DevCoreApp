@@ -2,7 +2,7 @@
 using DevInstance.LogScope;
 using Microsoft.AspNetCore.Components;
 
-namespace DevInstance.DevCoreApp.Client.UI.Components;
+namespace DevInstance.DevCoreApp.Client.Core.UI.Components;
 
 public class BasePage : ComponentBase, IServiceExecutionHost
 {

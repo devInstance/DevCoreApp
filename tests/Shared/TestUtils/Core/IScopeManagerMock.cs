@@ -1,7 +1,7 @@
 ﻿using DevInstance.LogScope;
 using System;
 
-namespace DevInstance.DevCoreApp.Shared.TestUtils
+namespace DevInstance.DevCoreApp.Shared.TestUtils.Core
 {
     public class IScopeManagerMock : IScopeManager
     {

@@ -1,9 +1,9 @@
 using DevInstance.BlazorToolkit.Http;
 using DevInstance.BlazorToolkit.Tools;
-using DevInstance.DevCoreApp.Client.Services;
-using DevInstance.DevCoreApp.Client.Services.Net;
-using DevInstance.DevCoreApp.Client.Services.Net.Api;
-using DevInstance.DevCoreApp.Client.Services.Notifications;
+using DevInstance.DevCoreApp.Client.Services.Core;
+using DevInstance.DevCoreApp.Client.Services.Core.Net;
+using DevInstance.DevCoreApp.Client.Services.Core.Net.Api;
+using DevInstance.DevCoreApp.Client.Services.Core.Notifications;
 using DevInstance.DevCoreApp.Shared.Utils.Core;
 using DevInstance.LogScope.Extensions;
 using DevInstance.LogScope.Formatters;

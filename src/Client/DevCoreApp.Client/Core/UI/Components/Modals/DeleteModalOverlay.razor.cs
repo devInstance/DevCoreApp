@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
 
-namespace DevInstance.DevCoreApp.Client.UI.Components.Modals;
+namespace DevInstance.DevCoreApp.Client.Core.UI.Components.Modals;
 
 public partial class DeleteModalOverlay
 {

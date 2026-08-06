@@ -1,5 +1,5 @@
 using Xunit;
-using DevInstance.DevCoreApp.Shared.TestUtils;
+using DevInstance.DevCoreApp.Shared.TestUtils.Core;
 using DevInstance.DevCoreApp.Server.Tests;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using Moq;

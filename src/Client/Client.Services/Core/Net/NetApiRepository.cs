@@ -1,10 +1,10 @@
 ﻿using DevInstance.DevCoreApp.Shared.Model.Core;
 using DevInstance.BlazorToolkit.Http;
 using Microsoft.AspNetCore.Components;
-using DevInstance.DevCoreApp.Client.Services.Net.Api;
+using DevInstance.DevCoreApp.Client.Services.Core.Net.Api;
 using System.Net.Http;
 
-namespace DevInstance.DevCoreApp.Client.Services.Net;
+namespace DevInstance.DevCoreApp.Client.Services.Core.Net;
 
 public class NetApiRepository : INetApiRepository
 {

@@ -1,6 +1,6 @@
 using DevInstance.DevCoreApp.Shared.Model.Core.Notifications;
 
-namespace DevInstance.DevCoreApp.Client.Services.Notifications;
+namespace DevInstance.DevCoreApp.Client.Services.Core.Notifications;
 
 public interface INotificationHubClient : IAsyncDisposable
 {

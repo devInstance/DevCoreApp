@@ -1,6 +1,6 @@
 using Xunit;
 using System.Linq;
-using DevInstance.DevCoreApp.Server.Tests.Services;
+using DevInstance.DevCoreApp.Server.Tests.Core.Services;
 using System.Collections.Generic;
 using Moq;
 using Times = Moq.Times;

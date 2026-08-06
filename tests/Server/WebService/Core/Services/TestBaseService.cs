@@ -9,7 +9,7 @@ using DevInstance.WebServiceToolkit.Common.Model;
 using DevInstance.WebServiceToolkit.Common.Tools;
 using DevInstance.WebServiceToolkit.Database.Queries;
 
-namespace DevInstance.DevCoreApp.Server.Tests.Services;
+namespace DevInstance.DevCoreApp.Server.Tests.Core.Services;
 
 internal class TestBaseServiceEntity : DatabaseEntityObject
 {

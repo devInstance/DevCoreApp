@@ -1,7 +1,7 @@
 ﻿using DevInstance.LogScope;
 using System.Net;
 
-namespace DevInstance.DevCoreApp.Client.Services;
+namespace DevInstance.DevCoreApp.Client.Services.Core;
 
 public delegate void ResultHandler<T>(T result);
 

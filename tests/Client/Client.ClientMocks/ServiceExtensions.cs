@@ -1,11 +1,11 @@
-﻿using DevInstance.DevCoreApp.Client.Services.Api;
+﻿using DevInstance.DevCoreApp.Client.Services.Core.Api;
 using Microsoft.Extensions.DependencyInjection;
 using DevInstance.DevCoreApp.Client.Net.Api;
 using DevInstance.DevCoreApp.Client.Net;
 using DevInstance.DevCoreApp.Client.Net.ServicesMocks;
 using DevInstance.DevCoreApp.Client.ClientMocks.ServicesMocks;
 
-namespace DevInstance.DevCoreApp.Client.Services;
+namespace DevInstance.DevCoreApp.Client.Services.Core;
 
 public static class ServiceExtensions
 {

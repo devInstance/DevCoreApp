@@ -3,7 +3,7 @@ using DevInstance.LogScope;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 
-namespace DevInstance.DevCoreApp.Client.Services.Notifications;
+namespace DevInstance.DevCoreApp.Client.Services.Core.Notifications;
 
 public class NotificationHubClient : INotificationHubClient
 {

@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 
-namespace DevInstance.DevCoreApp.Client.Services.Notifications;
+namespace DevInstance.DevCoreApp.Client.Services.Core.Notifications;
 
 public static class NotificationClientExtensions
 {
