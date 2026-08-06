@@ -1,4 +1,4 @@
-namespace DevInstance.DevCoreApp.Server.StorageProcessor
+namespace DevInstance.DevCoreApp.Server.StorageProcessor.Core
 {
     public class StorageConfiguration
     {

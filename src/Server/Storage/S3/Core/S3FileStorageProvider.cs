@@ -3,7 +3,9 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace DevInstance.DevCoreApp.Server.StorageProcessor.S3
+using DevInstance.DevCoreApp.Server.StorageProcessor.Core;
+
+namespace DevInstance.DevCoreApp.Server.StorageProcessor.S3.Core
 {
     public class S3FileStorageProvider : IFileStorageProvider
     {

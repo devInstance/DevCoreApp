@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace DevInstance.DevCoreApp.Server.EmailProcessor
+namespace DevInstance.DevCoreApp.Server.EmailProcessor.Core
 {
     public interface IEmailMessage
     {

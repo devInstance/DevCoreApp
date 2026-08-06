@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
-using DevInstance.DevCoreApp.Server.EmailProcessor;
+using DevInstance.DevCoreApp.Server.EmailProcessor.Core;
 using DevInstance.DevCoreApp.Shared.Model.Core;
 
 namespace DevInstance.DevCoreApp.Server.Database.Core.Data.Decorators;

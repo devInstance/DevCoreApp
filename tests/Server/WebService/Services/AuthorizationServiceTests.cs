@@ -3,7 +3,7 @@ using DevInstance.DevCoreApp.Shared.TestUtils;
 using DevInstance.DevCoreApp.Server.Tests;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using Moq;
-using DevInstance.DevCoreApp.Server.EmailProcessor;
+using DevInstance.DevCoreApp.Server.EmailProcessor.Core;
 using DevInstance.DevCoreApp.Shared.Model.Core;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using DevInstance.DevCoreApp.Server.Database.Core.Data.Queries;

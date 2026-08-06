@@ -1,5 +1,5 @@
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
-using DevInstance.DevCoreApp.Server.EmailProcessor;
+using DevInstance.DevCoreApp.Server.EmailProcessor.Core;
 using DevInstance.DevCoreApp.Server.Admin.Services.Background;
 using DevInstance.DevCoreApp.Server.Admin.Services.Background.Requests;
 using DevInstance.DevCoreApp.Server.Admin.Services.Notifications.Templates;

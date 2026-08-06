@@ -2,7 +2,9 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace DevInstance.DevCoreApp.Server.EmailProcessor.SendGrid;
+using DevInstance.DevCoreApp.Server.EmailProcessor.Core;
+
+namespace DevInstance.DevCoreApp.Server.EmailProcessor.SendGrid.Core;
 
 public class SendGridEmailProvider : IEmailProvider
 {

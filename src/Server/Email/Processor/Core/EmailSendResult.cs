@@ -1,4 +1,4 @@
-namespace DevInstance.DevCoreApp.Server.EmailProcessor
+namespace DevInstance.DevCoreApp.Server.EmailProcessor.Core
 {
     public class EmailSendResult
     {

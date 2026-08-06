@@ -3,7 +3,9 @@ using System.Net.Mail;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace DevInstance.DevCoreApp.Server.EmailProcessor.Smtp;
+using DevInstance.DevCoreApp.Server.EmailProcessor.Core;
+
+namespace DevInstance.DevCoreApp.Server.EmailProcessor.Smtp.Core;
 
 public class SmtpEmailProvider : IEmailProvider
 {

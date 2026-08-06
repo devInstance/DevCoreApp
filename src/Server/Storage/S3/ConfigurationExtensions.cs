@@ -1,6 +1,9 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
+using DevInstance.DevCoreApp.Server.StorageProcessor.Core;
+using DevInstance.DevCoreApp.Server.StorageProcessor.S3.Core;
+
 namespace DevInstance.DevCoreApp.Server.StorageProcessor.S3
 {
     public static class ConfigurationExtensions

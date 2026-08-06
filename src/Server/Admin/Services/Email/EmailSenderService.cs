@@ -1,5 +1,5 @@
 using DevInstance.BlazorToolkit.Tools;
-using DevInstance.DevCoreApp.Server.EmailProcessor;
+using DevInstance.DevCoreApp.Server.EmailProcessor.Core;
 using DevInstance.DevCoreApp.Server.Admin.Services.Background.Requests;
 using DevInstance.LogScope;
 

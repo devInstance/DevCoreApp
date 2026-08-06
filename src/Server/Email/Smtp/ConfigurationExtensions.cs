@@ -2,6 +2,9 @@ using System;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
+using DevInstance.DevCoreApp.Server.EmailProcessor.Core;
+using DevInstance.DevCoreApp.Server.EmailProcessor.Smtp.Core;
+
 namespace DevInstance.DevCoreApp.Server.EmailProcessor.Smtp
 {
     public static class ConfigurationExtensions

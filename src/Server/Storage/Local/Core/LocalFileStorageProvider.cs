@@ -3,7 +3,9 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace DevInstance.DevCoreApp.Server.StorageProcessor.Local
+using DevInstance.DevCoreApp.Server.StorageProcessor.Core;
+
+namespace DevInstance.DevCoreApp.Server.StorageProcessor.Local.Core
 {
     public class LocalFileStorageProvider : IFileStorageProvider
     {

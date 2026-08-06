@@ -3,7 +3,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace DevInstance.DevCoreApp.Server.StorageProcessor
+namespace DevInstance.DevCoreApp.Server.StorageProcessor.Core
 {
     public interface IFileStorageProvider
     {

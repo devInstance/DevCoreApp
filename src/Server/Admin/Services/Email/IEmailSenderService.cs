@@ -1,5 +1,5 @@
 using DevInstance.DevCoreApp.Server.Admin.Services.Background.Requests;
-using DevInstance.DevCoreApp.Server.EmailProcessor;
+using DevInstance.DevCoreApp.Server.EmailProcessor.Core;
 
 namespace DevInstance.DevCoreApp.Server.Admin.Services.Email;
 

@@ -4,7 +4,9 @@ using MailKit.Security;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace DevInstance.DevCoreApp.Server.EmailProcessor.MailKit;
+using DevInstance.DevCoreApp.Server.EmailProcessor.Core;
+
+namespace DevInstance.DevCoreApp.Server.EmailProcessor.MailKit.Core;
 
 public class MailKitEmailSender : IEmailProvider
 {
