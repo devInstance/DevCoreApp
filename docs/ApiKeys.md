@@ -38,12 +38,12 @@ The API key stack is split across these parts:
 | EF configuration | Configures indexes, JSON storage, and relationships | `src/Server/Database/Core/ApplicationDbContext.cs` |
 | Query layer | Search, sort, paging, and lookup by key hash or creator | `src/Server/Database/Core/Data/Queries/BasicsImplementation/CoreApiKeyQuery.cs` |
 | Decorators | Maps DB entity to shared admin/service model | `src/Server/Database/Core/Data/Decorators/ApiKeyDecorators.cs` |
-| Shared DTOs | Validation rules and create-result contract | `src/Shared/Model/ApiKeys/ApiKeyItem.cs` |
-| Admin service | Creates, lists, and revokes keys | `src/Server/Admin/Services/ApiKeys/ApiKeyAdminService.cs` |
-| Auth handler | Authenticates requests from `X-Api-Key` | `src/Server/Admin/WebService/Identity/ApiKeyAuthenticationHandler.cs` |
-| Permission transformation | Converts the key’s stored scopes into permission claims | `src/Server/Admin/Services/Authentication/PermissionClaimsTransformation.cs` |
-| Admin UI | Lets admins manage keys | `src/Server/Admin/WebService/UI/Pages/Admin/ApiKeysPage.razor` |
-| Seeder | Backfills legacy empty-scope keys to stable snapshots | `src/Server/Admin/Services/Seeding/ApiKeyDataSeeder.cs` |
+| Shared DTOs | Validation rules and create-result contract | `src/Shared/Model/Core/ApiKeys/ApiKeyItem.cs` |
+| Admin service | Creates, lists, and revokes keys | `src/Server/Admin/Services/Core/ApiKeys/ApiKeyAdminService.cs` |
+| Auth handler | Authenticates requests from `X-Api-Key` | `src/Server/Admin/WebService/Core/Identity/ApiKeyAuthenticationHandler.cs` |
+| Permission transformation | Converts the key’s stored scopes into permission claims | `src/Server/Admin/Services/Core/Authentication/PermissionClaimsTransformation.cs` |
+| Admin UI | Lets admins manage keys | `src/Server/Admin/WebService/Core/UI/Pages/Admin/ApiKeysPage.razor` |
+| Seeder | Backfills legacy empty-scope keys to stable snapshots | `src/Server/Admin/Services/Core/Seeding/ApiKeyDataSeeder.cs` |
 
 The runtime flow is:
 

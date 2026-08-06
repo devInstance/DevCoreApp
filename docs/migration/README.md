@@ -2,6 +2,14 @@
 
 DevCoreApp is a **template**. Downstream products (**ThreadIQ**, **Tentrie**, …) are forks of it. Shared/template code lives under `Core` namespaces/folders; product-specific code lives under `App` (see the "Shared Core vs Product Code" section in the root [`CLAUDE.md`](../../CLAUDE.md)).
 
+**Where code lives.** The marker is the first segment under the project root namespace —
+`<ProjectRootNamespace>.Core.<rest>` for shared code, `.App.<feature>` for product code, with
+folders mirroring namespaces. Two carve-outs: files sitting *directly* at a project root (host
+shell — `Program.cs`, `App.razor`, `_Imports.razor`, `BaseService.cs`, `ConfigurationExtensions.cs`)
+keep the root namespace and get no marker, and the `Database/Core` project is already the shared
+root so it is never doubled to `Core.Core`. The rule that actually decides sync is therefore
+**`.App.` means local; everything else is shared** — `Core` is a locator, not the source of truth.
+
 A fix made to shared (`Core`) code in *any* repo needs to reach *every* repo. This folder is how those fixes travel: as human- and agent-readable **instruction docs**, not as raw patches (the same logical file has a different product namespace prefix in each fork, so a literal diff rarely applies cleanly).
 
 ## Hub-and-spoke

@@ -18,7 +18,7 @@ UI (ImportPage, ExportDialog)
 
 Handlers are registered via DI. The service discovers them from `IEnumerable<IImportHandler>` and `IEnumerable<IExportHandler>`, matching by `EntityType` string.
 
-## Shared DTOs (`src/Shared/Model/ImportExport/`)
+## Shared DTOs (`src/Shared/Model/Core/ImportExport/`)
 
 | Class | Purpose |
 |-------|---------|
@@ -102,7 +102,7 @@ To make a new entity importable/exportable:
 ### 1. Create the import handler
 
 ```
-src/Server/Admin/Services/ImportExport/Handlers/{Entity}ImportHandler.cs
+src/Server/Admin/Services/Core/ImportExport/Handlers/{Entity}ImportHandler.cs
 ```
 
 ```csharp
@@ -145,7 +145,7 @@ public class InvoiceImportHandler : IImportHandler<InvoiceItem>
 ### 2. Create the export handler
 
 ```
-src/Server/Admin/Services/ImportExport/Handlers/{Entity}ExportHandler.cs
+src/Server/Admin/Services/Core/ImportExport/Handlers/{Entity}ExportHandler.cs
 ```
 
 ```csharp
@@ -315,7 +315,7 @@ Both endpoints require `Owner` or `Admin` role.
 
 ## Mock Service
 
-`ImportExportServiceMock` (`mocks/Server/Admin/ServicesMocks/ImportExport/`) — annotated `[BlazorServiceMock]`. Generates fake data with Bogus, simulates 15-row imports with 3 validation errors, and produces CSV exports with fake user data. Uses `Task.Delay` for realistic latency.
+`ImportExportServiceMock` (`mocks/Server/Admin/ServicesMocks/Core/ImportExport/`) — annotated `[BlazorServiceMock]`. Generates fake data with Bogus, simulates 15-row imports with 3 validation errors, and produces CSV exports with fake user data. Uses `Task.Delay` for realistic latency.
 
 ## Existing Handlers
 
@@ -327,7 +327,7 @@ Both endpoints require `Owner` or `Admin` role.
 ## File Summary
 
 ```
-src/Shared/Model/ImportExport/
+src/Shared/Model/Core/ImportExport/
     ImportExportEnums.cs
     ImportFieldDescriptor.cs
     ExportFieldDescriptor.cs
@@ -344,7 +344,7 @@ src/Server/Database/Core/
     Data/Queries/BasicsImplementation/CoreImportSessionQuery.cs
     Data/Decorators/ImportSessionDecorators.cs
 
-src/Server/Admin/Services/ImportExport/
+src/Server/Admin/Services/Core/ImportExport/
     IImportExportService.cs
     ImportExportService.cs
     ExportDownloadResult.cs
@@ -360,7 +360,7 @@ src/Server/Admin/Services/ImportExport/
     Handlers/UserProfileImportHandler.cs
     Handlers/UserProfileExportHandler.cs
 
-src/Server/Admin/Services/Background/
+src/Server/Admin/Services/Core/Background/
     Requests/ImportDataRequest.cs
     Tasks/Handlers/ImportDataTaskHandler.cs
 
@@ -369,6 +369,6 @@ src/Server/Admin/WebService/
     UI/Pages/Admin/ImportPage.razor(.cs)
     UI/Components/ExportDialog.razor(.cs)
 
-mocks/Server/Admin/ServicesMocks/ImportExport/
+mocks/Server/Admin/ServicesMocks/Core/ImportExport/
     ImportExportServiceMock.cs
 ```

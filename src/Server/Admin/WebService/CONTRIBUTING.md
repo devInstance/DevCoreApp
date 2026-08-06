@@ -467,7 +467,7 @@ public class UserProfile : DatabaseObject
 }
 ```
 
-### 8. Shared DTO (`Shared/Model/UserProfileItem.cs`)
+### 8. Shared DTO (`Shared/Model/Core/UserProfileItem.cs`)
 
 ```csharp
 public class UserProfileItem : ModelItem
