@@ -1,0 +1,57 @@
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Forms;
+using DevInstance.DevCoreApp.Server.Admin.WebService.Core.Identity;
+using DevInstance.DevCoreApp.Server.Admin.Services;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core;
+using DevInstance.DevCoreApp.Shared.Model.Core.Account;
+
+namespace DevInstance.DevCoreApp.Server.Admin.WebService.Core.UI.Pages.Account;
+
+public partial class Register
+{
+    [Inject]
+    private AccountService AccountService { get; set; } = default!;
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = default!;
+
+    [Inject]
+    private IdentityRedirectManager RedirectManager { get; set; } = default!;
+
+    private string? errorMessage;
+
+    [SupplyParameterFromForm]
+    private RegisterParameters Input { get; set; } = new();
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    private string? Message => errorMessage;
+
+    public async Task RegisterUser(EditContext editContext)
+    {
+        var confirmationLinkBase = NavigationManager.ToAbsoluteUri("account/confirm-email").AbsoluteUri;
+        var result = await AccountService.RegisterAsync(Input, confirmationLinkBase);
+
+        if (!result.Succeeded)
+        {
+            errorMessage = result.ErrorMessage;
+            return;
+        }
+
+        if (result.RequiresEmailConfirmation)
+        {
+            RedirectManager.RedirectToWithStatus(
+                "Account/Login",
+                "Registration successful! Please check your email to confirm your account.",
+                HttpContext);
+        }
+        else
+        {
+            RedirectManager.RedirectTo(ReturnUrl);
+        }
+    }
+}

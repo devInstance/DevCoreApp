@@ -1,7 +1,7 @@
-﻿@using DevInstance.DevCoreApp.Server.Admin.WebService.UI.Components.Account
-<Router AppAssembly="typeof(Program).Assembly" NotFoundPage="typeof(Pages.NotFound)">
+﻿@using DevInstance.DevCoreApp.Server.Admin.WebService.Core.UI.Components.Account
+<Router AppAssembly="typeof(Program).Assembly" NotFoundPage="typeof(Core.UI.Pages.NotFound)">
     <Found Context="routeData">
-        <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
+        <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Core.UI.Layout.MainLayout)">
             <NotAuthorized>
                 <RedirectToLogin />
             </NotAuthorized>

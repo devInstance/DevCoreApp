@@ -1,0 +1,24 @@
+@page "/Error"
+@using DevInstance.DevCoreApp.Server.Admin.WebService.Core.Middleware
+
+<PageTitle>Error</PageTitle>
+
+<h1 class="text-danger">Error.</h1>
+<h2 class="text-danger">An error occurred while processing your request.</h2>
+
+@if (!string.IsNullOrEmpty(CorrelationId))
+{
+    <p>
+        Something went wrong. Please reference correlation ID <code>@CorrelationId</code> when contacting support.
+    </p>
+}
+
+@code{
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+    private string? CorrelationId { get; set; }
+
+    protected override void OnInitialized() =>
+        CorrelationId = HttpContext?.Items[CorrelationIdMiddleware.ItemKey] as string;
+}
