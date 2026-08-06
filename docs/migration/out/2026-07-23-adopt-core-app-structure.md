@@ -3,11 +3,19 @@ origin: DevCoreApp
 targets: [ThreadIQ, Tentrie]
 scope:
   - "*"   # affects namespace/folder layout of every layer in each fork
-status: pending
+status: superseded
 related:
+  - docs/migration/out/2026-08-06-core-app-restructure.md   # ← apply this instead
   - CLAUDE.md ("Shared Core vs Product Code", "Cross-Project Sync")
   - docs/migration/README.md
 ---
+
+> **Superseded — do not apply.** This doc proposed the convention before DevCoreApp had
+> carried the move out itself. Two things changed in the doing: the marker rule
+> ("directly above the feature") did not cover the projects grouped by kind, and a
+> `Worker` layer listed here does not exist. Apply
+> [`2026-08-06-core-app-restructure.md`](2026-08-06-core-app-restructure.md) instead — it
+> states the finalized rules and the traps found while executing them.
 
 # Adopt the Core / App structure and migration workflow
 
