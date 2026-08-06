@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using DevInstance.DevCoreApp.Server.Admin.WebService.Identity;
 using DevInstance.DevCoreApp.Server.Admin.Services;
-using DevInstance.DevCoreApp.Shared.Model.Account;
+using DevInstance.DevCoreApp.Shared.Model.Core.Account;
 
 namespace DevInstance.DevCoreApp.Server.Admin.WebService.UI.Pages.Account;
 

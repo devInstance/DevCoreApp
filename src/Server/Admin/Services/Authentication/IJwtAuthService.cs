@@ -1,5 +1,5 @@
 using DevInstance.BlazorToolkit.Services;
-using DevInstance.DevCoreApp.Shared.Model.Authentication;
+using DevInstance.DevCoreApp.Shared.Model.Core.Authentication;
 
 namespace DevInstance.DevCoreApp.Server.Admin.Services.Authentication;
 

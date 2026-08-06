@@ -1,5 +1,5 @@
 using DevInstance.BlazorToolkit.Services;
-using DevInstance.DevCoreApp.Shared.Model.Settings;
+using DevInstance.DevCoreApp.Shared.Model.Core.Settings;
 
 namespace DevInstance.DevCoreApp.Server.Admin.Services.Settings;
 

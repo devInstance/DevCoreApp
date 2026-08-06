@@ -4,8 +4,8 @@ using DevInstance.DevCoreApp.Server.Admin.Services;
 using DevInstance.DevCoreApp.Server.Admin.Services.AuditLogs;
 using DevInstance.DevCoreApp.Server.Admin.WebService.UI.Components;
 using DevInstance.DevCoreApp.Server.Admin.WebService.UI.Model.Grid;
-using DevInstance.DevCoreApp.Shared.Model.AuditLogs;
-using DevInstance.DevCoreApp.Shared.Model.Settings;
+using DevInstance.DevCoreApp.Shared.Model.Core.AuditLogs;
+using DevInstance.DevCoreApp.Shared.Model.Core.Settings;
 using DevInstance.WebServiceToolkit.Common.Model;
 using Microsoft.AspNetCore.Components;
 

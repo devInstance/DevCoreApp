@@ -24,8 +24,8 @@ using DevInstance.DevCoreApp.Server.Database.Postgres;
 using DevInstance.DevCoreApp.Server.Database.SqlServer;
 using DevInstance.DevCoreApp.Server.EmailProcessor.MailKit;
 using DevInstance.DevCoreApp.Server.StorageProcessor.Local;
-using DevInstance.DevCoreApp.Shared.Model.Authentication;
-using DevInstance.DevCoreApp.Shared.Utils;
+using DevInstance.DevCoreApp.Shared.Model.Core.Authentication;
+using DevInstance.DevCoreApp.Shared.Utils.Core;
 using DevInstance.LogScope.Extensions.SerilogLogger;
 using DevInstance.LogScope.Formatters;
 using DevInstance.DevCoreApp.Server.Admin.WebService.Identity;
@@ -36,7 +36,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
-using TimeProvider = DevInstance.DevCoreApp.Shared.Utils.TimeProvider; //TODO: migrate to standard TimeProvider
+using TimeProvider = DevInstance.DevCoreApp.Shared.Utils.Core.TimeProvider; //TODO: migrate to standard TimeProvider
 
 #if SERVICEMOCKS
 using DevInstance.DevCoreApp.Server.Admin.Services.Mocks.UserAdmin;

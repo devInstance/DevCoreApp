@@ -45,7 +45,7 @@
     </div>
 </div>
 
-<HDataGrid TItem="DevInstance.DevCoreApp.Shared.Model.EmailLogItem"
+<HDataGrid TItem="DevInstance.DevCoreApp.Shared.Model.Core.EmailLogItem"
            Data="EmailLogList"
            Columns="Columns"
            IsLoading="Host.InProgress"
@@ -60,7 +60,7 @@
            GroupBy="@(GroupByStatus ? (e => e.Status) : null)"
            GroupsCollapsedByDefault="false">
     <ColumnTemplates>
-        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.EmailLogItem" Field="status" Context="email">
+        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.Core.EmailLogItem" Field="status" Context="email">
             <span class="badge @GetStatusBadgeClass(email.Status)">@email.Status</span>
         </HColumnTemplate>
     </ColumnTemplates>
@@ -79,7 +79,7 @@
     </GroupHeaderTemplate>
 </HDataGrid>
 
-<GridSettings Columns="Columns" OnSave="OnSave" PageSize="pageCount" TItem="DevInstance.DevCoreApp.Shared.Model.EmailLogItem" />
+<GridSettings Columns="Columns" OnSave="OnSave" PageSize="pageCount" TItem="DevInstance.DevCoreApp.Shared.Model.Core.EmailLogItem" />
 
 @if (SelectedEmail != null)
 {

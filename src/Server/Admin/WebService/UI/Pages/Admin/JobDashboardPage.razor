@@ -32,7 +32,7 @@
     </div>
 </div>
 
-<HDataGrid TItem="DevInstance.DevCoreApp.Shared.Model.BackgroundTasks.BackgroundTaskItem"
+<HDataGrid TItem="DevInstance.DevCoreApp.Shared.Model.Core.BackgroundTasks.BackgroundTaskItem"
            Data="JobList"
            Columns="Columns"
            IsLoading="Host.InProgress"
@@ -42,10 +42,10 @@
            IdSelector="t => t.Id"
            OnRowClick="OnRowClick">
     <ColumnTemplates>
-        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.BackgroundTasks.BackgroundTaskItem" Field="status" Context="task">
+        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.Core.BackgroundTasks.BackgroundTaskItem" Field="status" Context="task">
             <span class="badge @GetStatusBadgeClass(task.Status)">@task.Status</span>
         </HColumnTemplate>
-        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.BackgroundTasks.BackgroundTaskItem" Field="retrycount" Context="task">
+        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.Core.BackgroundTasks.BackgroundTaskItem" Field="retrycount" Context="task">
             @task.RetryCount / @task.MaxRetries
         </HColumnTemplate>
     </ColumnTemplates>
@@ -60,7 +60,7 @@
     </SearchContent>
 </HDataGrid>
 
-<GridSettings Columns="Columns" OnSave="OnSave" PageSize="pageCount" TItem="DevInstance.DevCoreApp.Shared.Model.BackgroundTasks.BackgroundTaskItem" />
+<GridSettings Columns="Columns" OnSave="OnSave" PageSize="pageCount" TItem="DevInstance.DevCoreApp.Shared.Model.Core.BackgroundTasks.BackgroundTaskItem" />
 
 @if (SelectedJob != null)
 {

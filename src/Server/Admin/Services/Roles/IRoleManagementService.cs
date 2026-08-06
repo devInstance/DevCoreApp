@@ -1,5 +1,5 @@
 using DevInstance.BlazorToolkit.Services;
-using DevInstance.DevCoreApp.Shared.Model.Roles;
+using DevInstance.DevCoreApp.Shared.Model.Core.Roles;
 using DevInstance.WebServiceToolkit.Common.Model;
 using System.Collections.Generic;
 using System.Threading.Tasks;

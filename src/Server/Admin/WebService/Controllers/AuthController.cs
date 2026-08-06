@@ -1,5 +1,5 @@
 using DevInstance.DevCoreApp.Server.Admin.Services.Authentication;
-using DevInstance.DevCoreApp.Shared.Model.Authentication;
+using DevInstance.DevCoreApp.Shared.Model.Core.Authentication;
 using DevInstance.WebServiceToolkit.Controllers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

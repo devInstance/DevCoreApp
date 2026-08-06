@@ -1,5 +1,5 @@
 using DevInstance.DevCoreApp.Server.Database.Core.Models.Webhooks;
-using DevInstance.DevCoreApp.Shared.Model.Webhooks;
+using DevInstance.DevCoreApp.Shared.Model.Core.Webhooks;
 
 namespace DevInstance.DevCoreApp.Server.Database.Core.Data.Decorators;
 

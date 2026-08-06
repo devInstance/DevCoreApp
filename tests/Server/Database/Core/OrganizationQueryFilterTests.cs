@@ -2,7 +2,7 @@ using DevInstance.DevCoreApp.Server.Database.Core;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using DevInstance.DevCoreApp.Server.Database.Core.Models.Base;
-using DevInstance.DevCoreApp.Shared.Model.Common;
+using DevInstance.DevCoreApp.Shared.Model.Core.Common;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 using System;

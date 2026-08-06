@@ -23,7 +23,7 @@
     </div>
 }
 
-<HDataGrid TItem="DevInstance.DevCoreApp.Shared.Model.Roles.RoleItem"
+<HDataGrid TItem="DevInstance.DevCoreApp.Shared.Model.Core.Roles.RoleItem"
            Data="RoleList"
            Columns="Columns"
            IsLoading="Host.InProgress"
@@ -32,14 +32,14 @@
            OnColumnsChanged="OnColumnsChanged"
            OnRowClick="OnRowClick">
     <ColumnTemplates>
-        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.Roles.RoleItem" Field="name" Context="role">
+        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.Core.Roles.RoleItem" Field="name" Context="role">
             @role.Name
             @if (role.IsSystemRole)
             {
                 <span class="badge bg-info ms-1">System</span>
             }
         </HColumnTemplate>
-        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.Roles.RoleItem" Field="actions" Context="role">
+        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.Core.Roles.RoleItem" Field="actions" Context="role">
             <button class="btn btn-sm btn-outline-primary me-1" title="Edit" @onclick="() => ShowEditModal(role)" @onclick:stopPropagation="true">
                 <i class="bi bi-pencil"></i>
             </button>
@@ -62,7 +62,7 @@
     </SearchContent>
 </HDataGrid>
 
-<GridSettings Columns="Columns" OnSave="OnSave" PageSize="pageCount" TItem="DevInstance.DevCoreApp.Shared.Model.Roles.RoleItem" />
+<GridSettings Columns="Columns" OnSave="OnSave" PageSize="pageCount" TItem="DevInstance.DevCoreApp.Shared.Model.Core.Roles.RoleItem" />
 
 @* ---------- Create Modal ---------- *@
 @if (showCreateModal)

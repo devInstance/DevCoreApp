@@ -3,7 +3,7 @@ using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using DevInstance.DevCoreApp.Server.Database.Postgres.Data;
 using DevInstance.DevCoreApp.Shared.TestUtils;
-using DevInstance.DevCoreApp.Shared.Utils;
+using DevInstance.DevCoreApp.Shared.Utils.Core;
 using DevInstance.LogScope;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;

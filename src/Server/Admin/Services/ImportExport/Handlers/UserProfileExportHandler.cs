@@ -1,6 +1,6 @@
 using DevInstance.DevCoreApp.Server.Admin.Services.UserAdmin;
-using DevInstance.DevCoreApp.Shared.Model;
-using DevInstance.DevCoreApp.Shared.Model.ImportExport;
+using DevInstance.DevCoreApp.Shared.Model.Core;
+using DevInstance.DevCoreApp.Shared.Model.Core.ImportExport;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DevInstance.DevCoreApp.Server.Admin.Services.ImportExport.Handlers;

@@ -1,5 +1,5 @@
 using DevInstance.DevCoreApp.Server.Admin.Services.ImportExport;
-using DevInstance.DevCoreApp.Shared.Model.ImportExport;
+using DevInstance.DevCoreApp.Shared.Model.Core.ImportExport;
 using DevInstance.WebServiceToolkit.Controllers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

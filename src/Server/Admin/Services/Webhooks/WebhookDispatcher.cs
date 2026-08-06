@@ -3,7 +3,7 @@ using DevInstance.DevCoreApp.Server.Admin.Services.Background;
 using DevInstance.DevCoreApp.Server.Admin.Services.Background.Requests;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Server.Database.Core.Data.Decorators;
-using DevInstance.DevCoreApp.Shared.Model.Webhooks;
+using DevInstance.DevCoreApp.Shared.Model.Core.Webhooks;
 using DevInstance.LogScope;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;

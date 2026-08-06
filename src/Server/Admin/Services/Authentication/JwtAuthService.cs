@@ -5,7 +5,7 @@ using System.Text;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using DevInstance.BlazorToolkit.Services;
-using DevInstance.DevCoreApp.Shared.Model.Authentication;
+using DevInstance.DevCoreApp.Shared.Model.Core.Authentication;
 using DevInstance.LogScope;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;

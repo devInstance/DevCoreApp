@@ -23,7 +23,7 @@
     </div>
 }
 
-<HDataGrid TItem="DevInstance.DevCoreApp.Shared.Model.FeatureFlags.FeatureFlagItem"
+<HDataGrid TItem="DevInstance.DevCoreApp.Shared.Model.Core.FeatureFlags.FeatureFlagItem"
            Data="FlagList"
            Columns="Columns"
            IsLoading="Host.InProgress"
@@ -32,10 +32,10 @@
            OnColumnsChanged="OnColumnsChanged"
            OnRowClick="OnRowClick">
     <ColumnTemplates>
-        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.FeatureFlags.FeatureFlagItem" Field="scope" Context="flag">
+        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.Core.FeatureFlags.FeatureFlagItem" Field="scope" Context="flag">
             @(flag.OrganizationName ?? "Global")
         </HColumnTemplate>
-        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.FeatureFlags.FeatureFlagItem" Field="isenabled" Context="flag">
+        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.Core.FeatureFlags.FeatureFlagItem" Field="isenabled" Context="flag">
             @if (flag.IsEnabled)
             {
                 <span class="badge bg-success">On</span>
@@ -45,7 +45,7 @@
                 <span class="badge bg-secondary">Off</span>
             }
         </HColumnTemplate>
-        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.FeatureFlags.FeatureFlagItem" Field="rollout" Context="flag">
+        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.Core.FeatureFlags.FeatureFlagItem" Field="rollout" Context="flag">
             @if (flag.RolloutPercentage.HasValue)
             {
                 @($"{flag.RolloutPercentage}%")
@@ -55,7 +55,7 @@
                 <span class="text-muted">&mdash;</span>
             }
         </HColumnTemplate>
-        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.FeatureFlags.FeatureFlagItem" Field="actions" Context="flag">
+        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.Core.FeatureFlags.FeatureFlagItem" Field="actions" Context="flag">
             <button class="btn btn-sm btn-outline-primary me-1" title="Edit" @onclick="() => ShowEditModal(flag)" @onclick:stopPropagation="true">
                 <i class="bi bi-pencil"></i>
             </button>
@@ -75,7 +75,7 @@
     </SearchContent>
 </HDataGrid>
 
-<GridSettings Columns="Columns" OnSave="OnSave" PageSize="pageCount" TItem="DevInstance.DevCoreApp.Shared.Model.FeatureFlags.FeatureFlagItem" />
+<GridSettings Columns="Columns" OnSave="OnSave" PageSize="pageCount" TItem="DevInstance.DevCoreApp.Shared.Model.Core.FeatureFlags.FeatureFlagItem" />
 
 @* ---------- Create/Edit Modal ---------- *@
 @if (showModal)

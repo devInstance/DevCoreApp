@@ -1,5 +1,5 @@
 using DevInstance.BlazorToolkit.Services;
-using DevInstance.DevCoreApp.Shared.Model.Webhooks;
+using DevInstance.DevCoreApp.Shared.Model.Core.Webhooks;
 using DevInstance.WebServiceToolkit.Common.Model;
 using System.Threading.Tasks;
 

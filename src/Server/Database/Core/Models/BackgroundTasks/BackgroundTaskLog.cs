@@ -1,5 +1,5 @@
 using DevInstance.DevCoreApp.Server.Database.Core.Models.Base;
-using DevInstance.DevCoreApp.Shared.Model.Common;
+using DevInstance.DevCoreApp.Shared.Model.Core.Common;
 using System;
 
 namespace DevInstance.DevCoreApp.Server.Database.Core.Models.BackgroundTasks;

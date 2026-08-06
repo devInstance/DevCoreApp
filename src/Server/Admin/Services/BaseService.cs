@@ -1,7 +1,7 @@
 ﻿using System;
 using DevInstance.LogScope;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
-using DevInstance.DevCoreApp.Shared.Utils;
+using DevInstance.DevCoreApp.Shared.Utils.Core;
 using DevInstance.DevCoreApp.Server.Admin.Services.Authentication;
 using DevInstance.WebServiceToolkit.Database.Queries;
 using DevInstance.WebServiceToolkit.Common.Model;

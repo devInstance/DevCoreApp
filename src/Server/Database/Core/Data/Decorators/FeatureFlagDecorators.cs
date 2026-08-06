@@ -1,5 +1,5 @@
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
-using DevInstance.DevCoreApp.Shared.Model.FeatureFlags;
+using DevInstance.DevCoreApp.Shared.Model.Core.FeatureFlags;
 
 namespace DevInstance.DevCoreApp.Server.Database.Core.Data.Decorators;
 

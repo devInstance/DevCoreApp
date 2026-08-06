@@ -2,7 +2,7 @@ using Bogus;
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.BlazorToolkit.Tools;
 using DevInstance.DevCoreApp.Server.Admin.Services.Email;
-using DevInstance.DevCoreApp.Shared.Model;
+using DevInstance.DevCoreApp.Shared.Model.Core;
 using DevInstance.WebServiceToolkit.Common.Model;
 using DevInstance.WebServiceToolkit.Common.Tools;
 

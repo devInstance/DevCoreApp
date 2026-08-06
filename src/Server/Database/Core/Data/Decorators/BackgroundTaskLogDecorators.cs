@@ -1,5 +1,5 @@
 using DevInstance.DevCoreApp.Server.Database.Core.Models.BackgroundTasks;
-using DevInstance.DevCoreApp.Shared.Model.BackgroundTasks;
+using DevInstance.DevCoreApp.Shared.Model.Core.BackgroundTasks;
 
 namespace DevInstance.DevCoreApp.Server.Database.Core.Data.Decorators;
 

@@ -1,5 +1,5 @@
 using DevInstance.BlazorToolkit.Services;
-using DevInstance.DevCoreApp.Shared.Model.ApiKeys;
+using DevInstance.DevCoreApp.Shared.Model.Core.ApiKeys;
 using DevInstance.WebServiceToolkit.Common.Model;
 using System.Threading.Tasks;
 

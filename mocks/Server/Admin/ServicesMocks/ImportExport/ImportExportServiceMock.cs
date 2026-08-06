@@ -2,7 +2,7 @@ using Bogus;
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.BlazorToolkit.Tools;
 using DevInstance.DevCoreApp.Server.Admin.Services.ImportExport;
-using DevInstance.DevCoreApp.Shared.Model.ImportExport;
+using DevInstance.DevCoreApp.Shared.Model.Core.ImportExport;
 using DevInstance.WebServiceToolkit.Common.Tools;
 
 namespace DevInstance.DevCoreApp.Server.Admin.Services.Mocks.ImportExport;

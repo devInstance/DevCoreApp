@@ -1,5 +1,5 @@
 using DevInstance.BlazorToolkit.Services;
-using DevInstance.DevCoreApp.Shared.Model.ImportExport;
+using DevInstance.DevCoreApp.Shared.Model.Core.ImportExport;
 
 namespace DevInstance.DevCoreApp.Server.Admin.Services.ImportExport;
 

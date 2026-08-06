@@ -1,6 +1,6 @@
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.DevCoreApp.Server.Admin.Services.UserAdmin;
-using DevInstance.DevCoreApp.Shared.Model;
+using DevInstance.DevCoreApp.Shared.Model.Core;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 

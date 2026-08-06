@@ -54,7 +54,7 @@
     </div>
 </div>
 
-<HDataGrid TItem="DevInstance.DevCoreApp.Shared.Model.UserProfileItem"
+<HDataGrid TItem="DevInstance.DevCoreApp.Shared.Model.Core.UserProfileItem"
            Data="UserList"
            Columns="Columns"
            IsLoading="Host.InProgress"
@@ -64,7 +64,7 @@
            IdSelector="u => u.Id"
            OnRowClick="OnRowClick">
     <ColumnTemplates>
-        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.UserProfileItem" Field="email" Context="user">
+        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.Core.UserProfileItem" Field="email" Context="user">
             <div class="d-flex align-items-center gap-2">
                 <ProfilePictureUpload PictureUrl="@user.ProfilePictureThumbnailUrl"
                                       FirstName="@user.FirstName"
@@ -74,7 +74,7 @@
                 <span>@user.Email</span>
             </div>
         </HColumnTemplate>
-        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.UserProfileItem" Field="status" Context="user">
+        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.Core.UserProfileItem" Field="status" Context="user">
             @if (user.Status == "Active")
             {
                 <span class="badge bg-success">Active</span>
@@ -88,7 +88,7 @@
                 <span class="badge bg-secondary">@user.Status</span>
             }
         </HColumnTemplate>
-        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.UserProfileItem" Field="actions" Context="user">
+        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.Core.UserProfileItem" Field="actions" Context="user">
             <a href="admin/users/@user.Id/edit" class="btn btn-sm btn-outline-primary me-1" title="Edit" @onclick:stopPropagation="true">
                 <i class="bi bi-pencil"></i>
             </a>
@@ -108,7 +108,7 @@
     </SearchContent>
 </HDataGrid>
 
-<GridSettings Columns="Columns" OnSave="OnSave" PageSize="pageCount" TItem="DevInstance.DevCoreApp.Shared.Model.UserProfileItem" />
+<GridSettings Columns="Columns" OnSave="OnSave" PageSize="pageCount" TItem="DevInstance.DevCoreApp.Shared.Model.Core.UserProfileItem" />
 
 @* ── User Preview Panel ── *@
 @if (SelectedUser != null)

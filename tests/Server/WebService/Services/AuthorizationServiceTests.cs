@@ -4,7 +4,7 @@ using DevInstance.DevCoreApp.Server.Tests;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using Moq;
 using DevInstance.DevCoreApp.Server.EmailProcessor;
-using DevInstance.DevCoreApp.Shared.Model;
+using DevInstance.DevCoreApp.Shared.Model.Core;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using DevInstance.DevCoreApp.Server.Database.Core.Data.Queries;
 using System.Threading.Tasks;

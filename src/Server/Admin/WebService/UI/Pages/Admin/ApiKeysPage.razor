@@ -25,7 +25,7 @@
     </div>
 }
 
-<HDataGrid TItem="DevInstance.DevCoreApp.Shared.Model.ApiKeys.ApiKeyItem"
+<HDataGrid TItem="DevInstance.DevCoreApp.Shared.Model.Core.ApiKeys.ApiKeyItem"
            Data="KeyList"
            Columns="Columns"
            IsLoading="Host.InProgress"
@@ -33,10 +33,10 @@
            OnPageChanged="OnPageChangedAsync"
            OnColumnsChanged="OnColumnsChanged">
     <ColumnTemplates>
-        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.ApiKeys.ApiKeyItem" Field="prefix" Context="key">
+        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.Core.ApiKeys.ApiKeyItem" Field="prefix" Context="key">
             <code>@key.Prefix</code>
         </HColumnTemplate>
-        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.ApiKeys.ApiKeyItem" Field="scopes" Context="key">
+        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.Core.ApiKeys.ApiKeyItem" Field="scopes" Context="key">
             @if (key.Scopes != null && key.Scopes.Count > 0)
             {
                 <span class="badge bg-info">@key.Scopes.Count scopes</span>
@@ -46,7 +46,7 @@
                 <span class="text-muted">None</span>
             }
         </HColumnTemplate>
-        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.ApiKeys.ApiKeyItem" Field="organization" Context="key">
+        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.Core.ApiKeys.ApiKeyItem" Field="organization" Context="key">
             @if (!string.IsNullOrWhiteSpace(key.OrganizationName))
             {
                 @key.OrganizationName
@@ -56,7 +56,7 @@
                 <span class="text-muted">All</span>
             }
         </HColumnTemplate>
-        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.ApiKeys.ApiKeyItem" Field="expiresat" Context="key">
+        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.Core.ApiKeys.ApiKeyItem" Field="expiresat" Context="key">
             @if (key.ExpiresAt.HasValue)
             {
                 @key.ExpiresAt.Value.ToString("yyyy-MM-dd")
@@ -66,7 +66,7 @@
                 <span class="text-muted">Never</span>
             }
         </HColumnTemplate>
-        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.ApiKeys.ApiKeyItem" Field="usedat" Context="key">
+        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.Core.ApiKeys.ApiKeyItem" Field="usedat" Context="key">
             @if (key.LastUsedAt.HasValue)
             {
                 @key.LastUsedAt.Value.ToString("yyyy-MM-dd HH:mm")
@@ -76,7 +76,7 @@
                 <span class="text-muted">Never</span>
             }
         </HColumnTemplate>
-        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.ApiKeys.ApiKeyItem" Field="status" Context="key">
+        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.Core.ApiKeys.ApiKeyItem" Field="status" Context="key">
             @if (key.IsRevoked)
             {
                 <span class="badge bg-danger">Revoked</span>
@@ -90,7 +90,7 @@
                 <span class="badge bg-success">Active</span>
             }
         </HColumnTemplate>
-        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.ApiKeys.ApiKeyItem" Field="actions" Context="key">
+        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.Core.ApiKeys.ApiKeyItem" Field="actions" Context="key">
             @if (!key.IsRevoked && !(key.ExpiresAt.HasValue && key.ExpiresAt.Value < DateTime.UtcNow))
             {
                 <AuthorizeView Policy="Admin.ApiKeys.Revoke">
@@ -112,7 +112,7 @@
     </SearchContent>
 </HDataGrid>
 
-<GridSettings Columns="Columns" OnSave="OnSave" PageSize="pageCount" TItem="DevInstance.DevCoreApp.Shared.Model.ApiKeys.ApiKeyItem" />
+<GridSettings Columns="Columns" OnSave="OnSave" PageSize="pageCount" TItem="DevInstance.DevCoreApp.Shared.Model.Core.ApiKeys.ApiKeyItem" />
 
 @* ---------- Create Modal ---------- *@
 @if (showCreateModal)

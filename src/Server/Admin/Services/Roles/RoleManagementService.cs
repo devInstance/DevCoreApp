@@ -3,7 +3,7 @@ using DevInstance.BlazorToolkit.Tools;
 using DevInstance.DevCoreApp.Server.Admin.Services.Exceptions;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
-using DevInstance.DevCoreApp.Shared.Model.Roles;
+using DevInstance.DevCoreApp.Shared.Model.Core.Roles;
 using DevInstance.LogScope;
 using DevInstance.WebServiceToolkit.Common.Model;
 using DevInstance.WebServiceToolkit.Common.Tools;

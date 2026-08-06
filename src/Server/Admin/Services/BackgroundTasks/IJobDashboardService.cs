@@ -1,5 +1,5 @@
 using DevInstance.BlazorToolkit.Services;
-using DevInstance.DevCoreApp.Shared.Model.BackgroundTasks;
+using DevInstance.DevCoreApp.Shared.Model.Core.BackgroundTasks;
 using DevInstance.WebServiceToolkit.Common.Model;
 
 namespace DevInstance.DevCoreApp.Server.Admin.Services.BackgroundTasks;

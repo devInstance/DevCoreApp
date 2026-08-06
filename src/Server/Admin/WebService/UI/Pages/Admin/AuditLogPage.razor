@@ -31,7 +31,7 @@
     </div>
 </div>
 
-<HDataGrid TItem="DevInstance.DevCoreApp.Shared.Model.AuditLogs.AuditLogItem"
+<HDataGrid TItem="DevInstance.DevCoreApp.Shared.Model.Core.AuditLogs.AuditLogItem"
            Data="AuditLogList"
            Columns="Columns"
            IsLoading="Host.InProgress"
@@ -41,10 +41,10 @@
            IdSelector="a => a.Id"
            OnRowClick="OnRowClick">
     <ColumnTemplates>
-        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.AuditLogs.AuditLogItem" Field="action" Context="entry">
+        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.Core.AuditLogs.AuditLogItem" Field="action" Context="entry">
             <span class="badge @GetActionBadgeClass(entry.Action)">@entry.Action</span>
         </HColumnTemplate>
-        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.AuditLogs.AuditLogItem" Field="source" Context="entry">
+        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.Core.AuditLogs.AuditLogItem" Field="source" Context="entry">
             @if (entry.Source == "Database")
             {
                 <span class="badge bg-warning text-dark">
@@ -68,7 +68,7 @@
     </SearchContent>
 </HDataGrid>
 
-<GridSettings Columns="Columns" OnSave="OnSave" PageSize="pageCount" TItem="DevInstance.DevCoreApp.Shared.Model.AuditLogs.AuditLogItem" />
+<GridSettings Columns="Columns" OnSave="OnSave" PageSize="pageCount" TItem="DevInstance.DevCoreApp.Shared.Model.Core.AuditLogs.AuditLogItem" />
 
 @if (SelectedEntry != null)
 {

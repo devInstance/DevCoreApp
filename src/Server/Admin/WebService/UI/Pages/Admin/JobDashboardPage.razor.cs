@@ -3,8 +3,8 @@ using DevInstance.DevCoreApp.Server.Admin.Services;
 using DevInstance.DevCoreApp.Server.Admin.Services.BackgroundTasks;
 using DevInstance.DevCoreApp.Server.Admin.WebService.UI.Components;
 using DevInstance.DevCoreApp.Server.Admin.WebService.UI.Model.Grid;
-using DevInstance.DevCoreApp.Shared.Model.BackgroundTasks;
-using DevInstance.DevCoreApp.Shared.Model.Settings;
+using DevInstance.DevCoreApp.Shared.Model.Core.BackgroundTasks;
+using DevInstance.DevCoreApp.Shared.Model.Core.Settings;
 using DevInstance.WebServiceToolkit.Common.Model;
 using Microsoft.AspNetCore.Components;
 

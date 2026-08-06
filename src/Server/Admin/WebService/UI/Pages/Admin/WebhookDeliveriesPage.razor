@@ -22,7 +22,7 @@
     </div>
 }
 
-<HDataGrid TItem="DevInstance.DevCoreApp.Shared.Model.Webhooks.WebhookDeliveryItem"
+<HDataGrid TItem="DevInstance.DevCoreApp.Shared.Model.Core.Webhooks.WebhookDeliveryItem"
            Data="DeliveryList"
            Columns="Columns"
            IsLoading="Host.InProgress"
@@ -31,21 +31,21 @@
            OnColumnsChanged="OnColumnsChanged"
            OnRowClick="OnRowClick">
     <ColumnTemplates>
-        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.Webhooks.WebhookDeliveryItem" Field="status" Context="del">
+        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.Core.Webhooks.WebhookDeliveryItem" Field="status" Context="del">
             @switch (del.Status)
             {
-                case DevInstance.DevCoreApp.Shared.Model.Webhooks.WebhookDeliveryStatus.Delivered:
+                case DevInstance.DevCoreApp.Shared.Model.Core.Webhooks.WebhookDeliveryStatus.Delivered:
                     <span class="badge bg-success">Delivered</span>
                     break;
-                case DevInstance.DevCoreApp.Shared.Model.Webhooks.WebhookDeliveryStatus.Failed:
+                case DevInstance.DevCoreApp.Shared.Model.Core.Webhooks.WebhookDeliveryStatus.Failed:
                     <span class="badge bg-danger">Failed</span>
                     break;
-                case DevInstance.DevCoreApp.Shared.Model.Webhooks.WebhookDeliveryStatus.Pending:
+                case DevInstance.DevCoreApp.Shared.Model.Core.Webhooks.WebhookDeliveryStatus.Pending:
                     <span class="badge bg-warning">Pending</span>
                     break;
             }
         </HColumnTemplate>
-        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.Webhooks.WebhookDeliveryItem" Field="responsecode" Context="del">
+        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.Core.Webhooks.WebhookDeliveryItem" Field="responsecode" Context="del">
             @if (del.ResponseStatusCode.HasValue)
             {
                 <span class="@(del.ResponseStatusCode < 300 ? "text-success" : "text-danger")">@del.ResponseStatusCode</span>
@@ -55,7 +55,7 @@
                 <span class="text-muted">&mdash;</span>
             }
         </HColumnTemplate>
-        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.Webhooks.WebhookDeliveryItem" Field="attempts" Context="del">
+        <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.Core.Webhooks.WebhookDeliveryItem" Field="attempts" Context="del">
             @del.AttemptCount
             @if (del.NextRetryAt.HasValue)
             {
@@ -68,7 +68,7 @@
     </EmptyContent>
 </HDataGrid>
 
-<GridSettings Columns="Columns" OnSave="OnSave" PageSize="pageCount" TItem="DevInstance.DevCoreApp.Shared.Model.Webhooks.WebhookDeliveryItem" />
+<GridSettings Columns="Columns" OnSave="OnSave" PageSize="pageCount" TItem="DevInstance.DevCoreApp.Shared.Model.Core.Webhooks.WebhookDeliveryItem" />
 
 @* ---------- Detail Modal ---------- *@
 @if (SelectedDelivery != null)

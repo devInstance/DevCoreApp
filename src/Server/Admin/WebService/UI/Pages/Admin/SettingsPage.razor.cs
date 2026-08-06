@@ -1,6 +1,6 @@
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.DevCoreApp.Server.Admin.Services.Settings;
-using DevInstance.DevCoreApp.Shared.Model.Settings;
+using DevInstance.DevCoreApp.Shared.Model.Core.Settings;
 using Microsoft.AspNetCore.Components;
 
 namespace DevInstance.DevCoreApp.Server.Admin.WebService.UI.Pages.Admin;

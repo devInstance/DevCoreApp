@@ -3,10 +3,10 @@ using DevInstance.BlazorToolkit.Services;
 using DevInstance.BlazorToolkit.Tools;
 using DevInstance.DevCoreApp.Server.Admin.Services.Authentication;
 using DevInstance.DevCoreApp.Server.Admin.Services.UserAdmin;
-using DevInstance.DevCoreApp.Shared.Model;
-using DevInstance.DevCoreApp.Shared.Model.Common;
-using DevInstance.DevCoreApp.Shared.Model.Permissions;
-using DevInstance.DevCoreApp.Shared.Model.UserAdmin;
+using DevInstance.DevCoreApp.Shared.Model.Core;
+using DevInstance.DevCoreApp.Shared.Model.Core.Common;
+using DevInstance.DevCoreApp.Shared.Model.Core.Permissions;
+using DevInstance.DevCoreApp.Shared.Model.Core.UserAdmin;
 using DevInstance.WebServiceToolkit.Common.Model;
 using DevInstance.WebServiceToolkit.Common.Tools;
 

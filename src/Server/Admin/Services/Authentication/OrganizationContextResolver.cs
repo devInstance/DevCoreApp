@@ -1,5 +1,5 @@
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
-using DevInstance.DevCoreApp.Shared.Model.Common;
+using DevInstance.DevCoreApp.Shared.Model.Core.Common;
 using DevInstance.LogScope;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;

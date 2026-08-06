@@ -2,7 +2,7 @@ using Bogus;
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.BlazorToolkit.Tools;
 using DevInstance.DevCoreApp.Server.Admin.Services.Settings;
-using DevInstance.DevCoreApp.Shared.Model.Settings;
+using DevInstance.DevCoreApp.Shared.Model.Core.Settings;
 using DevInstance.WebServiceToolkit.Common.Tools;
 
 namespace DevInstance.DevCoreApp.Server.Admin.Services.Mocks.Settings;

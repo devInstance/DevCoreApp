@@ -1,7 +1,7 @@
 
 using DevInstance.BlazorToolkit.Services;
-using DevInstance.DevCoreApp.Shared.Model;
-using DevInstance.DevCoreApp.Shared.Model.UserAdmin;
+using DevInstance.DevCoreApp.Shared.Model.Core;
+using DevInstance.DevCoreApp.Shared.Model.Core.UserAdmin;
 
 namespace DevInstance.DevCoreApp.Server.Admin.Services.UserAdmin;
 

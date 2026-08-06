@@ -1,5 +1,5 @@
 using DevInstance.BlazorToolkit.Services;
-using DevInstance.DevCoreApp.Shared.Model;
+using DevInstance.DevCoreApp.Shared.Model.Core;
 using DevInstance.WebServiceToolkit.Common.Model;
 
 namespace DevInstance.DevCoreApp.Server.Admin.Services.Email;

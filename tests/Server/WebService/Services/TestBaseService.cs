@@ -2,7 +2,7 @@
 using DevInstance.DevCoreApp.Server.Admin.Services.Authentication;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Server.Database.Core.Models.Base;
-using DevInstance.DevCoreApp.Shared.Utils;
+using DevInstance.DevCoreApp.Shared.Utils.Core;
 using DevInstance.LogScope;
 using DevInstance.WebServiceToolkit.Common.Model;
 using DevInstance.WebServiceToolkit.Common.Tools;

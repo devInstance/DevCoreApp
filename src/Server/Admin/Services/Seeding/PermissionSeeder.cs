@@ -1,7 +1,7 @@
 using DevInstance.DevCoreApp.Server.Database.Core;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
-using DevInstance.DevCoreApp.Shared.Model.Permissions;
+using DevInstance.DevCoreApp.Shared.Model.Core.Permissions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System;

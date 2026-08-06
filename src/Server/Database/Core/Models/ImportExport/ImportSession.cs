@@ -1,6 +1,6 @@
 using System;
 using DevInstance.DevCoreApp.Server.Database.Core.Models.Base;
-using DevInstance.DevCoreApp.Shared.Model.ImportExport;
+using DevInstance.DevCoreApp.Shared.Model.Core.ImportExport;
 
 namespace DevInstance.DevCoreApp.Server.Database.Core.Models.ImportExport;
 

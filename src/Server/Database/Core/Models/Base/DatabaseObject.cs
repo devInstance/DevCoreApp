@@ -11,7 +11,7 @@ public class DatabaseObject : DatabaseBaseObject
     /// <summary>
     /// Public id is exposed for the client. All Web APIs should
     /// use the public id instead of the PK from the database.
-    /// Please use <see cref="DevInstance.DevCoreApp.Shared.Utils.IdGenerator.New()"/> 
+    /// Please use <see cref="DevInstance.DevCoreApp.Shared.Utils.Core.IdGenerator.New()"/> 
     /// to generate new value.
     /// </summary>
     [Required]

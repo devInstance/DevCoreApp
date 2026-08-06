@@ -1,5 +1,5 @@
 using DevInstance.DevCoreApp.Server.Admin.Services.Notifications;
-using DevInstance.DevCoreApp.Shared.Model.Notifications;
+using DevInstance.DevCoreApp.Shared.Model.Core.Notifications;
 using Microsoft.AspNetCore.SignalR;
 
 namespace DevInstance.DevCoreApp.Server.Admin.WebService.Hubs;

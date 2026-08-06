@@ -1,7 +1,7 @@
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.BlazorToolkit.Tools;
 using DevInstance.DevCoreApp.Server.Admin.Services.Webhooks;
-using DevInstance.DevCoreApp.Shared.Model.Webhooks;
+using DevInstance.DevCoreApp.Shared.Model.Core.Webhooks;
 using DevInstance.WebServiceToolkit.Common.Model;
 using DevInstance.WebServiceToolkit.Common.Tools;
 using System;

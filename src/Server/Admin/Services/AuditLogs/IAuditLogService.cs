@@ -1,5 +1,5 @@
 using DevInstance.BlazorToolkit.Services;
-using DevInstance.DevCoreApp.Shared.Model.AuditLogs;
+using DevInstance.DevCoreApp.Shared.Model.Core.AuditLogs;
 using DevInstance.WebServiceToolkit.Common.Model;
 
 namespace DevInstance.DevCoreApp.Server.Admin.Services.AuditLogs;

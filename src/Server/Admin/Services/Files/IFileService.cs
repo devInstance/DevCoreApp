@@ -1,5 +1,5 @@
 using DevInstance.BlazorToolkit.Services;
-using DevInstance.DevCoreApp.Shared.Model.Files;
+using DevInstance.DevCoreApp.Shared.Model.Core.Files;
 using System;
 using System.IO;
 using System.Threading.Tasks;

@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using DevInstance.DevCoreApp.Server.Admin.Services.Background.Requests;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
-using DevInstance.DevCoreApp.Shared.Model.Webhooks;
+using DevInstance.DevCoreApp.Shared.Model.Core.Webhooks;
 using DevInstance.LogScope;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;

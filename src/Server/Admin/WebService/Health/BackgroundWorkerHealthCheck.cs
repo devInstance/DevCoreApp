@@ -1,6 +1,6 @@
 using DevInstance.DevCoreApp.Server.Admin.Services.Background;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
-using DevInstance.DevCoreApp.Shared.Model.Common;
+using DevInstance.DevCoreApp.Shared.Model.Core.Common;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace DevInstance.DevCoreApp.Server.Admin.WebService.Health;

@@ -1,4 +1,4 @@
-﻿using DevInstance.DevCoreApp.Shared.Model;
+﻿using DevInstance.DevCoreApp.Shared.Model.Core;
 using DevInstance.BlazorToolkit.Http;
 using Microsoft.AspNetCore.Components;
 using DevInstance.DevCoreApp.Client.Services.Net.Api;

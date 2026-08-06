@@ -2,11 +2,11 @@ using DevInstance.BlazorToolkit.Services;
 using DevInstance.DevCoreApp.Server.Admin.Services.Organizations;
 using DevInstance.DevCoreApp.Server.Admin.Services.Roles;
 using DevInstance.DevCoreApp.Server.Admin.Services.UserAdmin;
-using DevInstance.DevCoreApp.Shared.Model;
-using DevInstance.DevCoreApp.Shared.Model.Common;
-using DevInstance.DevCoreApp.Shared.Model.Organizations;
-using DevInstance.DevCoreApp.Shared.Model.Roles;
-using DevInstance.DevCoreApp.Shared.Model.UserAdmin;
+using DevInstance.DevCoreApp.Shared.Model.Core;
+using DevInstance.DevCoreApp.Shared.Model.Core.Common;
+using DevInstance.DevCoreApp.Shared.Model.Core.Organizations;
+using DevInstance.DevCoreApp.Shared.Model.Core.Roles;
+using DevInstance.DevCoreApp.Shared.Model.Core.UserAdmin;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 

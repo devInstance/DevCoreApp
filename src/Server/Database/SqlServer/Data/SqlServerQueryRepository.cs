@@ -1,7 +1,7 @@
 ﻿using DevInstance.LogScope;
 using DevInstance.DevCoreApp.Server.Database.Core;
 using DevInstance.DevCoreApp.Server.Database.Postgres.Data;
-using DevInstance.DevCoreApp.Shared.Utils;
+using DevInstance.DevCoreApp.Shared.Utils.Core;
 
 namespace DevInstance.DevCoreApp.Server.Database.SqlServer.Data;
 

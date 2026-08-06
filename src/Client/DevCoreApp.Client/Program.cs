@@ -4,7 +4,7 @@ using DevInstance.DevCoreApp.Client.Services;
 using DevInstance.DevCoreApp.Client.Services.Net;
 using DevInstance.DevCoreApp.Client.Services.Net.Api;
 using DevInstance.DevCoreApp.Client.Services.Notifications;
-using DevInstance.DevCoreApp.Shared.Utils;
+using DevInstance.DevCoreApp.Shared.Utils.Core;
 using DevInstance.LogScope.Extensions;
 using DevInstance.LogScope.Formatters;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -32,7 +32,7 @@ public class Program
        new DefaultFormattersOptions { ShowTimestamp = false, ShowThreadNumber = false, ShowId = false});
 #endif
 
-        builder.Services.AddSingleton<ITimeProvider, Shared.Utils.TimeProvider>();
+        builder.Services.AddSingleton<ITimeProvider, Shared.Utils.Core.TimeProvider>();
 
         builder.Services.AddAuthorizationCore();
         builder.Services.AddCascadingAuthenticationState();

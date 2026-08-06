@@ -1,4 +1,4 @@
-using DevInstance.DevCoreApp.Shared.Model.Notifications;
+using DevInstance.DevCoreApp.Shared.Model.Core.Notifications;
 using DevInstance.LogScope;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;

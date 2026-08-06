@@ -1,5 +1,5 @@
 using DevInstance.DevCoreApp.Server.Admin.Services.ImportExport;
-using DevInstance.DevCoreApp.Shared.Model.ImportExport;
+using DevInstance.DevCoreApp.Shared.Model.Core.ImportExport;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 

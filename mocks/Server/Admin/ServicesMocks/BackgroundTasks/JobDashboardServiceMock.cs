@@ -2,7 +2,7 @@ using Bogus;
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.BlazorToolkit.Tools;
 using DevInstance.DevCoreApp.Server.Admin.Services.BackgroundTasks;
-using DevInstance.DevCoreApp.Shared.Model.BackgroundTasks;
+using DevInstance.DevCoreApp.Shared.Model.Core.BackgroundTasks;
 using DevInstance.WebServiceToolkit.Common.Model;
 using DevInstance.WebServiceToolkit.Common.Tools;
 
@@ -97,7 +97,7 @@ public class JobDashboardServiceMock : IJobDashboardService
 
         if (status.HasValue)
         {
-            var statusName = ((DevInstance.DevCoreApp.Shared.Model.Common.BackgroundTaskStatus)status.Value).ToString();
+            var statusName = ((DevInstance.DevCoreApp.Shared.Model.Core.Common.BackgroundTaskStatus)status.Value).ToString();
             filtered = filtered.Where(t => t.Status == statusName);
         }
 

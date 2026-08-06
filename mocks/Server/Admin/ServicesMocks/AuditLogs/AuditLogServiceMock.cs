@@ -2,7 +2,7 @@ using Bogus;
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.BlazorToolkit.Tools;
 using DevInstance.DevCoreApp.Server.Admin.Services.AuditLogs;
-using DevInstance.DevCoreApp.Shared.Model.AuditLogs;
+using DevInstance.DevCoreApp.Shared.Model.Core.AuditLogs;
 using DevInstance.WebServiceToolkit.Common.Model;
 using DevInstance.WebServiceToolkit.Common.Tools;
 

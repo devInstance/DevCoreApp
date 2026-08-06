@@ -56,7 +56,7 @@
 }
 else
 {
-    <HDataGrid TItem="DevInstance.DevCoreApp.Shared.Model.Organizations.OrganizationItem"
+    <HDataGrid TItem="DevInstance.DevCoreApp.Shared.Model.Core.Organizations.OrganizationItem"
                Data="OrgList"
                Columns="Columns"
                IsLoading="Host.InProgress"
@@ -65,7 +65,7 @@ else
                OnColumnsChanged="OnColumnsChanged"
                OnRowClick="OnRowClick">
         <ColumnTemplates>
-            <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.Organizations.OrganizationItem" Field="name" Context="org">
+            <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.Core.Organizations.OrganizationItem" Field="name" Context="org">
                 <span style="padding-left: @(org.Level * 20)px;">
                     @if (org.Level > 0)
                     {
@@ -74,7 +74,7 @@ else
                     @org.Name
                 </span>
             </HColumnTemplate>
-            <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.Organizations.OrganizationItem" Field="status" Context="org">
+            <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.Core.Organizations.OrganizationItem" Field="status" Context="org">
                 @if (org.IsActive)
                 {
                     <span class="badge bg-success">Active</span>
@@ -84,7 +84,7 @@ else
                     <span class="badge bg-secondary">Inactive</span>
                 }
             </HColumnTemplate>
-            <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.Organizations.OrganizationItem" Field="actions" Context="org">
+            <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.Core.Organizations.OrganizationItem" Field="actions" Context="org">
                 <button class="btn btn-sm btn-outline-primary me-1" title="Edit" @onclick="() => ShowEditModal(org)" @onclick:stopPropagation="true">
                     <i class="bi bi-pencil"></i>
                 </button>
@@ -110,7 +110,7 @@ else
         </SearchContent>
     </HDataGrid>
 
-    <GridSettings Columns="Columns" OnSave="OnSave" PageSize="pageCount" TItem="DevInstance.DevCoreApp.Shared.Model.Organizations.OrganizationItem" />
+    <GridSettings Columns="Columns" OnSave="OnSave" PageSize="pageCount" TItem="DevInstance.DevCoreApp.Shared.Model.Core.Organizations.OrganizationItem" />
 }
 
 @* ---------- Create / Edit Modal ---------- *@
@@ -217,7 +217,7 @@ else
 }
 
 @code {
-    private RenderFragment RenderTreeLevel(List<DevInstance.DevCoreApp.Shared.Model.Organizations.OrganizationItem> roots, List<DevInstance.DevCoreApp.Shared.Model.Organizations.OrganizationItem> allOrgs) => __builder =>
+    private RenderFragment RenderTreeLevel(List<DevInstance.DevCoreApp.Shared.Model.Core.Organizations.OrganizationItem> roots, List<DevInstance.DevCoreApp.Shared.Model.Core.Organizations.OrganizationItem> allOrgs) => __builder =>
     {
         <ul class="list-unstyled mb-0">
             @foreach (var org in roots.OrderBy(o => o.SortOrder).ThenBy(o => o.Name))

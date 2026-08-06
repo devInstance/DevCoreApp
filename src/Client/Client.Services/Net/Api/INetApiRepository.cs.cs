@@ -1,4 +1,4 @@
-﻿using DevInstance.DevCoreApp.Shared.Model;
+﻿using DevInstance.DevCoreApp.Shared.Model.Core;
 using DevInstance.BlazorToolkit.Http;
 using System;
 using System.Collections.Generic;

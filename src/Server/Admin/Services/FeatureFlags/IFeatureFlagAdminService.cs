@@ -1,5 +1,5 @@
 using DevInstance.BlazorToolkit.Services;
-using DevInstance.DevCoreApp.Shared.Model.FeatureFlags;
+using DevInstance.DevCoreApp.Shared.Model.Core.FeatureFlags;
 using DevInstance.WebServiceToolkit.Common.Model;
 
 namespace DevInstance.DevCoreApp.Server.Admin.Services.FeatureFlags;

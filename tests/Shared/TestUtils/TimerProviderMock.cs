@@ -1,4 +1,4 @@
-﻿using DevInstance.DevCoreApp.Shared.Utils;
+﻿using DevInstance.DevCoreApp.Shared.Utils.Core;
 using Moq;
 using System;
 

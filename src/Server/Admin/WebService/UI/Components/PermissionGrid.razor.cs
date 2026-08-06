@@ -1,4 +1,4 @@
-using DevInstance.DevCoreApp.Shared.Model.Roles;
+using DevInstance.DevCoreApp.Shared.Model.Core.Roles;
 using Microsoft.AspNetCore.Components;
 using System.Collections.Generic;
 using System.Linq;

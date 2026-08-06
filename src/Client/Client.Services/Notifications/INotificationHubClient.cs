@@ -1,4 +1,4 @@
-using DevInstance.DevCoreApp.Shared.Model.Notifications;
+using DevInstance.DevCoreApp.Shared.Model.Core.Notifications;
 
 namespace DevInstance.DevCoreApp.Client.Services.Notifications;
 

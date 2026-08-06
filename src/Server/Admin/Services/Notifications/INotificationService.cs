@@ -1,6 +1,6 @@
 using DevInstance.BlazorToolkit.Services;
-using DevInstance.DevCoreApp.Shared.Model.Common;
-using DevInstance.DevCoreApp.Shared.Model.Notifications;
+using DevInstance.DevCoreApp.Shared.Model.Core.Common;
+using DevInstance.DevCoreApp.Shared.Model.Core.Notifications;
 using DevInstance.WebServiceToolkit.Common.Model;
 using System;
 using System.Threading.Tasks;

@@ -1,9 +1,9 @@
 @page "/admin/users/{UserId}/edit"
 @attribute [Authorize(Roles = "Owner,Admin")]
 
-@using DevInstance.DevCoreApp.Shared.Model.Common
-@using DevInstance.DevCoreApp.Shared.Model.UserAdmin
-@using DevInstance.DevCoreApp.Shared.Model.Roles
+@using DevInstance.DevCoreApp.Shared.Model.Core.Common
+@using DevInstance.DevCoreApp.Shared.Model.Core.UserAdmin
+@using DevInstance.DevCoreApp.Shared.Model.Core.Roles
 @using DevInstance.DevCoreApp.Server.Admin.WebService.UI.Components
 
 <PageTitle>Edit User</PageTitle>

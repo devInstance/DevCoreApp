@@ -3,7 +3,7 @@ using DevInstance.DevCoreApp.Server.Admin.Services.Background.Requests;
 using DevInstance.DevCoreApp.Server.Admin.Services.ImportExport;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Server.Database.Core.Data.Decorators;
-using DevInstance.DevCoreApp.Shared.Model.ImportExport;
+using DevInstance.DevCoreApp.Shared.Model.Core.ImportExport;
 using DevInstance.LogScope;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;

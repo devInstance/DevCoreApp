@@ -2,7 +2,7 @@ using Bogus;
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.BlazorToolkit.Tools;
 using DevInstance.DevCoreApp.Server.Admin.Services.FeatureFlags;
-using DevInstance.DevCoreApp.Shared.Model.FeatureFlags;
+using DevInstance.DevCoreApp.Shared.Model.Core.FeatureFlags;
 using DevInstance.WebServiceToolkit.Common.Model;
 using DevInstance.WebServiceToolkit.Common.Tools;
 using System;

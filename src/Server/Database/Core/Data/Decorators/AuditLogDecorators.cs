@@ -1,5 +1,5 @@
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
-using DevInstance.DevCoreApp.Shared.Model.AuditLogs;
+using DevInstance.DevCoreApp.Shared.Model.Core.AuditLogs;
 
 namespace DevInstance.DevCoreApp.Server.Database.Core.Data.Decorators;
 

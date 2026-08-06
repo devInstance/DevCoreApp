@@ -3,7 +3,7 @@ using DevInstance.DevCoreApp.Server.Admin.Services.Background.Requests;
 using DevInstance.DevCoreApp.Server.Admin.Services.Background.Tasks;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Server.Database.Core.Data.Decorators;
-using DevInstance.DevCoreApp.Shared.Model.Common;
+using DevInstance.DevCoreApp.Shared.Model.Core.Common;
 using DevInstance.LogScope;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;

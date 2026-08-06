@@ -1,4 +1,4 @@
-using DevInstance.DevCoreApp.Shared.Model.UserAdmin;
+using DevInstance.DevCoreApp.Shared.Model.Core.UserAdmin;
 using Microsoft.AspNetCore.Components;
 
 namespace DevInstance.DevCoreApp.Server.Admin.WebService.UI.Components;
