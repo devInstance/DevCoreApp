@@ -22,7 +22,12 @@ Page (Blazor) → Host.ServiceReadAsync / Host.ServiceSubmitAsync → Service �
 - Inherit from `BaseService`
 - Annotate with `[BlazorService]`
 - Return `ServiceActionResult<T>` (use `ServiceActionResult<T>.OK(data)`)
-- Access data via `Repository.GetXxxQuery(AuthorizationContext.CurrentProfile)`
+- Open **one unit of work per public method** — `await using var repo = RepositoryFactory.Create();`
+  — then access data via `repo.GetXxxQuery(AuthorizationContext.CurrentProfile)`. There is no
+  shared scoped `Repository` property on `BaseService` any more; it was removed because concurrent
+  Blazor components on one circuit collided on the shared context. Private helpers that touch data
+  take an `IQueryRepository repo` parameter instead of creating their own.
+  See [`../../Database/UnitOfWork.md`](../../Database/UnitOfWork.md).
 - Create new records via `query.CreateNew()` + `entity.ToRecord(dto)` + `query.AddAsync(record)`
 - Update existing records via `entity.ToRecord(dto)` + `query.UpdateAsync(record)`
 - Background work (e.g., email) via `IBackgroundWorker.Submit()`

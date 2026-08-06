@@ -1,3 +1,15 @@
+---
+origin: Tentrie
+targets: [DevCoreApp]
+scope:
+  - Server.Database.Core.Models (soft-delete base fields / ISoftDeletable)
+  - Server.Database.Core.Data (IAppDbContextFactory, IQueryRepositoryFactory, unit of work)
+  - Server.Admin.Services (BaseService: SoftDeleteAsync, RepositoryFactory; no DbContext in services)
+status: pending
+related:
+  - src/Server/Database/UnitOfWork.md
+---
+
 # Back to DevCoreApp — items to contribute upstream
 
 Patterns and features developed in Tentrie that generalize beyond this product and belong in [DevCoreApp](https://github.com/devInstance/DevCoreApp) (the underlying starter template). Tracked here so we don't lose them when picking up upstream work.
