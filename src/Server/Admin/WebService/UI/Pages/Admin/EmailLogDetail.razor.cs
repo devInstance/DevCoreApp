@@ -1,5 +1,5 @@
 using DevInstance.BlazorToolkit.Services;
-using DevInstance.DevCoreApp.Server.Admin.Services.Email;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.Email;
 using DevInstance.DevCoreApp.Shared.Model.Core;
 using Microsoft.AspNetCore.Components;
 

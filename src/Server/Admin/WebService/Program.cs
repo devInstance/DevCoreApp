@@ -1,16 +1,16 @@
 using System.Text;
 using DevInstance.BlazorToolkit.Tools;
-using DevInstance.DevCoreApp.Server.Admin.Services.Authentication;
-using DevInstance.DevCoreApp.Server.Admin.Services.ApiKeys;
-using DevInstance.DevCoreApp.Server.Admin.Services.Background;
-using DevInstance.DevCoreApp.Server.Admin.Services.Background.Tasks;
-using DevInstance.DevCoreApp.Server.Admin.Services.Background.Tasks.Handlers;
-using DevInstance.DevCoreApp.Server.Admin.Services.ImportExport;
-using DevInstance.DevCoreApp.Server.Admin.Services.ImportExport.Handlers;
-using DevInstance.DevCoreApp.Server.Admin.Services.Notifications;
-using DevInstance.DevCoreApp.Server.Admin.Services.Notifications.Templates;
-using DevInstance.DevCoreApp.Server.Admin.Services.Seeding;
-using DevInstance.DevCoreApp.Server.Admin.Services.UserAdmin;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.Authentication;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.ApiKeys;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.Background;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.Background.Tasks;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.Background.Tasks.Handlers;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.ImportExport;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.ImportExport.Handlers;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.Notifications;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.Notifications.Templates;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.Seeding;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.UserAdmin;
 using DevInstance.DevCoreApp.Server.Admin.WebService.Hubs;
 using DevInstance.DevCoreApp.Server.Admin.WebService.Identity;
 using DevInstance.DevCoreApp.Server.Admin.WebService.Logging;
@@ -39,8 +39,8 @@ using Serilog;
 using TimeProvider = DevInstance.DevCoreApp.Shared.Utils.Core.TimeProvider; //TODO: migrate to standard TimeProvider
 
 #if SERVICEMOCKS
-using DevInstance.DevCoreApp.Server.Admin.Services.Mocks.UserAdmin;
-using DevInstance.DevCoreApp.Server.Admin.Services.Mocks.ImportExport;
+using DevInstance.DevCoreApp.Server.Admin.Services.Mocks.Core.UserAdmin;
+using DevInstance.DevCoreApp.Server.Admin.Services.Mocks.Core.ImportExport;
 #endif
 
 namespace DevInstance.DevCoreApp.Server.Admin.WebService;

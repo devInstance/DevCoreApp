@@ -1,4 +1,4 @@
-using DevInstance.DevCoreApp.Server.Admin.Services.Files;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.Files;
 using DevInstance.DevCoreApp.Shared.Model.Core.Files;
 using DevInstance.WebServiceToolkit.Controllers;
 using Microsoft.AspNetCore.Authorization;

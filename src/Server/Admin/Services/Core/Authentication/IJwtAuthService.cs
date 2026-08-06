@@ -1,0 +1,11 @@
+using DevInstance.BlazorToolkit.Services;
+using DevInstance.DevCoreApp.Shared.Model.Core.Authentication;
+
+namespace DevInstance.DevCoreApp.Server.Admin.Services.Core.Authentication;
+
+public interface IJwtAuthService
+{
+    Task<ServiceActionResult<JwtLoginResponse>> LoginAsync(JwtLoginRequest request, string? ipAddress, string? userAgent = null);
+    Task<ServiceActionResult<JwtLoginResponse>> RefreshAsync(string refreshToken, string? ipAddress);
+    Task<ServiceActionResult<bool>> RevokeAsync(string refreshToken, string? ipAddress);
+}

@@ -1,6 +1,6 @@
 using DevInstance.BlazorToolkit.Services;
-using DevInstance.DevCoreApp.Server.Admin.Services.ImportExport;
-using DevInstance.DevCoreApp.Server.Admin.Services.Organizations;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.ImportExport;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.Organizations;
 using DevInstance.DevCoreApp.Shared.Model.Core.ImportExport;
 using DevInstance.DevCoreApp.Shared.Model.Core.Organizations;
 using Microsoft.AspNetCore.Components;

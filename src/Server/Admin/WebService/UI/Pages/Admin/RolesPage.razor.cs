@@ -1,6 +1,7 @@
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.DevCoreApp.Server.Admin.Services;
-using DevInstance.DevCoreApp.Server.Admin.Services.Roles;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.Roles;
 using DevInstance.DevCoreApp.Server.Admin.WebService.UI.Components;
 using DevInstance.DevCoreApp.Server.Admin.WebService.UI.Model.Grid;
 using DevInstance.DevCoreApp.Shared.Model.Core.Roles;

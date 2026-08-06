@@ -1,5 +1,5 @@
 using System.Net;
-using DevInstance.DevCoreApp.Server.Admin.Services.Exceptions;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.Exceptions;
 using DevInstance.DevCoreApp.Shared.Model.Core;
 using DevInstance.LogScope;
 using DevInstance.WebServiceToolkit.Exceptions;

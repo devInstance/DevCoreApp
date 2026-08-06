@@ -1,5 +1,6 @@
 ﻿using DevInstance.DevCoreApp.Server.Admin.Services;
-using DevInstance.DevCoreApp.Server.Admin.Services.Authentication;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.Authentication;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Server.Database.Core.Models.Base;
 using DevInstance.DevCoreApp.Shared.Utils.Core;

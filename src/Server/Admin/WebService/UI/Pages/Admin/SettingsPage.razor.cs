@@ -1,5 +1,5 @@
 using DevInstance.BlazorToolkit.Services;
-using DevInstance.DevCoreApp.Server.Admin.Services.Settings;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.Settings;
 using DevInstance.DevCoreApp.Shared.Model.Core.Settings;
 using Microsoft.AspNetCore.Components;
 

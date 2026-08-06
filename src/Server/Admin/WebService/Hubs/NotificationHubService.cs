@@ -1,4 +1,4 @@
-using DevInstance.DevCoreApp.Server.Admin.Services.Notifications;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.Notifications;
 using DevInstance.DevCoreApp.Shared.Model.Core.Notifications;
 using Microsoft.AspNetCore.SignalR;
 

@@ -1,0 +1,192 @@
+using DevInstance.BlazorToolkit.Services;
+using DevInstance.BlazorToolkit.Tools;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.Authentication;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.Settings;
+using DevInstance.DevCoreApp.Server.Database.Core.Data;
+using DevInstance.DevCoreApp.Server.Database.Core.Data.Decorators;
+using DevInstance.DevCoreApp.Shared.Model.Core.Files;
+using DevInstance.DevCoreApp.Shared.Utils.Core;
+using DevInstance.DevCoreApp.Server.StorageProcessor.Core;
+using DevInstance.LogScope;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.Exceptions;
+using DevInstance.WebServiceToolkit.Exceptions;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace DevInstance.DevCoreApp.Server.Admin.Services.Core.Files;
+
+[BlazorService]
+public class FileService : BaseService, IFileService
+{
+    private readonly IScopeLog log;
+    private readonly IFileStorageProvider StorageProvider;
+    private readonly ISettingsService SettingsService;
+    private readonly IOperationContext OperationContext;
+
+    private const string SettingsCategory = "Storage";
+    private const string MaxFileSizeBytesKey = "MaxFileSizeBytes";
+    private const string AllowedContentTypesKey = "AllowedContentTypes";
+    private const string SoftDeleteKey = "SoftDelete";
+
+    private const long DefaultMaxFileSizeBytes = 10 * 1024 * 1024; // 10 MB
+    private const string DefaultAllowedContentTypes = "*"; // all types
+
+    public FileService(IScopeManager logManager,
+                       ITimeProvider timeProvider,
+                              IQueryRepositoryFactory repositoryFactory,
+                       IAuthorizationContext authorizationContext,
+                       IFileStorageProvider storageProvider,
+                       ISettingsService settingsService,
+                       IOperationContext operationContext)
+        : base(logManager, timeProvider, repositoryFactory, authorizationContext)
+    {
+        log = logManager.CreateLogger(this);
+        StorageProvider = storageProvider;
+        SettingsService = settingsService;
+        OperationContext = operationContext;
+    }
+
+    public async Task<ServiceActionResult<FileRecordItem>> UploadAsync(
+        Stream stream, string originalName, string contentType,
+        string? entityType = null, string? entityId = null,
+        Guid? organizationIdOverride = null)
+    {
+        using var l = log.TraceScope();
+
+        // Validate content type
+        var allowedTypes = await SettingsService.GetAsync<string>(SettingsCategory, AllowedContentTypesKey);
+        allowedTypes ??= DefaultAllowedContentTypes;
+
+        if (allowedTypes != "*")
+        {
+            var allowed = allowedTypes.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            if (!allowed.Any(t => string.Equals(t, contentType, StringComparison.OrdinalIgnoreCase)))
+            {
+                throw new BadRequestException($"Content type '{contentType}' is not allowed.");
+            }
+        }
+
+        // Validate file size
+        var maxSize = await SettingsService.GetAsync<long>(SettingsCategory, MaxFileSizeBytesKey);
+        if (maxSize <= 0) maxSize = DefaultMaxFileSizeBytes;
+
+        if (stream.CanSeek && stream.Length > maxSize)
+        {
+            throw new BadRequestException($"File size exceeds the maximum allowed size of {maxSize} bytes.");
+        }
+
+        // Upload to storage provider
+        var uploadResult = await StorageProvider.UploadAsync(stream, originalName, contentType);
+        if (!uploadResult.Success)
+        {
+            l.E($"Storage provider upload failed: {uploadResult.ErrorMessage}");
+            throw new BusinessRuleException($"File upload failed: {uploadResult.ErrorMessage}");
+        }
+
+        // Validate size after upload (for non-seekable streams)
+        if (uploadResult.SizeBytes > maxSize)
+        {
+            await StorageProvider.DeleteAsync(uploadResult.StoragePath!);
+            throw new BadRequestException($"File size exceeds the maximum allowed size of {maxSize} bytes.");
+        }
+
+        // Create FileRecord
+        await using var repo = RepositoryFactory.Create();
+        var fileQuery = repo.GetFileRecordQuery(AuthorizationContext.CurrentProfile);
+        var fileRecord = fileQuery.CreateNew();
+        fileRecord.OriginalName = originalName;
+        fileRecord.FileName = Path.GetFileName(uploadResult.StoragePath!);
+        fileRecord.ContentType = contentType;
+        fileRecord.SizeBytes = uploadResult.SizeBytes;
+        fileRecord.StorageProvider = "Local"; // from config/provider
+        fileRecord.StoragePath = uploadResult.StoragePath!;
+        fileRecord.EntityType = entityType;
+        fileRecord.EntityId = entityId;
+        var orgId = organizationIdOverride ?? OperationContext.PrimaryOrganizationId;
+        if (orgId == null || orgId == Guid.Empty)
+        {
+            // Fallback: resolve root organization when no org context is available
+            var orgQuery = repo.GetOrganizationsQuery(AuthorizationContext.CurrentProfile);
+            var rootOrg = orgQuery.Select().FirstOrDefault(o => o.ParentId == null);
+            orgId = rootOrg?.Id;
+        }
+        fileRecord.OrganizationId = orgId ?? Guid.Empty;
+        // CreatedBy/UpdatedBy are stamped as scalar FKs by CreateNew() — never assign the
+        // navigation here (it belongs to another context and EF would try to INSERT it).
+
+        await fileQuery.AddAsync(fileRecord);
+
+        l.I($"File uploaded: {originalName} → {uploadResult.StoragePath}");
+        return ServiceActionResult<FileRecordItem>.OK(fileRecord.ToView());
+    }
+
+    public async Task<ServiceActionResult<FileDownloadResult>> DownloadAsync(string filePublicId)
+    {
+        using var l = log.TraceScope();
+
+        await using var repo = RepositoryFactory.Create();
+        var fileQuery = repo.GetFileRecordQuery(AuthorizationContext.CurrentProfile);
+        var fileRecord = await fileQuery.ByPublicId(filePublicId).Select().FirstOrDefaultAsync();
+
+        if (fileRecord == null)
+            throw new RecordNotFoundException("File not found.");
+
+        var stream = await StorageProvider.DownloadAsync(fileRecord.StoragePath);
+
+        l.I($"File downloaded: {fileRecord.OriginalName}");
+        return ServiceActionResult<FileDownloadResult>.OK(new FileDownloadResult
+        {
+            Stream = stream,
+            ContentType = fileRecord.ContentType,
+            FileName = fileRecord.OriginalName
+        });
+    }
+
+    public async Task<ServiceActionResult<bool>> DeleteAsync(string filePublicId)
+    {
+        using var l = log.TraceScope();
+
+        await using var repo = RepositoryFactory.Create();
+        var fileQuery = repo.GetFileRecordQuery(AuthorizationContext.CurrentProfile);
+        var fileRecord = await fileQuery.ByPublicId(filePublicId).Select().FirstOrDefaultAsync();
+
+        if (fileRecord == null)
+            throw new RecordNotFoundException("File not found.");
+
+        var softDelete = await SettingsService.GetAsync<bool>(SettingsCategory, SoftDeleteKey);
+
+        if (softDelete)
+        {
+            fileRecord.IsActive = false;
+            await fileQuery.UpdateAsync(fileRecord);
+            l.I($"File soft-deleted: {fileRecord.OriginalName}");
+        }
+        else
+        {
+            await StorageProvider.DeleteAsync(fileRecord.StoragePath);
+            await fileQuery.RemoveAsync(fileRecord);
+            l.I($"File hard-deleted: {fileRecord.OriginalName}");
+        }
+
+        return ServiceActionResult<bool>.OK(true);
+    }
+
+    public async Task<ServiceActionResult<string>> GetUrlAsync(string filePublicId, TimeSpan? expiry = null)
+    {
+        using var l = log.TraceScope();
+
+        await using var repo = RepositoryFactory.Create();
+        var fileQuery = repo.GetFileRecordQuery(AuthorizationContext.CurrentProfile);
+        var fileRecord = await fileQuery.ByPublicId(filePublicId).Select().FirstOrDefaultAsync();
+
+        if (fileRecord == null)
+            throw new RecordNotFoundException("File not found.");
+
+        var url = await StorageProvider.GetUrlAsync(fileRecord.StoragePath, expiry);
+
+        return ServiceActionResult<string>.OK(url);
+    }
+}

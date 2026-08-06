@@ -1,7 +1,8 @@
 using System.Text.Json;
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.DevCoreApp.Server.Admin.Services;
-using DevInstance.DevCoreApp.Server.Admin.Services.AuditLogs;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.AuditLogs;
 using DevInstance.DevCoreApp.Server.Admin.WebService.UI.Components;
 using DevInstance.DevCoreApp.Server.Admin.WebService.UI.Model.Grid;
 using DevInstance.DevCoreApp.Shared.Model.Core.AuditLogs;

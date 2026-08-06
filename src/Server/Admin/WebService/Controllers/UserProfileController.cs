@@ -1,4 +1,4 @@
-﻿using DevInstance.DevCoreApp.Server.Admin.Services.UserAdmin;
+﻿using DevInstance.DevCoreApp.Server.Admin.Services.Core.UserAdmin;
 using DevInstance.DevCoreApp.Shared.Model.Core;
 using DevInstance.WebServiceToolkit.Controllers;
 using Microsoft.AspNetCore.Authorization;

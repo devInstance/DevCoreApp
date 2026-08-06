@@ -1,7 +1,7 @@
 using DevInstance.BlazorToolkit.Services;
-using DevInstance.DevCoreApp.Server.Admin.Services.Organizations;
-using DevInstance.DevCoreApp.Server.Admin.Services.Roles;
-using DevInstance.DevCoreApp.Server.Admin.Services.UserAdmin;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.Organizations;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.Roles;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.UserAdmin;
 using DevInstance.DevCoreApp.Shared.Model.Core;
 using DevInstance.DevCoreApp.Shared.Model.Core.Common;
 using DevInstance.DevCoreApp.Shared.Model.Core.Organizations;
