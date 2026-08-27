@@ -19,6 +19,14 @@ related:
 
 # Fix write-side organization scoping and entity stamping under the per-operation unit of work
 
+> **Delivery log.** 2026-08-26 — delivered into `ThreadIQ/docs/migration/in/`. Audited on delivery:
+> ThreadIQ already satisfies items 1, 2 and 4 (this doc was diagnosed from ThreadIQ's own fixes).
+> Two gaps remain there — one surviving `UpdatedBy` navigation assignment in `FileService`'s
+> soft-delete path, and item 3, where ThreadIQ uses payload extraction (`ExtractOrganizationId`,
+> 8 request types) instead of `BackgroundRequestItem.OrganizationId`, leaving `SendEmail`,
+> `ImportData` and `DeliverWebhook` rows on `Guid.Empty`. Not yet delivered to **Tentrie**.
+> Status stays `pending`.
+
 ## Why
 
 Adopting the per-operation unit of work (each service method opens its own short-lived context)

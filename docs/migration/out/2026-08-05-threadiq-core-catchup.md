@@ -16,6 +16,13 @@ related:
 
 # Suggestions for ThreadIQ: catch up to canonical `Core`
 
+> **Delivery log.** 2026-08-26 — delivered into `ThreadIQ/docs/migration/in/` (which did not exist
+> until then; the folder was created at the same time). Audited against ThreadIQ's code on
+> delivery: **none of items 1–3 or 5 have been applied**, and item 4 is divergent by default rather
+> than by decision — ThreadIQ's `IQueryRepository` is still `IAsyncDisposable`-only, so its
+> `CreateAsyncScope` calls remain load-bearing. Item-by-item evidence is in the ThreadIQ copy's
+> "Delivery & audit log" section. Status stays `pending`.
+
 ## Why
 
 A comparison of every shared `Core` surface between the two repos (namespace prefix normalized)
