@@ -41,6 +41,12 @@ else if (Input != null)
             </button>
         </li>
         <li class="nav-item">
+            <button class="nav-link @(ActiveTab == "access" ? "active" : "")" type="button"
+                    @onclick='() => SetActiveTab("access")'>
+                <i class="bi bi-key me-1"></i>Access
+            </button>
+        </li>
+        <li class="nav-item">
             <button class="nav-link @(ActiveTab == "overrides" ? "active" : "")" type="button"
                     @onclick='() => SetActiveTab("overrides")'>
                 <i class="bi bi-shield-lock me-1"></i>Permission Overrides
@@ -122,7 +128,7 @@ else if (Input != null)
                     </div>
                     }
                     <div class="mb-3">
-                        <span class="text-muted">Status: @Input.Status</span>
+                        <span class="text-muted">Status: @Input.StatusLabel</span>
                     </div>
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-lg btn-primary" disabled="@Host.InProgress">
@@ -137,6 +143,135 @@ else if (Input != null)
                 </EditForm>
             </div>
         </div>
+    }
+
+    @* ── Access Tab ── *@
+    @if (ActiveTab == "access")
+    {
+        @if (AccessState == null)
+        {
+            <div class="text-center py-3">
+                <div class="spinner-border spinner-border-sm" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="row">
+                <div class="col-lg-8">
+                    @if (!string.IsNullOrEmpty(AccessNotice))
+                    {
+                        <div class="alert alert-success" role="alert">@AccessNotice</div>
+                    }
+
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">Sign-in status</h5>
+                            <p class="text-muted small">
+                                Signing in needs both a confirmed email address and a password.
+                            </p>
+                            <div class="d-flex gap-2 mb-2">
+                                @if (AccessState.EmailConfirmed)
+                                {
+                                    <span class="badge bg-success"><i class="bi bi-check-lg me-1"></i>Email confirmed</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle me-1"></i>Email not confirmed</span>
+                                }
+                                @if (AccessState.HasPassword)
+                                {
+                                    <span class="badge bg-success"><i class="bi bi-check-lg me-1"></i>Password set</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle me-1"></i>No password</span>
+                                }
+                            </div>
+                            @if (AccessState.CanSignIn)
+                            {
+                                <div class="text-success small"><i class="bi bi-check-circle me-1"></i>This user can sign in.</div>
+                            }
+                            else
+                            {
+                                <div class="text-muted small">This user cannot sign in yet.</div>
+                            }
+                        </div>
+                    </div>
+
+                    @if (!AccessState.CanSignIn)
+                    {
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">Invitation link</h5>
+                                <p class="text-muted small">
+                                    Opening this link confirms the address and lets the user choose a password.
+                                    Send it yourself when outbound email is not working.
+                                </p>
+
+                                @if (AccessState.InvitationLink != null)
+                                {
+                                    <div class="input-group mb-2">
+                                        <input type="text" class="form-control font-monospace small"
+                                               value="@AccessState.InvitationLink" readonly
+                                               @onclick="CopyInvitationLink" />
+                                        <button class="btn btn-outline-secondary" type="button" @onclick="CopyInvitationLink">
+                                            <i class="bi bi-clipboard me-1"></i>@(InviteLinkCopied ? "Copied" : "Copy")
+                                        </button>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="alert alert-warning small" role="alert">
+                                        The public site URL is unknown, so no link can be built. Set
+                                        <code>App:BaseUrl</code> in <code>appsettings.json</code>.
+                                    </div>
+                                }
+
+                                <button type="button" class="btn btn-outline-primary" @onclick="ResendInvitation" disabled="@Host.InProgress">
+                                    <i class="bi bi-envelope me-1"></i>Resend invitation email
+                                </button>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">Set password</h5>
+                            <p class="text-muted small">
+                                Sets the password directly and confirms the email address, so the user can
+                                sign in immediately. Deliver the password over a channel you trust.
+                            </p>
+
+                            @if (!string.IsNullOrEmpty(PasswordError))
+                            {
+                                <div class="alert alert-danger py-2" role="alert">@PasswordError</div>
+                            }
+
+                            <div class="mb-2">
+                                <label class="form-label" for="newPassword">New password</label>
+                                <input type="password" id="newPassword" class="form-control"
+                                       autocomplete="new-password" @bind="NewPassword" />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label" for="confirmNewPassword">Confirm password</label>
+                                <input type="password" id="confirmNewPassword" class="form-control"
+                                       autocomplete="new-password" @bind="ConfirmNewPassword" />
+                            </div>
+
+                            <button type="button" class="btn btn-primary" @onclick="SetPassword" disabled="@Host.InProgress">
+                                @if (Host.InProgress)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                }
+                                Set Password
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
     }
 
     @* ── Organizations Tab ── *@

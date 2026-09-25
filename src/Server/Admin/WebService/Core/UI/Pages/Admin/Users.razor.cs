@@ -5,6 +5,7 @@ using DevInstance.DevCoreApp.Server.Admin.Services.Core.UserAdmin;
 using DevInstance.DevCoreApp.Server.Admin.WebService.Core.UI.Components;
 using DevInstance.DevCoreApp.Server.Admin.WebService.Core.UI.Model.Grid;
 using DevInstance.DevCoreApp.Shared.Model.Core;
+using DevInstance.DevCoreApp.Shared.Model.Core.UserAdmin;
 using DevInstance.DevCoreApp.Shared.Model.Core.Settings;
 using DevInstance.WebServiceToolkit.Common.Model;
 using Microsoft.AspNetCore.Components;
@@ -36,6 +37,10 @@ public partial class Users
         new() { Label = "Phone", Field = "phone", ValueSelector = u => u.PhoneNumber, Width = "14%" },
         new() { Label = "Roles", Field = "roles", ValueSelector = u => u.Roles, IsSortable = false, Width = "10%" },
         new() { Label = "Status", Field = "status", ValueSelector = u => u.Status.ToString(), Width = "10%" },
+        // Off by default, switched on from grid settings. Not sortable: the name lives on
+        // Organizations via UserOrganizations, and CoreUserProfilesQuery.SortBy only orders columns
+        // on UserProfiles itself.
+        new() { Label = "Organization", Field = "organization", ValueSelector = u => u.OrganizationName, IsSortable = false, IsVisible = false, Width = "14%" },
         new() { Label = "Actions", Field = "actions", ValueSelector = u => u.Id, IsSortable = false, Width = "5%" },
     };
 
@@ -48,9 +53,6 @@ public partial class Users
 
     private int pageCount = 10;
     private string SearchTerm { get; set; } = string.Empty;
-    private string SearchField { get; set; } = string.Empty;
-    private string StatusFilter { get; set; } = string.Empty;
-    private int UpdatedWithinDays { get; set; }
     private string SortField { get; set; } = string.Empty;
     private bool IsAsc { get; set; } = true;
 
@@ -159,30 +161,22 @@ public partial class Users
     public async Task OnClearSearch()
     {
         SearchTerm = string.Empty;
-        SearchField = string.Empty;
-        StatusFilter = string.Empty;
-        UpdatedWithinDays = 0;
         await LoadUsers(0, UserList?.SortBy, UserList?.IsAsc, null);
     }
 
     private string? BuildSearchString()
+        => string.IsNullOrWhiteSpace(SearchTerm) ? null : SearchTerm.Trim();
+
+    /// <summary>
+    /// Badge colour for a status machine value. Text comes from <c>UserProfileItem.StatusLabel</c>.
+    /// </summary>
+    private static string StatusBadgeClass(string? status) => status switch
     {
-        var parts = new List<string>();
-
-        if (!string.IsNullOrWhiteSpace(SearchTerm))
-            parts.Add(SearchTerm.Trim());
-
-        if (!string.IsNullOrEmpty(SearchField))
-            parts.Add($"field:{SearchField}");
-
-        if (!string.IsNullOrEmpty(StatusFilter))
-            parts.Add($"status:{StatusFilter}");
-
-        if (UpdatedWithinDays > 0)
-            parts.Add($"days:{UpdatedWithinDays}");
-
-        return parts.Count > 0 ? string.Join(" | ", parts) : null;
-    }
+        UserStatusLabels.Live => "bg-success",
+        UserStatusLabels.Initiated => "bg-warning text-dark",
+        UserStatusLabels.Suspended => "bg-danger",
+        _ => "bg-secondary"
+    };
 
     public async Task OnColumnsChanged()
     {

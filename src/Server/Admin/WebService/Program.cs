@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using DevInstance.BlazorToolkit.Tools;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.Account;
 using DevInstance.DevCoreApp.Server.Admin.Services.Core.Authentication;
 using DevInstance.DevCoreApp.Server.Admin.Services.Core.ApiKeys;
 using DevInstance.DevCoreApp.Server.Admin.Services.Core.Background;
@@ -92,6 +93,8 @@ public class Program
 
         builder.Services.AddCascadingAuthenticationState();
         builder.Services.AddScoped<IdentityRedirectManager>();
+        // One builder for every emailed account link (invitation, password reset) — see AccountRoutes.
+        builder.Services.AddScoped<IAccountLinkBuilder, AccountLinkBuilder>();
         builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
 
         builder.Services.Configure<JwtSettings>(

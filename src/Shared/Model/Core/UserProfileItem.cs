@@ -29,7 +29,24 @@ public class UserProfileItem : ModelItem
     public string PhoneNumber { get; set; }
 
     public string Roles { get; set; } = string.Empty;
+
+    /// <summary>The machine value — the <c>UserStatus</c> enum name. Compare against this, display <see cref="StatusLabel"/>.</summary>
     public string Status { get; set; } = string.Empty;
+
+    /// <summary>The human-readable form of <see cref="Status"/>. See <c>UserStatusLabels</c>.</summary>
+    public string StatusLabel => UserAdmin.UserStatusLabels.For(Status);
+
+    /// <summary>
+    /// The name of the user's primary organization.
+    /// <para>
+    /// Populated only by the list read (<c>GetListAsync</c>), which batches the lookup for the whole
+    /// page; single-user reads leave it empty rather than pay for a join nothing displays. Empty
+    /// also legitimately means "no assignment" — worth noticing, since such a user reads every
+    /// organization and can write to none.
+    /// </para>
+    /// </summary>
+    [Display(Name = "Organization")]
+    public string OrganizationName { get; set; } = string.Empty;
 
     [Display(Name = "Time Zone")]
     public string? TimeZoneId { get; set; }

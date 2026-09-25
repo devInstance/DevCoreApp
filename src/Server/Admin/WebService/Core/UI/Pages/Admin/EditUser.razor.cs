@@ -9,6 +9,7 @@ using DevInstance.DevCoreApp.Shared.Model.Core.Roles;
 using DevInstance.DevCoreApp.Shared.Model.Core.UserAdmin;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.JSInterop;
 
 namespace DevInstance.DevCoreApp.Server.Admin.WebService.Core.UI.Pages.Admin;
 
@@ -22,6 +23,9 @@ public partial class EditUser
 
     [Inject]
     private NavigationManager NavigationManager { get; set; } = default!;
+
+    [Inject]
+    private IJSRuntime JS { get; set; } = default!;
 
     [Inject(Key = null)]
     private IOrganizationService? OrganizationService { get; set; }
@@ -54,6 +58,14 @@ public partial class EditUser
     private Dictionary<string, string>? OverrideStates { get; set; } // key → "inherit"|"grant"|"deny"
     private Dictionary<string, Dictionary<string, List<PermissionItem>>>? GroupedAllPermissions { get; set; }
     private Dictionary<string, List<string>> overrideModuleActions = new();
+
+    // Access tab
+    private UserAccessStateItem? AccessState { get; set; }
+    private string NewPassword { get; set; } = "";
+    private string ConfirmNewPassword { get; set; } = "";
+    private string? PasswordError { get; set; }
+    private string? AccessNotice { get; set; }
+    private bool InviteLinkCopied { get; set; }
 
     // Effective Permissions tab
     private List<EffectivePermissionItem>? EffectivePermissions { get; set; }
@@ -94,8 +106,69 @@ public partial class EditUser
                 case "effective":
                     await LoadEffectiveTab();
                     break;
+                case "access":
+                    await LoadAccessTab();
+                    break;
             }
         }
+    }
+
+    // ── Access ──
+
+    private async Task LoadAccessTab()
+    {
+        await Host.ServiceReadAsync(
+            async () => await UserService.GetUserAccessStateAsync(UserId),
+            (state) => AccessState = state
+        );
+    }
+
+    private async Task CopyInvitationLink()
+    {
+        if (AccessState?.InvitationLink == null) return;
+
+        InviteLinkCopied = await JS.InvokeAsync<bool>("copyTextToClipboard", AccessState.InvitationLink);
+    }
+
+    private async Task ResendInvitation()
+    {
+        AccessNotice = null;
+
+        await Host.ServiceSubmitAsync(
+            async () => await UserService.ResendInvitationAsync(UserId),
+            _ => AccessNotice = "Invitation email queued. Check Admin \u2192 Email Log for delivery."
+        );
+    }
+
+    private async Task SetPassword()
+    {
+        PasswordError = null;
+        AccessNotice = null;
+
+        if (string.IsNullOrWhiteSpace(NewPassword))
+        {
+            PasswordError = "Please enter a password.";
+            return;
+        }
+
+        if (NewPassword != ConfirmNewPassword)
+        {
+            PasswordError = "The passwords do not match.";
+            return;
+        }
+
+        await Host.ServiceSubmitAsync(
+            async () => await UserService.SetUserPasswordAsync(UserId, NewPassword),
+            _ =>
+            {
+                NewPassword = "";
+                ConfirmNewPassword = "";
+                AccessNotice = "Password set. The email address was confirmed at the same time, so the user can sign in now.";
+            }
+        );
+
+        // The account is very likely usable now — reload so the badges and the link agree with it.
+        await LoadAccessTab();
     }
 
     // ── Profile ──

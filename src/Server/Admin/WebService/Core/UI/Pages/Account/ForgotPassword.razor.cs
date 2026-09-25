@@ -24,7 +24,7 @@ public partial class ForgotPassword
 
     private async Task OnValidSubmitAsync()
     {
-        var resetLinkBase = NavigationManager.ToAbsoluteUri("Account/ResetPassword").AbsoluteUri;
+        var resetLinkBase = NavigationManager.ToAbsoluteUri("account/reset-password").AbsoluteUri;
         await AccountService.SendPasswordResetLinkAsync(Input, resetLinkBase);
 
         // Always show success to prevent user enumeration

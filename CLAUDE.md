@@ -53,7 +53,7 @@ dotnet test tests/Server/WebService/WebService.Tests.csproj --filter "FullyQuali
   filter, organization stamping, unit-of-work concurrency, decorators) and
   `tests/Server/WebService/WebService.Tests.csproj` (service tests; its assembly is named
   `DevInstance.DevCoreApp.Server.Tests`). Shared fakes (`IScopeManagerMock`, `TimerProviderMock`)
-  live in `tests/Shared/TestUtils`. The suite is small (~34 test methods in 6 files) — a smoke net, not a safety
+  live in `tests/Shared/TestUtils`. The suite is small (~36 tests) — a smoke net, not a safety
   net. Green tests are not evidence a behavior change works; build and exercise the app too.
 - `tests/Client/Client.ClientMocks` is committed but **not** referenced by the `.slnx` — dead
   leftovers from the WASM client. Don't extend them.

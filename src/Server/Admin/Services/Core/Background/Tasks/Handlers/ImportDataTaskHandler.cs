@@ -41,6 +41,17 @@ public class ImportDataTaskHandler : IBackgroundTaskHandler
             return;
         }
 
+        // Run the commit inside the session's organization. The worker resets the operation context
+        // for every task, so without this the import runs org-less: reads are fail-open across every
+        // organization, and any org-scoped insert throws in OrganizationStampInterceptor. Creating
+        // users is the case that made this visible — they now require an organization to land in.
+        var operationContext = scopedProvider.GetRequiredService<BackgroundOperationContext>();
+        if (session.OrganizationId != Guid.Empty)
+        {
+            operationContext.PrimaryOrganizationId = session.OrganizationId;
+            operationContext.SetVisibleOrganizationIds([session.OrganizationId]);
+        }
+
         try
         {
             var importExportService = scopedProvider.GetRequiredService<IImportExportService>();

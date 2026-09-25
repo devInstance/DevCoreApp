@@ -13,6 +13,13 @@ public interface IUserProfileService : ICRUDService<UserProfileItem>
 
     ServiceActionResult<List<string>> GetAvailableRoles();
     Task<ServiceActionResult<UserProfileItem>> CreateUserAsync(UserProfileItem newUser, string role);
+
+    /// <summary>
+    /// Creates a user in a named organization. Pass null for <paramref name="organizationPublicId"/>
+    /// to use the creating administrator's primary organization. Every new user gets exactly one
+    /// assignment either way — an unassigned user reads every organization and can write to none.
+    /// </summary>
+    Task<ServiceActionResult<UserProfileItem>> CreateUserAsync(UserProfileItem newUser, string role, string? organizationPublicId);
     Task<ServiceActionResult<UserProfileItem>> UpdateUserAsync(string id, UserProfileItem updatedUser, string role);
     Task<ServiceActionResult<bool>> DeleteUserAsync(string id);
 
@@ -21,6 +28,10 @@ public interface IUserProfileService : ICRUDService<UserProfileItem>
     Task<ServiceActionResult<List<PermissionOverrideItem>>> GetUserPermissionOverridesAsync(string userId);
     Task<ServiceActionResult<bool>> SetUserPermissionOverridesAsync(string userId, List<PermissionOverrideItem> overrides);
     Task<ServiceActionResult<List<EffectivePermissionItem>>> GetEffectivePermissionsAsync(string userId);
+
+    Task<ServiceActionResult<UserAccessStateItem>> GetUserAccessStateAsync(string userId);
+    Task<ServiceActionResult<bool>> ResendInvitationAsync(string userId);
+    Task<ServiceActionResult<bool>> SetUserPasswordAsync(string userId, string password);
 
     Task<ServiceActionResult<UserProfileItem>> UploadProfilePictureAsync(string userId, Stream imageStream, string contentType);
     Task<ServiceActionResult<bool>> DeleteProfilePictureAsync(string userId);

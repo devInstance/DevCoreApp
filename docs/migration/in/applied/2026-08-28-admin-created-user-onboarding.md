@@ -22,7 +22,9 @@ scope:
   - Server.Admin.WebService.Core.UI.Pages.Account.ForgotPassword
   - Server.Admin.WebService.Program                            # DI registration only (root, unmarked)
   - Server.Admin.Services.Mocks.Core.UserAdmin.UserProfileServiceMock
-status: pending
+  - Server.Admin.Services.Core.Organizations.IOrganizationService  # DevCoreApp only: GetCurrentAsync was missing here
+  - Server.Admin.Services.Core.Organizations.OrganizationService   # DevCoreApp only: GetCurrentAsync was missing here
+status: applied
 change: "24f54d500dc3d6bb3d93d1ca7d3b9d1e9e22a0b1"   # ThreadIQ main, "#1124: New user experience"
 related:
   - docs/open-items.md   # ThreadIQ-local: the three neighbouring problems deliberately left alone
@@ -36,6 +38,32 @@ related:
 |---|---|
 | 2026-08-28 | Authored in ThreadIQ `out/`. Not yet delivered. |
 | 2026-08-28 | ThreadIQ change committed as `24f54d5` (`#1124`), 30 files. `change` filled in immediately afterwards, so that SHA carries this doc with the placeholder still in it — read the doc from ThreadIQ `main`, not from the commit it names. |
+| 2026-09-25 | Applied in DevCoreApp. Changes 1–8 taken; 18 of the 24 shared files applied as ThreadIQ's diff with the namespace prefix swapped, the other six merged by hand. Deviations below. Build clean (Debug + ServiceMocks); 36 tests green, including the 19 added here. Manual verification steps 1–9 **not yet run**. Open question 1 remains open (hub decision pending). |
+
+### Applied in DevCoreApp — deviations from the instructions
+
+- **Unit of work, not `ApplicationDbContext`.** ThreadIQ's `UserProfileService` and `AccountService`
+  inject the scoped context (`Db` / `dbContext`). DevCoreApp's services had already moved to the
+  per-operation `RepositoryFactory.Create()` pattern, so every new data access here goes through
+  `IQueryRepository`: organization resolution via `GetOrganizationsQuery().ByPublicIds(...)`, the
+  assignment via `GetUserOrganizationQuery().CreateNew()` + `AddAsync`, and the batched Organization
+  column via `GetUserOrganizationQuery().Select()`. Behaviour is the same. `CreateUserAsync` opens its
+  one `repo` before the organization is resolved, so resolve-first ordering is kept.
+- **Owner root organization: no tenant lookup.** There is no `Tenant` query on `IQueryRepository`,
+  so `AssignRootOrganizationAsync` resolves the root as the parentless organization (lowest
+  `SortOrder`), the doc's own fallback. `OrganizationDataSeeder` creates exactly one tenant whose
+  `RootOrganizationId` is that organization, so the result is the same on a template install.
+- **`IOrganizationService.GetCurrentAsync` added.** `NewUser` defaults its organization picker from
+  it. ThreadIQ's `Core` has it but DevCoreApp's did not (it never came upstream). Ported as-is,
+  outside this doc's scope list; the fan-out doc must carry it for any fork that also lacks it.
+- **Already partly done here.** DevCoreApp's `CreateUserAsync` already called the no-password
+  `CreateAsync` and already sent an email-confirmation token as an absolute link built from
+  `HttpContext`. That builder is replaced by `IAccountLinkBuilder`; `IHttpContextAccessor` is no
+  longer injected into `UserProfileService`.
+- **Not taken:** ThreadIQ-local phone formatting (`FormatPhone` / `NormalizePhone`) and the
+  browser time-zone field in `NewUser.razor`, both present in ThreadIQ's context lines. The
+  `Users.razor` comment pointing at ThreadIQ's `docs/open-items.md` now points here instead.
+- `registration.html` checked: it renders `<a href="{{Link}}">`, so the absolute URL is correct.
 
 ## Source change
 

@@ -16,7 +16,11 @@ public static class UserProfileDecorators
     /// <param name="appUser">The application user associated with the profile.</param>
     /// <param name="roles">The roles assigned to the user.</param>
     /// <returns>A <see cref="UserProfileItem"/> view model or <c>null</c> if the profile is <c>null</c>.</returns>
-    public static UserProfileItem ToView(this UserProfile profile, ApplicationUser? appUser = null, IList<string>? roles = null)
+    public static UserProfileItem ToView(
+        this UserProfile profile,
+        ApplicationUser? appUser = null,
+        IList<string>? roles = null,
+        string? organizationName = null)
     {
         var hasPicture = !string.IsNullOrEmpty(profile.ProfilePictureContentType);
 
@@ -29,6 +33,7 @@ public static class UserProfileDecorators
             LastName = profile.LastName ?? string.Empty,
             PhoneNumber = profile.PhoneNumber ?? string.Empty,
             Roles = roles != null ? string.Join(", ", roles) : string.Empty,
+            OrganizationName = organizationName ?? string.Empty,
             Status = profile.Status.ToString(),
             TimeZoneId = profile.TimeZoneId,
             CreateDate = profile.CreateDate,

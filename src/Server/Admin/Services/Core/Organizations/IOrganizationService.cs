@@ -16,6 +16,12 @@ public interface IOrganizationService
 
     Task<ServiceActionResult<OrganizationItem>> GetAsync(string publicId);
 
+    /// <summary>
+    /// The current user's primary organization, or null when unauthenticated or the user
+    /// has no organization assignment.
+    /// </summary>
+    Task<ServiceActionResult<OrganizationItem?>> GetCurrentAsync();
+
     Task<ServiceActionResult<OrganizationItem>> CreateAsync(OrganizationItem item, string? parentPublicId);
 
     Task<ServiceActionResult<OrganizationItem>> UpdateAsync(string publicId, OrganizationItem item);
