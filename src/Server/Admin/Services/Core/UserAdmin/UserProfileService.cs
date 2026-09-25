@@ -4,6 +4,7 @@ using DevInstance.DevCoreApp.Server.Admin.Services.Core.Authentication;
 using DevInstance.DevCoreApp.Server.Admin.Services.Core.Background;
 using DevInstance.DevCoreApp.Server.Admin.Services.Core.Background.Requests;
 using DevInstance.DevCoreApp.Server.Admin.Services.Core.Exceptions;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.Files;
 using DevInstance.DevCoreApp.Server.Admin.Services.Core.Notifications.Templates;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Server.Database.Core.Data.Decorators;
@@ -722,24 +723,12 @@ public class UserProfileService : BaseService, IUserProfileService
             (profile.ProfilePictureThumbnail, profile.ProfilePictureContentType));
     }
 
+    /// <summary>
+    /// JPEG at quality 85 — the format ProfilePictureContentType is set to on upload. Scaling
+    /// itself lives in the shared <see cref="ImageResizer"/>; this wrapper only turns an
+    /// undecodable upload back into the BadRequestException callers already expect.
+    /// </summary>
     private static byte[] ResizeImage(byte[] imageData, int maxWidth, int maxHeight)
-    {
-        using var original = SKBitmap.Decode(imageData);
-        if (original == null)
-            throw new BadRequestException("Invalid image data.");
-
-        var ratioX = (double)maxWidth / original.Width;
-        var ratioY = (double)maxHeight / original.Height;
-        var ratio = Math.Min(ratioX, ratioY);
-        ratio = Math.Min(ratio, 1.0); // Don't upscale
-
-        var newWidth = (int)(original.Width * ratio);
-        var newHeight = (int)(original.Height * ratio);
-
-        using var resized = original.Resize(new SKImageInfo(newWidth, newHeight), SKFilterQuality.High);
-        using var image = SKImage.FromBitmap(resized);
-        using var data = image.Encode(SKEncodedImageFormat.Jpeg, 85);
-
-        return data.ToArray();
-    }
+        => ImageResizer.Resize(imageData, maxWidth, maxHeight, SKEncodedImageFormat.Jpeg, 85)
+           ?? throw new BadRequestException("Invalid image data.");
 }

@@ -14,6 +14,19 @@ public static class DateTimeExtensions
     }
 
     /// <summary>
+    /// Resolves a stored TimeZoneId to a TimeZoneInfo, returning null for an unset or
+    /// unrecognized id rather than throwing. An id that exists on one OS and not another is a
+    /// normal condition, not an error, so every caller wants the same lenient behavior —
+    /// this is the one place it lives.
+    /// </summary>
+    public static TimeZoneInfo? ResolveTimeZone(string? timeZoneId)
+    {
+        if (string.IsNullOrEmpty(timeZoneId)) return null;
+        try { return TimeZoneInfo.FindSystemTimeZoneById(timeZoneId); }
+        catch { return null; }
+    }
+
+    /// <summary>
     /// Returns "now" expressed in the user's local clock. Use this from Blazor SSR
     /// pages/components when seeding ViewModels — DateTime.Now reflects the server's clock
     /// (UTC in most cloud deployments), not the user's. When tz is null, returns the UTC

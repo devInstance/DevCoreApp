@@ -1,4 +1,4 @@
----
+﻿---
 origin: ThreadIQ
 targets: [DevCoreApp]
 scope:
@@ -10,7 +10,7 @@ scope:
   - Server.Admin.Services.Core.Authentication.ICurrentUserContext
   - Client.App                      # the App marker vs. the root App.razor component
   - Server.Admin.WebService.App     # same collision, milder
-status: pending
+status: applied
 related:
   - docs/migration/out/2026-08-06-core-app-restructure.md   # the doc these findings respond to
   - ThreadIQ docs/core-app-restructure-plan.md              # the file-by-file triage (ThreadIQ-local)
@@ -24,6 +24,7 @@ related:
 |---|---|
 | 2026-08-26 | Authored in ThreadIQ `out/` after completing the restructure (`#1111`). Not yet delivered. |
 | 2026-08-27 | Delivered into DevCoreApp `in/`. Not yet triaged. Findings 1 and 2 are rule defects DevCoreApp cannot reproduce on itself; finding 1 blocks any WASM fork with product code. |
+| 2026-08-28 | Triaged and applied. Finding 1 reproduced here (CS0101 in Client, CS0118 in WebService) and fixed via option 1 — both Blazor shells now live in `UI/`. Findings 2-5 folded into `out/2026-08-06-core-app-restructure.md`; trap 5 corrected. All five helpers taken into canonical `Core`, two with changes. Organizations reconciliation: ThreadIQ to send it as its own instruction doc. Fan-out: `out/2026-08-28-app-marker-collision-and-core-helpers.md`. |
 
 ## Why
 

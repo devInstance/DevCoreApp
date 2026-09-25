@@ -1,4 +1,6 @@
-# CLAUDE.md — DevCoreApp Solution Guide
+﻿# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 This is the root-level guide for the entire DevCoreApp solution. Project-specific conventions (page patterns, service patterns, mocks) are in `src/Server/Admin/WebService/CLAUDE.md`.
 
@@ -23,7 +25,8 @@ The solution file is `DevInstance.DevCoreApp.slnx` (the modern `.slnx` XML forma
 # Restore + build the whole solution
 dotnet build DevInstance.DevCoreApp.slnx
 
-# Run the Admin web app (Blazor SSR host + API). Needs a reachable database (see below).
+# Run the Admin web app (Blazor SSR host + API). Needs a reachable database — see the
+# Database/Configuration notes below (default: Postgres on localhost:5432, db `sample_app`).
 dotnet run --project src/Server/Admin/WebService/DevCoreApp.Admin.WebService.csproj
 
 # Run the app against in-memory mock services — no database/Identity/email needed.
@@ -41,14 +44,44 @@ dotnet test tests/Server/WebService/WebService.Tests.csproj --filter "FullyQuali
 ```
 
 - Three build configurations exist: `Debug`, `Release`, and `ServiceMocks`. CI (`azure-pipelines-ci.yml`) builds `Release` and runs `**/tests/**/*[Tt]ests.csproj`.
+  `.github/workflows/blazor-app-dev_devcoreapp.yml` is a stale Azure Web App deploy (pins .NET 8,
+  triggers on the old `blazor-app-dev` branch) — not the CI of record.
+- **The mocks project is excluded from `Debug` and `Release`** in `DevInstance.DevCoreApp.slnx`
+  (`<Build … Project="false" />`), so a whole-solution build never compiles it. Build or run with
+  `-c ServiceMocks` to type-check mock code.
 - Two test projects, both xUnit v3: `tests/Server/Database/Core/Core.Tests.csproj` (org query
-  filter, unit-of-work concurrency) and `tests/Server/WebService/WebService.Tests.csproj` (service
-  tests). Shared fakes (`IScopeManagerMock`, `TimerProviderMock`) live in `tests/Shared/TestUtils`.
+  filter, organization stamping, unit-of-work concurrency, decorators) and
+  `tests/Server/WebService/WebService.Tests.csproj` (service tests; its assembly is named
+  `DevInstance.DevCoreApp.Server.Tests`). Shared fakes (`IScopeManagerMock`, `TimerProviderMock`)
+  live in `tests/Shared/TestUtils`. The suite is small (~34 test methods in 6 files) — a smoke net, not a safety
+  net. Green tests are not evidence a behavior change works; build and exercise the app too.
+- `tests/Client/Client.ClientMocks` is committed but **not** referenced by the `.slnx` — dead
+  leftovers from the WASM client. Don't extend them.
 - **Database provider is selected at runtime** via `Database:Provider` in `appsettings.json` (`Postgres` — default — or `SqlServer`), with connection strings under `ConnectionStrings:PostgresConnection` / `:SqlServerConnection`. The `Database/` solution folder splits into `Core` (provider-agnostic) plus `Postgres` and `SqlServer` projects. **Each provider owns its own `Migrations/` folder** — a schema change needs a migration in both.
 - On startup the app calls `MigrateAndSeedAsync()`: it applies pending migrations and runs every
   registered `IDataSeeder` (organizations, settings, permissions, API keys). Adding seed data means
   adding an `IDataSeeder`, not a migration insert.
 - After changing entities, **do not** scaffold EF migrations yourself — see the rule in "Things To Never Do".
+
+### Configuration
+
+All runtime configuration is in `src/Server/Admin/WebService/appsettings*.json`. The committed
+values are development placeholders (JWT secret, SMTP password) — override them via environment
+variables or user secrets, never by editing the file for a real deployment.
+
+| Section | Bound to / read by |
+|---|---|
+| `Database:Provider` + `ConnectionStrings:{Postgres,SqlServer}Connection` | `Program.AddDatabase` — picks the provider at startup |
+| `JwtSettings` | `JwtSettings` — issuer/audience/secret, access + refresh token lifetimes |
+| `BackgroundTasks` | `BackgroundTaskSettings` — concurrency, polling, retry backoff, stuck-task recovery |
+| `HealthEndpoints` | `HealthEndpointSettings` / `HealthEndpointAccess` — header + shared secret gating `/health/ready` |
+| `EmailConfiguration` | `AddMailKit(configuration)` |
+| `StorageConfiguration` | `AddLocalFileStorage(configuration)` — `BasePath` for the local provider |
+| `Serilog` / `Logging` | log level overrides (the sinks themselves are code — see Hosting) |
+
+Anything tunable at *runtime* (storage limits, feature flags) lives in the `Settings` /
+`FeatureFlags` tables instead — see [`docs/Settings.md`](docs/Settings.md) and
+[`docs/FeatureFlags.md`](docs/FeatureFlags.md).
 
 ## Solution Structure
 
@@ -65,7 +98,7 @@ DevCoreApp/
 │   ├── Client/
 │   │   ├── DevCoreApp.Client/       # Blazor WASM app (standalone — NOT hosted by WebService today)
 │   │   │   ├── Core/{UI,Extensions}/
-│   │   │   └── Program.cs, App.razor, _Imports.razor   # host shell, no marker
+│   │   │   └── Program.cs, UI/App.razor, _Imports.razor  # host shell, no marker
 │   │   └── Client.Services/Core/    # → DevInstance.DevCoreApp.Client.Services.Core (API clients)
 │   ├── Server/
 │   │   ├── Admin/
@@ -139,6 +172,15 @@ Interactive Server is exactly why the per-operation unit of work below is mandat
 Errors are shaped by `ApiExceptionHandler` (registered via `AddExceptionHandler<T>`): JSON for API
 paths, falling through to the `/Error` page for the rest.
 
+**Logging pipeline.** `SerilogConfiguration.ConfigureSerilog` replaces the default provider before
+anything else is registered: Console in Development, a Serilog **PostgreSQL sink writing to the
+`ApplicationLogs` table** in Production (skipped when there is no Postgres connection string; the
+table is not auto-created). Application code never touches Serilog — it writes through LogScope, and
+the chain is `IScopeLog` → `ILogger` → Serilog. `UseCorrelationId()` runs before
+`UseSerilogRequestLogging()` and puts one id into `HttpContext.Items["CorrelationId"]`, the Serilog
+`CorrelationId` column, the error JSON, and `IOperationContext.CorrelationId` — it is the join key
+across all four.
+
 ## Shared Core vs Product Code
 
 DevCoreApp is a **template**. Downstream products (**ThreadIQ**, **Tentrie**, …) are forks of it. To keep shared template code updatable across all forks, every file sits in an unambiguous *shared* or *product* location. Six rules define it.
@@ -168,11 +210,28 @@ The split uses **namespaces + folders inside the existing assemblies** — no ne
 Admin.WebService/   Program.cs, _Imports.razor, UI/App.razor, UI/Routes.razor,
                     appsettings*.json, wwwroot/, Styles/, Scripts/
 Admin.Services/     BaseService.cs, ICRUDService.cs
-Client/             Program.cs, App.razor, _Imports.razor, wwwroot/
+Client/             Program.cs, UI/App.razor, _Imports.razor, wwwroot/
 Email/*, Storage/*  ConfigurationExtensions.cs
 ```
 
 Note `_Imports.razor` lives at the **WebService project root**, not in `UI/`. A `_Imports.razor` only cascades to its own folder and below, so from `UI/` it would not reach the components under `Core/UI/`.
+
+**No type may share its name with a marker namespace.** `App` is a namespace under every project
+root, so a type named `App` in that same root namespace is `CS0101: the namespace already contains
+a definition for 'App'`. Both Blazor hosts would otherwise trip this, because a Blazor root
+component is a type named `App`:
+
+- **The root shell lives in `UI/`, in both hosts** — `Admin.WebService/UI/App.razor` and
+  `Client/UI/App.razor`. That is why the Client's shell is *not* at its project root even though
+  Rule 2 would otherwise put it there.
+- **Reference it qualified** — `app.MapRazorComponents<UI.App>()`,
+  `builder.RootComponents.Add<UI.App>("#app")`. A bare `App` from the project root namespace binds
+  to the *namespace* and fails as `CS0118: 'App' is a namespace but is used like a type` the moment
+  any fork puts a file under `App/`.
+
+DevCoreApp cannot catch a regression here by building, because its own `App/` folders are empty. To
+check, drop a throwaway `namespace <RootNs>.App; internal class Probe { }` into
+`Client/App/` and `Admin.WebService/App/`, build the solution, and delete it.
 
 **Rule 3 — `Database/Core` is exempt.** That project already *is* the shared root — do **not** double it to `Core.Core`. Shared code keeps `Server.Database.Core.<...>` as-is; product entities go under `Server.Database.Core.App.Models.<Entity>`. The `Postgres`/`SqlServer` provider projects are untouched by this split (they hold provider plumbing plus generated migrations).
 
@@ -202,6 +261,13 @@ When a fork must edit a **shared (`Core`) file in place** (the change can't go i
 - XML / `.csproj`: `<!-- project-specific … -->` … `<!-- /project-specific -->`
 
 Shared-ness is expressed by *location* (`Core/`), so the tag only ever marks the **exception** — a local override inside shared code.
+
+**A fence marks a region, not a file.** If a fork ends up wrapping a whole shared file — or
+replacing one shared file with a differently shaped set of files — that is not a deviation inside
+shared code, it is product code sitting in the wrong folder. Move it to `App/` and, if the upstream
+original is genuinely obsolete, send the replacement to the hub as its own instruction doc so the
+decision is made once for everyone. A whole-file fence left in `Core/` reads to the next fan-out as
+"shared surface, do not touch", which is exactly the wrong signal.
 
 ## Cross-Project Sync (migration in/out)
 
@@ -321,7 +387,19 @@ Tenant: "Acme Corp"
 - `ApplicationDbContext` applies the global filter to every entity implementing `IOrganizationScoped`
   — implement that interface on new business entities to get scoping for free
 
-**When creating new records**, set `OrganizationId` to `IOperationContext.PrimaryOrganizationId`.
+**`OrganizationId` on new rows is stamped for you — do not hand-assign it.**
+`OrganizationStampInterceptor` (`Database/Core/Data/`) is registered in
+`ApplicationDbContext.OnConfiguring`, so it covers both the DI-scoped context and the short-lived
+ones built by `IAppDbContextFactory`. On insert it fills `OrganizationId` from
+`IOperationContext.PrimaryOrganizationId` for every `IOrganizationScoped` entity that has none, and
+**throws when no organization can be resolved** instead of writing `Guid.Empty`. A value assigned
+explicitly is left alone (a background job can still write into another org). `BackgroundTask` is
+the one exempt type — unauthenticated flows submit confirmation/reset mail with no organization.
+
+Why it is centralized: the **read-side filter is deliberately fail-open** — an empty
+`VisibleOrganizationIds` disables filtering rather than returning nothing, so an unstamped row reads
+back fine in development and then disappears for every real user. If an insert fails with an
+organization error, fix the operation context; do not work around the interceptor.
 
 ## Permissions System
 
@@ -386,6 +464,17 @@ atomically flipping status to `Running` → dispatches to the matching `IBackgro
   own business state; `BackgroundTasks` owns execution state.
 - Full design: [`docs/BackgroundTasks.md`](docs/BackgroundTasks.md).
 
+## Real-Time Notifications
+
+`NotificationHub` is a bare `[Authorize] Hub` at `/hubs/notifications` — it declares no
+client-callable methods; traffic is server → browser only. Services call `INotificationHubService`
+(`SendNotificationAsync` / `SendUnreadCountAsync`, which emit the `ReceiveNotification` and
+`UpdateUnreadCount` client events), implemented in `WebService/Core/Hubs/NotificationHubService.cs`
+over `IHubContext<NotificationHub>`. **That interface is the seam** — it lets `Admin.Services` push
+notifications without referencing SignalR. Persistence, read state, and per-user preferences live in
+`NotificationService` and the `Notifications` / `UserNotificationPreferences` tables. Browsers
+connect with a JWT in `?access_token=` (see the `JwtBearerEvents` hook in `Program.cs`).
+
 ## File Storage
 
 Provider-based file storage with local disk (default) and S3 (stub). Configuration and usage details: [`src/Server/Storage/FileStorage.md`](src/Server/Storage/FileStorage.md).
@@ -446,7 +535,7 @@ implemented in `CoreQueryRepository` before services can reach it.
 - Use `query.CreateNew()` to instantiate entities — never `new Entity { ... }` directly. The query's `CreateNew()` method sets `Id`, `PublicId`, `CreateDate`, `UpdateDate` (and other base fields) consistently via `IdGenerator` and `ITimeProvider`. The only exception is data seeders that run during database initialization.
 - Use LogScope (`IScopeLog`) for logging, not `ILogger`
 - Use `[AuditExclude]` on sensitive entity properties
-- Set `OrganizationId` on new business records
+- Implement `IOrganizationScoped` on new business entities — `OrganizationStampInterceptor` then fills `OrganizationId` on insert; do not set it by hand
 - Return `ServiceActionResult<T>` from services, not raw values or exceptions
 - Use `ModelList<T>` for paginated responses
 - Put shared/template code under a `Core` segment and product-specific code under `App` (see [Shared Core vs Product Code](#shared-core-vs-product-code))

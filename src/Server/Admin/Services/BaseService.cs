@@ -26,15 +26,12 @@ public abstract class BaseService
 
     /// <summary>
     /// Resolves a TimeZoneInfo from a stored TimeZoneId, returning null for an unset or
-    /// unrecognized id rather than throwing. Static so callers outside a service instance
-    /// (background handlers, mappers) can reuse the same lenient behavior.
+    /// unrecognized id rather than throwing. Kept as a protected shorthand for services; the
+    /// behavior itself lives in <see cref="DateTimeExtensions.ResolveTimeZone"/>, which
+    /// <c>ICurrentUserContext</c> shares so pages and services cannot drift apart.
     /// </summary>
     protected static TimeZoneInfo? ResolveTimeZone(string? timeZoneId)
-    {
-        if (string.IsNullOrEmpty(timeZoneId)) return null;
-        try { return TimeZoneInfo.FindSystemTimeZoneById(timeZoneId); }
-        catch { return null; }
-    }
+        => DateTimeExtensions.ResolveTimeZone(timeZoneId);
 
     public BaseService(IScopeManager logManager,
                         ITimeProvider timeProvider,

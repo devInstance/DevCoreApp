@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using DevInstance.BlazorToolkit.Tools;
 using DevInstance.DevCoreApp.Server.Admin.Services.Core.Authentication;
 using DevInstance.DevCoreApp.Server.Admin.Services.Core.ApiKeys;
@@ -258,7 +258,7 @@ public class Program
                 await next();
             }));
 
-        app.MapRazorComponents<App>()
+        app.MapRazorComponents<UI.App>()
             .AddInteractiveServerRenderMode();
 
         app.MapControllers();

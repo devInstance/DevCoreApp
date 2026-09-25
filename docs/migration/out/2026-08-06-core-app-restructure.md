@@ -1,4 +1,4 @@
----
+﻿---
 origin: DevCoreApp
 targets: [ThreadIQ, Tentrie]
 scope:
@@ -6,11 +6,20 @@ scope:
 status: pending
 related:
   - docs/migration/out/2026-07-23-adopt-core-app-structure.md   # superseded by this doc
+  - docs/migration/in/applied/2026-08-26-core-app-restructure-findings.md   # ThreadIQ's execution report, folded in below
   - CLAUDE.md ("Shared Core vs Product Code", "Cross-Project Sync")
   - docs/migration/README.md
 ---
 
 # Restructure into the Core / App split
+
+## Amendments
+
+**2026-08-28.** Revised after ThreadIQ executed this doc end to end and reported back
+(`in/applied/2026-08-26-core-app-restructure-findings.md`). If you applied an earlier copy, the
+deltas are: Rule 2 now puts the WASM root shell in `UI/` (trap 6 — a hard compile error, verified
+in DevCoreApp), recipe steps 1 and 2 gained the `.razor.css`, partial-qualification and
+identity-pair rules, and **trap 5 is corrected** — moving product entities needs no migration.
 
 ## Why
 
@@ -66,12 +75,16 @@ These are the host/entry/shell files the framework or convention pins in place. 
 Admin.WebService/   Program.cs, _Imports.razor, UI/App.razor, UI/Routes.razor,
                     appsettings*.json, wwwroot/, Styles/, Scripts/
 Admin.Services/     BaseService.cs, ICRUDService.cs
-Client/             Program.cs, App.razor, _Imports.razor, wwwroot/
+Client/             Program.cs, UI/App.razor, _Imports.razor, wwwroot/
 Email/*, Storage/*  ConfigurationExtensions.cs   (DI wiring)
 ```
 
 They are still shared surface — a fork that must change one fences it (Rule 6) rather than moving
 it.
+
+**Both Blazor root shells live in `UI/`, not at the project root.** A root component is a type
+named `App` and the marker is a namespace named `App`; in the same parent namespace that is a
+compile error. See trap 6.
 
 **Rule 3 — the `Database/Core` project is exempt.** It already *is* the shared root; do not double
 it to `Core.Core`. Shared code keeps `Server.Database.Core.<...>` unchanged; product entities go to
@@ -133,7 +146,8 @@ Storage/Processor/, {Local,S3}/   same shape
 
 Client.Services/         Core/{Net,Net/Api,Notifications}/ + Core/ root services
 Client/                  Core/{UI,Extensions}/
-                         Program.cs, App.razor, _Imports.razor, wwwroot/   (root)
+                         UI/App.razor                           (root shell, Rule 2)
+                         Program.cs, _Imports.razor, wwwroot/   (root)
 
 mocks/…/ServicesMocks/   Core/<Feature>/
 tests/…/WebService/      Core/Services/       (mirrors Admin.Services)
@@ -164,13 +178,41 @@ Order, building after each: `Shared/Model` → `Shared/Utils` → `Email/*` → 
 
 For each project:
 
-1. `git mv` each feature folder (and non-root loose files) into `<ProjectDir>/Core/`.
+1. `git mv` each feature folder (and non-root loose files) into `<ProjectDir>/Core/`. **A
+   `Foo.razor.css` must stay next to its `Foo.razor`** — when you pull individual components out of
+   a shared folder rather than moving the folder whole, the scoped stylesheet is easy to strand.
+   The build catches it (`BLAZOR102: The scoped css file … was defined but no associated razor
+   component or view was found for it`), so it costs a round trip, not a bug.
 2. Rewrite namespace tokens across **every `.cs` and `.razor` file in the whole solution** —
    consumers in other projects reference these namespaces too. Enumerate the concrete old→new
    pairs from the project's declared namespaces and apply them longest-first in a single pass, so
    `…Shared.Model` can never match as a prefix of `…Shared.Model.Account`. Match on namespace-token
    boundaries: not preceded by an identifier char or `.`, not followed by an identifier char (a
-   trailing `.` is fine — that is the type name).
+   trailing `.` is fine — that is the type name); `(?<![A-Za-z0-9_.])` is the lookbehind that keeps
+   a short form from matching inside a longer one.
+
+   Two things a fully-qualified-only rewrite misses, both found by ThreadIQ:
+
+   - **Partial qualifications.** Code inside `DevInstance.{Product}.*` writes a namespace at every
+     length that still resolves relatively, not just the full one:
+
+     ```csharp
+     DevInstance.ThreadIQ.Server.Database.Core.Models.CRM.DealRecord   // full
+            Server.Database.Core.Models.CRM.DealRecord                 // product prefix dropped
+                   Database.Core.Models.CRM.DealRecord                 // …and more
+                                 Models.CRM.DealRecord                 // bare, from inside Database.Core
+     IOfflineCrudClientService<Shared.Model.CRM.DealItem>              // the same, in Client.Services
+     ```
+
+     Generate the shorter forms from each pair and put them in the same longest-first alternation.
+
+   - **Identity pairs for what must not move.** Folding loose root files into `Core/` creates the
+     pair `<RootNs>` → `<RootNs>.Core`, which then matches the namespace declaration of the Rule 2
+     files that must *stay* at the root, and of any sibling project sharing the prefix. ThreadIQ
+     saw `BaseService.cs`/`ICRUDService.cs` rewritten to `…Admin.Services.Core`,
+     `…Admin.Services.Mocks` heading for `…Admin.Services.Core.Mocks`, and
+     `…EmailProcessor.MailKit` become `…EmailProcessor.Core.MailKit`. Add explicit `X` → `X` pairs
+     for those namespaces so longest-first matches them first and replaces them with themselves.
 3. Also rewrite `@using` lines and the **fully-qualified generic arguments inline in Razor markup** —
    e.g. `<HDataGrid TItem="DevInstance.{Product}.Shared.Model.ApiKeys.ApiKeyItem">`. These are easy
    to miss because they are in markup, not in a `using` block.
@@ -178,7 +220,7 @@ For each project:
 
 Preserve each file's BOM and line endings when rewriting, or the diff drowns in whitespace churn.
 
-### The five traps (all hit during DevCoreApp's move)
+### The six traps (1-5 hit during DevCoreApp's move; 6 found by ThreadIQ and since verified here)
 
 1. **`_Imports.razor` cascade.** A `_Imports.razor` applies to its own folder and below. Once the
    components move to `Core/UI/**`, a `_Imports.razor` still sitting in `UI/` no longer reaches
@@ -208,8 +250,43 @@ Preserve each file's BOM and line endings when rewriting, or the diff drowns in 
 5. **Leave `Database/Core` and the provider projects alone** (Rule 3). This is what keeps EF
    migration snapshots valid: every type string in `Migrations/**` names
    `Server.Database.Core.Models.*`, all of which survive unchanged. **No migration needs
-   regenerating.** If your fork has product entities to move to `App/Models/`, that *does* change
-   snapshot type names — do it as a separate change with a migration, not inside this move.
+   regenerating.**
+
+   Moving your own product entities into `App/Models/` is also free, and an earlier version of
+   this doc was wrong to say otherwise. `MigrationsModelDiffer` pairs entity types by **mapped
+   table name** first; a namespace-only move changes no table name, so the differ emits zero
+   operations. The stale type strings left in the snapshot and in the historical `*.Designer.cs`
+   build a name-keyed relational model that never resolves them to CLR types, so they cannot
+   throw, and the snapshot repairs itself on whatever migration lands next. ThreadIQ measured it:
+   36 entities moved, 52 migration files and a 5,409-line `ModelSnapshot` byte-for-byte untouched.
+
+   Two conditions on that:
+
+   - It holds only while **no table name moves with the type**. Renaming the class as well changes
+     the default TPH discriminator (the short type name), which is a data change and does need a
+     migration.
+   - Gate it with `dotnet ef migrations has-pending-model-changes` — read-only, needs no database,
+     scaffolds nothing. Run it **once per provider**; Postgres and SqlServer carry separate
+     snapshots.
+
+6. **`App` as a marker collides with the Blazor root component.** A Blazor host's root component
+   is a type named `App`; the marker is a namespace named `App` under the same project root. The
+   moment anything lands under `App/`, that is a compile error — and it will not show up while
+   your `App/` folders are still empty:
+
+   | Host | Root component | Result |
+   |---|---|---|
+   | `Client` (WASM), shell at project root | `…Client.App` | `CS0101: the namespace already contains a definition for 'App'` — hard stop |
+   | `Admin.WebService`, shell already in `UI/` | `…WebService.UI.App` | compiles, then `CS0118: 'App' is a namespace but is used like a type` at `MapRazorComponents<App>()` |
+
+   Fix, and the reason Rule 2 now lists `UI/App.razor` for both hosts: `git mv App.razor
+   UI/App.razor` in the WASM client, and reference the shell qualified in both hosts —
+   `builder.RootComponents.Add<UI.App>("#app")` and `app.MapRazorComponents<UI.App>()`. Do not
+   work around it with an `@namespace` directive on `App.razor`: the file keeps its path but its
+   sync key changes, which is the one thing Rule 5 exists to prevent.
+
+   To prove it is fixed, drop a throwaway `namespace <RootNs>.App; internal class Probe { }` into
+   `Client/App/` and `Admin.WebService/App/`, build the solution, and delete it.
 
 ### Add the migration folders
 
