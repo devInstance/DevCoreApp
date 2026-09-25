@@ -16,6 +16,7 @@ using DevInstance.DevCoreApp.Server.Admin.WebService.Core.Hubs;
 using DevInstance.DevCoreApp.Server.Admin.WebService.Core.Identity;
 using DevInstance.DevCoreApp.Server.Admin.WebService.Core.Logging;
 using DevInstance.DevCoreApp.Server.Admin.WebService.Core.Health;
+using DevInstance.DevCoreApp.Server.Admin.WebService.Core.Hosting;
 using DevInstance.DevCoreApp.Server.Admin.WebService.Core.Middleware;
 using DevInstance.DevCoreApp.Server.Admin.WebService.UI;
 using DevInstance.DevCoreApp.Server.Database.Core;
@@ -27,8 +28,10 @@ using DevInstance.DevCoreApp.Server.EmailProcessor.MailKit;
 using DevInstance.DevCoreApp.Server.StorageProcessor.Local;
 using DevInstance.DevCoreApp.Shared.Model.Core.Authentication;
 using DevInstance.DevCoreApp.Shared.Utils.Core;
+using DevInstance.DevCoreApp.Shared.Utils.Core.Json;
 using DevInstance.LogScope.Extensions.SerilogLogger;
 using DevInstance.LogScope.Formatters;
+using DevInstance.WebServiceToolkit.Controllers;
 using DevInstance.DevCoreApp.Server.Admin.WebService.Core.Identity;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -202,7 +205,12 @@ public class Program
         builder.Services.AddSignalR();
         builder.Services.AddScoped<INotificationHubService, NotificationHubService>();
 
-        builder.Services.AddControllers();
+        // Every DateTime on the wire is UTC ("...Z"); clients convert to local for display.
+        builder.Services.AddControllers()
+            .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new UtcDateTimeJsonConverter()))
+            // Model-validation 400s use the same WebServiceError body as every other API error.
+            .AddWebServiceToolkitErrors();
+        builder.Services.AddWasmClientCors(builder.Configuration);
         builder.Services.AddMailKit(builder.Configuration);
         builder.Services.AddLocalFileStorage(builder.Configuration);
         builder.Services.AddSingleton<IEmailTemplateService, EmailTemplateService>(); //TODO: use webservice toolkit for it
@@ -240,7 +248,10 @@ public class Program
         app.UseCorrelationId();
         app.UseSerilogRequestLogging();
 
+        app.UseWasmClients();
         app.UseStaticFiles();
+
+        app.UseCors(WasmClientHosting.CorsPolicy);
 
         app.UseAuthentication();
         app.UseAuthorization();
@@ -280,6 +291,9 @@ public class Program
             Predicate = check => check.Tags.Contains("ready"),
             ResponseWriter = HealthCheckResponseWriter.WriteAsync
         });
+
+        // WASM client routes (index.html fallbacks) — after every server endpoint.
+        app.MapWasmClients();
 
         // Apply pending migrations, seed roles and data
         await app.Services.MigrateAndSeedAsync();

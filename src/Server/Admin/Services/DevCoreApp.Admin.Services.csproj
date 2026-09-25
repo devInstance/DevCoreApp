@@ -23,7 +23,7 @@
 	  <PackageReference Include="DevInstance.BlazorToolkit" Version="10.1.2" />
 	  <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.16.0" />
 
-	  <PackageReference Include="DevInstance.WebServiceToolkit" Version="10.1.0" />
+	  <PackageReference Include="DevInstance.WebServiceToolkit" Version="10.3.1" />
 
 	  <PackageReference Include="CsvHelper" Version="33.*" />
 	  <PackageReference Include="ClosedXML" Version="0.104.*" />

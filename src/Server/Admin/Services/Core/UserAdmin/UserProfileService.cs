@@ -13,6 +13,7 @@ using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using DevInstance.DevCoreApp.Server.EmailProcessor.Core;
 using DevInstance.DevCoreApp.Shared.Model.Core;
 using DevInstance.DevCoreApp.Shared.Model.Core.Common;
+using DevInstance.DevCoreApp.Shared.Model.Core.Permissions;
 using DevInstance.DevCoreApp.Shared.Model.Core.UserAdmin;
 using DevInstance.DevCoreApp.Shared.Utils.Core;
 using DevInstance.LogScope;
@@ -40,6 +41,7 @@ public class UserProfileService : BaseService, IUserProfileService
     private IOperationContext OperationContext { get; }
     private IAccountLinkBuilder LinkBuilder { get; }
     private IConfiguration Configuration { get; }
+    private IPermissionService PermissionService { get; }
 
     private IScopeLog log;
 
@@ -54,7 +56,8 @@ public class UserProfileService : BaseService, IUserProfileService
                               IOrganizationContextResolver orgResolver,
                               IOperationContext operationContext,
                               IAccountLinkBuilder linkBuilder,
-                              IConfiguration configuration)
+                              IConfiguration configuration,
+                              IPermissionService permissionService)
         : base(logManager, timeProvider, repositoryFactory, authorizationContext)
     {
         log = logManager.CreateLogger(this);
@@ -67,6 +70,7 @@ public class UserProfileService : BaseService, IUserProfileService
         OperationContext = operationContext;
         LinkBuilder = linkBuilder;
         Configuration = configuration;
+        PermissionService = permissionService;
     }
 
     public ServiceActionResult<UserProfileItem> GetCurrentUser()
@@ -869,6 +873,19 @@ public class UserProfileService : BaseService, IUserProfileService
         return ServiceActionResult<List<EffectivePermissionItem>>.OK(items);
     }
 
+    /// <summary>
+    /// A user may change their own picture; changing anyone else's requires Admin.Users.Edit.
+    /// The profile query is organization-scoped, not ownership-scoped, so this check is what
+    /// stops one user from replacing a colleague's picture through the API.
+    /// </summary>
+    private async Task EnsureCanChangePictureAsync(Guid profileId)
+    {
+        if (AuthorizationContext.CurrentProfile?.Id == profileId) return;
+
+        if (!await PermissionService.HasPermissionAsync(PermissionDefinitions.Admin.Users.Edit))
+            throw new ForbiddenException("You can only change your own profile picture.");
+    }
+
     public async Task<ServiceActionResult<UserProfileItem>> UploadProfilePictureAsync(string userId, Stream imageStream, string contentType)
     {
         using var l = log.TraceScope();
@@ -893,6 +910,8 @@ public class UserProfileService : BaseService, IUserProfileService
         if (profile == null)
             throw new RecordNotFoundException("User not found.");
 
+        await EnsureCanChangePictureAsync(profile.Id);
+
         profile.ProfilePicture = picture;
         profile.ProfilePictureContentType = "image/jpeg";
         profile.ProfilePictureThumbnail = thumbnail;
@@ -914,6 +933,8 @@ public class UserProfileService : BaseService, IUserProfileService
         var profile = await profilesQuery.ByPublicId(userId).Select().FirstOrDefaultAsync();
         if (profile == null)
             throw new RecordNotFoundException("User not found.");
+
+        await EnsureCanChangePictureAsync(profile.Id);
 
         profile.ProfilePicture = null;
         profile.ProfilePictureContentType = null;

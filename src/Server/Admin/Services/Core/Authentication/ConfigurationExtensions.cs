@@ -50,7 +50,8 @@ public static class ConfigurationExtensions
 
         services.ConfigureApplicationCookie(options =>
         {
-            options.Cookie.HttpOnly = false;
+            // No script needs the auth cookie; keep it out of reach of injected JS.
+            options.Cookie.HttpOnly = true;
             options.Events.OnRedirectToLogin = context =>
             {
                 if (context.Request.Path.StartsWithSegments("/api"))

@@ -36,7 +36,17 @@ function downloadFileFromBytes(fileName, contentType, bytes) {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 }
+async function copyTextToClipboard(text) {
+    try {
+        await navigator.clipboard.writeText(text);
+        return true;
+    }
+    catch {
+        return false;
+    }
+}
 window.showBootstrapModal = showBootstrapModal;
 window.dismissBootstrapModal = dismissBootstrapModal;
 window.downloadFileFromBytes = downloadFileFromBytes;
+window.copyTextToClipboard = copyTextToClipboard;
 //# sourceMappingURL=app.js.map

@@ -1,16 +1,13 @@
 using DevInstance.DevCoreApp.Server.Admin.Services.Core.ImportExport;
 using DevInstance.DevCoreApp.Shared.Model.Core.ImportExport;
-using DevInstance.WebServiceToolkit.Controllers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using static DevInstance.WebServiceToolkit.Controllers.ControllerUtils;
 
 namespace DevInstance.DevCoreApp.Server.Admin.WebService.Core.Controllers;
 
 [Route("api/import-export")]
-[ApiController]
 [Authorize(Roles = "Owner,Admin")]
-public class ImportExportController : ControllerBase
+public class ImportExportController : ApiControllerBase
 {
     private readonly IImportExportService _importExportService;
 
@@ -47,12 +44,9 @@ public class ImportExportController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<ImportParseResult>> ParseHeaders(IFormFile file)
     {
-        return await this.HandleWebRequestAsync<ImportParseResult>(async () =>
-        {
-            using var stream = file.OpenReadStream();
-            var result = await _importExportService.ParseHeadersAsync(stream, file.FileName);
-            return Ok(result.Result);
-        });
+        // IFormFile is an HTTP type services must not see; the stream stays open for the call.
+        await using var stream = file.OpenReadStream();
+        return await HandleServiceAsync(() => _importExportService.ParseHeadersAsync(stream, file.FileName));
     }
 
     [HttpPost("import/validate")]
@@ -65,12 +59,10 @@ public class ImportExportController : ControllerBase
         [FromForm] string mappingsJson,
         [FromQuery] string? organizationId = null)
     {
-        return await this.HandleWebRequestAsync<ImportValidationResult>(async () =>
-        {
-            var mappings = System.Text.Json.JsonSerializer.Deserialize<List<ImportColumnMappingItem>>(mappingsJson) ?? new();
-            using var stream = file.OpenReadStream();
-            var result = await _importExportService.ValidateAsync(stream, file.FileName, entityType, mappings, organizationId);
-            return Ok(result.Result);
-        });
+        // TODO (WASM Phase 1): bind the mappings as part of a multipart DTO instead of
+        // deserializing a form field in the controller.
+        var mappings = System.Text.Json.JsonSerializer.Deserialize<List<ImportColumnMappingItem>>(mappingsJson) ?? new();
+        await using var stream = file.OpenReadStream();
+        return await HandleServiceAsync(() => _importExportService.ValidateAsync(stream, file.FileName, entityType, mappings, organizationId));
     }
 }

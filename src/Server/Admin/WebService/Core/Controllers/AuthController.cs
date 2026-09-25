@@ -1,15 +1,12 @@
 using DevInstance.DevCoreApp.Server.Admin.Services.Core.Authentication;
 using DevInstance.DevCoreApp.Shared.Model.Core.Authentication;
-using DevInstance.WebServiceToolkit.Controllers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using static DevInstance.WebServiceToolkit.Controllers.ControllerUtils;
 
 namespace DevInstance.DevCoreApp.Server.Admin.WebService.Core.Controllers;
 
 [Route("api/auth")]
-[ApiController]
-public class AuthController : ControllerBase
+public class AuthController : ApiControllerBase
 {
     private readonly IJwtAuthService _jwtAuthService;
 
@@ -22,42 +19,35 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<JwtLoginResponse>> LoginAsync([FromBody] JwtLoginRequest request)
+    public Task<ActionResult<JwtLoginResponse>> LoginAsync([FromBody] JwtLoginRequest request)
     {
-        return await this.HandleWebRequestAsync<JwtLoginResponse>(async () =>
-        {
-            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-            var userAgent = HttpContext.Request.Headers.UserAgent.FirstOrDefault();
-            var result = await _jwtAuthService.LoginAsync(request, ipAddress, userAgent);
-            return Ok(result.Result);
-        });
+        // IP and User-Agent are read here because they are transport facts, not request data:
+        // the refresh-token record stores them for audit and reuse detection, and services
+        // must not depend on HttpContext.
+        return HandleServiceAsync(() => _jwtAuthService.LoginAsync(request, ClientIp, UserAgent));
     }
 
     [AllowAnonymous]
     [HttpPost("refresh")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<JwtLoginResponse>> RefreshAsync([FromBody] RefreshTokenRequest request)
+    public Task<ActionResult<JwtLoginResponse>> RefreshAsync([FromBody] RefreshTokenRequest request)
     {
-        return await this.HandleWebRequestAsync<JwtLoginResponse>(async () =>
-        {
-            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-            var result = await _jwtAuthService.RefreshAsync(request.RefreshToken, ipAddress);
-            return Ok(result.Result);
-        });
+        // IP: see LoginAsync.
+        return HandleServiceAsync(() => _jwtAuthService.RefreshAsync(request.RefreshToken, ClientIp));
     }
 
     [Authorize]
     [HttpPost("revoke")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<bool>> RevokeAsync([FromBody] RefreshTokenRequest request)
+    public Task<ActionResult<bool>> RevokeAsync([FromBody] RefreshTokenRequest request)
     {
-        return await this.HandleWebRequestAsync<bool>(async () =>
-        {
-            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-            var result = await _jwtAuthService.RevokeAsync(request.RefreshToken, ipAddress);
-            return Ok(result.Result);
-        });
+        // IP: see LoginAsync.
+        return HandleServiceAsync(() => _jwtAuthService.RevokeAsync(request.RefreshToken, ClientIp));
     }
+
+    private string? ClientIp => HttpContext.Connection.RemoteIpAddress?.ToString();
+
+    private string? UserAgent => HttpContext.Request.Headers.UserAgent.FirstOrDefault();
 }

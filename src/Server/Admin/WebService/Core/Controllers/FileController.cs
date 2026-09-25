@@ -1,16 +1,13 @@
 using DevInstance.DevCoreApp.Server.Admin.Services.Core.Files;
 using DevInstance.DevCoreApp.Shared.Model.Core.Files;
-using DevInstance.WebServiceToolkit.Controllers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using static DevInstance.WebServiceToolkit.Controllers.ControllerUtils;
 
 namespace DevInstance.DevCoreApp.Server.Admin.WebService.Core.Controllers;
 
 [Route("api/files")]
-[ApiController]
 [Authorize]
-public class FileController : ControllerBase
+public class FileController : ApiControllerBase
 {
     private readonly IFileService _fileService;
 
@@ -28,13 +25,10 @@ public class FileController : ControllerBase
         [FromForm] string? entityType = null,
         [FromForm] string? entityId = null)
     {
-        return await this.HandleWebRequestAsync<FileRecordItem>(async () =>
-        {
-            using var stream = file.OpenReadStream();
-            var result = await _fileService.UploadAsync(
-                stream, file.FileName, file.ContentType, entityType, entityId);
-            return Ok(result.Result);
-        });
+        // IFormFile is an HTTP type services must not see; the stream stays open for the call.
+        await using var stream = file.OpenReadStream();
+        return await HandleServiceAsync(() => _fileService.UploadAsync(
+            stream, file.FileName, file.ContentType, entityType, entityId));
     }
 
     [HttpGet("{filePublicId}/download")]
@@ -52,26 +46,19 @@ public class FileController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<bool>> DeleteAsync(string filePublicId)
+    public Task<ActionResult<bool>> DeleteAsync(string filePublicId)
     {
-        return await this.HandleWebRequestAsync<bool>(async () =>
-        {
-            var result = await _fileService.DeleteAsync(filePublicId);
-            return Ok(result.Result);
-        });
+        return HandleServiceAsync(() => _fileService.DeleteAsync(filePublicId));
     }
 
     [HttpGet("{filePublicId}/url")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<string>> GetUrlAsync(string filePublicId, [FromQuery] int? expiryMinutes = null)
+    public Task<ActionResult<string>> GetUrlAsync(string filePublicId, [FromQuery] int? expiryMinutes = null)
     {
-        return await this.HandleWebRequestAsync<string>(async () =>
-        {
-            TimeSpan? expiry = expiryMinutes.HasValue ? TimeSpan.FromMinutes(expiryMinutes.Value) : null;
-            var result = await _fileService.GetUrlAsync(filePublicId, expiry);
-            return Ok(result.Result);
-        });
+        // Minutes -> TimeSpan: TimeSpan has no stable query-string form, so the API takes minutes.
+        TimeSpan? expiry = expiryMinutes.HasValue ? TimeSpan.FromMinutes(expiryMinutes.Value) : null;
+        return HandleServiceAsync(() => _fileService.GetUrlAsync(filePublicId, expiry));
     }
 }

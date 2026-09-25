@@ -16,4 +16,5 @@ interface Window {
     showBootstrapModal(id: string): boolean;
     dismissBootstrapModal(id: string): boolean;
     downloadFileFromBytes(fileName: string, contentType: string, bytes: ArrayLike<number>): void;
+    copyTextToClipboard(text: string): Promise<boolean>;
 }

@@ -1,16 +1,14 @@
-using System.Net;
-using DevInstance.DevCoreApp.Server.Admin.Services.Core.Exceptions;
-using DevInstance.DevCoreApp.Shared.Model.Core;
 using DevInstance.LogScope;
-using DevInstance.WebServiceToolkit.Exceptions;
+using DevInstance.WebServiceToolkit.Controllers;
 using Microsoft.AspNetCore.Diagnostics;
 
 namespace DevInstance.DevCoreApp.Server.Admin.WebService.Core.Middleware;
 
 /// <summary>
 /// Global exception handler for API requests (/api/*).
-/// Maps known exception types to appropriate HTTP status codes and returns
-/// a sanitized JSON response with the correlation ID.
+/// Maps exceptions with WebServiceToolkit's <see cref="ControllerUtils.ToWebServiceError"/>
+/// (the same mapping HandleWebRequestAsync uses) and returns a sanitized JSON
+/// <see cref="ApiErrorResponse"/> with the correlation ID.
 /// Non-API requests fall through to the default error page handler.
 /// </summary>
 public class ApiExceptionHandler : IExceptionHandler
@@ -26,14 +24,17 @@ public class ApiExceptionHandler : IExceptionHandler
             return false;
         }
 
-        var (statusCode, message) = MapException(exception);
+        // Same status/body mapping as HandleWebRequestAsync, so a client sees one error shape
+        // whether the exception was thrown inside or outside a controller action.
+        var isDevelopment = httpContext.RequestServices.GetRequiredService<IHostEnvironment>().IsDevelopment();
+        var (statusCode, error) = ControllerUtils.ToWebServiceError(exception, isDevelopment);
 
         var correlationId = httpContext.Items[CorrelationIdMiddleware.ItemKey] as string;
 
         // Resolve logger from the request scope to avoid DI lifetime issues
         var log = httpContext.RequestServices.GetRequiredService<IScopeManager>().CreateLogger(this);
 
-        if (statusCode == (int)HttpStatusCode.InternalServerError)
+        if (statusCode >= StatusCodes.Status500InternalServerError)
         {
             log.E($"Unhandled exception [CorrelationId={correlationId}]: {exception}");
         }
@@ -47,25 +48,13 @@ public class ApiExceptionHandler : IExceptionHandler
 
         var errorResponse = new ApiErrorResponse
         {
-            Status = statusCode,
-            Message = message,
+            ErrorType = error.ErrorType,
+            Message = error.Message,
+            PropertyName = error.PropertyName,
             CorrelationId = correlationId
         };
 
         await httpContext.Response.WriteAsJsonAsync(errorResponse, cancellationToken);
         return true;
-    }
-
-    private static (int StatusCode, string Message) MapException(Exception exception)
-    {
-        return exception switch
-        {
-            BadRequestException e => ((int)HttpStatusCode.BadRequest, e.Message),
-            UnauthorizedException e => ((int)HttpStatusCode.Unauthorized, e.Message),
-            RecordNotFoundException e => ((int)HttpStatusCode.NotFound, e.Message),
-            RecordConflictException e => ((int)HttpStatusCode.Conflict, e.Message),
-            BusinessRuleException e => (StatusCodes.Status422UnprocessableEntity, e.Message),
-            _ => ((int)HttpStatusCode.InternalServerError, "An unexpected error occurred.")
-        };
     }
 }

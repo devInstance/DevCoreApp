@@ -68,6 +68,18 @@ Queue emails via `IBackgroundWorker.Submit()` with a `BackgroundRequestItem` of 
 - Placeholders use `{{Key}}` syntax in both subject and body
 - To add a new template: add a constant to `EmailTemplateName`, register in `EmailTemplateRepository`, create the HTML file in `wwwroot/email-templates/`
 
+### API Controller Pattern
+- Routes are literal `[Route("api/...")]`; controllers derive from `Core/Controllers/ApiControllerBase`
+  (which carries `[ApiController]`) and put the page's permission policy on the class or action.
+- Each action makes **one** service call: `return HandleServiceAsync(() => _service.DoAsync(...));`
+  Success returns the bare result (no `ServiceActionResult` envelope); failures and thrown
+  WebServiceToolkit exceptions become a `WebServiceError` body the Blazor clients read as
+  `ServiceActionError`.
+- No mapping, validation or branching in controllers. When something must happen there (reading
+  an `IFormFile` stream, client IP), say why in a comment.
+- Every `DateTime` on the wire is UTC (`UtcDateTimeJsonConverter`); clients convert for display.
+- Plan and rationale: [`docs/WasmMigrationPlan.md`](../../../../docs/WasmMigrationPlan.md).
+
 ### HDataGrid Component
 Use `HDataGrid<TItem>` for all tabular data pages. Do not write inline `<table>` markup. Full documentation: [`Core/UI/Components/HDataGrid.md`](Core/UI/Components/HDataGrid.md).
 

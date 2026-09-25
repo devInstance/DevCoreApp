@@ -1,16 +1,13 @@
 using DevInstance.DevCoreApp.Server.Admin.Services.Core.UserAdmin;
 using DevInstance.DevCoreApp.Shared.Model.Core;
-using DevInstance.WebServiceToolkit.Controllers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using static DevInstance.WebServiceToolkit.Controllers.ControllerUtils;
 
 namespace DevInstance.DevCoreApp.Server.Admin.WebService.Core.Controllers;
 
 [Route("api/users/{userId}/profile-picture")]
-[ApiController]
 [Authorize]
-public class ProfilePictureController : ControllerBase
+public class ProfilePictureController : ApiControllerBase
 {
     private readonly IUserProfileService _userService;
 
@@ -25,24 +22,17 @@ public class ProfilePictureController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<UserProfileItem>> UploadAsync(string userId, IFormFile file)
     {
-        return await this.HandleWebRequestAsync<UserProfileItem>(async () =>
-        {
-            using var stream = file.OpenReadStream();
-            var result = await _userService.UploadProfilePictureAsync(userId, stream, file.ContentType);
-            return Ok(result.Result);
-        });
+        // IFormFile is an HTTP type services must not see; the stream stays open for the call.
+        await using var stream = file.OpenReadStream();
+        return await HandleServiceAsync(() => _userService.UploadProfilePictureAsync(userId, stream, file.ContentType));
     }
 
     [HttpDelete]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<bool>> DeleteAsync(string userId)
+    public Task<ActionResult<bool>> DeleteAsync(string userId)
     {
-        return await this.HandleWebRequestAsync<bool>(async () =>
-        {
-            var result = await _userService.DeleteProfilePictureAsync(userId);
-            return Ok(result.Result);
-        });
+        return HandleServiceAsync(() => _userService.DeleteProfilePictureAsync(userId));
     }
 
     [HttpGet]

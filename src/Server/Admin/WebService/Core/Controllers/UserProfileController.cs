@@ -1,45 +1,34 @@
-﻿using DevInstance.DevCoreApp.Server.Admin.Services.Core.UserAdmin;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.UserAdmin;
 using DevInstance.DevCoreApp.Shared.Model.Core;
-using DevInstance.WebServiceToolkit.Controllers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using static DevInstance.WebServiceToolkit.Controllers.ControllerUtils;
 
 namespace DevInstance.DevCoreApp.Server.Admin.WebService.Core.Controllers;
 
 [Route("api/user/profile")]
-[ApiController]
-public class UserProfileController : ControllerBase
+[Authorize]
+public class UserProfileController : ApiControllerBase
 {
-    public IUserProfileService Service{ get; }
+    private readonly IUserProfileService _service;
 
     public UserProfileController(IUserProfileService service)
     {
-        Service = service;
+        _service = service;
     }
 
-    [Authorize(Policy = "Admin.Users.View")]
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public ActionResult<UserProfileItem> GetProfile()
     {
-        return this.HandleWebRequest((WebHandler<UserProfileItem>)(() =>
-        {
-            return Ok(Service.GetCurrentUser());
-        }));
+        return HandleService(() => _service.GetCurrentUser());
     }
 
-    [Authorize]
     [HttpPut]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<UserProfileItem>> UpdateProfileAsync([FromBody] UserProfileItem newProfile)
+    public Task<ActionResult<UserProfileItem>> UpdateProfileAsync([FromBody] UserProfileItem newProfile)
     {
-        return await this.HandleWebRequestAsync<UserProfileItem>(async () =>
-        {
-            return Ok(await Service.UpdateCurrentUserAsync(newProfile));
-        });
+        return HandleServiceAsync(() => _service.UpdateCurrentUserAsync(newProfile));
     }
 }

@@ -1,10 +1,13 @@
+using DevInstance.WebServiceToolkit.Exceptions;
+
 namespace DevInstance.DevCoreApp.Server.Admin.Services.Core.Exceptions;
 
 /// <summary>
-/// Thrown when a domain/business rule validation fails. Maps to HTTP 422 Unprocessable Entity.
+/// Thrown when a domain/business rule validation fails. Maps to HTTP 422 Unprocessable Entity
+/// through WebServiceToolkit's <see cref="UnprocessableEntityException"/> — both in
+/// <c>HandleWebRequestAsync</c> and in <c>ApiExceptionHandler</c>.
 /// </summary>
-public class BusinessRuleException : Exception
+public class BusinessRuleException : UnprocessableEntityException
 {
-    public BusinessRuleException(string message) : base(message) { }
-    public BusinessRuleException(string message, Exception innerException) : base(message, innerException) { }
+    public BusinessRuleException(string message, string? propertyName = null) : base(message, propertyName) { }
 }
