@@ -5,8 +5,10 @@ using DevInstance.BlazorToolkit.Utils;
 using DevInstance.DevCoreApp.Server.Database.Core;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.Account;
 using DevInstance.DevCoreApp.Server.Admin.Services.Core.Authentication;
 using DevInstance.DevCoreApp.Shared.Model.Core.Account;
+using DevInstance.DevCoreApp.Shared.Model.Core.Common;
 using DevInstance.DevCoreApp.Shared.Utils.Core;
 using DevInstance.LogScope;
 using Microsoft.AspNetCore.Http;
@@ -188,7 +190,8 @@ public class AccountService : BaseService
         // Check if email is already confirmed
         if (await userManager.IsEmailConfirmedAsync(user))
         {
-            return ConfirmEmailResult.AlreadyConfirmedResult(userId);
+            return ConfirmEmailResult.AlreadyConfirmedResult(
+                userId, needsPassword: !await userManager.HasPasswordAsync(user));
         }
 
         // Confirm the email
@@ -205,6 +208,13 @@ public class AccountService : BaseService
 
         // Check if user has a password set (users created by admin may not have set their own password yet)
         var needsPassword = !await userManager.HasPasswordAsync(user);
+
+        // A user who already had a password becomes usable at this moment. One who does not will be
+        // activated by SetPasswordAsync a step later.
+        if (!needsPassword)
+        {
+            await ActivateProfileIfUsableAsync(user);
+        }
 
         return ConfirmEmailResult.Success(userId, needsPassword);
     }
@@ -224,10 +234,44 @@ public class AccountService : BaseService
         if (result.Succeeded)
         {
             l.I($"Password set for user {userId}");
+            await ActivateProfileIfUsableAsync(user);
             return SetPasswordResult.Success();
         }
 
         return SetPasswordResult.Failed(result.Errors.Select(e => e.Description));
+    }
+
+    /// <summary>
+    /// Moves the profile to <see cref="UserStatus.LIVE"/> once the account can actually be signed
+    /// into. Without this every invited user reads as INITIATED forever, since nothing else in the
+    /// codebase ever advances the field.
+    /// </summary>
+    private async Task ActivateProfileIfUsableAsync(ApplicationUser user)
+    {
+        using var l = log.TraceScope();
+
+        var emailConfirmed = await userManager.IsEmailConfirmedAsync(user);
+        var hasPassword = await userManager.HasPasswordAsync(user);
+
+        await using var repo = RepositoryFactory.Create();
+        var query = repo.GetUserProfilesQuery(null!);
+        var profile = await query.ByApplicationUserId(user.Id).Select().FirstOrDefaultAsync();
+
+        if (profile == null)
+        {
+            // Self-registration creates no profile. Nothing to advance.
+            return;
+        }
+
+        if (!UserActivation.ShouldActivate(profile.Status, emailConfirmed, hasPassword))
+        {
+            return;
+        }
+
+        profile.Status = UserStatus.LIVE;
+        await query.UpdateAsync(profile);
+
+        l.I($"UserProfile {profile.PublicId} advanced to LIVE.");
     }
 
     public async Task<bool> HasUsersAsync()
@@ -283,6 +327,8 @@ public class AccountService : BaseService
 
         l.I($"UserProfile created for owner with email {input.Email}.");
 
+        await AssignRootOrganizationAsync(repo, user);
+
         // Automatically confirm email for owner account during setup
         var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
         await userManager.ConfirmEmailAsync(user, token);
@@ -291,6 +337,52 @@ public class AccountService : BaseService
         await signInManager.SignInAsync(user, isPersistent: false);
 
         return SetupOwnerResult.Success();
+    }
+
+    /// <summary>
+    /// Puts the owner in the seeded root organization.
+    /// <para>
+    /// Without this the very first account has no <c>UserOrganizations</c> row, which does not
+    /// merely restrict them — it breaks in both directions at once. The global query filter is
+    /// fail-open on an empty visible set, so they read every organization, while
+    /// <c>OrganizationStampInterceptor</c> throws on every organization-scoped insert. The owner
+    /// could see everything and create nothing.
+    /// </para>
+    /// </summary>
+    private async Task AssignRootOrganizationAsync(IQueryRepository repo, ApplicationUser user)
+    {
+        using var l = log.TraceScope();
+
+        // OrganizationDataSeeder runs at startup, so the root org exists by now. The seeder creates
+        // one tenant whose RootOrganizationId is the single parentless organization.
+        var rootOrganizationId = await repo.GetOrganizationsQuery(null!)
+            .ByParentId(null)
+            .Select()
+            .OrderBy(o => o.SortOrder)
+            .Select(o => (Guid?)o.Id)
+            .FirstOrDefaultAsync();
+
+        if (rootOrganizationId == null || rootOrganizationId == Guid.Empty)
+        {
+            l.E("Owner setup could not find a root organization to assign. The owner will read every "
+                + "organization and be unable to create records until assigned one manually.");
+            return;
+        }
+
+        var userOrgQuery = repo.GetUserOrganizationQuery(null!);
+        var assignment = userOrgQuery.CreateNew();
+        assignment.UserId = user.Id;
+        assignment.OrganizationId = rootOrganizationId.Value;
+        // WithChildren, not Self: the owner is the top of the tree and every organization added
+        // later hangs beneath the root. Self would hide each new one until assigned by hand.
+        assignment.Scope = OrganizationAccessScope.WithChildren;
+        assignment.IsPrimary = true;
+        await userOrgQuery.AddAsync(assignment);
+
+        user.PrimaryOrganizationId = rootOrganizationId;
+        await userManager.UpdateAsync(user);
+
+        l.I($"Owner assigned to root organization {rootOrganizationId}.");
     }
 
     private async Task RecordLoginAttemptAsync(Guid userId, string? ipAddress, string? userAgent, bool success, string? failureReason)

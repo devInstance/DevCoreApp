@@ -19,6 +19,7 @@ public class UserProfileServiceMock : IUserProfileService
     List<UserProfileItem> modelList = new List<UserProfileItem>();
 
     private Dictionary<string, List<UserOrganizationItem>> userOrganizations = new();
+    private Dictionary<string, UserAccessStateItem> accessStates = new();
     private Dictionary<string, List<PermissionOverrideItem>> userOverrides = new();
 
     private readonly List<(string Id, string Name, string Path)> mockOrgs = new()
@@ -55,7 +56,10 @@ public class UserProfileServiceMock : IUserProfileService
             .RuleFor(u => u.LastName, f => f.Name.LastName())
             .RuleFor(u => u.PhoneNumber, f => f.Phone.PhoneNumber("(###) ###-####"))
             .RuleFor(u => u.Roles, f => f.PickRandom(ApplicationRoles.Admin, ApplicationRoles.Manager, ApplicationRoles.Employee, ApplicationRoles.Client))
-            .RuleFor(u => u.Status, f => f.PickRandom("Active", "Initiated", "Disabled"))
+            // Machine values, as the real decorator emits — "Active"/"Disabled" were never
+            // UserStatus members, so the mock grid showed statuses the app cannot produce.
+            .RuleFor(u => u.Status, f => f.PickRandom(UserStatusLabels.Live, UserStatusLabels.Initiated, UserStatusLabels.Suspended))
+            .RuleFor(u => u.OrganizationName, f => f.PickRandom("Default Organization", "East Region", "West Region"))
             .RuleFor(u => u.CreateDate, f => f.Date.Past(2))
             .RuleFor(u => u.UpdateDate, (f, u) => f.Date.Between(u.CreateDate, DateTime.UtcNow));
     }
@@ -210,18 +214,77 @@ public class UserProfileServiceMock : IUserProfileService
         return ServiceActionResult<UserProfileItem>.OK(item);
     }
 
-    public async Task<ServiceActionResult<UserProfileItem>> CreateUserAsync(UserProfileItem newUser, string role)
+    public Task<ServiceActionResult<UserProfileItem>> CreateUserAsync(UserProfileItem newUser, string role)
+        => CreateUserAsync(newUser, role, null);
+
+    public async Task<ServiceActionResult<UserProfileItem>> CreateUserAsync(
+        UserProfileItem newUser, string role, string? organizationPublicId)
     {
         newUser.Id = IdGenerator.New();
         newUser.Roles = role;
-        newUser.Status = "Initiated";
+        newUser.Status = UserStatusLabels.Initiated;
         newUser.CreateDate = DateTime.UtcNow;
         newUser.UpdateDate = DateTime.UtcNow;
         modelList.Add(newUser);
 
+        var organization = organizationPublicId != null
+            ? mockOrgs.FirstOrDefault(o => o.Id == organizationPublicId)
+            : mockOrgs.FirstOrDefault();
+
+        if (organization != default)
+        {
+            newUser.OrganizationName = organization.Name;
+            userOrganizations[newUser.Id] = new List<UserOrganizationItem>
+            {
+                new UserOrganizationItem
+                {
+                    OrganizationId = organization.Id,
+                    OrganizationName = organization.Name,
+                    OrganizationPath = organization.Path,
+                    Scope = OrganizationAccessScope.Self,
+                    IsPrimary = true
+                }
+            };
+        }
+
+        // Mirrors the real service: created with no password and an unconfirmed address, so the
+        // Access tab has something to invite.
+        accessStates[newUser.Id] = new UserAccessStateItem { EmailConfirmed = false, HasPassword = false };
+
         await Task.Delay(delay);
 
         return ServiceActionResult<UserProfileItem>.OK(newUser);
+    }
+
+    public async Task<ServiceActionResult<UserAccessStateItem>> GetUserAccessStateAsync(string userId)
+    {
+        await Task.Delay(delay);
+
+        var state = accessStates.GetValueOrDefault(userId)
+            ?? new UserAccessStateItem { EmailConfirmed = true, HasPassword = true };
+
+        return ServiceActionResult<UserAccessStateItem>.OK(new UserAccessStateItem
+        {
+            EmailConfirmed = state.EmailConfirmed,
+            HasPassword = state.HasPassword,
+            InvitationLink = state.EmailConfirmed && state.HasPassword
+                ? null
+                : $"https://localhost/account/confirm-email?userId={userId}&code={IdGenerator.New()}"
+        });
+    }
+
+    public async Task<ServiceActionResult<bool>> ResendInvitationAsync(string userId)
+    {
+        await Task.Delay(delay);
+        return ServiceActionResult<bool>.OK(true);
+    }
+
+    public async Task<ServiceActionResult<bool>> SetUserPasswordAsync(string userId, string password)
+    {
+        await Task.Delay(delay);
+
+        accessStates[userId] = new UserAccessStateItem { EmailConfirmed = true, HasPassword = true };
+        return ServiceActionResult<bool>.OK(true);
     }
 
     public async Task<ServiceActionResult<UserProfileItem>> UpdateAsync(string id, UserProfileItem item)

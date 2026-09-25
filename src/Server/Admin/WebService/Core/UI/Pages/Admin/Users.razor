@@ -5,39 +5,12 @@
 
 <div class="row mb-3">
     <div class="col col-md-6 col-lg-4">
-        <HSearchBar @bind-Value="SearchTerm" Placeholder="Search users..." OnSearch="OnSearch" Disabled="Host.InProgress">
-            <AdvancedContent>
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <label class="form-label">Search in</label>
-                        <select class="form-select form-select-sm" @bind="SearchField" disabled="@Host.InProgress">
-                            <option value="">All fields</option>
-                            <option value="firstname">First Name</option>
-                            <option value="lastname">Last Name</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Status</label>
-                        <select class="form-select form-select-sm" @bind="StatusFilter" disabled="@Host.InProgress">
-                            <option value="">All</option>
-                            <option value="Active">Active</option>
-                            <option value="Initiated">Initiated</option>
-                            <option value="Disabled">Disabled</option>
-                            <option value="Suspended">Suspended</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Updated within</label>
-                        <select class="form-select form-select-sm" @bind="UpdatedWithinDays" disabled="@Host.InProgress">
-                            <option value="0">Any time</option>
-                            <option value="7">Last 7 days</option>
-                            <option value="30">Last 30 days</option>
-                            <option value="90">Last 90 days</option>
-                        </select>
-                    </div>
-                </div>
-            </AdvancedContent>
-        </HSearchBar>
+        @* The advanced panel held Search-in / Status / Updated-within selects. All three built
+           tokens ("status:Active") into the search string, and nothing parses them —
+           CoreUserProfilesQuery.Search substring-matches names, email and phone only, so choosing
+           any of them emptied the grid. Removed rather than left lying; a real status filter needs
+           ByStatus on IUserProfilesQuery (see the admin-created-user-onboarding migration doc). *@
+        <HSearchBar @bind-Value="SearchTerm" Placeholder="Search users..." OnSearch="OnSearch" Disabled="Host.InProgress" />
     </div>
     <div class="col col-md-6 col-lg-8">
         <div class="float-end">
@@ -75,18 +48,10 @@
             </div>
         </HColumnTemplate>
         <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.Core.UserProfileItem" Field="status" Context="user">
-            @if (user.Status == "Active")
-            {
-                <span class="badge bg-success">Active</span>
-            }
-            else if (user.Status == "Suspended")
-            {
-                <span class="badge bg-danger">Suspended</span>
-            }
-            else
-            {
-                <span class="badge bg-secondary">@user.Status</span>
-            }
+            @* Colour keys off the machine value; the text always comes from StatusLabel. The old
+               branches compared against "Active"/"Suspended", which no UserStatus.ToString() ever
+               produces, so every user rendered grey. *@
+            <span class="badge @StatusBadgeClass(user.Status)">@user.StatusLabel</span>
         </HColumnTemplate>
         <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.Core.UserProfileItem" Field="actions" Context="user">
             <a href="admin/users/@user.Id/edit" class="btn btn-sm btn-outline-primary me-1" title="Edit" @onclick:stopPropagation="true">

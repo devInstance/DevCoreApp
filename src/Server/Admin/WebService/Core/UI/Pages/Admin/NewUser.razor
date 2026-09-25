@@ -15,7 +15,11 @@
         }
         <EditForm Model="Input" OnValidSubmit="CreateUser" FormName="newuser">
             <DataAnnotationsValidator />
-            <p class="text-muted">Create a new user account. An email will be sent to the user to complete registration.</p>
+            <p class="text-muted">
+                Create a new user account. An invitation email is sent so the user can confirm their
+                address and set a password. If email is not configured, open the new user and copy the
+                invitation link from the Access tab.
+            </p>
             <hr />
             <ValidationSummary class="text-danger" role="alert" />
             <div class="form-floating mb-3">
@@ -56,6 +60,16 @@
                 {
                     <div class="text-danger">@RoleError</div>
                 }
+            </div>
+            <div class="form-floating mb-3">
+                <InputSelect @bind-Value="SelectedOrganizationId" id="SelectedOrganizationId" class="form-select">
+                    @foreach (var org in AvailableOrganizations)
+                    {
+                        <option value="@org.Id">@(new string(' ', org.Level * 4))@org.Name</option>
+                    }
+                </InputSelect>
+                <label for="SelectedOrganizationId">Organization</label>
+                <div class="form-text">The user sees this organization's data. Change it later under Edit User &rarr; Organizations.</div>
             </div>
             <div class="d-flex gap-2">
                 <button type="submit" class="btn btn-lg btn-primary" disabled="@Host.InProgress">

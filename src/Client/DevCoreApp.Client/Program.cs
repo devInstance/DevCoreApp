@@ -1,4 +1,4 @@
-using DevInstance.BlazorToolkit.Http;
+﻿using DevInstance.BlazorToolkit.Http;
 using DevInstance.BlazorToolkit.Tools;
 using DevInstance.DevCoreApp.Client.Services.Core;
 using DevInstance.DevCoreApp.Client.Services.Core.Net;
@@ -19,7 +19,7 @@ public class Program
     {
         var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
-        builder.RootComponents.Add<App>("#app");
+        builder.RootComponents.Add<UI.App>("#app");
         builder.RootComponents.Add<HeadOutlet>("head::after");
 
         builder.Services.AddLocalization();

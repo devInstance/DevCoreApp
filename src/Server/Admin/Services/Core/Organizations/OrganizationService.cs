@@ -24,14 +24,17 @@ namespace DevInstance.DevCoreApp.Server.Admin.Services.Core.Organizations;
 public class OrganizationService : BaseService, IOrganizationService
 {
     private readonly IScopeLog log;
+    private readonly IOperationContext _operationContext;
 
     public OrganizationService(IScopeManager logManager,
                                ITimeProvider timeProvider,
                               IQueryRepositoryFactory repositoryFactory,
-                               IAuthorizationContext authorizationContext)
+                               IAuthorizationContext authorizationContext,
+                               IOperationContext operationContext)
         : base(logManager, timeProvider, repositoryFactory, authorizationContext)
     {
         log = logManager.CreateLogger(this);
+        _operationContext = operationContext;
     }
 
     public async Task<ServiceActionResult<ModelList<OrganizationItem>>> GetAllAsync(
@@ -98,6 +101,28 @@ public class OrganizationService : BaseService, IOrganizationService
             throw new RecordNotFoundException("Organization not found.");
 
         return ServiceActionResult<OrganizationItem>.OK(org.ToView());
+    }
+
+    public async Task<ServiceActionResult<OrganizationItem?>> GetCurrentAsync()
+    {
+        using var l = log.TraceScope();
+
+        var orgId = _operationContext.PrimaryOrganizationId;
+        if (!orgId.HasValue)
+            return ServiceActionResult<OrganizationItem?>.OK(null);
+
+        await using var repo = RepositoryFactory.Create();
+
+        // Filtered by Id directly: IOrganizationsQuery exposes ByPublicId but no ById,
+        // and PrimaryOrganizationId is the internal Guid.
+        var org = await repo.GetOrganizationsQuery(AuthorizationContext.CurrentProfile)
+            .Select()
+            .Include(o => o.Parent)
+            .FirstOrDefaultAsync(o => o.Id == orgId.Value);
+
+        // Missing rather than throwing: callers use this as a default, and a user whose primary
+        // org is not visible to them should degrade to "none", not fail the whole operation.
+        return ServiceActionResult<OrganizationItem?>.OK(org?.ToView());
     }
 
     public async Task<ServiceActionResult<OrganizationItem>> CreateAsync(OrganizationItem item, string? parentPublicId)

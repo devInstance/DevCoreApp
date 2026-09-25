@@ -16,6 +16,16 @@
                         <a href="Account/Login" class="text-decoration-none">Go to login</a>
                     </div>
                 }
+                else if (passwordSet)
+                {
+                    <h1 class="h4 mb-4 text-center">Account Ready</h1>
+                    <div class="alert alert-success" role="alert">
+                        Your password has been set successfully. You can now log in.
+                    </div>
+                    <div class="text-center">
+                        <a href="Account/Login" class="btn btn-primary">Log in</a>
+                    </div>
+                }
                 else if (emailConfirmed && !needsPassword)
                 {
                     <h1 class="h4 mb-4 text-center">Email Confirmed</h1>
@@ -50,16 +60,6 @@
 
                         <button type="submit" class="w-100 btn btn-primary">Set Password</button>
                     </EditForm>
-                }
-                else if (passwordSet)
-                {
-                    <h1 class="h4 mb-4 text-center">Account Ready</h1>
-                    <div class="alert alert-success" role="alert">
-                        Your password has been set successfully. You can now log in.
-                    </div>
-                    <div class="text-center">
-                        <a href="Account/Login" class="btn btn-primary">Log in</a>
-                    </div>
                 }
                 else
                 {

@@ -1,4 +1,4 @@
-using DevInstance.DevCoreApp.Server.Database.Core;
+﻿using DevInstance.DevCoreApp.Server.Database.Core;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using Microsoft.AspNetCore.Authentication;
@@ -27,6 +27,7 @@ public static class ConfigurationExtensions
                 return sp.GetRequiredService<AuthorizationContext>();
             return sp.GetRequiredService<BackgroundAuthorizationContext>();
         });
+        services.AddScoped<ICurrentUserContext, CurrentUserContext>();
 
         services.Configure<IdentityOptions>(options =>
         {

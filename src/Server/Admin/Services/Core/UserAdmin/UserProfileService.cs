@@ -1,15 +1,18 @@
 ﻿using DevInstance.BlazorToolkit.Services;
 using DevInstance.BlazorToolkit.Tools;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.Account;
 using DevInstance.DevCoreApp.Server.Admin.Services.Core.Authentication;
 using DevInstance.DevCoreApp.Server.Admin.Services.Core.Background;
 using DevInstance.DevCoreApp.Server.Admin.Services.Core.Background.Requests;
 using DevInstance.DevCoreApp.Server.Admin.Services.Core.Exceptions;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.Files;
 using DevInstance.DevCoreApp.Server.Admin.Services.Core.Notifications.Templates;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Server.Database.Core.Data.Decorators;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using DevInstance.DevCoreApp.Server.EmailProcessor.Core;
 using DevInstance.DevCoreApp.Shared.Model.Core;
+using DevInstance.DevCoreApp.Shared.Model.Core.Common;
 using DevInstance.DevCoreApp.Shared.Model.Core.UserAdmin;
 using DevInstance.DevCoreApp.Shared.Utils.Core;
 using DevInstance.LogScope;
@@ -17,10 +20,10 @@ using DevInstance.WebServiceToolkit.Common.Model;
 using DevInstance.WebServiceToolkit.Common.Tools;
 using DevInstance.WebServiceToolkit.Database.Queries.Extensions;
 using DevInstance.WebServiceToolkit.Exceptions;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using System.Text;
 using SkiaSharp;
 
@@ -34,8 +37,9 @@ public class UserProfileService : BaseService, IUserProfileService
     private IBackgroundWorker BackgroundWorker { get; }
     private IEmailTemplateService EmailTemplateService { get; }
     private IOrganizationContextResolver OrgResolver { get; }
-    private IHttpContextAccessor HttpContextAccessor { get; }
     private IOperationContext OperationContext { get; }
+    private IAccountLinkBuilder LinkBuilder { get; }
+    private IConfiguration Configuration { get; }
 
     private IScopeLog log;
 
@@ -48,8 +52,9 @@ public class UserProfileService : BaseService, IUserProfileService
                               IBackgroundWorker backgroundWorker,
                               IEmailTemplateService emailTemplateService,
                               IOrganizationContextResolver orgResolver,
-                              IHttpContextAccessor httpContextAccessor,
-                              IOperationContext operationContext)
+                              IOperationContext operationContext,
+                              IAccountLinkBuilder linkBuilder,
+                              IConfiguration configuration)
         : base(logManager, timeProvider, repositoryFactory, authorizationContext)
     {
         log = logManager.CreateLogger(this);
@@ -59,8 +64,9 @@ public class UserProfileService : BaseService, IUserProfileService
         BackgroundWorker = backgroundWorker;
         EmailTemplateService = emailTemplateService;
         OrgResolver = orgResolver;
-        HttpContextAccessor = httpContextAccessor;
         OperationContext = operationContext;
+        LinkBuilder = linkBuilder;
+        Configuration = configuration;
     }
 
     public ServiceActionResult<UserProfileItem> GetCurrentUser()
@@ -103,6 +109,8 @@ public class UserProfileService : BaseService, IUserProfileService
         var totalCount = await profilesQuery.Clone().Select().CountAsync();
         var userProfiles = await profilesQuery.Paginate(top, page).Select().ToListAsync();
 
+        var organizationNames = await LoadPrimaryOrganizationNamesAsync(repo, userProfiles);
+
         var users = new List<UserProfileItem>();
 
         foreach (var profile in userProfiles)
@@ -112,7 +120,8 @@ public class UserProfileService : BaseService, IUserProfileService
             if (appUser != null)
             {
                 var roles = await UserManager.GetRolesAsync(appUser);
-                var newUserViewModel = profile.ToView(appUser, roles);
+                organizationNames.TryGetValue(profile.ApplicationUserId, out var organizationName);
+                var newUserViewModel = profile.ToView(appUser, roles, organizationName);
 
                 users.Add(newUserViewModel);
             }
@@ -120,6 +129,36 @@ public class UserProfileService : BaseService, IUserProfileService
 
         var modelList = ModelListResult.CreateList(users.ToArray(), totalCount, top, page, sortBy, search, true);
         return ServiceActionResult<ModelList<UserProfileItem>>.OK(modelList);
+    }
+
+    /// <summary>
+    /// Primary organization name per ApplicationUser id, for one page of results.
+    /// <para>
+    /// Batched deliberately: the loop around it already pays an N+1 to Identity for roles, and this
+    /// column is hidden by default — it must not add a second query per row for a column most
+    /// installations never switch on.
+    /// </para>
+    /// </summary>
+    private async Task<Dictionary<Guid, string>> LoadPrimaryOrganizationNamesAsync(IQueryRepository repo, List<UserProfile> profiles)
+    {
+        if (profiles.Count == 0)
+        {
+            return new Dictionary<Guid, string>();
+        }
+
+        var appUserIds = profiles.Select(p => p.ApplicationUserId).Distinct().ToList();
+
+        var rows = await repo.GetUserOrganizationQuery(AuthorizationContext.CurrentProfile)
+            .Select()
+            .Where(uo => appUserIds.Contains(uo.UserId) && uo.IsPrimary && uo.Organization != null)
+            .Select(uo => new { uo.UserId, uo.Organization!.Name })
+            .ToListAsync();
+
+        // GroupBy rather than ToDictionaryAsync: exactly one primary is a rule SetUserOrganizationsAsync
+        // enforces on write, not a database constraint, so a legacy row pair must not throw here.
+        return rows
+            .GroupBy(r => r.UserId)
+            .ToDictionary(g => g.Key, g => g.First().Name);
     }
 
     public ServiceActionResult<List<string>> GetAvailableRoles()
@@ -153,7 +192,11 @@ public class UserProfileService : BaseService, IUserProfileService
         throw new NotImplementedException("Use DeleteUserAsync instead.");
     }
 
-    public async Task<ServiceActionResult<UserProfileItem>> CreateUserAsync(UserProfileItem newUser, string role)
+    public Task<ServiceActionResult<UserProfileItem>> CreateUserAsync(UserProfileItem newUser, string role)
+        => CreateUserAsync(newUser, role, null);
+
+    public async Task<ServiceActionResult<UserProfileItem>> CreateUserAsync(
+        UserProfileItem newUser, string role, string? organizationPublicId)
     {
         using var l = log.TraceScope();
 
@@ -163,6 +206,15 @@ public class UserProfileService : BaseService, IUserProfileService
             throw new BadRequestException("Please select a role.");
         }
 
+        await using var repo = RepositoryFactory.Create();
+
+        // Resolve the organization BEFORE creating anything. A user with no UserOrganizations row
+        // is worse than no user at all: OrganizationContextResolver returns an empty context, the
+        // global query filter is fail-open and shows them every organization's data, while
+        // OrganizationStampInterceptor throws on every write. Identity does not enlist in the unit
+        // of work, so failing after UserManager.CreateAsync would strand the email address.
+        var organizationId = await ResolveNewUserOrganizationIdAsync(repo, organizationPublicId);
+
         // Check if email already exists
         var existingUser = await UserManager.FindByEmailAsync(newUser.Email);
         if (existingUser != null)
@@ -170,7 +222,10 @@ public class UserProfileService : BaseService, IUserProfileService
             throw new RecordConflictException("A user with this email address already exists.");
         }
 
-        // Create ApplicationUser without a password. The invited user will set it after confirming email.
+        // Create the ApplicationUser with NO password. The user sets their own through the
+        // invitation link; ConfirmEmailAsync keys the set-password step off HasPasswordAsync, so a
+        // placeholder password here would silently route them to "email confirmed, now log in"
+        // holding a password nobody knows.
         var user = Activator.CreateInstance<ApplicationUser>();
         user.Email = newUser.Email;
         user.UserName = newUser.Email;
@@ -184,15 +239,17 @@ public class UserProfileService : BaseService, IUserProfileService
 
         l.I($"New user created with email {newUser.Email}.");
 
-        // Assign role
+        // Assign role. This throws rather than logging: a user with no role has no permissions and
+        // no way to acquire any, and the caller was previously told the create succeeded.
         var roleResult = await UserManager.AddToRoleAsync(user, role);
         if (!roleResult.Succeeded)
         {
-            l.E($"Failed to assign role {role}: {string.Join(", ", roleResult.Errors.Select(e => e.Description))}");
+            throw new BusinessRuleException(
+                $"User was created but the role '{role}' could not be assigned: "
+                + $"{string.Join(", ", roleResult.Errors.Select(e => e.Description))}");
         }
 
         // Create UserProfile with INITIATED status
-        await using var repo = RepositoryFactory.Create();
         var profilesQuery = repo.GetUserProfilesQuery(AuthorizationContext.CurrentProfile);
         var userProfile = profilesQuery.CreateNew();
         userProfile.ToRecord(newUser);
@@ -203,10 +260,58 @@ public class UserProfileService : BaseService, IUserProfileService
 
         l.I($"UserProfile created for user {newUser.Email} with INITIATED status.");
 
-        // Queue registration email
-        await SendRegistrationEmailAsync(user, userProfile);
+        await AssignOrganizationAsync(repo, user, organizationId);
+
+        // Queue the invitation email
+        await SendInvitationEmailAsync(user, userProfile);
 
         return ServiceActionResult<UserProfileItem>.OK(userProfile.ToView(user, new List<string> { role }));
+    }
+
+    /// <summary>
+    /// The organization a newly created user is placed in: the one named by the caller, else the
+    /// creating administrator's primary organization.
+    /// </summary>
+    private async Task<Guid> ResolveNewUserOrganizationIdAsync(IQueryRepository repo, string? organizationPublicId)
+    {
+        if (!string.IsNullOrWhiteSpace(organizationPublicId))
+        {
+            var organization = await repo.GetOrganizationsQuery(AuthorizationContext.CurrentProfile)
+                .ByPublicIds(new[] { organizationPublicId })
+                .Select()
+                .FirstOrDefaultAsync();
+
+            if (organization == null)
+                throw new RecordNotFoundException($"Organization '{organizationPublicId}' not found.");
+
+            return organization.Id;
+        }
+
+        return OperationContext.PrimaryOrganizationId
+            ?? throw new BusinessRuleException(
+                "Cannot create a user: no organization could be resolved for this operation. "
+                + "Assign your own account to an organization first (Admin > Users > Organizations).");
+    }
+
+    /// <summary>
+    /// Gives the user a single primary organization assignment scoped to itself. Mirrors what
+    /// SetUserOrganizationsAsync writes, including the ApplicationUser mirror column and the
+    /// resolver cache invalidation, so the assignment is live on the user's next request.
+    /// </summary>
+    private async Task AssignOrganizationAsync(IQueryRepository repo, ApplicationUser user, Guid organizationId)
+    {
+        var userOrgQuery = repo.GetUserOrganizationQuery(AuthorizationContext.CurrentProfile);
+        var assignment = userOrgQuery.CreateNew();
+        assignment.UserId = user.Id;
+        assignment.OrganizationId = organizationId;
+        assignment.Scope = OrganizationAccessScope.Self;
+        assignment.IsPrimary = true;
+        await userOrgQuery.AddAsync(assignment);
+
+        user.PrimaryOrganizationId = organizationId;
+        await UserManager.UpdateAsync(user);
+
+        OrgResolver.InvalidateCache(user.Id);
     }
 
     private async Task<ServiceActionResult<UserProfileItem>> GetUserByIdAsync(string publicId)
@@ -337,13 +442,149 @@ public class UserProfileService : BaseService, IUserProfileService
         return ServiceActionResult<bool>.OK(true);
     }
 
-    private async Task SendRegistrationEmailAsync(ApplicationUser user, UserProfile userProfile)
+    /// <summary>
+    /// Reports whether the user can sign in, and hands back the invitation link so an
+    /// administrator can deliver it out of band when email is not configured.
+    /// </summary>
+    public async Task<ServiceActionResult<UserAccessStateItem>> GetUserAccessStateAsync(string userId)
     {
         using var l = log.TraceScope();
 
+        await using var repo = RepositoryFactory.Create();
+        var (_, appUser) = await ResolveUserAsync(repo, userId);
+
+        var state = new UserAccessStateItem
+        {
+            EmailConfirmed = await UserManager.IsEmailConfirmedAsync(appUser),
+            HasPassword = await UserManager.HasPasswordAsync(appUser)
+        };
+
+        // Only offer a link while it is still the way in. Once the account is usable, a fresh
+        // confirm-email token is noise at best.
+        if (!state.CanSignIn)
+        {
+            state.InvitationLink = await BuildInvitationLinkAsync(appUser);
+        }
+
+        return ServiceActionResult<UserAccessStateItem>.OK(state);
+    }
+
+    /// <summary>
+    /// Re-queues the invitation email. The link is regenerated rather than stored — Identity
+    /// tokens are derived, and every previously issued one stays valid until the security stamp
+    /// changes, so a resend does not invalidate a link the user may already be holding.
+    /// </summary>
+    public async Task<ServiceActionResult<bool>> ResendInvitationAsync(string userId)
+    {
+        using var l = log.TraceScope();
+
+        await using var repo = RepositoryFactory.Create();
+        var (profile, appUser) = await ResolveUserAsync(repo, userId);
+
+        if (await UserManager.IsEmailConfirmedAsync(appUser) && await UserManager.HasPasswordAsync(appUser))
+        {
+            throw new BusinessRuleException(
+                "This account is already active. Use the password reset flow instead of an invitation.");
+        }
+
+        var queued = await SendInvitationEmailAsync(appUser, profile);
+        if (!queued)
+        {
+            throw new BusinessRuleException(
+                $"The invitation could not be addressed because the public site URL is unknown. "
+                + $"Configure '{AccountLinkBuilder.BaseUrlKey}' in appsettings, or copy the invitation link and send it manually.");
+        }
+
+        return ServiceActionResult<bool>.OK(true);
+    }
+
+    /// <summary>
+    /// Administrator-set password — the escape hatch for a deployment with no working outbound
+    /// email.
+    /// <para>
+    /// This also confirms the email address, deliberately. <c>SignIn.RequireConfirmedAccount</c> is
+    /// on, so setting a password alone still leaves the user unable to log in, and an administrator
+    /// who has just handed over a password by some trusted channel has vouched for the address as
+    /// firmly as a confirmation mail would.
+    /// </para>
+    /// </summary>
+    public async Task<ServiceActionResult<bool>> SetUserPasswordAsync(string userId, string password)
+    {
+        using var l = log.TraceScope();
+
+        if (string.IsNullOrWhiteSpace(password))
+        {
+            throw new BadRequestException("Please provide a password.");
+        }
+
+        await using var repo = RepositoryFactory.Create();
+        var (profile, appUser) = await ResolveUserAsync(repo, userId);
+
+        // Go through a reset token rather than AddPasswordAsync: this has to work both for an
+        // invited user who has no password and for an existing one who has forgotten theirs.
+        var resetToken = await UserManager.GeneratePasswordResetTokenAsync(appUser);
+        var result = await UserManager.ResetPasswordAsync(appUser, resetToken, password);
+
+        if (!result.Succeeded)
+        {
+            throw new BusinessRuleException(
+                $"Could not set the password: {string.Join(", ", result.Errors.Select(e => e.Description))}");
+        }
+
+        if (!await UserManager.IsEmailConfirmedAsync(appUser))
+        {
+            var confirmToken = await UserManager.GenerateEmailConfirmationTokenAsync(appUser);
+            var confirmResult = await UserManager.ConfirmEmailAsync(appUser, confirmToken);
+
+            if (!confirmResult.Succeeded)
+            {
+                throw new BusinessRuleException(
+                    $"The password was set but the email could not be confirmed, so the user still "
+                    + $"cannot sign in: {string.Join(", ", confirmResult.Errors.Select(e => e.Description))}");
+            }
+        }
+
+        // Both halves are satisfied now — the password above, the confirmation just before — so the
+        // account is usable and the profile should say so.
+        if (UserActivation.ShouldActivate(profile.Status, true, true))
+        {
+            profile.Status = UserStatus.LIVE;
+            await repo.GetUserProfilesQuery(AuthorizationContext.CurrentProfile).UpdateAsync(profile);
+        }
+
+        l.I($"Password set by administrator for user {userId}.");
+
+        return ServiceActionResult<bool>.OK(true);
+    }
+
+    /// <summary>
+    /// The absolute URL that confirms the address and offers the set-password form. Null when the
+    /// public origin cannot be resolved (background work with no <c>App:BaseUrl</c> configured).
+    /// </summary>
+    private async Task<string?> BuildInvitationLinkAsync(ApplicationUser user)
+    {
         var token = await UserManager.GenerateEmailConfirmationTokenAsync(user);
-        var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
-        var link = BuildRegistrationConfirmationLink(user.Id.ToString(), encodedToken);
+        var code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+
+        return LinkBuilder.BuildInvitationLink(user.Id, code);
+    }
+
+    /// <summary>
+    /// Queues the invitation email. Returns false, without queueing, when no absolute link can be
+    /// built — an email whose only call to action is a broken link is worse than none, and the
+    /// administrator has the copyable link on the Edit User page either way.
+    /// </summary>
+    private async Task<bool> SendInvitationEmailAsync(ApplicationUser user, UserProfile userProfile)
+    {
+        using var l = log.TraceScope();
+
+        var link = await BuildInvitationLinkAsync(user);
+        if (link == null)
+        {
+            l.W($"Invitation email for {userProfile.Email} was not queued: the public site URL could not "
+                + $"be resolved. Configure '{AccountLinkBuilder.BaseUrlKey}' or send the link manually.");
+            return false;
+        }
 
         var result = await EmailTemplateService.RenderAsync(EmailTemplateName.Registration, new Dictionary<string, string>
         {
@@ -355,7 +596,13 @@ public class UserProfileService : BaseService, IUserProfileService
         // We should inroduce a new interface IDevCoreEmailSender and implement it in IdentityEmailSender along with IEmailSender<ApplicationUser>
         var emailRequest = new EmailRequest
         {
-            From = new EmailAddress { Address = "noreply@example.com", Name = "DevCoreApp" },
+            From = new EmailAddress
+            {
+                Address = Configuration["EmailConfiguration:FromEmail"]
+                    ?? Configuration["EmailConfiguration:Username"]
+                    ?? "noreply@example.com",
+                Name = Configuration["EmailConfiguration:FromName"] ?? "DevCoreApp"
+            },
             To = new List<EmailAddress>
             {
                 new EmailAddress { Address = userProfile.Email, Name = $"{userProfile.FirstName} {userProfile.LastName}" }
@@ -373,16 +620,8 @@ public class UserProfileService : BaseService, IUserProfileService
             OrganizationId = OperationContext.PrimaryOrganizationId
         });
 
-        l.I($"Registration email queued for {userProfile.Email}");
-    }
-
-    private string BuildRegistrationConfirmationLink(string userId, string code)
-    {
-        var httpContext = HttpContextAccessor.HttpContext
-            ?? throw new InvalidOperationException("Cannot build registration confirmation link without an active HTTP request.");
-
-        var baseUri = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
-        return $"{baseUri}/account/confirm-email?userId={Uri.EscapeDataString(userId)}&code={Uri.EscapeDataString(code)}";
+        l.I($"Invitation email queued for {userProfile.Email}");
+        return true;
     }
 
     // Read-only resolve helper. Takes the caller's repo so it shares the caller's unit of work
@@ -722,24 +961,12 @@ public class UserProfileService : BaseService, IUserProfileService
             (profile.ProfilePictureThumbnail, profile.ProfilePictureContentType));
     }
 
+    /// <summary>
+    /// JPEG at quality 85 — the format ProfilePictureContentType is set to on upload. Scaling
+    /// itself lives in the shared <see cref="ImageResizer"/>; this wrapper only turns an
+    /// undecodable upload back into the BadRequestException callers already expect.
+    /// </summary>
     private static byte[] ResizeImage(byte[] imageData, int maxWidth, int maxHeight)
-    {
-        using var original = SKBitmap.Decode(imageData);
-        if (original == null)
-            throw new BadRequestException("Invalid image data.");
-
-        var ratioX = (double)maxWidth / original.Width;
-        var ratioY = (double)maxHeight / original.Height;
-        var ratio = Math.Min(ratioX, ratioY);
-        ratio = Math.Min(ratio, 1.0); // Don't upscale
-
-        var newWidth = (int)(original.Width * ratio);
-        var newHeight = (int)(original.Height * ratio);
-
-        using var resized = original.Resize(new SKImageInfo(newWidth, newHeight), SKFilterQuality.High);
-        using var image = SKImage.FromBitmap(resized);
-        using var data = image.Encode(SKEncodedImageFormat.Jpeg, 85);
-
-        return data.ToArray();
-    }
+        => ImageResizer.Resize(imageData, maxWidth, maxHeight, SKEncodedImageFormat.Jpeg, 85)
+           ?? throw new BadRequestException("Invalid image data.");
 }

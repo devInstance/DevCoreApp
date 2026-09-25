@@ -15,11 +15,17 @@ public class ConfirmEmailResult
         NeedsPassword = needsPassword
     };
 
-    public static ConfirmEmailResult AlreadyConfirmedResult(string userId) => new()
+    /// <summary>
+    /// The address was already confirmed. <paramref name="needsPassword"/> still has to be reported:
+    /// an invited user who opens the link a second time before choosing a password is confirmed but
+    /// cannot sign in, and telling them "you can now log in" strands them.
+    /// </summary>
+    public static ConfirmEmailResult AlreadyConfirmedResult(string userId, bool needsPassword = false) => new()
     {
         Succeeded = true,
         AlreadyConfirmed = true,
-        UserId = userId
+        UserId = userId,
+        NeedsPassword = needsPassword
     };
 
     public static ConfirmEmailResult InvalidLink() => new()
