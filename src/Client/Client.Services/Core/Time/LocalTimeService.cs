@@ -24,6 +24,9 @@ public interface ILocalTimeService
     /// <summary>Wall-clock time in <see cref="TimeZone"/> → UTC.</summary>
     DateTime ToUtc(DateTime local);
 
+    /// <summary>Nullable <see cref="ToUtc(DateTime)"/>, for optional date filters.</summary>
+    DateTime? ToUtc(DateTime? local) => local.HasValue ? ToUtc(local.Value) : null;
+
     /// <summary>Formats a UTC value in <see cref="TimeZone"/>; <paramref name="empty"/> for null.</summary>
     string Format(DateTime? utc, string format = "g", string empty = "");
 }

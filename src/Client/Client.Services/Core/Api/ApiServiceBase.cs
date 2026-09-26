@@ -22,6 +22,16 @@ public abstract class ApiServiceBase
 
     protected IScopeLog Log { get; }
 
+    /// <summary>
+    /// The API's sort parameter from the field + direction pair the admin pages track
+    /// (<c>Name</c> ascending, <c>-Name</c> descending).
+    /// </summary>
+    protected static string[]? SortBy(string? field, bool? isAsc) =>
+        string.IsNullOrEmpty(field) ? null : new[] { (isAsc == false ? "-" : "") + field };
+
+    /// <summary>Escapes one path segment (an id) for a URL.</summary>
+    protected static string Segment(string value) => Uri.EscapeDataString(value);
+
     /// <summary>A request builder for <paramref name="path"/> (relative, e.g. <c>"api/users"</c>).</summary>
     protected IApiContext<T> Api<T>(string path) => apiFactory.Create<T>(ApiClient.HttpClientName, path);
 

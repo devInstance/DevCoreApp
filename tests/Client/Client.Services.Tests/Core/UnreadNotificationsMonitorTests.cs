@@ -40,6 +40,8 @@ public class UnreadNotificationsMonitorTests
             Starts++;
             if (FailToStart) throw new HttpRequestException("no transport");
             IsConnected = true;
+            // Like NotificationHubClient: the first connect is reported as a connection change.
+            OnConnectionChanged?.Invoke(null);
             return Task.CompletedTask;
         }
 
@@ -158,6 +160,18 @@ public class UnreadNotificationsMonitorTests
         Assert.Equal(0, monitor.UnreadCount);
         Assert.Equal(calls, api.Calls);
         Assert.False(hub.IsConnected);
+    }
+
+    [Fact]
+    public async Task initial_connect_does_not_fetch_the_count_twice()
+    {
+        var (monitor, api, _) = Create();
+
+        await monitor.StartAsync(realTime: true);
+        await Task.Delay(50);
+
+        Assert.Equal(1, api.Calls);
+        await monitor.StopAsync();
     }
 
     [Fact]

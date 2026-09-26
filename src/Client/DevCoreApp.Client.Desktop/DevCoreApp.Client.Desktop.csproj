@@ -22,6 +22,9 @@
 	<ItemGroup>
 		<ProjectReference Include="..\Client.Services\Client.Services.csproj" />
 	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\mocks\Client\Client.Services.Mocks\Client.Services.Mocks.csproj" Condition="'$(Configuration)' == 'ServiceMocks'" />
+	</ItemGroup>
 
 	<!-- TypeScript: sources in Scripts/, compiled JS committed to wwwroot/scripts/ (same setup as the
 	     server project). Runs tsc only when a .ts file is newer than its .js output. -->

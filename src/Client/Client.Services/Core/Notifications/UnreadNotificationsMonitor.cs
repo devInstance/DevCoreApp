@@ -37,6 +37,7 @@ public sealed class UnreadNotificationsMonitor : IUnreadNotificationsMonitor
     private readonly INotificationHubClient hub;
     private readonly IScopeLog log;
     private CancellationTokenSource? polling;
+    private bool hubStarting;
 
     public UnreadNotificationsMonitor(INotificationService notifications, INotificationHubClient hub, IScopeManager logManager)
     {
@@ -70,6 +71,9 @@ public sealed class UnreadNotificationsMonitor : IUnreadNotificationsMonitor
         {
             hub.OnUnreadCountUpdated += OnPushed;
             hub.OnConnectionChanged += OnConnectionChanged;
+            // The hub reports its first connect through OnConnectionChanged too; the count was
+            // just loaded, so only later (re)connects trigger a re-sync.
+            hubStarting = true;
             try
             {
                 await hub.StartAsync();
@@ -78,6 +82,10 @@ public sealed class UnreadNotificationsMonitor : IUnreadNotificationsMonitor
             {
                 // WebSockets, SSE and long polling all failed (host cannot hold connections).
                 l.W($"Notification hub unavailable, polling instead: {ex.Message}");
+            }
+            finally
+            {
+                hubStarting = false;
             }
         }
 
@@ -136,7 +144,7 @@ public sealed class UnreadNotificationsMonitor : IUnreadNotificationsMonitor
     // A push sent while the connection was down is lost; re-sync once it is back.
     private void OnConnectionChanged(Exception? error)
     {
-        if (error == null)
+        if (error == null && !hubStarting)
         {
             _ = RefreshAsync(force: true);
         }

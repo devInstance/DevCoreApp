@@ -19,6 +19,9 @@ public class ProfilePictureService : ApiServiceBase, IProfilePictureService
 {
     private readonly IHttpClientFactory httpFactory;
 
+    // Pictures are immutable until replaced, and a grid shows one per row: fetch each once.
+    private readonly Dictionary<string, string?> cache = new();
+
     public ProfilePictureService(IHttpApiContextFactory apiFactory, IHttpClientFactory httpFactory, IScopeManager logManager)
         : base(apiFactory, logManager)
     {
@@ -30,33 +33,60 @@ public class ProfilePictureService : ApiServiceBase, IProfilePictureService
     private static string PicturePath(string userId) => $"api/users/{Uri.EscapeDataString(userId)}/profile-picture";
 
     public Task<ServiceActionResult<string?>> GetDataUrlAsync(string userId, bool thumbnail = false) =>
+        GetDataUrlFromPathAsync(PicturePath(userId) + (thumbnail ? "/thumbnail" : ""));
+
+    public Task<ServiceActionResult<string?>> GetDataUrlFromPathAsync(string apiPath) =>
         CallAsync<string?>(async () =>
         {
-            using var response = await Http.GetAsync(PicturePath(userId) + (thumbnail ? "/thumbnail" : ""));
+            var path = apiPath.TrimStart('/');
+            if (cache.TryGetValue(path, out var cached))
+            {
+                return cached;
+            }
+
+            using var response = await Http.GetAsync(path);
             if (response.StatusCode == HttpStatusCode.NotFound)
             {
-                return (string?)null;
+                return cache[path] = null;
             }
             response.EnsureSuccessStatusCode();
 
             var bytes = await response.Content.ReadAsByteArrayAsync();
             var contentType = response.Content.Headers.ContentType?.MediaType ?? "image/jpeg";
-            return $"data:{contentType};base64,{Convert.ToBase64String(bytes)}";
+            return cache[path] = $"data:{contentType};base64,{Convert.ToBase64String(bytes)}";
         });
 
     public Task<ServiceActionResult<UserProfileItem>> UploadAsync(string userId, Stream image, string fileName, string contentType) =>
         CallAsync(async () =>
         {
             using var content = new MultipartFormDataContent();
-            var file = new StreamContent(image);
+            // Copied, not wrapped: disposing the form must not close the caller's stream.
+            using var buffer = new MemoryStream();
+            await image.CopyToAsync(buffer);
+            var file = new ByteArrayContent(buffer.ToArray());
             file.Headers.ContentType = new MediaTypeHeaderValue(contentType);
             content.Add(file, "file", fileName);
 
             using var response = await Http.PostAsync(PicturePath(userId), content);
             response.EnsureSuccessStatusCode();
+            Invalidate(userId);
             return await response.Content.ReadFromJsonAsync<UserProfileItem>();
         });
 
     public Task<ServiceActionResult<bool>> DeleteAsync(string userId) =>
-        CallAsync(() => Api<bool>(PicturePath(userId)).Delete().ExecuteAsync());
+        CallAsync(async () =>
+        {
+            var deleted = await Api<bool>(PicturePath(userId)).Delete().ExecuteAsync();
+            Invalidate(userId);
+            return deleted;
+        });
+
+    private void Invalidate(string userId)
+    {
+        var prefix = PicturePath(userId);
+        foreach (var key in cache.Keys.Where(k => k.StartsWith(prefix)).ToList())
+        {
+            cache.Remove(key);
+        }
+    }
 }

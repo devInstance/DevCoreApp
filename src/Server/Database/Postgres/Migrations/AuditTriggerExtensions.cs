@@ -75,7 +75,10 @@ BEGIN
         old_values::TEXT,
         new_values::TEXT,
         NULL,
-        NOW() AT TIME ZONE 'UTC',
+        -- NOW() itself: ChangedAt is timestamptz. ""NOW() AT TIME ZONE 'UTC'"" yields a zone-less
+        -- UTC reading that Postgres re-reads in the session time zone, shifting every row by
+        -- the server's offset whenever the session is not UTC.
+        NOW(),
         NULL,
         NULL,
         1  -- AuditSource.Database = 1

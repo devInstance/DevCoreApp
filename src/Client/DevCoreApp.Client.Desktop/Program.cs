@@ -1,5 +1,7 @@
 using DevInstance.BlazorToolkit.Tools;
+using DevInstance.DevCoreApp.Client.Desktop.Core.UI;
 using DevInstance.DevCoreApp.Client.Services.Core;
+using DevInstance.DevCoreApp.Client.Services.Core.Time;
 using DevInstance.LogScope.Extensions;
 using DevInstance.LogScope.Formatters;
 using Microsoft.AspNetCore.Components.Web;
@@ -28,7 +30,18 @@ public class Program
         builder.Services.AddDevCoreClientServices(ResolveApiBase(builder));
         builder.Services.AddBlazorServices(typeof(Program).Assembly);
 
-        await builder.Build().RunAsync();
+#if SERVICEMOCKS
+        // `dotnet run -c ServiceMocks`: in-memory services, no server. Registered after the real
+        // ones so they win; sign in with any email and password.
+        builder.Services.AddBlazorServicesMocks(typeof(DevInstance.DevCoreApp.Client.Services.Mocks.Core.Auth.AuthServiceMock).Assembly);
+#endif
+
+        var host = builder.Build();
+
+        // Grid column definitions format dates through this static facade (see LocalClock).
+        LocalClock.Service = host.Services.GetRequiredService<ILocalTimeService>();
+
+        await host.RunAsync();
     }
 
     /// <summary>

@@ -355,12 +355,42 @@ Open for Phase 2:
    7 tests cover the monitor.
 9. ⏭ The client mocks project (D8) moves to Phase 3, where there are feature services to mock.
 
-**Phase 3 — Port pages** (one PR-sized slice per feature; each slice = client service + page(s) + mocks)
-- Order: Account (register/forgot/reset/confirm) → Profile/Theme → Users (list/new/edit) →
-  Roles → Organizations → Settings → Feature flags → API keys → Webhooks → Email log → Jobs →
-  Audit log → Import/Export → Notifications bell (now live via SignalR).
-- Pages keep their markup; `@inject IXxxService` switches from server services to client services
-  of the same shape. Date rendering goes through `<LocalTime>`.
+**Phase 3 — Port pages** — ✅ done
+1. ✅ Client services in `Client.Services/Core/<Feature>` for every admin feature: API keys, audit
+   log, jobs, email log, feature flags, grid profiles, import/export, organizations, roles,
+   settings, users, webhooks and account. **Their interfaces mirror the server interfaces**
+   (same names and signatures), so pages ported by swapping `using`s. The server's synchronous
+   methods are `…Async` on the client, because they are HTTP calls.
+2. ✅ All admin pages and grid components were ported to `Client.Desktop/Core/UI`:
+   - pages: users (list/new/edit), roles, organizations, email log (+ detail), jobs, audit log,
+     import, feature flags, API keys, webhooks (+ deliveries), settings;
+   - components: HDataGrid & co, permission grids, export dialog.
+   The nav shows each item only with the permission its API needs.
+3. ✅ Account pages: register, forgot/reset password, confirm email → invitation password (over
+   `api/account` on the auth client, no token), plus links from Login.
+4. ✅ Dates: every UTC value that was printed raw now goes through `LocalClock`/`<LocalTime>`
+   (31 sites). Date filters are converted to UTC inside the client services.
+5. ✅ Profile pictures: `ProfilePictureUpload` loads through `IProfilePictureService` (a token
+   fetch returned as a `data:` URL, cached and invalidated on upload/delete).
+6. ✅ Client mocks: `mocks/Client/Client.Services.Mocks`, ported from the server mocks, plus
+   auth/me/grid/notifications/pictures/account mocks. `dotnet run -c ServiceMocks` on Desktop
+   runs with no server; any credentials sign in as an Owner.
+7. ✅ Verified live with a real account: every admin page loads, all API calls returned 200, and
+   the session refresh happened on its own. Mock mode was verified with the server stopped.
+8. Found during verification:
+   - **Audit trigger timestamps were wrong (pre-existing).** The Postgres
+     `audit_trigger_function()` stored `NOW() AT TIME ZONE 'UTC'` into a `timestamptz` column, so
+     every database-sourced audit row is shifted by the DB session's UTC offset. The helper in
+     `AuditTriggerExtensions` is fixed. **A new migration that calls
+     `migrationBuilder.CreateAuditTriggerFunction()` is needed** to update existing databases.
+     Rows already written stay shifted.
+   - The unread badge fetched twice per load (the hub reports its first connect as a change);
+     that is fixed and tested.
+9. Open:
+   - the login page should redirect when already signed in;
+   - Visual Studio multi-project launch (see Phase 2);
+   - write flows (create/edit/delete) were exercised only through the API contract, not clicked
+     through in the browser.
 
 **Phase 4 — Cut over**
 1. Add the `Pages/Setup.cshtml` Razor Page; remove `Core/UI/**` Blazor Server pages, `UI/App.razor`,

@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<!-- In-memory [BlazorServiceMock] implementations of the client service interfaces, so the
+	     WASM clients run with -c ServiceMocks and no server. Excluded from Debug/Release in the
+	     .slnx, like the server mocks. -->
+
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<AssemblyName>DevInstance.DevCoreApp.Client.Services.Mocks</AssemblyName>
+		<RootNamespace>DevInstance.DevCoreApp.Client.Services.Mocks</RootNamespace>
+		<Configurations>Debug;Release;ServiceMocks</Configurations>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Bogus" Version="35.6.5" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\src\Client\Client.Services\Client.Services.csproj" />
+	</ItemGroup>
+
+</Project>
