@@ -65,6 +65,8 @@ public class Program
             builder.Configuration.GetSection(BackgroundTaskSettings.SectionName));
         builder.Services.Configure<HealthEndpointSettings>(
             builder.Configuration.GetSection(HealthEndpointSettings.SectionName));
+        builder.Services.Configure<NotificationSettings>(
+            builder.Configuration.GetSection(NotificationSettings.SectionName));
         builder.Services.AddSingleton<IBackgroundTaskHandler, SendEmailTaskHandler>();
         builder.Services.AddSingleton<IBackgroundTaskHandler, ImportDataTaskHandler>();
         builder.Services.AddSingleton<IBackgroundTaskHandler, WebhookDeliveryTaskHandler>();
@@ -118,6 +120,14 @@ public class Program
                     var authHeader = context.Request.Headers.Authorization.FirstOrDefault();
                     if (authHeader != null &&
                         authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                        return JwtBearerDefaults.AuthenticationScheme;
+
+                    // Browsers cannot set headers on a WebSocket, so SignalR sends the token as
+                    // ?access_token= (read by JwtBearer's OnMessageReceived below). Without this
+                    // branch the upgrade falls to the cookie scheme, gets a 302, and the client
+                    // silently degrades to long polling.
+                    if (context.Request.Path.StartsWithSegments("/hubs") &&
+                        context.Request.Query.ContainsKey("access_token"))
                         return JwtBearerDefaults.AuthenticationScheme;
 
                     if (context.Request.Headers.ContainsKey("X-Api-Key"))
@@ -285,7 +295,14 @@ public class Program
             .AddInteractiveServerRenderMode();
 
         app.MapControllers();
-        app.MapHub<NotificationHub>("/hubs/notifications");
+        // Real-time push is optional (Notifications:RealTime). Without the hub, pushes from
+        // NotificationHubService reach no one and clients fall back to polling.
+        var notificationSettings = builder.Configuration.GetSection(NotificationSettings.SectionName).Get<NotificationSettings>()
+            ?? new NotificationSettings();
+        if (notificationSettings.RealTime)
+        {
+            app.MapHub<NotificationHub>("/hubs/notifications");
+        }
         // Add additional endpoints required by the Identity /Account Razor components.
         app.MapAdditionalIdentityEndpoints();
 

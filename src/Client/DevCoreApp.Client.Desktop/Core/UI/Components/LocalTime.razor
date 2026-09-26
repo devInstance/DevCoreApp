@@ -1,0 +1,29 @@
+@* Renders a UTC value in the user's time zone. Every date on a page goes through this (or
+   ILocalTimeService) — never ToString() on an API DateTime, which would show UTC. *@
+@implements IDisposable
+@inject ILocalTimeService Time
+
+@if (Value.HasValue)
+{
+    <time datetime="@Value.Value.ToUniversalTime().ToString("o")" title="@Time.TimeZone.DisplayName">@Time.Format(Value, Format)</time>
+}
+else
+{
+    @Empty
+}
+
+@code {
+    /// <summary>A UTC value from the API.</summary>
+    [Parameter] public DateTime? Value { get; set; }
+
+    /// <summary>A .NET date format string, applied to the local time.</summary>
+    [Parameter] public string Format { get; set; } = "g";
+
+    [Parameter] public string Empty { get; set; } = "";
+
+    protected override void OnInitialized() => Time.Changed += OnZoneChanged;
+
+    private void OnZoneChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Time.Changed -= OnZoneChanged;
+}

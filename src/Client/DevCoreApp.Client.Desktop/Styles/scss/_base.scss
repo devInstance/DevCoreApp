@@ -1,0 +1,90 @@
+// ============================================
+// Base Styles
+// ============================================
+
+// --------------------------------------------
+// CSS Custom Properties (for runtime theming)
+// --------------------------------------------
+
+:root {
+    // Light theme (default)
+    --bs-body-bg: #{$light-body-bg};
+    --bs-body-color: #{$light-body-color};
+
+    // Sidebar
+    --sidebar-bg: #{$light-sidebar-bg};
+    --sidebar-color: #{$light-sidebar-color};
+    --sidebar-hover-bg: #{$light-sidebar-hover-bg};
+    --sidebar-active-bg: #{$light-sidebar-active-bg};
+    --sidebar-active-color: #{$light-sidebar-active-color};
+    --sidebar-brand-color: #{$light-sidebar-brand-color};
+    --sidebar-width: #{$sidebar-width};
+    --sidebar-icons-width: #{$sidebar-icons-width};
+    --sidebar-collapsed-width: #{$sidebar-collapsed-width};
+
+    // Top navbar
+    --topbar-bg: #{$light-topbar-bg};
+    --topbar-border: #{$light-topbar-border};
+    --topbar-color: #{$light-topbar-color};
+    --topbar-height: #{$topbar-height};
+
+    // Content
+    --content-bg: #{$light-content-bg};
+
+    // Primary color
+    --primary-color: #{$primary};
+    --primary-hover: #{$primary-hover};
+}
+
+// Dark theme
+[data-bs-theme="dark"] {
+    --bs-body-bg: #{$dark-body-bg};
+    --bs-body-color: #{$dark-body-color};
+
+    --sidebar-bg: #{$dark-sidebar-bg};
+    --sidebar-color: #{$dark-sidebar-color};
+    --sidebar-hover-bg: #{$dark-sidebar-hover-bg};
+    --sidebar-active-bg: #{$dark-sidebar-active-bg};
+    --sidebar-active-color: #{$dark-sidebar-active-color};
+    --sidebar-brand-color: #{$dark-sidebar-brand-color};
+
+    --topbar-bg: #{$dark-topbar-bg};
+    --topbar-border: #{$dark-topbar-border};
+    --topbar-color: #{$dark-topbar-color};
+
+    --content-bg: #{$dark-content-bg};
+}
+
+// --------------------------------------------
+// Document & Body
+// --------------------------------------------
+
+html, body {
+    font-family: $font-family-base;
+    background-color: var(--content-bg);
+    color: var(--bs-body-color);
+    height: 100%;
+    margin: 0;
+}
+
+// --------------------------------------------
+// Links
+// --------------------------------------------
+
+a, .btn-link {
+    color: var(--primary-color);
+
+    &:hover {
+        color: var(--primary-hover);
+    }
+}
+
+// --------------------------------------------
+// Headings
+// --------------------------------------------
+
+h1, h2, h3, h4, h5, h6 {
+    &:focus {
+        outline: none;
+    }
+}

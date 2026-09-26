@@ -18,4 +18,10 @@ public class CurrentUserItem
 
     /// <summary>"Light", "Dark" or "System".</summary>
     public string Theme { get; set; }
+
+    /// <summary>
+    /// Whether this server pushes notifications over SignalR (<c>Notifications:RealTime</c>).
+    /// When false the client must not connect to the hub and polls instead.
+    /// </summary>
+    public bool RealTimeNotifications { get; set; }
 }

@@ -1,0 +1,66 @@
+@page "/account/login"
+@using DevInstance.DevCoreApp.Shared.Model.Core.Authentication
+@inject IAuthService Auth
+@inject NavigationManager Navigation
+
+<PageTitle>Log in</PageTitle>
+
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h1 class="h4 mb-4 text-center">Log in</h1>
+
+                @if (Host.IsError)
+                {
+                    <div class="alert alert-danger" role="alert">@Host.ErrorMessage</div>
+                }
+
+                <EditForm Model="Input" OnValidSubmit="LoginAsync">
+                    <DataAnnotationsValidator />
+
+                    <div class="form-floating mb-3">
+                        <InputText @bind-Value="Input.Email" id="email" class="form-control" autocomplete="username" placeholder="name@example.com" />
+                        <label for="email">Email</label>
+                        <ValidationMessage For="() => Input.Email" class="text-danger" />
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <InputText type="password" @bind-Value="Input.Password" id="password" class="form-control" autocomplete="current-password" placeholder="password" />
+                        <label for="password">Password</label>
+                        <ValidationMessage For="() => Input.Password" class="text-danger" />
+                    </div>
+
+                    <button type="submit" class="w-100 btn btn-primary mb-3" disabled="@Host.InProgress">
+                        @if (Host.InProgress)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                        }
+                        Log in
+                    </button>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [CascadingParameter] private IServiceExecutionHost Host { get; set; } = default!;
+
+    [SupplyParameterFromQuery] private string? ReturnUrl { get; set; }
+
+    private JwtLoginRequest Input { get; } = new();
+
+    private async Task LoginAsync()
+    {
+        await Host.ServiceSubmitAsync(
+            async () => await Auth.LoginAsync(Input),
+            _ => Navigation.NavigateTo(SafeReturnUrl()));
+    }
+
+    // Only app-relative targets: "//evil.example" or "https://..." would be an open redirect.
+    private string SafeReturnUrl() =>
+        ReturnUrl is { Length: > 0 } url && url.StartsWith('/') && !url.StartsWith("//") && !url.StartsWith("/\\")
+            ? url.TrimStart('/')
+            : "";
+}

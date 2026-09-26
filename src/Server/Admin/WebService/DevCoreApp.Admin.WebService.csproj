@@ -65,7 +65,7 @@
 	</ItemGroup>
 
 	<!-- SCSS Compilation: Copy compiled CSS from Styles to wwwroot -->
-	<Target Name="CopySassOutput" AfterTargets="DartSassCompile">
+	<Target Name="CopySassOutput" AfterTargets="DartSass_Build">
 		<Copy SourceFiles="Styles\app.css" DestinationFolder="wwwroot" />
 	</Target>
 

@@ -9,7 +9,8 @@
   </Folder>
   <Folder Name="/Client/">
     <Project Path="src/Client/Client.Services/Client.Services.csproj" />
-    <Project Path="src/Client/DevCoreApp.Client/DevCoreApp.Client.csproj" />
+    <Project Path="src/Client/DevCoreApp.Client.Desktop/DevCoreApp.Client.Desktop.csproj" />
+    <Project Path="src/Client/DevCoreApp.Client.Mobile/DevCoreApp.Client.Mobile.csproj" />
   </Folder>
   <Folder Name="/Server/" />
   <Folder Name="/Server/Admin/">
@@ -41,6 +42,9 @@
     <Project Path="src/Shared/Utils/Shared.Utils.csproj" />
   </Folder>
   <Folder Name="/Tests/">
+    <Project Path="tests/Client/Client.Services.Tests/Client.Services.Tests.csproj">
+      <BuildType Solution="ServiceMocks|*" Project="Debug" />
+    </Project>
     <Project Path="tests/Server/Database/Core/Core.Tests.csproj">
       <BuildType Solution="ServiceMocks|*" Project="Debug" />
     </Project>

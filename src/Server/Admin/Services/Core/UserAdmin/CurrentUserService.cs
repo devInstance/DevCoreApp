@@ -3,10 +3,12 @@ using DevInstance.BlazorToolkit.Services;
 using DevInstance.BlazorToolkit.Tools;
 using DevInstance.DevCoreApp.Server.Admin.Services.Core.Appearance;
 using DevInstance.DevCoreApp.Server.Admin.Services.Core.Authentication;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core.Notifications;
 using DevInstance.DevCoreApp.Server.Database.Core.Data.Decorators;
 using DevInstance.DevCoreApp.Shared.Model.Core.UserAdmin;
 using DevInstance.LogScope;
 using DevInstance.WebServiceToolkit.Exceptions;
+using Microsoft.Extensions.Options;
 
 namespace DevInstance.DevCoreApp.Server.Admin.Services.Core.UserAdmin;
 
@@ -23,17 +25,20 @@ public class CurrentUserService : ICurrentUserService
     private readonly IAuthorizationContext authorizationContext;
     private readonly IPermissionService permissionService;
     private readonly IThemeService themeService;
+    private readonly NotificationSettings notificationSettings;
     private readonly IScopeLog log;
 
     public CurrentUserService(IScopeManager logManager,
                               IAuthorizationContext authorizationContext,
                               IPermissionService permissionService,
-                              IThemeService themeService)
+                              IThemeService themeService,
+                              IOptions<NotificationSettings> notificationSettings)
     {
         log = logManager.CreateLogger(this);
         this.authorizationContext = authorizationContext;
         this.permissionService = permissionService;
         this.themeService = themeService;
+        this.notificationSettings = notificationSettings.Value;
     }
 
     public async Task<ServiceActionResult<CurrentUserItem>> GetAsync()
@@ -59,7 +64,8 @@ public class CurrentUserService : ICurrentUserService
             Profile = profile.ToView(),
             Roles = roles,
             Permissions = permissions,
-            Theme = theme
+            Theme = theme,
+            RealTimeNotifications = notificationSettings.RealTime
         });
     }
 }

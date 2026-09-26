@@ -81,7 +81,13 @@ public class UserProfileService : BaseService, IUserProfileService
     public async Task<ServiceActionResult<UserProfileItem>> UpdateCurrentUserAsync(UserProfileItem newProfile)
     {
         var profile = AuthorizationContext.CurrentProfile;
+
+        // Self-service may not change the email: it is the sign-in identity, and only an
+        // administrator (UpdateUserAsync) may change it. The UI disables the field; the API
+        // must enforce it too.
+        var email = profile.Email;
         profile.ToRecord(newProfile);
+        profile.Email = email;
         await using var repo = RepositoryFactory.Create();
         await repo.GetUserProfilesQuery(AuthorizationContext.CurrentProfile).UpdateAsync(profile);
 

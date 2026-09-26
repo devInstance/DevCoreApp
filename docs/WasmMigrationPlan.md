@@ -281,20 +281,79 @@ Open for Phase 2:
 - **Import validate** still deserializes `mappingsJson` from a form field in the controller.
   Revisit with the import client.
 
-**Phase 2 — Client foundation**
-1. Rename `DevCoreApp.Client` → `DevCoreApp.Client.Mobile` (folder, csproj, namespaces, slnx), and fix
-   the HttpClient-name mismatch. Give Mobile login + profile screens that use the same
-   `Client.Services` auth/`me` services as Desktop — the proof that the shared layer works.
-2. Create `DevCoreApp.Client.Desktop`:
-   - `Program.cs`: named HttpClient + `AuthTokenHandler` + `HttpApiContextFactory(..., "api")`, and
-     `AddBlazorServices(ClientServices assembly)`;
-   - `JwtAuthenticationStateProvider`, permission policy handler, `AuthorizeRouteView`;
-   - `BasePage : IServiceExecutionHost`, `MainLayout`, `NavMenu`;
-   - `ILocalTimeService` + `<LocalTime>`;
-   - login/logout pages;
-   - SignalR `NotificationHubClient` with `AccessTokenProvider`.
-3. Move styles, scripts and the theme FOUC script into Desktop's `index.html`.
-4. Add client mocks project and `ServiceMocks` config.
+**Phase 2 — Client foundation** — ✅ done (Desktop verified signed-in; Mobile signed-in flow to be checked by hand)
+1. ✅ `DevCoreApp.Client` → `DevCoreApp.Client.Mobile` (folder, csproj, namespaces, slnx). Template
+   leftovers were removed (counter, weather, `PersistentAuthenticationStateProvider`, `UserInfo`,
+   empty `NetApi` stubs), as were the dead `tests/Client/Client.ClientMocks`.
+2. ✅ `Client.Services/Core` shared by both clients (`AddDevCoreClientServices(apiBase)`):
+   - `Api/`: `ApiServiceBase` (BlazorToolkit `IApiContext` → `ServiceActionResult`) and
+     `ApiQueryExtensions`. BlazorToolkit's URL builder neither escapes values nor formats them
+     culture-invariantly, so query models are encoded here, with UTC ISO dates and comma-joined
+     arrays.
+   - `Auth/`: `AuthTokenStore` (a singleton persisted to `localStorage`) and `TokenRefresher`
+     (single-flight, because the server treats reuse of a rotated refresh token as theft).
+     `AuthTokenHandler` refreshes near expiry, then refreshes once on 401 and replays the request
+     with its body. Also `ApiAuthenticationStateProvider` (claims from `api/me`) and
+     `ClientPermissionPolicyProvider`, so `<AuthorizeView Policy="Module.Entity.Action">` works
+     unchanged.
+   - `Time/ILocalTimeService`: the profile `TimeZoneId`, falling back to the browser zone; DST-safe.
+   - `Me/`, `Users/IProfilePictureService`: pictures are fetched with the token and returned as
+     `data:` URLs, which resolves the `<img src>` problem.
+   - `Notifications/`: the hub client connects to the API origin with `AccessTokenProvider`, and
+     `INotificationService` calls `api/notifications`.
+3. ✅ `DevCoreApp.Client.Desktop`:
+   - the shell (layout, sidebar, top bar, theme toggle synced with `api/me`, live unread badge);
+   - `AuthorizeRouteView` → `RedirectToLogin`;
+   - Login (open-redirect-safe `returnUrl`), Home and Profile (with a time-zone picker);
+   - the `<LocalTime>` component;
+   - SCSS/TS pipeline copied from WebService.
+   It runs standalone on :5280 (`ApiBaseUrl`).
+4. ✅ Mobile: Login, Home and Profile over the same services, running standalone on :5290. This
+   proves the shared layer.
+5. ✅ Server:
+   - Dev `Cors:AllowedOrigins` for :5280/:5290/:7280/:7290.
+   - `PermissionClaims.Type` moved to `Shared.Model`, so client and server share it.
+   - `UpdateCurrentUserAsync` no longer lets a user change their own email.
+   - The `DartSassBuilder` copy target was fixed. It hooked a non-existent target, so the
+     server's `wwwroot/app.css` had never been refreshed by the build.
+6. ✅ `tests/Client/Client.Services.Tests` has 19 tests: query encoding, local time and DST, the
+   token handler (bearer, refresh-and-replay, expiry, rejected refresh → sign-out, concurrent 401s
+   → one refresh), and claims and policies.
+7. Checked live in a browser:
+   - Desktop and Mobile load and redirect protected routes to login with `returnUrl`;
+   - the cross-origin preflight passes;
+   - a wrong password shows the server's error;
+   - **signed in on Desktop with a real account:**
+     - `api/auth/login` returned 200 and the user was sent back to the `returnUrl`;
+     - `api/me` returned 200 and the name shows in the top bar;
+     - the unread count loaded and the notification hub connected;
+     - profile save (`PUT api/me/profile`) returned 200;
+     - after choosing a time zone, the page re-read `api/me` and the display zone switched
+       (the zone was restored afterwards);
+     - after a page reload the session was restored from `localStorage`.
+   - The live run exposed a **pre-existing server bug, now fixed.** The "Smart" scheme selector
+     sent `/hubs` requests carrying `?access_token=` to the cookie scheme. Browsers cannot put a
+     header on a WebSocket, so every WebSocket upgrade got a 302 and SignalR silently fell back
+     to long polling. `/hubs` with `access_token` now selects JwtBearer. **Forks have the same
+     selector.**
+   - Not checked:
+     - the Mobile signed-in flow (the browser tool could not drive the Mobile tab; it uses the
+       same services as Desktop);
+     - a token refresh after the 15-minute expiry (covered by the handler tests).
+8. ✅ **Real-time notifications are optional.** `Notifications:RealTime` (default `true`) controls
+   whether the hub is mapped at all, and `api/me` returns it as `RealTimeNotifications`. The
+   shared `IUnreadNotificationsMonitor` keeps the unread count current in every hosting setup:
+   - it loads the count over REST;
+   - it connects the hub only when the server offers it;
+   - it polls every 60 s whenever the hub is not connected (disabled, failed, or dropped);
+   - it re-syncs after a reconnect;
+   - Desktop also refreshes when the window regains focus.
+   Set `RealTime` to `false` on hosts that cannot hold connections open, or when running several
+   instances **without a SignalR backplane** (Redis `AddStackExchangeRedis`, or Azure SignalR
+   Service), because a push from one instance never reaches clients connected to another.
+   Unauthenticated `/hubs` requests now get 401 instead of the cookie login redirect.
+   7 tests cover the monitor.
+9. ⏭ The client mocks project (D8) moves to Phase 3, where there are feature services to mock.
 
 **Phase 3 — Port pages** (one PR-sized slice per feature; each slice = client service + page(s) + mocks)
 - Order: Account (register/forgot/reset/confirm) → Profile/Theme → Users (list/new/edit) →

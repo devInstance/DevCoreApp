@@ -1,3 +1,4 @@
+using DevInstance.DevCoreApp.Shared.Model.Core.Permissions;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
@@ -27,7 +28,7 @@ namespace DevInstance.DevCoreApp.Server.Admin.Services.Core.Authentication;
 /// </summary>
 public class PermissionClaimsTransformation : IClaimsTransformation
 {
-    public const string PermissionClaimType = "Permission";
+    public const string PermissionClaimType = PermissionClaims.Type;
     public const string PermissionsLoadedClaimType = "PermissionsLoaded";
     public const string VisibleOrganizationClaimType = "VisibleOrganization";
     public const string PrimaryOrganizationClaimType = "PrimaryOrganization";

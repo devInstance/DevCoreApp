@@ -1,0 +1,121 @@
+@page "/user/profile"
+@attribute [Authorize]
+
+<PageTitle>My Profile</PageTitle>
+
+<div class="page-header">
+    <h1>My Profile</h1>
+    <p class="text-muted">View and update your personal information</p>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                @if (Input == null)
+                {
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>
+                    </div>
+                }
+                else
+                {
+                    @if (!string.IsNullOrEmpty(successMessage))
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            @successMessage
+                            <button type="button" class="btn-close" @onclick="() => successMessage = null"></button>
+                        </div>
+                    }
+
+                    @if (Host.IsError)
+                    {
+                        <div class="alert alert-danger" role="alert">@Host.ErrorMessage</div>
+                    }
+
+                    <EditForm Model="Input" OnValidSubmit="UpdateProfileAsync">
+                        <DataAnnotationsValidator />
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <InputText @bind-Value="Input.FirstName" id="firstName" class="form-control" placeholder="First Name" />
+                                    <label for="firstName">First Name</label>
+                                    <ValidationMessage For="() => Input.FirstName" class="text-danger" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <InputText @bind-Value="Input.LastName" id="lastName" class="form-control" placeholder="Last Name" />
+                                    <label for="lastName">Last Name</label>
+                                    <ValidationMessage For="() => Input.LastName" class="text-danger" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <InputText @bind-Value="Input.MiddleName" id="middleName" class="form-control" placeholder="Middle Name" />
+                            <label for="middleName">Middle Name</label>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <InputText @bind-Value="Input.Email" id="email" class="form-control" placeholder="Email" disabled />
+                            <label for="email">Email</label>
+                            <small class="text-muted">Contact an administrator to change your email address.</small>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <InputText @bind-Value="Input.PhoneNumber" id="phone" class="form-control" placeholder="Phone Number" />
+                            <label for="phone">Phone Number</label>
+                            <ValidationMessage For="() => Input.PhoneNumber" class="text-danger" />
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <InputSelect @bind-Value="Input.TimeZoneId" id="timeZone" class="form-select">
+                                <option value="">Use this browser's time zone (@BrowserZone)</option>
+                                @foreach (var zone in TimeZones)
+                                {
+                                    <option value="@zone.Id">@zone.DisplayName</option>
+                                }
+                            </InputSelect>
+                            <label for="timeZone">Time zone</label>
+                            <small class="text-muted">Dates and times across the app are shown in this time zone.</small>
+                        </div>
+
+                        <hr class="my-4" />
+
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="text-muted small">
+                                Member since <LocalTime Value="Input.CreateDate" Format="D" />
+                            </div>
+                            <button type="submit" class="btn btn-primary" disabled="@Host.InProgress">
+                                @if (Host.ServiceState == ServiceExecutionType.Submitting)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                                }
+                                Save Changes
+                            </button>
+                        </div>
+                    </EditForm>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card shadow-sm">
+            <div class="card-body text-center p-4">
+                @if (pictureUrl != null)
+                {
+                    <img src="@pictureUrl" alt="Profile picture" class="rounded-circle mb-3" style="width: 80px; height: 80px; object-fit: cover;" />
+                }
+                else
+                {
+                    <div class="avatar-placeholder avatar-lg mx-auto mb-3" style="width: 80px; height: 80px; font-size: 2rem;">@Initials</div>
+                }
+                <h5 class="mb-1">@Input?.FullName</h5>
+                <p class="text-muted mb-0">@Input?.Email</p>
+            </div>
+        </div>
+    </div>
+</div>

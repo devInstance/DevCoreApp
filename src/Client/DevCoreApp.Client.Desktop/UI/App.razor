@@ -1,0 +1,20 @@
+<Router AppAssembly="typeof(Program).Assembly" NotFoundPage="typeof(Core.UI.Pages.NotFound)">
+    <Found Context="routeData">
+        <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(MainLayout)">
+            <NotAuthorized>
+                @if (context.User.Identity?.IsAuthenticated != true)
+                {
+                    <RedirectToLogin />
+                }
+                else
+                {
+                    <div class="alert alert-warning">You do not have permission to view this page.</div>
+                }
+            </NotAuthorized>
+            <Authorizing>
+                <div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div></div>
+            </Authorizing>
+        </AuthorizeRouteView>
+        <FocusOnNavigate RouteData="routeData" Selector="h1" />
+    </Found>
+</Router>

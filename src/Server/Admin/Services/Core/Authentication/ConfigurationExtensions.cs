@@ -54,7 +54,8 @@ public static class ConfigurationExtensions
             options.Cookie.HttpOnly = true;
             options.Events.OnRedirectToLogin = context =>
             {
-                if (context.Request.Path.StartsWithSegments("/api"))
+                // API and hub clients cannot follow a redirect to an HTML login page.
+                if (context.Request.Path.StartsWithSegments("/api") || context.Request.Path.StartsWithSegments("/hubs"))
                 {
                     context.Response.StatusCode = 401;
                 }

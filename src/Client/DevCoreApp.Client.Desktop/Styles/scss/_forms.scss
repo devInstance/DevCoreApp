@@ -1,0 +1,36 @@
+// ============================================
+// Form Styles
+// ============================================
+
+// --------------------------------------------
+// Focus States
+// --------------------------------------------
+
+.form-control,
+.form-check-input {
+    @include focus-ring($primary);
+}
+
+// --------------------------------------------
+// Validation States
+// --------------------------------------------
+
+.valid.modified:not([type=checkbox]) {
+    outline: 1px solid $success;
+}
+
+.invalid {
+    outline: 1px solid $danger;
+}
+
+.validation-message {
+    color: $danger;
+}
+
+// --------------------------------------------
+// Checkbox Variants
+// --------------------------------------------
+
+.darker-border-checkbox.form-check-input {
+    border-color: $gray-500;
+}

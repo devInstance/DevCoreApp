@@ -1,0 +1,79 @@
+@page "/profile"
+@attribute [Authorize]
+@inject IMeService Me
+@inject ICurrentUserState CurrentUser
+@inject ILocalTimeService Time
+
+<PageTitle>Profile</PageTitle>
+
+<h1 class="h4 mb-3">Profile</h1>
+
+<ErrorMessageBanner IsError="Host.IsError" Message="@Host.ErrorMessage" />
+
+@if (Input == null)
+{
+    <LoadingProgress />
+}
+else
+{
+    @if (saved)
+    {
+        <div class="alert alert-success">Saved.</div>
+    }
+
+    <EditForm Model="Input" OnValidSubmit="SaveAsync">
+        <DataAnnotationsValidator />
+
+        <div class="mb-3">
+            <label for="firstName" class="form-label">First name</label>
+            <InputText @bind-Value="Input.FirstName" id="firstName" class="form-control form-control-lg" />
+        </div>
+        <div class="mb-3">
+            <label for="lastName" class="form-label">Last name</label>
+            <InputText @bind-Value="Input.LastName" id="lastName" class="form-control form-control-lg" />
+        </div>
+        <div class="mb-3">
+            <label for="phone" class="form-label">Phone</label>
+            <InputText @bind-Value="Input.PhoneNumber" id="phone" type="tel" class="form-control form-control-lg" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input class="form-control form-control-lg" value="@Input.Email" disabled />
+        </div>
+
+        <p class="text-muted small">
+            Member since @Time.Format(Input.CreateDate, "D") (@Time.TimeZone.DisplayName)
+        </p>
+
+        <button type="submit" class="btn btn-primary btn-lg w-100" disabled="@Host.InProgress">Save</button>
+    </EditForm>
+}
+
+@code {
+    [CascadingParameter] private IServiceExecutionHost Host { get; set; } = default!;
+
+    private UserProfileItem? Input { get; set; }
+    private bool saved;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Host.ServiceReadAsync(
+            async () => await Me.GetAsync(),
+            result => Input = result.Profile);
+    }
+
+    private async Task SaveAsync()
+    {
+        if (Input == null) return;
+        saved = false;
+
+        await Host.ServiceSubmitAsync(
+            async () => await Me.UpdateProfileAsync(Input),
+            result =>
+            {
+                Input = result;
+                saved = true;
+                CurrentUser.Reload();
+            });
+    }
+}

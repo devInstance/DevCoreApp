@@ -1,0 +1,51 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<OverrideHtmlAssetPlaceholders>true</OverrideHtmlAssetPlaceholders>
+		<AssemblyName>DevInstance.DevCoreApp.Client.Desktop</AssemblyName>
+		<RootNamespace>DevInstance.DevCoreApp.Client.Desktop</RootNamespace>
+		<Configurations>Debug;Release;ServiceMocks</Configurations>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="DevInstance.BlazorToolkit" Version="10.5.0" />
+		<PackageReference Include="DevInstance.LogScope.NET" Version="10.1.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="10.0.12" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.12" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.12" PrivateAssets="all" />
+		<PackageReference Include="DartSassBuilder" Version="1.1.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Client.Services\Client.Services.csproj" />
+	</ItemGroup>
+
+	<!-- TypeScript: sources in Scripts/, compiled JS committed to wwwroot/scripts/ (same setup as the
+	     server project). Runs tsc only when a .ts file is newer than its .js output. -->
+	<PropertyGroup>
+		<TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
+	</PropertyGroup>
+	<ItemGroup>
+		<TypeScriptSource Include="Scripts\**\*.ts" Exclude="Scripts\**\*.d.ts" />
+		<TypeScriptInput Include="Scripts\**\*.ts" />
+		<TypeScriptInput Include="tsconfig.json" />
+	</ItemGroup>
+	<Target Name="CompileTypeScript" BeforeTargets="BeforeBuild"
+	        Inputs="@(TypeScriptInput)"
+	        Outputs="@(TypeScriptSource->'wwwroot\scripts\%(Filename).js')">
+		<Exec Command="tsc -p tsconfig.json" IgnoreExitCode="true">
+			<Output TaskParameter="ExitCode" PropertyName="TscExitCode" />
+		</Exec>
+		<Error Condition="'$(TscExitCode)' != '0'"
+		       Text="TypeScript files changed but compilation failed (exit code $(TscExitCode)). Install tsc (npm i -g typescript) and run: tsc -p tsconfig.json" />
+	</Target>
+
+	<!-- SCSS: DartSassBuilder compiles Styles/app.scss; the result is served from wwwroot. -->
+	<Target Name="CopySassOutput" AfterTargets="DartSass_Build">
+		<Copy SourceFiles="Styles\app.css" DestinationFolder="wwwroot" />
+	</Target>
+
+</Project>

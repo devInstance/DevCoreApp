@@ -11,7 +11,7 @@ DevCoreApp is a reusable starter template for custom ERP and CRM applications. I
 ## Tech Stack
 
 - .NET 10+, ASP.NET Core, Entity Framework Core, ASP.NET Identity
-- Blazor **interactive Server** (Admin UI), Blazor WebAssembly (field worker client — standalone, not yet hosted)
+- Blazor **WebAssembly** clients (`Client.Desktop` admin UI, `Client.Mobile`) over the `/api` layer — **migration in progress**, see [`docs/WasmMigrationPlan.md`](docs/WasmMigrationPlan.md). The legacy Blazor interactive-Server admin UI still runs in WebService until the Phase 4 cut-over.
 - PostgreSQL (primary), SQL Server (secondary)
 - DevInstance.BlazorToolkit — client-side Blazor utilities (`[BlazorService]`, `IApiContext<T>`, `IServiceExecutionHost`)
 - DevInstance.WebServiceToolkit — server-side utilities (`[WebService]`, `[QueryModel]`, `IModelItem`, `IModelList<T>`, `HandleWebRequestAsync()`, `IModelQuery<T,D>`)
@@ -33,6 +33,11 @@ dotnet run --project src/Server/Admin/WebService/DevCoreApp.Admin.WebService.csp
 # The SERVICEMOCKS preprocessor symbol swaps real services for [BlazorServiceMock] ones.
 dotnet run -c ServiceMocks --project src/Server/Admin/WebService/DevCoreApp.Admin.WebService.csproj
 
+# Run the WASM clients standalone against the API above (dev CORS allows these origins).
+# Desktop: http://localhost:5280, Mobile: http://localhost:5290 — ApiBaseUrl in each wwwroot/appsettings.Development.json.
+dotnet run --project src/Client/DevCoreApp.Client.Desktop/DevCoreApp.Client.Desktop.csproj
+dotnet run --project src/Client/DevCoreApp.Client.Mobile/DevCoreApp.Client.Mobile.csproj
+
 # Run all tests (xUnit v3)
 dotnet test DevInstance.DevCoreApp.slnx
 
@@ -49,14 +54,14 @@ dotnet test tests/Server/WebService/WebService.Tests.csproj --filter "FullyQuali
 - **The mocks project is excluded from `Debug` and `Release`** in `DevInstance.DevCoreApp.slnx`
   (`<Build … Project="false" />`), so a whole-solution build never compiles it. Build or run with
   `-c ServiceMocks` to type-check mock code.
-- Two test projects, both xUnit v3: `tests/Server/Database/Core/Core.Tests.csproj` (org query
-  filter, organization stamping, unit-of-work concurrency, decorators) and
-  `tests/Server/WebService/WebService.Tests.csproj` (service tests; its assembly is named
-  `DevInstance.DevCoreApp.Server.Tests`). Shared fakes (`IScopeManagerMock`, `TimerProviderMock`)
-  live in `tests/Shared/TestUtils`. The suite is small (~36 tests) — a smoke net, not a safety
+- Three test projects, all xUnit v3: `tests/Server/Database/Core/Core.Tests.csproj` (org query
+  filter, organization stamping, unit-of-work concurrency, decorators),
+  `tests/Server/WebService/WebService.Tests.csproj` (service tests and the `/api` wire-contract
+  tests; its assembly is named `DevInstance.DevCoreApp.Server.Tests`), and
+  `tests/Client/Client.Services.Tests` (query encoding, local time, JWT handler/refresh, client
+  permission policies). Shared fakes (`IScopeManagerMock`, `TimerProviderMock`)
+  live in `tests/Shared/TestUtils`. The suite is small (~75 tests) — a smoke net, not a safety
   net. Green tests are not evidence a behavior change works; build and exercise the app too.
-- `tests/Client/Client.ClientMocks` is committed but **not** referenced by the `.slnx` — dead
-  leftovers from the WASM client. Don't extend them.
 - **Database provider is selected at runtime** via `Database:Provider` in `appsettings.json` (`Postgres` — default — or `SqlServer`), with connection strings under `ConnectionStrings:PostgresConnection` / `:SqlServerConnection`. The `Database/` solution folder splits into `Core` (provider-agnostic) plus `Postgres` and `SqlServer` projects. **Each provider owns its own `Migrations/` folder** — a schema change needs a migration in both.
 - On startup the app calls `MigrateAndSeedAsync()`: it applies pending migrations and runs every
   registered `IDataSeeder` (organizations, settings, permissions, API keys). Adding seed data means
@@ -96,10 +101,13 @@ Inside each project, `Core/` holds shared template code and `App/` holds product
 DevCoreApp/
 ├── src/
 │   ├── Client/
-│   │   ├── DevCoreApp.Client/       # Blazor WASM app (standalone — NOT hosted by WebService today)
-│   │   │   ├── Core/{UI,Extensions}/
-│   │   │   └── Program.cs, UI/App.razor, _Imports.razor  # host shell, no marker
-│   │   └── Client.Services/Core/    # → DevInstance.DevCoreApp.Client.Services.Core (API clients)
+│   │   ├── DevCoreApp.Client.Desktop/  # Blazor WASM admin UI (replaces the Blazor Server UI)
+│   │   │   ├── Core/UI/{Layout,Components,Pages}/
+│   │   │   └── Program.cs, UI/App.razor, _Imports.razor, Styles/, Scripts/  # host shell
+│   │   ├── DevCoreApp.Client.Mobile/   # Blazor WASM PWA (field users)
+│   │   └── Client.Services/Core/    # → …Client.Services.Core — shared by both clients:
+│   │                                #   Api/ (IApiContext base, query encoding), Auth/ (JWT store,
+│   │                                #   refresh handler, AuthenticationStateProvider), Time/, Me/, …
 │   ├── Server/
 │   │   ├── Admin/
 │   │   │   ├── Services/            # → DevCoreApp.Admin.Services  (business logic, auth, background)
@@ -138,7 +146,7 @@ Email.* / Storage.*            ← References: Shared    (Processor = abstractio
 Admin.Services                 ← References: Database.Core + both providers, Email, Storage, Shared
 Admin.WebService               ← References: Admin.Services (+ ServicesMocks in ServiceMocks config)
 Client.Services                ← References: Shared
-Client                         ← References: Client.Services, Shared
+Client.Desktop / Client.Mobile ← References: Client.Services, Shared
 ```
 
 **Hard rules:**
@@ -165,9 +173,13 @@ touching startup). It serves four kinds of traffic, each with a different auth p
 the `ApiKey` scheme, otherwise Identity cookies. When adding an endpoint, do not hardcode a scheme
 unless you intend to bypass that selection.
 
-**Blazor render mode is interactive Server only.** WebAssembly packages are referenced but
-`src/Client/DevCoreApp.Client` is not currently hosted by WebService — it is a standalone app.
-Interactive Server is exactly why the per-operation unit of work below is mandatory.
+**The Admin UI is moving from Blazor interactive Server to WebAssembly** (`Client.Desktop`, plan in
+[`docs/WasmMigrationPlan.md`](docs/WasmMigrationPlan.md)). Until the cut-over both exist: the
+Blazor Server pages still run in WebService, and the WASM clients run standalone in development
+(`WasmClients:*:BasePath` serves them from WebService once enabled). WASM clients talk only to
+`/api` with JWT; every `DateTime` on the wire is UTC and the client converts it for display
+(`ILocalTimeService` / `<LocalTime>`). The per-operation unit of work below stays mandatory —
+concurrent API requests need it as much as a shared circuit did.
 
 Errors are shaped by `ApiExceptionHandler` (registered via `AddExceptionHandler<T>`): JSON for API
 paths, falling through to the `/Error` page for the rest.
