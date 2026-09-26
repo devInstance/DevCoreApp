@@ -25,12 +25,12 @@ public partial class NewUser
     
     private UserProfileItem Input { get; set; } = new();
 
-    [SupplyParameterFromForm(Name = "SelectedRole")]
+    
     private string SelectedRole { get; set; } = "";
 
     private List<string> AvailableRoles { get; set; } = new();
 
-    [SupplyParameterFromForm(Name = "SelectedOrganizationId")]
+    
     private string SelectedOrganizationId { get; set; } = "";
 
     /// <summary>

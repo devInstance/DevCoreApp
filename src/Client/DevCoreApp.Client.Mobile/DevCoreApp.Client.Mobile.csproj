@@ -7,6 +7,8 @@
 		<OverrideHtmlAssetPlaceholders>true</OverrideHtmlAssetPlaceholders>
 		<ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
 		<NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
+		<!-- Served under /mobile by the server (and by `dotnet run` standalone): must match <base href> in index.html. -->
+		<StaticWebAssetBasePath>mobile</StaticWebAssetBasePath>
 		<AssemblyName>DevInstance.DevCoreApp.Client.Mobile</AssemblyName>
 		<RootNamespace>DevInstance.DevCoreApp.Client.Mobile</RootNamespace>
 		<Configurations>Debug;Release;ServiceMocks</Configurations>

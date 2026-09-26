@@ -1,0 +1,73 @@
+@page "/setup"
+@model SetupModel
+@{
+    ViewData["Title"] = "Set up owner account";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h1 class="h4 mb-2 text-center">Set up owner account</h1>
+                <p class="text-muted text-center mb-4">Create the first account. It gets full administrative access.</p>
+
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+
+                <form method="post">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Input.FirstName" class="form-label"></label>
+                            <input asp-for="Input.FirstName" class="form-control" autocomplete="given-name" />
+                            <span asp-validation-for="Input.FirstName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Input.LastName" class="form-label"></label>
+                            <input asp-for="Input.LastName" class="form-control" autocomplete="family-name" />
+                            <span asp-validation-for="Input.LastName" class="text-danger small"></span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Input.MiddleName" class="form-label">Middle Name (optional)</label>
+                        <input asp-for="Input.MiddleName" class="form-control" autocomplete="additional-name" />
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Input.PhoneNumber" class="form-label">Phone Number (optional)</label>
+                        <input asp-for="Input.PhoneNumber" class="form-control" autocomplete="tel" />
+                        <span asp-validation-for="Input.PhoneNumber" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Input.Email" class="form-label"></label>
+                        <input asp-for="Input.Email" class="form-control" autocomplete="username" />
+                        <span asp-validation-for="Input.Email" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Input.Password" class="form-label"></label>
+                        <input asp-for="Input.Password" class="form-control" autocomplete="new-password" />
+                        <span asp-validation-for="Input.Password" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Input.ConfirmPassword" class="form-label"></label>
+                        <input asp-for="Input.ConfirmPassword" class="form-control" autocomplete="new-password" />
+                        <span asp-validation-for="Input.ConfirmPassword" class="text-danger small"></span>
+                    </div>
+
+                    @* Filled from the browser below; the owner's dates are shown in this zone. *@
+                    <input asp-for="Input.TimeZoneId" type="hidden" />
+
+                    <button type="submit" class="w-100 btn btn-primary">Create owner account</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            var field = document.getElementById("Input_TimeZoneId");
+            if (field && !field.value) {
+                try { field.value = Intl.DateTimeFormat().resolvedOptions().timeZone || ""; } catch (e) { }
+            }
+        })();
+    </script>
+}

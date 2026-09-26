@@ -1,5 +1,14 @@
 # Contributing to DevCoreApp WebService
 
+> **Outdated — the UI moved to WebAssembly.** This project no longer contains Blazor pages; it is
+> the `/api` host (plus the `/setup` and `/Error` Razor Pages). The page, grid and
+> `IServiceExecutionHost` sections below now apply to `src/Client/DevCoreApp.Client.Desktop`,
+> with pages calling *client* services from `Client.Services` instead of server services, and the
+> folder layout below predates the Core/App restructure. Current guides:
+> [`CLAUDE.md`](CLAUDE.md) (server, API controllers), the Desktop
+> [`CLAUDE.md`](../../../Client/DevCoreApp.Client.Desktop/CLAUDE.md) (pages, client services,
+> dates) and [`docs/WasmMigrationPlan.md`](../../../../docs/WasmMigrationPlan.md).
+
 This document outlines the coding conventions and patterns used in this project.
 
 ## Project Structure

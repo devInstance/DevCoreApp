@@ -36,6 +36,11 @@ public class AccountController : ApiControllerBase
     public Task<ActionResult<ConfirmEmailResult>> ConfirmEmailAsync([FromBody] ConfirmEmailRequest request)
         => HandleServiceAsync(() => _service.ConfirmEmailAsync(request));
 
+    /// <summary>True until the owner account exists; the client then links to the <c>/setup</c> page.</summary>
+    [HttpGet("setup-required")]
+    public Task<ActionResult<bool>> IsSetupRequiredAsync()
+        => HandleServiceAsync(() => _service.IsSetupRequiredAsync());
+
     [HttpPost("set-password")]
     public Task<ActionResult<bool>> SetPasswordAsync([FromBody] InvitationPasswordRequest request)
         => HandleServiceAsync(() => _service.SetInvitationPasswordAsync(request));

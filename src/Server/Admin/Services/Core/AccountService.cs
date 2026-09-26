@@ -2,7 +2,6 @@ using System.Text;
 using System.Text.Encodings.Web;
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.BlazorToolkit.Tools;
-using DevInstance.BlazorToolkit.Utils;
 using DevInstance.DevCoreApp.Server.Database.Core;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
@@ -13,292 +12,142 @@ using DevInstance.DevCoreApp.Shared.Model.Core.Common;
 using DevInstance.DevCoreApp.Shared.Utils.Core;
 using DevInstance.LogScope;
 using DevInstance.WebServiceToolkit.Exceptions;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 
 namespace DevInstance.DevCoreApp.Server.Admin.Services.Core;
 
+/// <summary>
+/// Anonymous account flows (<c>api/account</c> and the owner-setup page). Nothing here signs a user
+/// in: sign-in is JWT (<see cref="IJwtAuthService"/>). Failures are thrown as WebServiceToolkit
+/// exceptions (400), so a returned result succeeded. Email links are built from
+/// <see cref="IAccountLinkBuilder"/> and point at the client routes in <see cref="AccountRoutes"/>.
+/// </summary>
 [BlazorService]
 [BlazorServiceMock]
 public class AccountService : BaseService, IAccountService
 {
-    private readonly SignInManager<ApplicationUser> signInManager;
     private readonly UserManager<ApplicationUser> userManager;
     private readonly IUserStore<ApplicationUser> userStore;
     private readonly IEmailSender<ApplicationUser> emailSender;
-    private readonly IHttpContextAccessor httpContextAccessor;
     private readonly IAccountLinkBuilder linkBuilder;
     private readonly IScopeLog log;
 
     public AccountService(
         IScopeManager logManager,
         ITimeProvider timeProvider,
-                              IQueryRepositoryFactory repositoryFactory,
+        IQueryRepositoryFactory repositoryFactory,
         IAuthorizationContext authorizationContext,
-        SignInManager<ApplicationUser> signInManager,
         UserManager<ApplicationUser> userManager,
         IUserStore<ApplicationUser> userStore,
         IEmailSender<ApplicationUser> emailSender,
-        IHttpContextAccessor httpContextAccessor,
         IAccountLinkBuilder linkBuilder)
         : base(logManager, timeProvider, repositoryFactory, authorizationContext)
     {
         log = logManager.CreateLogger(this);
-        this.signInManager = signInManager;
         this.userManager = userManager;
         this.userStore = userStore;
         this.emailSender = emailSender;
-        this.httpContextAccessor = httpContextAccessor;
         this.linkBuilder = linkBuilder;
     }
 
-    public async Task<LoginResult> LoginAsync(LoginParameters input)
-    {
-        using var l = log.TraceScope();
+    // ── Self-registration and emailed links ─────────────────────────────────────────
 
-        var httpContext = httpContextAccessor.HttpContext;
-        var ipAddress = httpContext?.Connection.RemoteIpAddress?.ToString();
-        var userAgent = httpContext?.Request.Headers.UserAgent.FirstOrDefault();
-
-        var user = await userManager.FindByEmailAsync(input.Email);
-
-        var result = await signInManager.PasswordSignInAsync(
-            input.Email,
-            input.Password,
-            input.RememberMe,
-            lockoutOnFailure: false);
-
-        if (result.Succeeded)
-        {
-            l.I("User logged in.");
-
-            if (user != null)
-            {
-                user.LastLoginAt = DateTime.UtcNow;
-                await userManager.UpdateAsync(user);
-                await RecordLoginAttemptAsync(user.Id, ipAddress, userAgent, true, null);
-            }
-
-            return LoginResult.Success();
-        }
-
-        if (result.IsLockedOut)
-        {
-            l.W("User account locked out.");
-            if (user != null)
-                await RecordLoginAttemptAsync(user.Id, ipAddress, userAgent, false, "Account locked out");
-            return LoginResult.LockedOut();
-        }
-
-        if (user != null)
-            await RecordLoginAttemptAsync(user.Id, ipAddress, userAgent, false, "Invalid password");
-
-        return LoginResult.InvalidLogin();
-    }
-
-    public Task<RegisterResult> RegisterAsync(RegisterParameters input, string confirmationLinkBase)
-    {
-        return RegisterCoreAsync(input, confirmationLinkBase, signInWhenConfirmationNotRequired: true);
-    }
-
-    private async Task<RegisterResult> RegisterCoreAsync(RegisterParameters input, string confirmationLinkBase, bool signInWhenConfirmationNotRequired)
+    public async Task<ServiceActionResult<RegisterResult>> RegisterAsync(RegisterParameters input)
     {
         using var l = log.TraceScope();
 
         var user = Activator.CreateInstance<ApplicationUser>();
-
         await userStore.SetUserNameAsync(user, input.Email, CancellationToken.None);
-        var emailStore = (IUserEmailStore<ApplicationUser>)userStore;
-        await emailStore.SetEmailAsync(user, input.Email, CancellationToken.None);
+        await ((IUserEmailStore<ApplicationUser>)userStore).SetEmailAsync(user, input.Email, CancellationToken.None);
+
         var result = await userManager.CreateAsync(user, input.Password);
-
-        if (!result.Succeeded)
-        {
-            return RegisterResult.Failed(result.Errors.Select(e => e.Description));
-        }
-
+        ThrowIfFailed(result);
         l.I("User created a new account with password.");
 
         var userId = await userManager.GetUserIdAsync(user);
-        var code = await userManager.GenerateEmailConfirmationTokenAsync(user);
-        code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-        var callbackUrl = $"{confirmationLinkBase}?userId={userId}&code={code}";
-
+        var code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(await userManager.GenerateEmailConfirmationTokenAsync(user)));
+        var callbackUrl = $"{BuildLink(AccountRoutes.ConfirmEmail)}?userId={userId}&code={code}";
         await emailSender.SendConfirmationLinkAsync(user, input.Email, HtmlEncoder.Default.Encode(callbackUrl));
 
-        var requiresConfirmation = userManager.Options.SignIn.RequireConfirmedAccount;
-
-        if (!requiresConfirmation && signInWhenConfirmationNotRequired)
-        {
-            await signInManager.SignInAsync(user, isPersistent: false);
-        }
-
-        return RegisterResult.Success(requiresConfirmation);
+        // No sign-in here even when confirmation is not required: the client signs in through
+        // api/auth once registered.
+        return ServiceActionResult<RegisterResult>.OK(
+            RegisterResult.Success(userManager.Options.SignIn.RequireConfirmedAccount));
     }
 
-    public async Task SendPasswordResetLinkAsync(ForgotPasswordParameters input, string resetLinkBase)
+    public async Task<ServiceActionResult<bool>> SendPasswordResetLinkAsync(ForgotPasswordParameters input)
     {
         using var l = log.TraceScope();
 
         var user = await userManager.FindByEmailAsync(input.Email);
         if (user is not null && await userManager.IsEmailConfirmedAsync(user))
         {
-            var code = await userManager.GeneratePasswordResetTokenAsync(user);
-            code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-            var callbackUrl = $"{resetLinkBase}?code={code}";
-
+            var code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(await userManager.GeneratePasswordResetTokenAsync(user)));
+            var callbackUrl = $"{BuildLink(AccountRoutes.ResetPassword)}?code={code}";
             await emailSender.SendPasswordResetLinkAsync(user, input.Email, HtmlEncoder.Default.Encode(callbackUrl));
             l.I($"Password reset link sent to {input.Email}");
         }
 
-        // Always complete successfully to prevent user enumeration
+        // Always succeed, so the endpoint cannot be used to find out which emails have accounts.
+        return ServiceActionResult<bool>.OK(true);
     }
 
-    public string DecodeResetCode(string encodedCode)
-    {
-        return Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(encodedCode));
-    }
-
-    public async Task<ResetPasswordResult> ResetPasswordAsync(ResetPasswordParameters input)
+    public async Task<ServiceActionResult<bool>> ResetPasswordAsync(ResetPasswordParameters input)
     {
         using var l = log.TraceScope();
+
+        var token = TryDecodeCode(input.Code) ?? throw new BadRequestException("Invalid password reset link.");
 
         var user = await userManager.FindByEmailAsync(input.Email);
         if (user is null)
         {
-            // Don't reveal that the user does not exist - show success anyway
-            return ResetPasswordResult.Success();
+            // Don't reveal that the user does not exist.
+            return ServiceActionResult<bool>.OK(true);
         }
 
-        var result = await userManager.ResetPasswordAsync(user, input.Code, input.Password);
-        if (result.Succeeded)
-        {
-            l.I($"Password reset for user {input.Email}");
-            return ResetPasswordResult.Success();
-        }
-
-        return ResetPasswordResult.Failed(result.Errors.Select(e => e.Description));
+        ThrowIfFailed(await userManager.ResetPasswordAsync(user, token, input.Password));
+        l.I($"Password reset for user {input.Email}");
+        return ServiceActionResult<bool>.OK(true);
     }
 
-    public async Task<ConfirmEmailResult> ConfirmEmailAsync(string? userId, string? code)
+    public async Task<ServiceActionResult<ConfirmEmailResult>> ConfirmEmailAsync(ConfirmEmailRequest request)
     {
         using var l = log.TraceScope();
 
-        if (userId is null || code is null)
-        {
-            return ConfirmEmailResult.InvalidLink();
-        }
+        // One message for unknown user / malformed or expired token, so the endpoint does not
+        // reveal which user ids exist.
+        const string invalidLink = "Invalid or expired confirmation link.";
 
-        var user = await userManager.FindByIdAsync(userId);
-        if (user is null)
-        {
-            return ConfirmEmailResult.UserNotFound();
-        }
+        var token = TryDecodeCode(request.Code) ?? throw new BadRequestException("Invalid confirmation link.");
+        var user = await userManager.FindByIdAsync(request.UserId) ?? throw new BadRequestException(invalidLink);
 
-        // Check if email is already confirmed
         if (await userManager.IsEmailConfirmedAsync(user))
         {
-            return ConfirmEmailResult.AlreadyConfirmedResult(
-                userId, needsPassword: !await userManager.HasPasswordAsync(user));
+            return ServiceActionResult<ConfirmEmailResult>.OK(
+                ConfirmEmailResult.AlreadyConfirmedResult(request.UserId, needsPassword: !await userManager.HasPasswordAsync(user)));
         }
 
-        // Confirm the email
-        var decodedCode = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(code));
-        var result = await userManager.ConfirmEmailAsync(user, decodedCode);
-
-        if (!result.Succeeded)
+        if (!(await userManager.ConfirmEmailAsync(user, token)).Succeeded)
         {
-            l.E($"Email confirmation failed for user {userId}");
-            return ConfirmEmailResult.Failed();
+            l.E($"Email confirmation failed for user {request.UserId}");
+            throw new BadRequestException(invalidLink);
         }
 
-        l.I($"Email confirmed for user {userId}");
+        l.I($"Email confirmed for user {request.UserId}");
 
-        // Check if user has a password set (users created by admin may not have set their own password yet)
+        // Users created by an administrator have no password yet; they set it next.
         var needsPassword = !await userManager.HasPasswordAsync(user);
-
-        // A user who already had a password becomes usable at this moment. One who does not will be
-        // activated by SetPasswordAsync a step later.
         if (!needsPassword)
         {
             await ActivateProfileIfUsableAsync(user);
         }
 
-        return ConfirmEmailResult.Success(userId, needsPassword);
+        return ServiceActionResult<ConfirmEmailResult>.OK(ConfirmEmailResult.Success(request.UserId, needsPassword));
     }
 
-    public async Task<SetPasswordResult> SetPasswordAsync(string userId, SetPasswordParameters input)
-    {
-        using var l = log.TraceScope();
-
-        var user = await userManager.FindByIdAsync(userId);
-        if (user is null)
-        {
-            return SetPasswordResult.Failed(new[] { "User not found." });
-        }
-
-        var result = await userManager.AddPasswordAsync(user, input.Password);
-
-        if (result.Succeeded)
-        {
-            l.I($"Password set for user {userId}");
-            await ActivateProfileIfUsableAsync(user);
-            return SetPasswordResult.Success();
-        }
-
-        return SetPasswordResult.Failed(result.Errors.Select(e => e.Description));
-    }
-
-    // ── IAccountService (api/account) ──────────────────────────────────────────────
-    // Thin wrappers over the methods above that turn failed results into 400s and build email
-    // links from IAccountLinkBuilder. The Blazor Server account pages keep calling the methods
-    // above until they are removed (WASM migration Phase 4).
-
-    async Task<ServiceActionResult<RegisterResult>> IAccountService.RegisterAsync(RegisterParameters input)
-    {
-        // No cookie sign-in: API clients sign in through api/auth once registered.
-        var result = await RegisterCoreAsync(input, BuildLink(AccountRoutes.ConfirmEmail), signInWhenConfirmationNotRequired: false);
-        ThrowIfFailed(result.Succeeded, result.ErrorMessage);
-        return ServiceActionResult<RegisterResult>.OK(result);
-    }
-
-    async Task<ServiceActionResult<bool>> IAccountService.SendPasswordResetLinkAsync(ForgotPasswordParameters input)
-    {
-        await SendPasswordResetLinkAsync(input, BuildLink(AccountRoutes.ResetPassword));
-        return ServiceActionResult<bool>.OK(true);
-    }
-
-    async Task<ServiceActionResult<bool>> IAccountService.ResetPasswordAsync(ResetPasswordParameters input)
-    {
-        var decoded = new ResetPasswordParameters
-        {
-            Email = input.Email,
-            Password = input.Password,
-            ConfirmPassword = input.ConfirmPassword,
-            Code = TryDecodeCode(input.Code) ?? throw new BadRequestException("Invalid password reset link.")
-        };
-
-        var result = await ResetPasswordAsync(decoded);
-        ThrowIfFailed(result.Succeeded, result.ErrorMessage);
-        return ServiceActionResult<bool>.OK(true);
-    }
-
-    async Task<ServiceActionResult<ConfirmEmailResult>> IAccountService.ConfirmEmailAsync(ConfirmEmailRequest request)
-    {
-        if (TryDecodeCode(request.Code) == null)
-            throw new BadRequestException("Invalid confirmation link.");
-
-        var result = await ConfirmEmailAsync(request.UserId, request.Code);
-
-        // One message for unknown user / bad token / failure, so the endpoint does not reveal
-        // which user ids exist.
-        ThrowIfFailed(result.Succeeded, "Invalid or expired confirmation link.");
-        return ServiceActionResult<ConfirmEmailResult>.OK(result);
-    }
-
-    async Task<ServiceActionResult<bool>> IAccountService.SetInvitationPasswordAsync(InvitationPasswordRequest request)
+    public async Task<ServiceActionResult<bool>> SetInvitationPasswordAsync(InvitationPasswordRequest request)
     {
         using var l = log.TraceScope();
 
@@ -316,30 +165,63 @@ public class AccountService : BaseService, IAccountService
             throw new BadRequestException("Invalid or expired invitation link.");
         }
 
-        var result = await SetPasswordAsync(request.UserId, request);
-        ThrowIfFailed(result.Succeeded, result.ErrorMessage);
+        ThrowIfFailed(await userManager.AddPasswordAsync(user, request.Password));
+        l.I($"Password set for user {request.UserId}");
+        await ActivateProfileIfUsableAsync(user);
         return ServiceActionResult<bool>.OK(true);
     }
 
-    private string BuildLink(string route)
+    // ── First-run owner setup ────────────────────────────────────────────────────────
+
+    public async Task<ServiceActionResult<bool>> IsSetupRequiredAsync() =>
+        ServiceActionResult<bool>.OK(!await userManager.Users.AnyAsync());
+
+    public async Task<ServiceActionResult<bool>> SetupOwnerAsync(SetupOwnerParameters input)
     {
-        var origin = linkBuilder.TryBuildBase()
-            ?? throw new InvalidOperationException($"Cannot build account links: set {AccountLinkBuilder.BaseUrlKey}.");
-        return origin + route;
+        using var l = log.TraceScope();
+
+        // The only gate on this anonymous flow: it works exactly once, before any user exists.
+        if (await userManager.Users.AnyAsync())
+        {
+            throw new ForbiddenException("Setup has already been completed.");
+        }
+
+        var user = Activator.CreateInstance<ApplicationUser>();
+        await userStore.SetUserNameAsync(user, input.Email, CancellationToken.None);
+        await ((IUserEmailStore<ApplicationUser>)userStore).SetEmailAsync(user, input.Email, CancellationToken.None);
+        ThrowIfFailed(await userManager.CreateAsync(user, input.Password));
+        l.I($"Owner account created with email {input.Email}.");
+
+        var roleResult = await userManager.AddToRoleAsync(user, ApplicationRoles.Owner);
+        if (!roleResult.Succeeded)
+        {
+            l.E($"Failed to assign Owner role: {string.Join(", ", roleResult.Errors.Select(e => e.Description))}");
+        }
+
+        await using var repo = RepositoryFactory.Create();
+        var profileQuery = repo.GetUserProfilesQuery(null!);
+        var userProfile = profileQuery.CreateNew();
+        userProfile.Email = input.Email;
+        userProfile.FirstName = input.FirstName;
+        userProfile.MiddleName = input.MiddleName ?? "";
+        userProfile.LastName = input.LastName;
+        userProfile.PhoneNumber = input.PhoneNumber ?? "";
+        userProfile.ApplicationUserId = user.Id;
+        userProfile.Status = UserStatus.LIVE;
+        userProfile.TimeZoneId = input.TimeZoneId;
+        await profileQuery.AddAsync(userProfile);
+        l.I($"UserProfile created for owner with email {input.Email}.");
+
+        await AssignRootOrganizationAsync(repo, user);
+
+        // The owner's address is trusted: they are the one installing the application.
+        await userManager.ConfirmEmailAsync(user, await userManager.GenerateEmailConfirmationTokenAsync(user));
+
+        // No sign-in: the owner logs in through the client like everyone else.
+        return ServiceActionResult<bool>.OK(true);
     }
 
-    private static string? TryDecodeCode(string? encoded)
-    {
-        if (string.IsNullOrEmpty(encoded)) return null;
-        try { return Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(encoded)); }
-        catch (FormatException) { return null; }
-    }
-
-    private static void ThrowIfFailed(bool succeeded, string? message)
-    {
-        if (!succeeded)
-            throw new BadRequestException(string.IsNullOrEmpty(message) ? "The request could not be completed." : message);
-    }
+    // ── Helpers ──────────────────────────────────────────────────────────────────────
 
     /// <summary>
     /// Moves the profile to <see cref="UserStatus.LIVE"/> once the account can actually be signed
@@ -372,71 +254,6 @@ public class AccountService : BaseService, IAccountService
         await query.UpdateAsync(profile);
 
         l.I($"UserProfile {profile.PublicId} advanced to LIVE.");
-    }
-
-    public async Task<bool> HasUsersAsync()
-    {
-        return await userManager.Users.AnyAsync();
-    }
-
-    public async Task<SetupOwnerResult> SetupOwnerAsync(SetupOwnerParameters input)
-    {
-        using var l = log.TraceScope();
-
-        // Security check: don't allow setup if users already exist
-        if (await userManager.Users.AnyAsync())
-        {
-            return SetupOwnerResult.AlreadySetup();
-        }
-
-        // Create ApplicationUser
-        var user = Activator.CreateInstance<ApplicationUser>();
-
-        await userStore.SetUserNameAsync(user, input.Email, CancellationToken.None);
-        var emailStore = (IUserEmailStore<ApplicationUser>)userStore;
-        await emailStore.SetEmailAsync(user, input.Email, CancellationToken.None);
-        var result = await userManager.CreateAsync(user, input.Password);
-
-        if (!result.Succeeded)
-        {
-            return SetupOwnerResult.Failed(result.Errors.Select(e => e.Description));
-        }
-
-        l.I($"Owner account created with email {input.Email}.");
-
-        // Assign Owner role
-        var roleResult = await userManager.AddToRoleAsync(user, ApplicationRoles.Owner);
-        if (!roleResult.Succeeded)
-        {
-            l.E($"Failed to assign Owner role: {string.Join(", ", roleResult.Errors.Select(e => e.Description))}");
-        }
-
-        // Create UserProfile
-        await using var repo = RepositoryFactory.Create();
-        var profileQuery = repo.GetUserProfilesQuery(null!);
-        var userProfile = profileQuery.CreateNew();
-        userProfile.Email = input.Email;
-        userProfile.FirstName = input.FirstName;
-        userProfile.MiddleName = input.MiddleName ?? "";
-        userProfile.LastName = input.LastName;
-        userProfile.PhoneNumber = input.PhoneNumber ?? "";
-        userProfile.ApplicationUserId = user.Id;
-        userProfile.Status = UserStatus.LIVE;
-        userProfile.TimeZoneId = input.TimeZoneId;
-        await profileQuery.AddAsync(userProfile);
-
-        l.I($"UserProfile created for owner with email {input.Email}.");
-
-        await AssignRootOrganizationAsync(repo, user);
-
-        // Automatically confirm email for owner account during setup
-        var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
-        await userManager.ConfirmEmailAsync(user, token);
-
-        // Sign in the owner
-        await signInManager.SignInAsync(user, isPersistent: false);
-
-        return SetupOwnerResult.Success();
     }
 
     /// <summary>
@@ -485,16 +302,25 @@ public class AccountService : BaseService, IAccountService
         l.I($"Owner assigned to root organization {rootOrganizationId}.");
     }
 
-    private async Task RecordLoginAttemptAsync(Guid userId, string? ipAddress, string? userAgent, bool success, string? failureReason)
+    private string BuildLink(string route)
     {
-        await using var repo = RepositoryFactory.Create();
-        var query = repo.GetUserLoginHistoryQuery(null!);
-        var entry = query.CreateNew();
-        entry.UserId = userId;
-        entry.IpAddress = ipAddress;
-        entry.UserAgent = userAgent;
-        entry.Success = success;
-        entry.FailureReason = failureReason;
-        await query.AddAsync(entry);
+        var origin = linkBuilder.TryBuildBase()
+            ?? throw new InvalidOperationException($"Cannot build account links: set {AccountLinkBuilder.BaseUrlKey}.");
+        return origin + route;
+    }
+
+    private static string? TryDecodeCode(string? encoded)
+    {
+        if (string.IsNullOrEmpty(encoded)) return null;
+        try { return Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(encoded)); }
+        catch (FormatException) { return null; }
+    }
+
+    private static void ThrowIfFailed(IdentityResult result)
+    {
+        if (!result.Succeeded)
+        {
+            throw new BadRequestException(string.Join(" ", result.Errors.Select(e => e.Description)));
+        }
     }
 }

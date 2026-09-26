@@ -41,6 +41,10 @@ public class AccountService : IAccountService
     public Task<ServiceActionResult<ConfirmEmailResult>> ConfirmEmailAsync(ConfirmEmailRequest request) =>
         PostAsync<ConfirmEmailResult, ConfirmEmailRequest>("confirm-email", request);
 
+    public Task<ServiceActionResult<bool>> IsSetupRequiredAsync() =>
+        BlazorToolkit.Services.Wasm.ServiceUtils.HandleWebApiCallAsync<bool>(async _ =>
+            await apiFactory.Create<bool>(ApiClient.AuthHttpClientName, "api/account/setup-required").Get().ExecuteAsync(), log);
+
     public Task<ServiceActionResult<bool>> SetInvitationPasswordAsync(InvitationPasswordRequest request) =>
         PostAsync<bool, InvitationPasswordRequest>("set-password", request);
 }

@@ -24,6 +24,9 @@ public class AccountServiceMock : IAccountService
     public Task<ServiceActionResult<ConfirmEmailResult>> ConfirmEmailAsync(ConfirmEmailRequest request) =>
         Task.FromResult(ServiceActionResult<ConfirmEmailResult>.OK(ConfirmEmailResult.Success(request.UserId, needsPassword: true)));
 
+    public Task<ServiceActionResult<bool>> IsSetupRequiredAsync() =>
+        Task.FromResult(ServiceActionResult<bool>.OK(false));
+
     public Task<ServiceActionResult<bool>> SetInvitationPasswordAsync(InvitationPasswordRequest request) =>
         Task.FromResult(ServiceActionResult<bool>.OK(true));
 }

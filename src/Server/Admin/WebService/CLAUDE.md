@@ -1,21 +1,16 @@
 # CLAUDE.md — Project Conventions
 
-## Architecture: Pages → Services → Repository
+## Architecture: API host → Services → Repository
 
-Pages must **never** access the database directly. All operations go through services via `IServiceExecutionHost`.
+This project is the **server**: the `/api` controllers, the SignalR hub, health checks, background
+jobs, and the host for the two WASM clients (Desktop at `/`, Mobile at `/mobile`, via project
+references — see `Core/Hosting/WasmClientHosting.cs`). It renders exactly two pages itself, as Razor
+Pages under `Core/Pages`: the first-run owner `/setup` and `/Error`. All UI lives in
+`src/Client/*` — see [`../../../Client/DevCoreApp.Client.Desktop/CLAUDE.md`](../../../Client/DevCoreApp.Client.Desktop/CLAUDE.md).
 
 ```
-Page (Blazor) → Host.ServiceReadAsync / Host.ServiceSubmitAsync → Service → Repository
+WASM client → /api controller (ApiControllerBase) → Service → Repository
 ```
-
-### Page Pattern
-- Inject the service **via interface**: `[Inject] private IUserProfileService UserService { get; set; } = default!;`
-- Receive the host as cascading parameter: `[CascadingParameter] private IServiceExecutionHost Host { get; set; } = default!;`
-- Use `Host.ServiceReadAsync(async () => await Service.Method(), result => Property = result)` for reads
-- Use `Host.ServiceSubmitAsync(async () => await Service.Method())` for writes
-- Do **not** manage `IsSubmitting` / loading state manually — BlazorToolkit manages `Host.InProgress`
-- Use `Host.InProgress`, `Host.IsError`, `Host.ErrorMessage` for UI state
-- Do **not** inject `ApplicationDbContext`, `IUserStore`, `ITimeProvider`, or `IBackgroundWorker` into pages
 
 ### Service Pattern
 - Define an interface (`I{Entity}Service`) for each service
@@ -24,8 +19,9 @@ Page (Blazor) → Host.ServiceReadAsync / Host.ServiceSubmitAsync → Service �
 - Return `ServiceActionResult<T>` (use `ServiceActionResult<T>.OK(data)`)
 - Open **one unit of work per public method** — `await using var repo = RepositoryFactory.Create();`
   — then access data via `repo.GetXxxQuery(AuthorizationContext.CurrentProfile)`. There is no
-  shared scoped `Repository` property on `BaseService` any more; it was removed because concurrent
-  Blazor components on one circuit collided on the shared context. Private helpers that touch data
+  shared scoped `Repository` property on `BaseService` any more (it was removed when concurrent
+  Blazor Server components collided on a shared context; concurrent API requests need the same
+  isolation). Private helpers that touch data
   take an `IQueryRepository repo` parameter instead of creating their own.
   See [`../../Database/UnitOfWork.md`](../../Database/UnitOfWork.md).
 - Create new records via `query.CreateNew()` + `entity.ToRecord(dto)` + `query.AddAsync(record)`
@@ -42,10 +38,10 @@ Page (Blazor) → Host.ServiceReadAsync / Host.ServiceSubmitAsync → Service �
 ### ID Generation
 - Use `IdGenerator.New()` from `DevInstance.WebServiceToolkit.Common.Tools` for generating unique public IDs and temporary values (e.g., temp passwords)
 
-### DTO / Form Model Pattern
-- DTOs (`{Entity}Item`) carry validation attributes (`[Required]`, `[EmailAddress]`, `[Phone]`, `[Display]`) directly — no separate `InputModel` classes in pages
-- Pages bind forms directly to the DTO: `[SupplyParameterFromForm] private UserProfileItem Input { get; set; } = new();`
-- Fields not part of the DTO (e.g., role selection during creation) live as separate page properties
+### DTOs
+- DTOs (`{Entity}Item`, request types) carry validation attributes (`[Required]`, `[EmailAddress]`,
+  …) directly. `[ApiController]` enforces them and answers a `WebServiceError` 400 naming the field;
+  the WASM forms use the same attributes client-side.
 
 ### Naming Conventions
 - **DTO / View Model:** `{Entity}Item` (e.g., `UserProfileItem`)
@@ -80,9 +76,6 @@ Queue emails via `IBackgroundWorker.Submit()` with a `BackgroundRequestItem` of 
 - Every `DateTime` on the wire is UTC (`UtcDateTimeJsonConverter`); clients convert for display.
 - Plan and rationale: [`docs/WasmMigrationPlan.md`](../../../../docs/WasmMigrationPlan.md).
 
-### HDataGrid Component
-Use `HDataGrid<TItem>` for all tabular data pages. Do not write inline `<table>` markup. Full documentation: [`Core/UI/Components/HDataGrid.md`](Core/UI/Components/HDataGrid.md).
-
 ### Import/Export Engine
 Generic CSV/Excel import and export for any entity type via handler pattern. Full documentation: [`../../Services/Core/ImportExport/ImportExport.md`](../../Services/Core/ImportExport/ImportExport.md).
 
@@ -91,12 +84,11 @@ Defined in `ApplicationRoles`: Owner, Admin, Manager, Employee, Client. Owner is
 
 ## Service Mocks
 
-Service mocks allow running the application without a real database or external dependencies. They are used for UI development and testing.
-
-### Why Mocks?
-- **UI development** — Iterate on pages without needing a database, Identity, or email infrastructure
-- **Predictable data** — Mocks generate consistent fake data via the [Bogus](https://github.com/bchavez/Bogus) library
-- **Isolation** — Test UI behavior independently from backend logic
+Server mocks let the **API** run without a real database or external dependencies: the controllers
+return fake data generated with [Bogus](https://github.com/bchavez/Bogus). For UI work with no
+server at all, use the **client** mocks instead (`mocks/Client/Client.Services.Mocks`, Desktop
+`-c ServiceMocks`) — same data generators, retargeted to the client service interfaces. A new
+service normally needs both.
 
 ### Build Configuration
 The solution has a `ServiceMocks` build configuration. Use it to run with mock services:

@@ -22,4 +22,7 @@ public interface IAccountService
 
     /// <summary>An invited user's first password; the link's code proves they received the email.</summary>
     Task<ServiceActionResult<bool>> SetInvitationPasswordAsync(InvitationPasswordRequest request);
+
+    /// <summary>True until the owner account exists (then the server's <c>/setup</c> page is closed).</summary>
+    Task<ServiceActionResult<bool>> IsSetupRequiredAsync();
 }

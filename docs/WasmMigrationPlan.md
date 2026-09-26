@@ -392,15 +392,48 @@ Open for Phase 2:
    - write flows (create/edit/delete) were exercised only through the API contract, not clicked
      through in the browser.
 
-**Phase 4 — Cut over**
-1. Add the `Pages/Setup.cshtml` Razor Page; remove `Core/UI/**` Blazor Server pages, `UI/App.razor`,
-   `UI/Routes.razor`, `AddInteractiveServerComponents`, `MapRazorComponents`,
-   `IdentityRevalidatingAuthenticationStateProvider`, the Identity razor endpoints, and
-   `reconnectModal`.
-2. Enable client hosting and point email links (confirm, reset, invite) at Desktop routes.
-3. The Blazor-Server "per-operation unit of work" rationale stays valid (controllers are
-   per-request, but background/concurrent API calls benefit too). Keep `RepositoryFactory`
-   and update the doc wording.
+**Phase 4 — Cut over** — ✅ done
+1. ✅ **Blazor Server is removed.** Gone from WebService:
+   - `Core/UI/**`, `UI/App.razor` and `Routes.razor`, `_Imports.razor`;
+   - the Identity Razor components and endpoints (`IdentityRedirectManager`, the revalidating
+     auth-state provider, `MapAdditionalIdentityEndpoints`, the no-op email sender);
+   - the SCSS/TS pipeline and static assets, which now live in Desktop;
+   - the Blazor Components packages, except `WebAssembly.Server`.
+2. ✅ **Owner setup:** `Core/Pages/Setup.cshtml` (Razor Pages, `RootDirectory = /Core/Pages`) at `/setup`:
+   - anonymous, and 404 once any user exists (the service re-checks on submit, returning 403);
+   - antiforgery, with the time zone taken from the browser;
+   - no sign-in: it redirects to the client login.
+   The Desktop login shows a "set up the owner account" link while `api/account/setup-required` is
+   true. `/Error` is a Razor Page too.
+3. ✅ `AccountService` now implements only `IAccountService` (the API flows plus `IsSetupRequiredAsync` /
+   `SetupOwnerAsync`). All cookie sign-in code is gone, as are 6 DTOs only the old pages used.
+   The Smart scheme falls back to **JWT** instead of the Identity cookie, so anonymous requests
+   get a 401, never a login redirect.
+4. ✅ **Hosting (decision revisited: project references, not a publish script).** WebService
+   references both clients, which makes them static web assets on build, run and publish, and one
+   F5 runs everything; this fixes the Visual Studio launch issue.
+   - Desktop is at `/`; Mobile is at `/mobile` (`StaticWebAssetBasePath`, `<base href="/mobile/">`).
+   - They are served by `MapStaticAssets()` plus `MapWasmClients()` (index.html fallbacks, with
+     `/api`, `/hubs` and `/health` excluded).
+   - ⚠ `UseBlazorFrameworkFiles` must **not** be used with `MapStaticAssets`. It branches the
+     pipeline for `/_framework` and those requests end in a 500 ("reached the end of the pipeline
+     without executing the endpoint").
+   - Hosted clients call their own origin (`ApiBaseUrl` empty). Standalone client dev uses the
+     `Standalone` launch environment and `appsettings.Standalone.json`.
+5. ✅ Verified with the server alone:
+   - `/` and deep links serve Desktop; `/mobile/…` serves Mobile; the runtimes are served;
+   - `/setup` returns 404 because users exist; `/Error` renders;
+   - unknown `/api`, `/hubs` and `/health` URLs return 404;
+   - sign-in on Desktop → Users worked same-origin (no preflights; all calls 200);
+   - Mobile shares the session;
+   - the server logged no errors.
+   The setup flow was tested end to end on a throwaway database (since dropped):
+   - `/setup` rendered and antiforgery was enforced;
+   - a weak password was rejected;
+   - the owner was created and the page redirected to the login;
+   - `/setup` then returned 404;
+   - the new owner signed in with the Owner role, all permissions, the browser time zone and the
+     root organization.
 
 **Phase 5 — Docs & fan-out**
 - Update the root `CLAUDE.md`, `src/Server/Admin/WebService/CLAUDE.md`, and add `docs/Api.md` (wire

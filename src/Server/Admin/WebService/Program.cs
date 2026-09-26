@@ -20,7 +20,6 @@ using DevInstance.DevCoreApp.Server.Admin.WebService.Core.Controllers;
 using DevInstance.DevCoreApp.Server.Admin.WebService.Core.Health;
 using DevInstance.DevCoreApp.Server.Admin.WebService.Core.Hosting;
 using DevInstance.DevCoreApp.Server.Admin.WebService.Core.Middleware;
-using DevInstance.DevCoreApp.Server.Admin.WebService.UI;
 using DevInstance.DevCoreApp.Server.Database.Core;
 using DevInstance.DevCoreApp.Server.Database.Core.Models;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
@@ -32,10 +31,8 @@ using DevInstance.DevCoreApp.Shared.Model.Core.Authentication;
 using DevInstance.DevCoreApp.Shared.Utils.Core;
 using DevInstance.LogScope.Extensions.SerilogLogger;
 using DevInstance.LogScope.Formatters;
-using DevInstance.DevCoreApp.Server.Admin.WebService.Core.Identity;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -87,20 +84,11 @@ public class Program
 #endif
 
 
-        // Add services to the container.
-#if DEBUG || SERVICEMOCKS
-        builder.Services.AddRazorComponents(options => options.DetailedErrors = builder.Environment.IsDevelopment())
-                .AddInteractiveServerComponents();
-#else
-        builder.Services.AddRazorComponents()
-                .AddInteractiveServerComponents();
-#endif
+        // The UI is the WASM clients; the server renders only the first-run /setup page and /Error.
+        builder.Services.AddRazorPages(options => options.RootDirectory = "/Core/Pages");
 
-        builder.Services.AddCascadingAuthenticationState();
-        builder.Services.AddScoped<IdentityRedirectManager>();
         // One builder for every emailed account link (invitation, password reset) — see AccountRoutes.
         builder.Services.AddScoped<IAccountLinkBuilder, AccountLinkBuilder>();
-        builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
 
         builder.Services.Configure<JwtSettings>(
             builder.Configuration.GetSection(JwtSettings.SectionName));
@@ -132,7 +120,10 @@ public class Program
 
                     if (context.Request.Headers.ContainsKey("X-Api-Key"))
                         return "ApiKey";
-                    return IdentityConstants.ApplicationScheme;
+
+                    // No cookie sign-in any more (the clients use JWT), so an anonymous request is
+                    // challenged as a bearer request: 401, never a redirect to a login page.
+                    return JwtBearerDefaults.AuthenticationScheme;
                 };
             });
 
@@ -206,12 +197,6 @@ public class Program
         builder.Services.AddBlazorServicesMocks(typeof(UserProfileServiceMock).Assembly);
         builder.Services.AddBlazorServicesMocks(typeof(UserProfileService).Assembly);
 #endif
-        // AddBlazorServices registers a class only under its interfaces once it has any. The Blazor
-        // Server pages still inject these two by concrete type, so forward the concrete type to the
-        // same scoped instance. Remove with the Blazor Server UI (WASM migration Phase 4).
-        builder.Services.AddScoped(sp => (AccountService)sp.GetRequiredService<IAccountService>());
-        builder.Services.AddScoped(sp => (GridProfileService)sp.GetRequiredService<IGridProfileService>());
-
         builder.Services.AddHttpClient("WebhookDelivery", client =>
         {
             client.Timeout = TimeSpan.FromSeconds(30);
@@ -267,7 +252,6 @@ public class Program
         app.UseCorrelationId();
         app.UseSerilogRequestLogging();
 
-        app.UseWasmClients();
         app.UseStaticFiles();
 
         app.UseCors(WasmClientHosting.CorsPolicy);
@@ -291,8 +275,10 @@ public class Program
                 await next();
             }));
 
-        app.MapRazorComponents<UI.App>()
-            .AddInteractiveServerRenderMode();
+        // The hosted WASM clients' files (fingerprinted, pre-compressed _framework assets included)
+        // are exposed as static-asset endpoints; UseStaticFiles alone does not serve them.
+        app.MapStaticAssets();
+        app.MapRazorPages();
 
         app.MapControllers();
         // Real-time push is optional (Notifications:RealTime). Without the hub, pushes from
@@ -303,9 +289,6 @@ public class Program
         {
             app.MapHub<NotificationHub>("/hubs/notifications");
         }
-        // Add additional endpoints required by the Identity /Account Razor components.
-        app.MapAdditionalIdentityEndpoints();
-
         // Health check endpoints
         app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
         {

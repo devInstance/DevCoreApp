@@ -11,7 +11,7 @@ DevCoreApp is a reusable starter template for custom ERP and CRM applications. I
 ## Tech Stack
 
 - .NET 10+, ASP.NET Core, Entity Framework Core, ASP.NET Identity
-- Blazor **WebAssembly** clients (`Client.Desktop` admin UI, `Client.Mobile`) over the `/api` layer — **migration in progress**, see [`docs/WasmMigrationPlan.md`](docs/WasmMigrationPlan.md). The legacy Blazor interactive-Server admin UI still runs in WebService until the Phase 4 cut-over.
+- Blazor **WebAssembly** clients — `Client.Desktop` (admin UI, served at `/`) and `Client.Mobile` (served at `/mobile`) — over the `/api` layer with JWT. The server renders only the first-run `/setup` page (Razor Pages). Background: [`docs/WasmMigrationPlan.md`](docs/WasmMigrationPlan.md).
 - PostgreSQL (primary), SQL Server (secondary)
 - DevInstance.BlazorToolkit — client-side Blazor utilities (`[BlazorService]`, `IApiContext<T>`, `IServiceExecutionHost`)
 - DevInstance.WebServiceToolkit — server-side utilities (`[WebService]`, `[QueryModel]`, `IModelItem`, `IModelList<T>`, `HandleWebRequestAsync()`, `IModelQuery<T,D>`)
@@ -25,18 +25,19 @@ The solution file is `DevInstance.DevCoreApp.slnx` (the modern `.slnx` XML forma
 # Restore + build the whole solution
 dotnet build DevInstance.DevCoreApp.slnx
 
-# Run the Admin web app (Blazor SSR host + API). Needs a reachable database — see the
-# Database/Configuration notes below (default: Postgres on localhost:5432, db `sample_app`).
+# Run everything: the API host serves Desktop at / and Mobile at /mobile (the server project
+# references both clients). Needs a reachable database — see the Database/Configuration notes
+# below (default: Postgres on localhost:5432, db `sample_app`). No users yet → open /setup.
 dotnet run --project src/Server/Admin/WebService/DevCoreApp.Admin.WebService.csproj
 
-# Run the app against in-memory mock services — no database/Identity/email needed.
-# The SERVICEMOCKS preprocessor symbol swaps real services for [BlazorServiceMock] ones.
+# The same with in-memory mocks on both sides — the SERVICEMOCKS symbol swaps real services for
+# [BlazorServiceMock] ones in the server and in the Desktop client (any login works).
 dotnet run -c ServiceMocks --project src/Server/Admin/WebService/DevCoreApp.Admin.WebService.csproj
 
-# Run the WASM clients standalone against the API above (dev CORS allows these origins).
-# Desktop: http://localhost:5280, Mobile: http://localhost:5290 — ApiBaseUrl in each wwwroot/appsettings.Development.json.
+# Optional: a client on its own dev server against the API above (launch profile environment
+# "Standalone" → wwwroot/appsettings.Standalone.json ApiBaseUrl; dev CORS allows these origins).
+# Desktop: http://localhost:5280, Mobile: http://localhost:5290/mobile/
 dotnet run --project src/Client/DevCoreApp.Client.Desktop/DevCoreApp.Client.Desktop.csproj
-dotnet run --project src/Client/DevCoreApp.Client.Mobile/DevCoreApp.Client.Mobile.csproj
 
 # Run all tests (xUnit v3)
 dotnet test DevInstance.DevCoreApp.slnx
@@ -53,7 +54,8 @@ dotnet test tests/Server/WebService/WebService.Tests.csproj --filter "FullyQuali
   triggers on the old `blazor-app-dev` branch) — not the CI of record.
 - **The mocks project is excluded from `Debug` and `Release`** in `DevInstance.DevCoreApp.slnx`
   (`<Build … Project="false" />`), so a whole-solution build never compiles it. Build or run with
-  `-c ServiceMocks` to type-check mock code.
+  `-c ServiceMocks` to type-check mock code. The same holds for the client mocks
+  (`mocks/Client/Client.Services.Mocks`, referenced by Desktop in `ServiceMocks`).
 - Three test projects, all xUnit v3: `tests/Server/Database/Core/Core.Tests.csproj` (org query
   filter, organization stamping, unit-of-work concurrency, decorators),
   `tests/Server/WebService/WebService.Tests.csproj` (service tests and the `/api` wire-contract
@@ -113,10 +115,10 @@ DevCoreApp/
 │   │   │   ├── Services/            # → DevCoreApp.Admin.Services  (business logic, auth, background)
 │   │   │   │   ├── Core/<Feature>/  # ApiKeys, Authentication, Background, ImportExport, …
 │   │   │   │   └── BaseService.cs, ICRUDService.cs     # host shell, no marker
-│   │   │   └── WebService/          # → DevCoreApp.Admin.WebService (Blazor SSR host + API + SignalR)
-│   │   │       ├── Core/{Controllers,Health,Hubs,Identity,Logging,Middleware}/
-│   │   │       ├── Core/UI/{Components,Layout,Model,Pages}/
-│   │   │       └── Program.cs, _Imports.razor, UI/{App,Routes}.razor   # host shell
+│   │   │   └── WebService/          # → DevCoreApp.Admin.WebService (API + SignalR + client host)
+│   │   │       ├── Core/{Controllers,Health,Hosting,Hubs,Identity,Logging,Middleware}/
+│   │   │       ├── Core/Pages/      # Razor Pages: /setup (first-run owner), /Error — nothing else
+│   │   │       └── Program.cs, appsettings*.json   # host shell
 │   │   ├── Database/
 │   │   │   ├── Core/                # Provider-agnostic: entities, queries, decorators, interceptors
 │   │   │   │                        #   already the shared root — no second Core (see Rule 3)
@@ -144,7 +146,8 @@ Database.Core                  ← References: Shared
 Database.Postgres/.SqlServer   ← References: Database.Core
 Email.* / Storage.*            ← References: Shared    (Processor = abstraction, rest = providers)
 Admin.Services                 ← References: Database.Core + both providers, Email, Storage, Shared
-Admin.WebService               ← References: Admin.Services (+ ServicesMocks in ServiceMocks config)
+Admin.WebService               ← References: Admin.Services (+ ServicesMocks in ServiceMocks config),
+                                 Client.Desktop + Client.Mobile (build-time only: hosts their static assets)
 Client.Services                ← References: Shared
 Client.Desktop / Client.Mobile ← References: Client.Services, Shared
 ```
@@ -153,6 +156,7 @@ Client.Desktop / Client.Mobile ← References: Client.Services, Shared
 - Client and Client.Services NEVER reference Database or any Server project
 - Database NEVER references Admin.Services, Admin.WebService, or ASP.NET Core HTTP abstractions
 - Admin.WebService NEVER references Database directly — always through Admin.Services
+- Admin.WebService references the client projects only to host their files — never use a client type in server code
 - Provider-specific EF code stays in `Database/Postgres` or `Database/SqlServer`; anything
   provider-agnostic belongs in `Database/Core`
 
@@ -163,23 +167,23 @@ touching startup). It serves four kinds of traffic, each with a different auth p
 
 | Entry point | Wiring | Auth |
 |---|---|---|
-| Blazor SSR pages (`Core/UI/Pages/**`) | `MapRazorComponents<App>().AddInteractiveServerRenderMode()` | Identity cookies |
+| WASM clients (Desktop `/`, Mobile `/mobile`) | `MapStaticAssets()` + `MapWasmClients()` (index.html fallbacks) | none (static files); the apps call `/api` |
+| Razor Pages (`Core/Pages`: `/setup`, `/Error`) | `MapRazorPages()` | anonymous; `/setup` 404s once any user exists |
 | REST API (`Core/Controllers/**`) | `MapControllers()` | JWT bearer, or `X-Api-Key` |
 | SignalR (`Core/Hubs/NotificationHub`) | `MapHub<NotificationHub>("/hubs/notifications")` | JWT via `?access_token=` |
 | Health | `MapHealthChecks("/health")`, `/health/ready` | `HealthEndpointAccess` gate |
 
 **Auth scheme selection is dynamic.** The default scheme is a policy scheme named `"Smart"` whose
-`ForwardDefaultSelector` picks per request: `Authorization: Bearer …` → JWT, `X-Api-Key` header →
-the `ApiKey` scheme, otherwise Identity cookies. When adding an endpoint, do not hardcode a scheme
-unless you intend to bypass that selection.
+`ForwardDefaultSelector` picks per request: `Authorization: Bearer …` or `/hubs` with
+`?access_token=` → JWT, `X-Api-Key` header → the `ApiKey` scheme, otherwise JWT (so anonymous
+requests get a 401, never a login redirect). Nothing signs in with a cookie. When adding an
+endpoint, do not hardcode a scheme unless you intend to bypass that selection.
 
-**The Admin UI is moving from Blazor interactive Server to WebAssembly** (`Client.Desktop`, plan in
-[`docs/WasmMigrationPlan.md`](docs/WasmMigrationPlan.md)). Until the cut-over both exist: the
-Blazor Server pages still run in WebService, and the WASM clients run standalone in development
-(`WasmClients:*:BasePath` serves them from WebService once enabled). WASM clients talk only to
-`/api` with JWT; every `DateTime` on the wire is UTC and the client converts it for display
-(`ILocalTimeService` / `<LocalTime>`). The per-operation unit of work below stays mandatory —
-concurrent API requests need it as much as a shared circuit did.
+**The UI is Blazor WebAssembly.** The WASM clients talk only to `/api` with JWT; every
+`DateTime` on the wire is UTC and the client converts it for display (`ILocalTimeService` /
+`<LocalTime>`). Client conventions: [`src/Client/DevCoreApp.Client.Desktop/CLAUDE.md`](src/Client/DevCoreApp.Client.Desktop/CLAUDE.md).
+The per-operation unit of work below stays mandatory: concurrent API requests need it as much as a
+Blazor Server circuit did.
 
 Errors are shaped by `ApiExceptionHandler` (registered via `AddExceptionHandler<T>`): JSON for API
 paths, falling through to the `/Error` page for the rest.
@@ -219,31 +223,30 @@ The split uses **namespaces + folders inside the existing assemblies** — no ne
 **Rule 2 — files directly at a project root keep the root namespace and get no marker.** These are the host/entry/shell files the framework or convention pins in place. They are shared surface by definition; a fork that must change one fences it (Rule 6) instead of moving it.
 
 ```
-Admin.WebService/   Program.cs, _Imports.razor, UI/App.razor, UI/Routes.razor,
-                    appsettings*.json, wwwroot/, Styles/, Scripts/
+Admin.WebService/   Program.cs, appsettings*.json, wwwroot/
 Admin.Services/     BaseService.cs, ICRUDService.cs
-Client/             Program.cs, UI/App.razor, _Imports.razor, wwwroot/
+Client.Desktop/     Program.cs, UI/App.razor, _Imports.razor, wwwroot/, Styles/, Scripts/
+Client.Mobile/      Program.cs, UI/App.razor, _Imports.razor, wwwroot/
 Email/*, Storage/*  ConfigurationExtensions.cs
 ```
 
-Note `_Imports.razor` lives at the **WebService project root**, not in `UI/`. A `_Imports.razor` only cascades to its own folder and below, so from `UI/` it would not reach the components under `Core/UI/`.
+Note `_Imports.razor` lives at each **client project root**, not in `UI/`. A `_Imports.razor` only cascades to its own folder and below, so from `UI/` it would not reach the components under `Core/UI/`.
 
 **No type may share its name with a marker namespace.** `App` is a namespace under every project
 root, so a type named `App` in that same root namespace is `CS0101: the namespace already contains
-a definition for 'App'`. Both Blazor hosts would otherwise trip this, because a Blazor root
+a definition for 'App'`. Both Blazor clients would otherwise trip this, because a Blazor root
 component is a type named `App`:
 
-- **The root shell lives in `UI/`, in both hosts** — `Admin.WebService/UI/App.razor` and
-  `Client/UI/App.razor`. That is why the Client's shell is *not* at its project root even though
+- **The root shell lives in `UI/`, in both clients** — `Client.Desktop/UI/App.razor` and
+  `Client.Mobile/UI/App.razor`. That is why the shell is *not* at the project root even though
   Rule 2 would otherwise put it there.
-- **Reference it qualified** — `app.MapRazorComponents<UI.App>()`,
-  `builder.RootComponents.Add<UI.App>("#app")`. A bare `App` from the project root namespace binds
+- **Reference it qualified** — `builder.RootComponents.Add<UI.App>("#app")`. A bare `App` from the project root namespace binds
   to the *namespace* and fails as `CS0118: 'App' is a namespace but is used like a type` the moment
   any fork puts a file under `App/`.
 
 DevCoreApp cannot catch a regression here by building, because its own `App/` folders are empty. To
 check, drop a throwaway `namespace <RootNs>.App; internal class Probe { }` into
-`Client/App/` and `Admin.WebService/App/`, build the solution, and delete it.
+`Client.Desktop/App/` and `Client.Mobile/App/`, build the solution, and delete it.
 
 **Rule 3 — `Database/Core` is exempt.** That project already *is* the shared root — do **not** double it to `Core.Core`. Shared code keeps `Server.Database.Core.<...>` as-is; product entities go under `Server.Database.Core.App.Models.<Entity>`. The `Postgres`/`SqlServer` provider projects are untouched by this split (they hold provider plumbing plus generated migrations).
 
@@ -298,7 +301,7 @@ Deep-dive docs for individual features and subsystems live in [`docs/`](docs/):
 - [Health Checks](docs/HealthChecks.md) · [Operation Context](docs/OperationContext.md) · [Settings](docs/Settings.md) · [Webhooks](docs/Webhooks.md)
 - [Specification](docs/Specification.md) — overall product spec
 
-Subsystem guides also live next to the code: [`src/Server/Database/UnitOfWork.md`](src/Server/Database/UnitOfWork.md), [`src/Server/Storage/FileStorage.md`](src/Server/Storage/FileStorage.md), [`src/Server/Admin/Services/Core/ImportExport/ImportExport.md`](src/Server/Admin/Services/Core/ImportExport/ImportExport.md), [`src/Server/Admin/WebService/Core/UI/Components/HDataGrid.md`](src/Server/Admin/WebService/Core/UI/Components/HDataGrid.md), and the WebService-specific [`src/Server/Admin/WebService/CLAUDE.md`](src/Server/Admin/WebService/CLAUDE.md).
+Subsystem guides also live next to the code: [`src/Server/Database/UnitOfWork.md`](src/Server/Database/UnitOfWork.md), [`src/Server/Storage/FileStorage.md`](src/Server/Storage/FileStorage.md), [`src/Server/Admin/Services/Core/ImportExport/ImportExport.md`](src/Server/Admin/Services/Core/ImportExport/ImportExport.md), [`src/Client/DevCoreApp.Client.Desktop/Core/UI/Components/HDataGrid.md`](src/Client/DevCoreApp.Client.Desktop/Core/UI/Components/HDataGrid.md), and the WebService-specific [`src/Server/Admin/WebService/CLAUDE.md`](src/Server/Admin/WebService/CLAUDE.md).
 
 ## Naming Conventions
 
@@ -342,11 +345,11 @@ entity that must be caught by the organization global query filter.
 
 Services NEVER call `DbContext` directly. All data access goes through query classes.
 
-**Per-operation unit of work (Blazor Server concurrency safety).** A Blazor interactive-Server
-circuit shares ONE DI scope, so a scoped `DbContext` is shared by every component on the page.
-Components initialize concurrently, so two of them querying at once run two operations on one
-context → EF/Npgsql throw *"A second operation was started on this context instance"* /
-*"Connection is not open"*. The fix: each service method opens its **own** short-lived context
+**Per-operation unit of work.** Introduced for Blazor Server, where a circuit shares ONE DI scope
+and concurrently initializing components ran two operations on one context → EF/Npgsql throw
+*"A second operation was started on this context instance"* / *"Connection is not open"*. It stays
+the rule with the API: a request that fans out (parallel service calls, background work) hits the
+same failure on a shared context. The fix: each service method opens its **own** short-lived context
 from a factory. Inject `IQueryRepositoryFactory` (exposed as `BaseService.RepositoryFactory`) and
 open one unit of work per method:
 
@@ -556,7 +559,7 @@ implemented in `CoreQueryRepository` before services can reach it.
 
 - Never expose `Id` (Guid PK) to the client — use `PublicId`
 - Never call `DbContext` directly from a service — use query classes
-- Never share one `DbContext`/repository across a Blazor circuit — open a per-operation `await using var repo = RepositoryFactory.Create();` in each service method (see Data Access Pattern → [`UnitOfWork.md`](src/Server/Database/UnitOfWork.md)). Never inject the scoped `ApplicationDbContext` into a Blazor-facing service.
+- Never share one `DbContext`/repository across operations — open a per-operation `await using var repo = RepositoryFactory.Create();` in each service method (see Data Access Pattern → [`UnitOfWork.md`](src/Server/Database/UnitOfWork.md)). Never inject the scoped `ApplicationDbContext` into a Blazor-facing service.
 - Never instantiate entities directly with `new Entity { ... }` — use `query.CreateNew()` instead (seeders are the only exception)
 - Never inject `DbContext` or database types into pages or controllers
 - Never add ASP.NET Core HTTP dependencies to the Database project

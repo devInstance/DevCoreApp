@@ -5,7 +5,6 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<UserSecretsId>aspnet-DevInstance.DevCoreApp-0533fd67-bb14-4bd3-b8b1-646b0cb66317</UserSecretsId>
-		<BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
 		<AssemblyName>DevInstance.DevCoreApp.Server.Admin.WebService</AssemblyName>
 		<RootNamespace>DevInstance.DevCoreApp.Server.Admin.WebService</RootNamespace>
 		<Copyright>Copyright 2021-2026 DevInstance LLC</Copyright>
@@ -19,9 +18,6 @@
 		<PackageReference Include="Serilog.Sinks.PostgreSQL" Version="2.3.0" />
 		<PackageReference Include="DevInstance.WebServiceToolkit" Version="10.3.2" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.12" />
-		<PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="10.0.12" />
-		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.12" />
-		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="10.0.12" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.12" />
 		<PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.12" />
 		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.12" />
@@ -34,39 +30,21 @@
 		<PackageReference Include="Microsoft.Extensions.Localization" Version="10.0.12" />
 		<PackageReference Include="Microsoft.Extensions.Localization.Abstractions" Version="10.0.12" />
 		<PackageReference Include="System.Text.Json" Version="10.0.3" />
-		<PackageReference Include="DartSassBuilder" Version="1.1.0" />
 	</ItemGroup>
-
-	<!-- TypeScript Compilation: Sources in Scripts/, compiled JS committed to wwwroot/scripts/.
-	     Runs tsc automatically when .ts files are newer than .js output. -->
-	<PropertyGroup>
-		<TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
-	</PropertyGroup>
-	<ItemGroup>
-		<TypeScriptSource Include="Scripts\**\*.ts" Exclude="Scripts\**\*.d.ts" />
-		<TypeScriptInput Include="Scripts\**\*.ts" />
-		<TypeScriptInput Include="tsconfig.json" />
-	</ItemGroup>
-	<Target Name="CompileTypeScript" BeforeTargets="BeforeBuild"
-	        Inputs="@(TypeScriptInput)"
-	        Outputs="@(TypeScriptSource->'wwwroot\scripts\%(Filename).js')">
-		<Exec Command="tsc -p tsconfig.json" IgnoreExitCode="true">
-			<Output TaskParameter="ExitCode" PropertyName="TscExitCode" />
-		</Exec>
-		<Error Condition="'$(TscExitCode)' != '0'"
-		       Text="TypeScript files changed but compilation failed (exit code $(TscExitCode)). Install tsc (npm i -g typescript) and run: tsc -p tsconfig.json" />
-	</Target>
 
 	<ItemGroup>
 		<ProjectReference Include="..\Services\DevCoreApp.Admin.Services.csproj" />
 	</ItemGroup>
+
+	<!-- The WASM clients, hosted by this app (the standard "hosted Blazor WebAssembly" model): their
+	     published files flow in as static web assets — Desktop at "/", Mobile at "/mobile" (its
+	     StaticWebAssetBasePath). Build-time only: the server uses no client code. -->
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\Client\DevCoreApp.Client.Desktop\DevCoreApp.Client.Desktop.csproj" />
+		<ProjectReference Include="..\..\..\Client\DevCoreApp.Client.Mobile\DevCoreApp.Client.Mobile.csproj" />
+	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\..\..\..\mocks\Server\Admin\ServicesMocks\DevCoreApp.Admin.Services.Mocks.csproj" Condition="'$(Configuration)' == 'ServiceMocks'" />
 	</ItemGroup>
-
-	<!-- SCSS Compilation: Copy compiled CSS from Styles to wwwroot -->
-	<Target Name="CopySassOutput" AfterTargets="DartSass_Build">
-		<Copy SourceFiles="Styles\app.css" DestinationFolder="wwwroot" />
-	</Target>
 
 </Project>
