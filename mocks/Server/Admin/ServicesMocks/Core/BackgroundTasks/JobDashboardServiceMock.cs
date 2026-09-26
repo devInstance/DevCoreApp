@@ -1,3 +1,4 @@
+using DevInstance.DevCoreApp.Shared.Model.Core.Common;
 using Bogus;
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.BlazorToolkit.Tools;
@@ -76,7 +77,7 @@ public class JobDashboardServiceMock : IJobDashboardService
             .RuleFor(t => t.UpdateDate, (f, t) => t.CompletedAt ?? t.StartedAt ?? t.ScheduledAt);
     }
 
-    public async Task<ServiceActionResult<ModelList<BackgroundTaskItem>>> GetAllAsync(
+    public async Task<ServiceActionResult<PagedList<BackgroundTaskItem>>> GetAllAsync(
         int? top, int? page, string? sortField = null, bool? isAsc = null,
         string? search = null, int? status = null, string? taskType = null,
         DateTime? startDate = null, DateTime? endDate = null)
@@ -124,8 +125,8 @@ public class JobDashboardServiceMock : IJobDashboardService
 
         await Task.Delay(delay);
 
-        return ServiceActionResult<ModelList<BackgroundTaskItem>>.OK(
-            ModelListResult.CreateList(items, filteredList.Count, topVal, pageVal, sortBy, search));
+        return ServiceActionResult<PagedList<BackgroundTaskItem>>.OK(
+            PagedList.Create(items, filteredList.Count, topVal, pageVal, sortBy, search));
     }
 
     public async Task<ServiceActionResult<List<BackgroundTaskLogItem>>> GetJobLogsAsync(string jobPublicId)

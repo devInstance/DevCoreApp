@@ -3,8 +3,10 @@ using System;
 
 namespace DevInstance.DevCoreApp.Shared.Model.Core;
 
-public class EmailLogItem : ModelItem
+public class EmailLogItem : IModelItem
 {
+    public string Id { get; set; }
+
     public string FromAddress { get; set; } = string.Empty;
     public string FromName { get; set; } = string.Empty;
     public string ToAddress { get; set; } = string.Empty;

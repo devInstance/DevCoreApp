@@ -602,29 +602,32 @@ _backgroundWorker.Submit(new BackgroundRequestItem
 
 ## API Controllers
 
+Controllers derive from `ApiControllerBase`, use a literal `api/...` route, carry the permission
+policy, and make exactly one service call per action (see "API Controller Pattern" in `CLAUDE.md`):
+
 ```csharp
-[Route("api/user/profile")]
-[ApiController]
-public class UserProfileController : ControllerBase
+[Route("api/feature-flags")]
+[Authorize]
+public class FeatureFlagsController : ApiControllerBase
 {
-    public UserProfileService Service { get; }
+    private readonly IFeatureFlagAdminService _service;
 
-    public UserProfileController(UserProfileService service)
-    {
-        Service = service;
-    }
+    public FeatureFlagsController(IFeatureFlagAdminService service) => _service = service;
 
-    [Authorize]
     [HttpGet]
-    public ActionResult<UserProfileItem> GetProfile()
-    {
-        return this.HandleWebRequest((WebHandler<UserProfileItem>)(() =>
-        {
-            return Ok(Service.Get());
-        }));
-    }
+    [Authorize(Policy = PermissionDefinitions.Admin.FeatureFlags.View)]
+    public Task<ActionResult<PagedList<FeatureFlagItem>>> GetListAsync([FromQuery] ListQuery query)
+        => HandleServiceAsync(() => _service.GetFlagsAsync(query.Top, query.Page, query.SortBy, query.Search));
+
+    [HttpPut("{id}")]
+    [Authorize(Policy = PermissionDefinitions.Admin.FeatureFlags.Edit)]
+    public Task<ActionResult<FeatureFlagItem>> UpdateAsync(string id, [FromBody] FeatureFlagItem item)
+        => HandleServiceAsync(() => _service.UpdateFlagAsync(id, item));
 }
 ```
+
+List endpoints bind a `[QueryModel]` (`ListQuery`, or a feature query deriving from it such as
+`EmailLogQuery`): `?top=20&page=0&sortBy=-CreateDate,Name&search=abc`, dates in UTC.
 
 ## Naming Conventions
 

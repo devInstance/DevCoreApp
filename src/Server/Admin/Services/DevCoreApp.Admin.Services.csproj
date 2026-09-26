@@ -20,10 +20,10 @@
 	  <ProjectReference Include="..\..\Storage\Processor\StorageProcessor.csproj" />
 	  <ProjectReference Include="..\..\Storage\Local\StorageProcessor.Local.csproj" />
 
-	  <PackageReference Include="DevInstance.BlazorToolkit" Version="10.1.2" />
+	  <PackageReference Include="DevInstance.BlazorToolkit" Version="10.5.0" />
 	  <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.16.0" />
 
-	  <PackageReference Include="DevInstance.WebServiceToolkit" Version="10.3.1" />
+	  <PackageReference Include="DevInstance.WebServiceToolkit" Version="10.3.2" />
 
 	  <PackageReference Include="CsvHelper" Version="33.*" />
 	  <PackageReference Include="ClosedXML" Version="0.104.*" />

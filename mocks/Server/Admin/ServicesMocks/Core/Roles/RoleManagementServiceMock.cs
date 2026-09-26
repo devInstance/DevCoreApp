@@ -1,3 +1,4 @@
+using DevInstance.DevCoreApp.Shared.Model.Core.Common;
 using Bogus;
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.BlazorToolkit.Tools;
@@ -65,7 +66,7 @@ public class RoleManagementServiceMock : IRoleManagementService
         };
     }
 
-    public async Task<ServiceActionResult<ModelList<RoleItem>>> GetRolesAsync(int? top, int? page, string[]? sortBy, string? search)
+    public async Task<ServiceActionResult<PagedList<RoleItem>>> GetRolesAsync(int? top, int? page, string[]? sortBy, string? search)
     {
         var pageVal = page ?? 0;
         var topVal = top ?? 10;
@@ -84,8 +85,8 @@ public class RoleManagementServiceMock : IRoleManagementService
 
         await Task.Delay(delay);
 
-        return ServiceActionResult<ModelList<RoleItem>>.OK(
-            ModelListResult.CreateList(items, filtered.Count, topVal, pageVal, sortBy, search));
+        return ServiceActionResult<PagedList<RoleItem>>.OK(
+            PagedList.Create(items, filtered.Count, topVal, pageVal, sortBy, search));
     }
 
     public async Task<ServiceActionResult<RoleItem>> GetRoleAsync(string roleId)

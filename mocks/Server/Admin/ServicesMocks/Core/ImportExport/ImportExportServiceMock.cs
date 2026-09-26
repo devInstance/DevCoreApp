@@ -61,9 +61,9 @@ public class ImportExportServiceMock : IImportExportService
         });
     }
 
-    public bool RequiresOrganizationSelection()
+    public ServiceActionResult<bool> RequiresOrganizationSelection()
     {
-        return false;
+        return ServiceActionResult<bool>.OK(false);
     }
 
     public async Task<ServiceActionResult<ImportValidationResult>> ValidateAsync(

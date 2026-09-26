@@ -1,3 +1,4 @@
+using DevInstance.DevCoreApp.Shared.Model.Core.Common;
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.DevCoreApp.Server.Admin.Services;
 using DevInstance.DevCoreApp.Server.Admin.Services.Core;
@@ -31,7 +32,7 @@ public partial class WebhookDeliveriesPage
     [CascadingParameter]
     private IServiceExecutionHost Host { get; set; } = default!;
 
-    private ModelList<WebhookDeliveryItem>? DeliveryList { get; set; }
+    private PagedList<WebhookDeliveryItem>? DeliveryList { get; set; }
 
     public List<ColumnDescriptor<WebhookDeliveryItem>> Columns { get; set; } = new()
     {
@@ -129,7 +130,7 @@ public partial class WebhookDeliveriesPage
 
     public async Task OnPageChangedAsync(int page)
     {
-        await LoadDeliveries(page, DeliveryList?.SortBy, DeliveryList?.IsAsc);
+        await LoadDeliveries(page, DeliveryList?.SortField(), DeliveryList?.IsAscending());
     }
 
     public async Task OnSortAsync(HSortableHeaderSortArgs args)

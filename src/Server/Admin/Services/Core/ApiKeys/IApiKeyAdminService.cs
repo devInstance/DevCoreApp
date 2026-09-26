@@ -1,3 +1,4 @@
+using DevInstance.DevCoreApp.Shared.Model.Core.Common;
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.DevCoreApp.Shared.Model.Core.ApiKeys;
 using DevInstance.WebServiceToolkit.Common.Model;
@@ -7,7 +8,7 @@ namespace DevInstance.DevCoreApp.Server.Admin.Services.Core.ApiKeys;
 
 public interface IApiKeyAdminService
 {
-    Task<ServiceActionResult<ModelList<ApiKeyItem>>> GetKeysAsync(
+    Task<ServiceActionResult<PagedList<ApiKeyItem>>> GetKeysAsync(
         int top, int page, string[]? sortBy = null, string? search = null);
 
     Task<ServiceActionResult<ApiKeyCreateResult>> CreateKeyAsync(ApiKeyItem item);

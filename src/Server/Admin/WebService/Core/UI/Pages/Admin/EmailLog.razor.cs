@@ -1,3 +1,4 @@
+using DevInstance.DevCoreApp.Shared.Model.Core.Common;
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.DevCoreApp.Server.Admin.Services;
 using DevInstance.DevCoreApp.Server.Admin.Services.Core;
@@ -27,7 +28,7 @@ public partial class EmailLog
     [CascadingParameter]
     private IServiceExecutionHost Host { get; set; } = default!;
 
-    private ModelList<EmailLogItem>? EmailLogList { get; set; }
+    private PagedList<EmailLogItem>? EmailLogList { get; set; }
 
     public List<ColumnDescriptor<EmailLogItem>> Columns { get; set; } = new()
     {
@@ -144,7 +145,7 @@ public partial class EmailLog
 
     public async Task OnPageChangedAsync(int page)
     {
-        await LoadEmailLogs(page, EmailLogList?.SortBy, EmailLogList?.IsAsc, EmailLogList?.Search);
+        await LoadEmailLogs(page, EmailLogList?.SortField(), EmailLogList?.IsAscending(), EmailLogList?.Search);
     }
 
     public async Task OnSave(GridSettingsResult<EmailLogItem> grid)
@@ -163,13 +164,13 @@ public partial class EmailLog
 
     public async Task OnSearch()
     {
-        await LoadEmailLogs(0, EmailLogList?.SortBy, EmailLogList?.IsAsc, SearchTerm);
+        await LoadEmailLogs(0, EmailLogList?.SortField(), EmailLogList?.IsAscending(), SearchTerm);
     }
 
     public async Task OnClearSearch()
     {
         SearchTerm = string.Empty;
-        await LoadEmailLogs(0, EmailLogList?.SortBy, EmailLogList?.IsAsc, null);
+        await LoadEmailLogs(0, EmailLogList?.SortField(), EmailLogList?.IsAscending(), null);
     }
 
     public async Task OnColumnsChanged()
@@ -189,7 +190,7 @@ public partial class EmailLog
     {
         SelectedEmail = null;
         ShowBodyPreview = false;
-        await LoadEmailLogs(0, EmailLogList?.SortBy, EmailLogList?.IsAsc, EmailLogList?.Search);
+        await LoadEmailLogs(0, EmailLogList?.SortField(), EmailLogList?.IsAscending(), EmailLogList?.Search);
     }
 
     private Task OnRowClick(EmailLogItem item)
@@ -237,7 +238,7 @@ public partial class EmailLog
         );
 
         SelectedIds.Clear();
-        await LoadEmailLogs(EmailLogList?.Page ?? 0, EmailLogList?.SortBy, EmailLogList?.IsAsc, EmailLogList?.Search);
+        await LoadEmailLogs(EmailLogList?.Page ?? 0, EmailLogList?.SortField(), EmailLogList?.IsAscending(), EmailLogList?.Search);
     }
 
     private async Task OnResendAllFailed()
@@ -247,7 +248,7 @@ public partial class EmailLog
                 GetStatusFilterValue(), StartDateFilter, EndDateFilter, EmailLogList?.Search)
         );
 
-        await LoadEmailLogs(EmailLogList?.Page ?? 0, EmailLogList?.SortBy, EmailLogList?.IsAsc, EmailLogList?.Search);
+        await LoadEmailLogs(EmailLogList?.Page ?? 0, EmailLogList?.SortField(), EmailLogList?.IsAscending(), EmailLogList?.Search);
     }
 
     private async Task OnResendSelected()
@@ -260,7 +261,7 @@ public partial class EmailLog
 
         SelectedEmail = null;
         ShowBodyPreview = false;
-        await LoadEmailLogs(EmailLogList?.Page ?? 0, EmailLogList?.SortBy, EmailLogList?.IsAsc, EmailLogList?.Search);
+        await LoadEmailLogs(EmailLogList?.Page ?? 0, EmailLogList?.SortField(), EmailLogList?.IsAscending(), EmailLogList?.Search);
     }
 
     private static string GetStatusBadgeClass(string status)

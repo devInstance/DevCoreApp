@@ -16,6 +16,45 @@ public class ImportExportController : ApiControllerBase
         _importExportService = importExportService;
     }
 
+    // ── Discovery ──
+
+    [HttpGet("import/entity-types")]
+    public ActionResult<List<string>> GetImportableEntityTypes()
+        => HandleService(() => _importExportService.GetImportableEntityTypes());
+
+    [HttpGet("import/{entityType}/fields")]
+    public ActionResult<List<ImportFieldDescriptor>> GetImportFields(string entityType)
+        => HandleService(() => _importExportService.GetImportFields(entityType));
+
+    /// <summary>True when the caller has no primary organization and must pick one for the import.</summary>
+    [HttpGet("import/requires-organization")]
+    public ActionResult<bool> RequiresOrganizationSelection()
+        => HandleService(() => _importExportService.RequiresOrganizationSelection());
+
+    [HttpGet("export/entity-types")]
+    public ActionResult<List<string>> GetExportableEntityTypes()
+        => HandleService(() => _importExportService.GetExportableEntityTypes());
+
+    [HttpGet("export/{entityType}/fields")]
+    public ActionResult<List<ExportFieldDescriptor>> GetExportFields(string entityType)
+        => HandleService(() => _importExportService.GetExportFields(entityType));
+
+    // ── Import session ──
+
+    [HttpGet("import/{sessionId}")]
+    public Task<ActionResult<ImportSessionItem>> GetSessionAsync(string sessionId)
+        => HandleServiceAsync(() => _importExportService.GetSessionAsync(sessionId));
+
+    [HttpPost("import/{sessionId}/commit")]
+    public Task<ActionResult<ImportCommitResult>> CommitAsync(string sessionId, [FromBody] ImportCommitRequest request)
+        => HandleServiceAsync(() => _importExportService.CommitAsync(sessionId, request.ExcludedRows));
+
+    [HttpPost("import/{sessionId}/rollback")]
+    public Task<ActionResult<bool>> RollbackAsync(string sessionId)
+        => HandleServiceAsync(() => _importExportService.RollbackAsync(sessionId));
+
+    // ── Files ──
+
     [HttpPost("export")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

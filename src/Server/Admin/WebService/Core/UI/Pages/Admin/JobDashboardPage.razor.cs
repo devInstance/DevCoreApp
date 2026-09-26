@@ -1,3 +1,4 @@
+using DevInstance.DevCoreApp.Shared.Model.Core.Common;
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.DevCoreApp.Server.Admin.Services;
 using DevInstance.DevCoreApp.Server.Admin.Services.Core;
@@ -30,7 +31,7 @@ public partial class JobDashboardPage
     [SupplyParameterFromQuery(Name = "search")]
     private string? InitialSearch { get; set; }
 
-    private ModelList<BackgroundTaskItem>? JobList { get; set; }
+    private PagedList<BackgroundTaskItem>? JobList { get; set; }
 
     public List<ColumnDescriptor<BackgroundTaskItem>> Columns { get; set; } = new()
     {
@@ -147,7 +148,7 @@ public partial class JobDashboardPage
 
     public async Task OnPageChangedAsync(int page)
     {
-        await LoadJobs(page, JobList?.SortBy, JobList?.IsAsc, JobList?.Search);
+        await LoadJobs(page, JobList?.SortField(), JobList?.IsAscending(), JobList?.Search);
     }
 
     public async Task OnSave(GridSettingsResult<BackgroundTaskItem> grid)
@@ -166,13 +167,13 @@ public partial class JobDashboardPage
 
     public async Task OnSearch()
     {
-        await LoadJobs(0, JobList?.SortBy, JobList?.IsAsc, SearchTerm);
+        await LoadJobs(0, JobList?.SortField(), JobList?.IsAscending(), SearchTerm);
     }
 
     public async Task OnClearSearch()
     {
         SearchTerm = string.Empty;
-        await LoadJobs(0, JobList?.SortBy, JobList?.IsAsc, null);
+        await LoadJobs(0, JobList?.SortField(), JobList?.IsAscending(), null);
     }
 
     public async Task OnColumnsChanged()
@@ -192,7 +193,7 @@ public partial class JobDashboardPage
     {
         SelectedJob = null;
         SelectedJobLogs = null;
-        await LoadJobs(0, JobList?.SortBy, JobList?.IsAsc, JobList?.Search);
+        await LoadJobs(0, JobList?.SortField(), JobList?.IsAscending(), JobList?.Search);
     }
 
     private async Task OnRowClick(BackgroundTaskItem item)
@@ -229,7 +230,7 @@ public partial class JobDashboardPage
 
         SelectedJob = null;
         SelectedJobLogs = null;
-        await LoadJobs(JobList?.Page ?? 0, JobList?.SortBy, JobList?.IsAsc, JobList?.Search);
+        await LoadJobs(JobList?.Page ?? 0, JobList?.SortField(), JobList?.IsAscending(), JobList?.Search);
     }
 
     private async Task RetryJob()
@@ -242,7 +243,7 @@ public partial class JobDashboardPage
 
         SelectedJob = null;
         SelectedJobLogs = null;
-        await LoadJobs(JobList?.Page ?? 0, JobList?.SortBy, JobList?.IsAsc, JobList?.Search);
+        await LoadJobs(JobList?.Page ?? 0, JobList?.SortField(), JobList?.IsAscending(), JobList?.Search);
     }
 
     private static string GetStatusBadgeClass(string status)

@@ -31,7 +31,7 @@ Page (Blazor) → Host.ServiceReadAsync / Host.ServiceSubmitAsync → Service �
 - Create new records via `query.CreateNew()` + `entity.ToRecord(dto)` + `query.AddAsync(record)`
 - Update existing records via `entity.ToRecord(dto)` + `query.UpdateAsync(record)`
 - Background work (e.g., email) via `IBackgroundWorker.Submit()`
-- DI registration is automatic — `[BlazorService]` + `AddBlazorServices()` registers both the concrete type and its interfaces
+- DI registration is automatic — `[BlazorService]` + `AddBlazorServices()` registers the class under each of its interfaces, or under its concrete type only when it implements none. Inject services by interface.
 
 ### Logging
 - Create a local logger in the constructor: `log = logManager.CreateLogger(this);`

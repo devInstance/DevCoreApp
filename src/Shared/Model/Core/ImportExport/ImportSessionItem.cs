@@ -4,8 +4,10 @@ using DevInstance.WebServiceToolkit.Common.Model;
 
 namespace DevInstance.DevCoreApp.Shared.Model.Core.ImportExport;
 
-public class ImportSessionItem : ModelItem
+public class ImportSessionItem : IModelItem
 {
+    public string Id { get; set; }
+
     public string EntityType { get; set; } = string.Empty;
     public string OriginalFileName { get; set; } = string.Empty;
     public ImportFileFormat FileFormat { get; set; }

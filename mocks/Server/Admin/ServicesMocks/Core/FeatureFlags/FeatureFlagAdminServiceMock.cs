@@ -1,3 +1,4 @@
+using DevInstance.DevCoreApp.Shared.Model.Core.Common;
 using Bogus;
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.BlazorToolkit.Tools;
@@ -69,7 +70,7 @@ public class FeatureFlagAdminServiceMock : IFeatureFlagAdminService
         };
     }
 
-    public async Task<ServiceActionResult<ModelList<FeatureFlagItem>>> GetFlagsAsync(
+    public async Task<ServiceActionResult<PagedList<FeatureFlagItem>>> GetFlagsAsync(
         int top, int page, string[]? sortBy = null, string? search = null)
     {
         await Task.Delay(delay);
@@ -86,8 +87,8 @@ public class FeatureFlagAdminServiceMock : IFeatureFlagAdminService
         var filtered = query.ToList();
         var items = filtered.Skip(page * top).Take(top).ToArray();
 
-        return ServiceActionResult<ModelList<FeatureFlagItem>>.OK(
-            ModelListResult.CreateList(items, filtered.Count, top, page, sortBy, search));
+        return ServiceActionResult<PagedList<FeatureFlagItem>>.OK(
+            PagedList.Create(items, filtered.Count, top, page, sortBy, search));
     }
 
     public async Task<ServiceActionResult<FeatureFlagItem>> GetFlagAsync(string id)

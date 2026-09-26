@@ -1,3 +1,4 @@
+using DevInstance.DevCoreApp.Shared.Model.Core.Common;
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.DevCoreApp.Shared.Model.Core.Webhooks;
 using DevInstance.WebServiceToolkit.Common.Model;
@@ -7,7 +8,7 @@ namespace DevInstance.DevCoreApp.Server.Admin.Services.Core.Webhooks;
 
 public interface IWebhookAdminService
 {
-    Task<ServiceActionResult<ModelList<WebhookSubscriptionItem>>> GetSubscriptionsAsync(
+    Task<ServiceActionResult<PagedList<WebhookSubscriptionItem>>> GetSubscriptionsAsync(
         int top, int page, string[]? sortBy = null, string? search = null);
 
     Task<ServiceActionResult<WebhookSubscriptionItem>> GetSubscriptionAsync(string id);
@@ -18,6 +19,6 @@ public interface IWebhookAdminService
 
     Task<ServiceActionResult<bool>> DeleteSubscriptionAsync(string id);
 
-    Task<ServiceActionResult<ModelList<WebhookDeliveryItem>>> GetDeliveriesAsync(
+    Task<ServiceActionResult<PagedList<WebhookDeliveryItem>>> GetDeliveriesAsync(
         int top, int page, string? subscriptionId = null, string[]? sortBy = null);
 }

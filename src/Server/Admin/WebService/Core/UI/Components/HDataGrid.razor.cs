@@ -1,3 +1,4 @@
+using DevInstance.DevCoreApp.Shared.Model.Core.Common;
 using DevInstance.DevCoreApp.Server.Admin.WebService.Core.UI.Model.Grid;
 using DevInstance.WebServiceToolkit.Common.Model;
 using Microsoft.AspNetCore.Components;
@@ -6,7 +7,7 @@ using Microsoft.JSInterop;
 
 namespace DevInstance.DevCoreApp.Server.Admin.WebService.Core.UI.Components;
 
-public partial class HDataGrid<TItem> where TItem : ModelItem
+public partial class HDataGrid<TItem> where TItem : IModelItem
 {
     private static readonly int[] PlaceholderWidths = [75, 60, 85, 70, 90, 65, 80];
 
@@ -18,7 +19,8 @@ public partial class HDataGrid<TItem> where TItem : ModelItem
     private double _contextMenuY;
 
     [Parameter, EditorRequired]
-    public ModelList<TItem>? Data { get; set; }
+    public PagedList<TItem>? Data { get; set; }
+
 
     [Parameter, EditorRequired]
     public List<ColumnDescriptor<TItem>> Columns { get; set; } = [];

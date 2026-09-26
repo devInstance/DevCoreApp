@@ -1,3 +1,4 @@
+using DevInstance.DevCoreApp.Shared.Model.Core.Common;
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.BlazorToolkit.Tools;
 using DevInstance.DevCoreApp.Server.Admin.Services.Core.Authentication;
@@ -37,7 +38,7 @@ public class ApiKeyAdminService : BaseService, IApiKeyAdminService
         this.permissionSnapshotService = permissionSnapshotService;
     }
 
-    public async Task<ServiceActionResult<ModelList<ApiKeyItem>>> GetKeysAsync(
+    public async Task<ServiceActionResult<PagedList<ApiKeyItem>>> GetKeysAsync(
         int top, int page, string[]? sortBy = null, string? search = null)
     {
         using var l = log.TraceScope();
@@ -63,8 +64,8 @@ public class ApiKeyAdminService : BaseService, IApiKeyAdminService
 
         var items = keys.Select(ak => ak.ToView()).ToArray();
 
-        var modelList = ModelListResult.CreateList(items, totalCount, top, page, sortBy, search);
-        return ServiceActionResult<ModelList<ApiKeyItem>>.OK(modelList);
+        var modelList = PagedList.Create(items, totalCount, top, page, sortBy, search);
+        return ServiceActionResult<PagedList<ApiKeyItem>>.OK(modelList);
     }
 
     public async Task<ServiceActionResult<ApiKeyCreateResult>> CreateKeyAsync(ApiKeyItem item)

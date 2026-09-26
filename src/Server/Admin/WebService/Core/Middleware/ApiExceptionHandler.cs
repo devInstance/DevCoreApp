@@ -18,8 +18,12 @@ public class ApiExceptionHandler : IExceptionHandler
         Exception exception,
         CancellationToken cancellationToken)
     {
-        // Only handle API requests — let non-API requests fall through to the error page
-        if (!httpContext.Request.Path.StartsWithSegments("/api", StringComparison.OrdinalIgnoreCase))
+        // Only handle API requests — let non-API requests fall through to the error page.
+        // Use the ORIGINAL path: with an ExceptionHandlingPath configured, Request.Path has
+        // already been rewritten to "/Error" by the time IExceptionHandlers run.
+        var originalPath = httpContext.Features.Get<IExceptionHandlerPathFeature>()?.Path
+            ?? httpContext.Request.Path.Value;
+        if (!new PathString(originalPath).StartsWithSegments("/api", StringComparison.OrdinalIgnoreCase))
         {
             return false;
         }

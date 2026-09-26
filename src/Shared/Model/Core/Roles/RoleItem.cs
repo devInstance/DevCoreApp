@@ -3,8 +3,10 @@ using System.ComponentModel.DataAnnotations;
 
 namespace DevInstance.DevCoreApp.Shared.Model.Core.Roles;
 
-public class RoleItem : ModelItem
+public class RoleItem : IModelItem
 {
+    public string Id { get; set; }
+
     [Required]
     [StringLength(256, MinimumLength = 2)]
     [Display(Name = "Name")]

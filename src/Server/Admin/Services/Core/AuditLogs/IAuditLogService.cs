@@ -1,3 +1,4 @@
+using DevInstance.DevCoreApp.Shared.Model.Core.Common;
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.DevCoreApp.Shared.Model.Core.AuditLogs;
 using DevInstance.WebServiceToolkit.Common.Model;
@@ -6,7 +7,7 @@ namespace DevInstance.DevCoreApp.Server.Admin.Services.Core.AuditLogs;
 
 public interface IAuditLogService
 {
-    Task<ServiceActionResult<ModelList<AuditLogItem>>> GetAllAsync(
+    Task<ServiceActionResult<PagedList<AuditLogItem>>> GetAllAsync(
         int? top, int? page, string? sortField = null, bool? isAsc = null,
         string? search = null, int? action = null, int? source = null,
         string? tableName = null, string? recordId = null,

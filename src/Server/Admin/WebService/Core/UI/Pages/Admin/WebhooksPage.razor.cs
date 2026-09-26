@@ -1,3 +1,4 @@
+using DevInstance.DevCoreApp.Shared.Model.Core.Common;
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.DevCoreApp.Server.Admin.Services;
 using DevInstance.DevCoreApp.Server.Admin.Services.Core;
@@ -28,7 +29,7 @@ public partial class WebhooksPage
     [CascadingParameter]
     private IServiceExecutionHost Host { get; set; } = default!;
 
-    private ModelList<WebhookSubscriptionItem>? SubscriptionList { get; set; }
+    private PagedList<WebhookSubscriptionItem>? SubscriptionList { get; set; }
 
     public List<ColumnDescriptor<WebhookSubscriptionItem>> Columns { get; set; } = new()
     {
@@ -134,7 +135,7 @@ public partial class WebhooksPage
 
     public async Task OnPageChangedAsync(int page)
     {
-        await LoadSubscriptions(page, SubscriptionList?.SortBy, SubscriptionList?.IsAsc, SubscriptionList?.Search);
+        await LoadSubscriptions(page, SubscriptionList?.SortField(), SubscriptionList?.IsAscending(), SubscriptionList?.Search);
     }
 
     public async Task OnSortAsync(HSortableHeaderSortArgs args)
@@ -163,13 +164,13 @@ public partial class WebhooksPage
 
     public async Task OnSearch()
     {
-        await LoadSubscriptions(0, SubscriptionList?.SortBy, SubscriptionList?.IsAsc, SearchTerm);
+        await LoadSubscriptions(0, SubscriptionList?.SortField(), SubscriptionList?.IsAscending(), SearchTerm);
     }
 
     public async Task OnClearSearch()
     {
         SearchTerm = string.Empty;
-        await LoadSubscriptions(0, SubscriptionList?.SortBy, SubscriptionList?.IsAsc, null);
+        await LoadSubscriptions(0, SubscriptionList?.SortField(), SubscriptionList?.IsAscending(), null);
     }
 
     private Task OnRowClick(WebhookSubscriptionItem item)
@@ -269,7 +270,7 @@ public partial class WebhooksPage
 
         if (!Host.IsError)
         {
-            await LoadSubscriptions(SubscriptionList?.Page ?? 0, SubscriptionList?.SortBy, SubscriptionList?.IsAsc, SubscriptionList?.Search);
+            await LoadSubscriptions(SubscriptionList?.Page ?? 0, SubscriptionList?.SortField(), SubscriptionList?.IsAscending(), SubscriptionList?.Search);
         }
     }
 }

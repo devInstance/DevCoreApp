@@ -29,7 +29,7 @@ public class JobDashboardService : BaseService, IJobDashboardService
         log = logManager.CreateLogger(this);
     }
 
-    public async Task<ServiceActionResult<ModelList<BackgroundTaskItem>>> GetAllAsync(
+    public async Task<ServiceActionResult<PagedList<BackgroundTaskItem>>> GetAllAsync(
         int? top, int? page, string? sortField = null, bool? isAsc = null,
         string? search = null, int? status = null, string? taskType = null,
         DateTime? startDate = null, DateTime? endDate = null)
@@ -74,8 +74,8 @@ public class JobDashboardService : BaseService, IJobDashboardService
             ? new[] { (isAsc == false ? "-" : "") + sortField }
             : null;
 
-        var modelList = ModelListResult.CreateList(items, totalCount, top, page, sortBy, search);
-        return ServiceActionResult<ModelList<BackgroundTaskItem>>.OK(modelList);
+        var modelList = PagedList.Create(items, totalCount, top, page, sortBy, search);
+        return ServiceActionResult<PagedList<BackgroundTaskItem>>.OK(modelList);
     }
 
     public async Task<ServiceActionResult<List<BackgroundTaskLogItem>>> GetJobLogsAsync(string jobPublicId)

@@ -1,3 +1,4 @@
+using DevInstance.DevCoreApp.Shared.Model.Core.Common;
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.BlazorToolkit.Tools;
 using DevInstance.DevCoreApp.Server.Admin.Services.Core.Exceptions;
@@ -34,7 +35,7 @@ public class RoleManagementService : IRoleManagementService
         _repository = repository;
     }
 
-    public async Task<ServiceActionResult<ModelList<RoleItem>>> GetRolesAsync(int? top, int? page, string[]? sortBy, string? search)
+    public async Task<ServiceActionResult<PagedList<RoleItem>>> GetRolesAsync(int? top, int? page, string[]? sortBy, string? search)
     {
         using var l = log.TraceScope();
 
@@ -76,8 +77,8 @@ public class RoleManagementService : IRoleManagementService
             PermissionCount = permissionCounts.GetValueOrDefault(r.Id, 0)
         }).ToArray();
 
-        var modelList = ModelListResult.CreateList(items, totalCount, topVal, pageVal, sortBy, search);
-        return ServiceActionResult<ModelList<RoleItem>>.OK(modelList);
+        var modelList = PagedList.Create(items, totalCount, topVal, pageVal, sortBy, search);
+        return ServiceActionResult<PagedList<RoleItem>>.OK(modelList);
     }
 
     public async Task<ServiceActionResult<RoleItem>> GetRoleAsync(string roleId)

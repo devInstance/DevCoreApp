@@ -1,3 +1,4 @@
+using DevInstance.DevCoreApp.Shared.Model.Core.Common;
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.DevCoreApp.Shared.Model.Core.Roles;
 using DevInstance.WebServiceToolkit.Common.Model;
@@ -8,7 +9,7 @@ namespace DevInstance.DevCoreApp.Server.Admin.Services.Core.Roles;
 
 public interface IRoleManagementService
 {
-    Task<ServiceActionResult<ModelList<RoleItem>>> GetRolesAsync(int? top, int? page, string[]? sortBy, string? search);
+    Task<ServiceActionResult<PagedList<RoleItem>>> GetRolesAsync(int? top, int? page, string[]? sortBy, string? search);
     Task<ServiceActionResult<RoleItem>> GetRoleAsync(string roleId);
     Task<ServiceActionResult<RoleItem>> CreateRoleAsync(RoleItem item);
     Task<ServiceActionResult<RoleItem>> UpdateRoleAsync(string roleId, RoleItem item);

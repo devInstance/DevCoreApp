@@ -8,7 +8,7 @@ namespace DevInstance.DevCoreApp.Client.Services.Core;
 
 public delegate Task DataUpdate<T>(T item);
 
-public class CRUDService<T> : BaseService where T : ModelItem
+public class CRUDService<T> : BaseService where T : IModelItem
 {
     IApiContext<T> Api { get; set; }
 

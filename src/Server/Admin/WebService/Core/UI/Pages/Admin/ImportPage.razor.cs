@@ -114,7 +114,7 @@ public partial class ImportPage
                 LoadImportFields();
                 AutoMapColumns();
                 DetectUnmappedColumns();
-                RequiresOrganization = ImportExportService.RequiresOrganizationSelection();
+                RequiresOrganization = ImportExportService.RequiresOrganizationSelection().Result;
                 CurrentStep = ImportWizardStep.MapColumns;
             }
         );

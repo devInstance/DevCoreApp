@@ -7,8 +7,10 @@ namespace DevInstance.DevCoreApp.Shared.Model.Core.Settings;
 /// <summary>
 /// DTO for grid profile settings
 /// </summary>
-public class GridProfileItem : ModelItem
+public class GridProfileItem : IModelItem
 {
+    public string Id { get; set; }
+
     public string GridName { get; set; } = string.Empty;
     public string ProfileName { get; set; } = "Default";
     public List<GridColumnState> Columns { get; set; } = new();

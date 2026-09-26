@@ -1,3 +1,4 @@
+using DevInstance.DevCoreApp.Shared.Model.Core.Common;
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.DevCoreApp.Server.Admin.Services;
 using DevInstance.DevCoreApp.Server.Admin.Services.Core;
@@ -28,7 +29,7 @@ public partial class FeatureFlagsPage
     [CascadingParameter]
     private IServiceExecutionHost Host { get; set; } = default!;
 
-    private ModelList<FeatureFlagItem>? FlagList { get; set; }
+    private PagedList<FeatureFlagItem>? FlagList { get; set; }
 
     public List<ColumnDescriptor<FeatureFlagItem>> Columns { get; set; } = new()
     {
@@ -134,7 +135,7 @@ public partial class FeatureFlagsPage
 
     public async Task OnPageChangedAsync(int page)
     {
-        await LoadFlags(page, FlagList?.SortBy, FlagList?.IsAsc, FlagList?.Search);
+        await LoadFlags(page, FlagList?.SortField(), FlagList?.IsAscending(), FlagList?.Search);
     }
 
     public async Task OnSortAsync(HSortableHeaderSortArgs args)
@@ -163,13 +164,13 @@ public partial class FeatureFlagsPage
 
     public async Task OnSearch()
     {
-        await LoadFlags(0, FlagList?.SortBy, FlagList?.IsAsc, SearchTerm);
+        await LoadFlags(0, FlagList?.SortField(), FlagList?.IsAscending(), SearchTerm);
     }
 
     public async Task OnClearSearch()
     {
         SearchTerm = string.Empty;
-        await LoadFlags(0, FlagList?.SortBy, FlagList?.IsAsc, null);
+        await LoadFlags(0, FlagList?.SortField(), FlagList?.IsAscending(), null);
     }
 
     private Task OnRowClick(FeatureFlagItem item)
@@ -265,7 +266,7 @@ public partial class FeatureFlagsPage
 
         if (!Host.IsError)
         {
-            await LoadFlags(FlagList?.Page ?? 0, FlagList?.SortBy, FlagList?.IsAsc, FlagList?.Search);
+            await LoadFlags(FlagList?.Page ?? 0, FlagList?.SortField(), FlagList?.IsAscending(), FlagList?.Search);
         }
     }
 }

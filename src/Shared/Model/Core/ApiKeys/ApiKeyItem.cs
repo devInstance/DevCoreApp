@@ -5,8 +5,10 @@ using DevInstance.WebServiceToolkit.Common.Model;
 
 namespace DevInstance.DevCoreApp.Shared.Model.Core.ApiKeys;
 
-public class ApiKeyItem : ModelItem
+public class ApiKeyItem : IModelItem
 {
+    public string Id { get; set; }
+
     [Required]
     [StringLength(256, MinimumLength = 2)]
     [Display(Name = "Name")]

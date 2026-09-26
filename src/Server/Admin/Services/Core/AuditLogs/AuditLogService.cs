@@ -1,3 +1,4 @@
+using DevInstance.DevCoreApp.Shared.Model.Core.Common;
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.BlazorToolkit.Tools;
 using DevInstance.DevCoreApp.Server.Admin.Services.Core.Authentication;
@@ -28,7 +29,7 @@ public class AuditLogService : BaseService, IAuditLogService
         log = logManager.CreateLogger(this);
     }
 
-    public async Task<ServiceActionResult<ModelList<AuditLogItem>>> GetAllAsync(
+    public async Task<ServiceActionResult<PagedList<AuditLogItem>>> GetAllAsync(
         int? top, int? page, string? sortField = null, bool? isAsc = null,
         string? search = null, int? action = null, int? source = null,
         string? tableName = null, string? recordId = null,
@@ -112,7 +113,7 @@ public class AuditLogService : BaseService, IAuditLogService
             ? new[] { (isAsc == false ? "-" : "") + sortField }
             : null;
 
-        var modelList = ModelListResult.CreateList(items, totalCount, top, page, sortBy, search);
-        return ServiceActionResult<ModelList<AuditLogItem>>.OK(modelList);
+        var modelList = PagedList.Create(items, totalCount, top, page, sortBy, search);
+        return ServiceActionResult<PagedList<AuditLogItem>>.OK(modelList);
     }
 }

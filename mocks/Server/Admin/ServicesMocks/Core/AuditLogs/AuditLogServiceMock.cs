@@ -1,3 +1,4 @@
+using DevInstance.DevCoreApp.Shared.Model.Core.Common;
 using Bogus;
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.BlazorToolkit.Tools;
@@ -72,7 +73,7 @@ public class AuditLogServiceMock : IAuditLogService
         };
     }
 
-    public async Task<ServiceActionResult<ModelList<AuditLogItem>>> GetAllAsync(
+    public async Task<ServiceActionResult<PagedList<AuditLogItem>>> GetAllAsync(
         int? top, int? page, string? sortField = null, bool? isAsc = null,
         string? search = null, int? action = null, int? source = null,
         string? tableName = null, string? recordId = null,
@@ -132,7 +133,7 @@ public class AuditLogServiceMock : IAuditLogService
 
         await Task.Delay(delay);
 
-        return ServiceActionResult<ModelList<AuditLogItem>>.OK(
-            ModelListResult.CreateList(items, filteredList.Count, topVal, pageVal, sortBy, search));
+        return ServiceActionResult<PagedList<AuditLogItem>>.OK(
+            PagedList.Create(items, filteredList.Count, topVal, pageVal, sortBy, search));
     }
 }

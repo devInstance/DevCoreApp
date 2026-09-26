@@ -199,7 +199,9 @@ public class NotificationService : BaseService, INotificationService
             .Select()
             .FirstOrDefaultAsync();
 
-        if (notification == null)
+        // The query is organization-scoped, not owner-scoped: without this a user could mark a
+        // colleague's notification as read. Answer 404 so ids of others' notifications are not confirmed.
+        if (notification == null || notification.UserProfileId != AuthorizationContext.CurrentProfile?.Id)
         {
             throw new RecordNotFoundException("Notification not found.");
         }
@@ -278,7 +280,19 @@ public class NotificationService : BaseService, INotificationService
         return ServiceActionResult<int>.OK(count);
     }
 
-    public async Task<ServiceActionResult<ModelList<NotificationItem>>> GetNotificationsAsync(
+    public Task<ServiceActionResult<PagedList<NotificationItem>>> GetMyNotificationsAsync(int? page = null, int? pageSize = null)
+        => GetNotificationsAsync(CurrentProfileId, page, pageSize);
+
+    public Task<ServiceActionResult<int>> GetMyUnreadCountAsync()
+        => GetUnreadCountAsync(CurrentProfileId);
+
+    public Task<ServiceActionResult<int>> MarkAllMyReadAsync()
+        => MarkAllReadAsync(CurrentProfileId);
+
+    private Guid CurrentProfileId => AuthorizationContext.CurrentProfile?.Id
+        ?? throw new UnauthorizedException("No user profile for the current user.");
+
+    public async Task<ServiceActionResult<PagedList<NotificationItem>>> GetNotificationsAsync(
         Guid userProfileId, int? page = null, int? pageSize = null)
     {
         using var l = log.TraceScope();
@@ -293,9 +307,9 @@ public class NotificationService : BaseService, INotificationService
         var notifications = await query.Paginate(pageSize, page).Select().ToListAsync();
 
         var items = notifications.Select(n => n.ToView()).ToArray();
-        var modelList = ModelListResult.CreateList(items, totalCount, pageSize, page);
+        var modelList = PagedList.Create(items, totalCount, pageSize, page);
 
-        return ServiceActionResult<ModelList<NotificationItem>>.OK(modelList);
+        return ServiceActionResult<PagedList<NotificationItem>>.OK(modelList);
     }
 
     private async Task<Guid> GetUserPrimaryOrganizationIdAsync(UserProfile userProfile)

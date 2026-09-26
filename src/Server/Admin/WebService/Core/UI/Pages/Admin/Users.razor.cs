@@ -1,3 +1,4 @@
+using DevInstance.DevCoreApp.Shared.Model.Core.Common;
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.DevCoreApp.Server.Admin.Services;
 using DevInstance.DevCoreApp.Server.Admin.Services.Core;
@@ -26,7 +27,7 @@ public partial class Users
     [CascadingParameter]
     private IServiceExecutionHost Host { get; set; } = default!;
 
-    private ModelList<UserProfileItem>? UserList { get; set; }
+    private PagedList<UserProfileItem>? UserList { get; set; }
 
     public List<ColumnDescriptor<UserProfileItem>> Columns { get; set; } = new()
     {
@@ -135,7 +136,7 @@ public partial class Users
 
     public async Task OnPageChangedAsync(int page)
     {
-        await LoadUsers(page, UserList?.SortBy, UserList?.IsAsc, UserList?.Search);
+        await LoadUsers(page, UserList?.SortField(), UserList?.IsAscending(), UserList?.Search);
     }
 
     public async Task OnSave(GridSettingsResult<UserProfileItem> grid)
@@ -155,13 +156,13 @@ public partial class Users
     public async Task OnSearch()
     {
         var search = BuildSearchString();
-        await LoadUsers(0, UserList?.SortBy, UserList?.IsAsc, search);
+        await LoadUsers(0, UserList?.SortField(), UserList?.IsAscending(), search);
     }
 
     public async Task OnClearSearch()
     {
         SearchTerm = string.Empty;
-        await LoadUsers(0, UserList?.SortBy, UserList?.IsAsc, null);
+        await LoadUsers(0, UserList?.SortField(), UserList?.IsAscending(), null);
     }
 
     private string? BuildSearchString()
@@ -272,7 +273,7 @@ public partial class Users
 
         if (!Host.IsError)
         {
-            await LoadUsers(UserList?.Page ?? 0, UserList?.SortBy, UserList?.IsAsc, UserList?.Search);
+            await LoadUsers(UserList?.Page ?? 0, UserList?.SortField(), UserList?.IsAscending(), UserList?.Search);
         }
     }
 }

@@ -88,7 +88,7 @@ public class UserProfileService : BaseService, IUserProfileService
         return ServiceActionResult<UserProfileItem>.OK(profile.ToView());
     }
 
-    public async Task<ServiceActionResult<ModelList<UserProfileItem>>> GetListAsync(int? top, int? page, string[] sortBy = null, string search = null)
+    public async Task<ServiceActionResult<PagedList<UserProfileItem>>> GetListAsync(int? top, int? page, string[] sortBy = null, string search = null)
     {
         using var l = log.TraceScope();
 
@@ -131,8 +131,8 @@ public class UserProfileService : BaseService, IUserProfileService
             }
         }
 
-        var modelList = ModelListResult.CreateList(users.ToArray(), totalCount, top, page, sortBy, search, true);
-        return ServiceActionResult<ModelList<UserProfileItem>>.OK(modelList);
+        var modelList = PagedList.Create(users.ToArray(), totalCount, top, page, sortBy, search, true);
+        return ServiceActionResult<PagedList<UserProfileItem>>.OK(modelList);
     }
 
     /// <summary>

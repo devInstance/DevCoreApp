@@ -1,3 +1,4 @@
+@using DevInstance.DevCoreApp.Shared.Model.Core.Common
 @typeparam TItem
 <span class="text-nowrap">
     @if (string.IsNullOrEmpty(UrlTemplate))
@@ -30,7 +31,7 @@
     public string SortField { get; set; } = string.Empty;
 
     [Parameter]
-    public ModelList<TItem>? Model { get; set; }
+    public PagedList<TItem>? Model { get; set; }
 
     [Parameter]
     public EventCallback<HSortableHeaderSortArgs> OnSort { get; set; }

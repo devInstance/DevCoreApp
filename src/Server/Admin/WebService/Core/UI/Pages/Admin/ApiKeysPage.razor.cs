@@ -1,3 +1,4 @@
+using DevInstance.DevCoreApp.Shared.Model.Core.Common;
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.DevCoreApp.Server.Admin.Services;
 using DevInstance.DevCoreApp.Server.Admin.Services.Core;
@@ -32,7 +33,7 @@ public partial class ApiKeysPage
     [CascadingParameter]
     private IServiceExecutionHost Host { get; set; } = default!;
 
-    private ModelList<ApiKeyItem>? KeyList { get; set; }
+    private PagedList<ApiKeyItem>? KeyList { get; set; }
 
     public List<ColumnDescriptor<ApiKeyItem>> Columns { get; set; } = new()
     {
@@ -144,7 +145,7 @@ public partial class ApiKeysPage
 
     public async Task OnPageChangedAsync(int page)
     {
-        await LoadKeys(page, KeyList?.SortBy, KeyList?.IsAsc, KeyList?.Search);
+        await LoadKeys(page, KeyList?.SortField(), KeyList?.IsAscending(), KeyList?.Search);
     }
 
     public async Task OnSortAsync(HSortableHeaderSortArgs args)
@@ -173,13 +174,13 @@ public partial class ApiKeysPage
 
     public async Task OnSearch()
     {
-        await LoadKeys(0, KeyList?.SortBy, KeyList?.IsAsc, SearchTerm);
+        await LoadKeys(0, KeyList?.SortField(), KeyList?.IsAscending(), SearchTerm);
     }
 
     public async Task OnClearSearch()
     {
         SearchTerm = string.Empty;
-        await LoadKeys(0, KeyList?.SortBy, KeyList?.IsAsc, null);
+        await LoadKeys(0, KeyList?.SortField(), KeyList?.IsAscending(), null);
     }
 
     // ---------- Create Modal ----------
@@ -257,7 +258,7 @@ public partial class ApiKeysPage
 
         if (!Host.IsError)
         {
-            await LoadKeys(KeyList?.Page ?? 0, KeyList?.SortBy, KeyList?.IsAsc, KeyList?.Search);
+            await LoadKeys(KeyList?.Page ?? 0, KeyList?.SortField(), KeyList?.IsAscending(), KeyList?.Search);
         }
     }
 }

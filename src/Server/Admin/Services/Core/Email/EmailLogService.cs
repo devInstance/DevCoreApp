@@ -1,3 +1,4 @@
+using DevInstance.DevCoreApp.Shared.Model.Core.Common;
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.BlazorToolkit.Tools;
 using DevInstance.DevCoreApp.Server.Admin.Services.Core.Authentication;
@@ -41,7 +42,7 @@ public class EmailLogService : BaseService, IEmailLogService
         OperationContext = operationContext;
     }
 
-    public async Task<ServiceActionResult<ModelList<EmailLogItem>>> GetAllAsync(
+    public async Task<ServiceActionResult<PagedList<EmailLogItem>>> GetAllAsync(
         int? top, int? page, string? sortField = null, bool? isAsc = null,
         string? search = null, int? status = null, string? templateName = null,
         DateTime? startDate = null, DateTime? endDate = null)
@@ -84,11 +85,11 @@ public class EmailLogService : BaseService, IEmailLogService
             ? new[] { (isAsc == false ? "-" : "") + sortField }
             : null;
 
-        var modelList = ModelListResult.CreateList(items, totalCount, top, page, sortBy, search);
-        return ServiceActionResult<ModelList<EmailLogItem>>.OK(modelList);
+        var modelList = PagedList.Create(items, totalCount, top, page, sortBy, search);
+        return ServiceActionResult<PagedList<EmailLogItem>>.OK(modelList);
     }
 
-    public Task<ServiceActionResult<ModelList<EmailLogItem>>> GetListAsync(int? top, int? page, string[] sortBy, string search)
+    public Task<ServiceActionResult<PagedList<EmailLogItem>>> GetListAsync(int? top, int? page, string[] sortBy, string search)
     {
         string sortField = null;
         bool? isAsc = null;

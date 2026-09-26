@@ -1,3 +1,4 @@
+using DevInstance.DevCoreApp.Shared.Model.Core.Common;
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.DevCoreApp.Server.Admin.Services;
 using DevInstance.DevCoreApp.Server.Admin.Services.Core;
@@ -32,7 +33,7 @@ public partial class OrganizationTreePage
     private IServiceExecutionHost Host { get; set; } = default!;
 
     // Grid view state
-    private ModelList<OrganizationItem>? OrgList { get; set; }
+    private PagedList<OrganizationItem>? OrgList { get; set; }
 
     public List<ColumnDescriptor<OrganizationItem>> Columns { get; set; } = new()
     {
@@ -185,7 +186,7 @@ public partial class OrganizationTreePage
 
     public async Task OnPageChangedAsync(int page)
     {
-        await LoadOrgs(page, OrgList?.SortBy, OrgList?.IsAsc, OrgList?.Search);
+        await LoadOrgs(page, OrgList?.SortField(), OrgList?.IsAscending(), OrgList?.Search);
     }
 
     public async Task OnSortAsync(HSortableHeaderSortArgs args)
@@ -220,14 +221,14 @@ public partial class OrganizationTreePage
         }
         else
         {
-            await LoadOrgs(0, OrgList?.SortBy, OrgList?.IsAsc, SearchTerm);
+            await LoadOrgs(0, OrgList?.SortField(), OrgList?.IsAscending(), SearchTerm);
         }
     }
 
     public async Task OnClearSearch()
     {
         SearchTerm = string.Empty;
-        await LoadOrgs(0, OrgList?.SortBy, OrgList?.IsAsc, null);
+        await LoadOrgs(0, OrgList?.SortField(), OrgList?.IsAscending(), null);
     }
 
     private async Task OnApplyFilters()
@@ -238,7 +239,7 @@ public partial class OrganizationTreePage
         }
         else
         {
-            await LoadOrgs(0, OrgList?.SortBy, OrgList?.IsAsc, OrgList?.Search);
+            await LoadOrgs(0, OrgList?.SortField(), OrgList?.IsAscending(), OrgList?.Search);
         }
     }
 
@@ -367,7 +368,7 @@ public partial class OrganizationTreePage
         }
         else
         {
-            await LoadOrgs(OrgList?.Page ?? 0, OrgList?.SortBy, OrgList?.IsAsc, OrgList?.Search);
+            await LoadOrgs(OrgList?.Page ?? 0, OrgList?.SortField(), OrgList?.IsAscending(), OrgList?.Search);
         }
     }
 }

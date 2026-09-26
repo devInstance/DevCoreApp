@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Encodings.Web;
+using DevInstance.BlazorToolkit.Services;
 using DevInstance.BlazorToolkit.Tools;
 using DevInstance.BlazorToolkit.Utils;
 using DevInstance.DevCoreApp.Server.Database.Core;
@@ -11,6 +12,7 @@ using DevInstance.DevCoreApp.Shared.Model.Core.Account;
 using DevInstance.DevCoreApp.Shared.Model.Core.Common;
 using DevInstance.DevCoreApp.Shared.Utils.Core;
 using DevInstance.LogScope;
+using DevInstance.WebServiceToolkit.Exceptions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
@@ -20,13 +22,14 @@ namespace DevInstance.DevCoreApp.Server.Admin.Services.Core;
 
 [BlazorService]
 [BlazorServiceMock]
-public class AccountService : BaseService
+public class AccountService : BaseService, IAccountService
 {
     private readonly SignInManager<ApplicationUser> signInManager;
     private readonly UserManager<ApplicationUser> userManager;
     private readonly IUserStore<ApplicationUser> userStore;
     private readonly IEmailSender<ApplicationUser> emailSender;
     private readonly IHttpContextAccessor httpContextAccessor;
+    private readonly IAccountLinkBuilder linkBuilder;
     private readonly IScopeLog log;
 
     public AccountService(
@@ -38,7 +41,8 @@ public class AccountService : BaseService
         UserManager<ApplicationUser> userManager,
         IUserStore<ApplicationUser> userStore,
         IEmailSender<ApplicationUser> emailSender,
-        IHttpContextAccessor httpContextAccessor)
+        IHttpContextAccessor httpContextAccessor,
+        IAccountLinkBuilder linkBuilder)
         : base(logManager, timeProvider, repositoryFactory, authorizationContext)
     {
         log = logManager.CreateLogger(this);
@@ -47,6 +51,7 @@ public class AccountService : BaseService
         this.userStore = userStore;
         this.emailSender = emailSender;
         this.httpContextAccessor = httpContextAccessor;
+        this.linkBuilder = linkBuilder;
     }
 
     public async Task<LoginResult> LoginAsync(LoginParameters input)
@@ -93,7 +98,12 @@ public class AccountService : BaseService
         return LoginResult.InvalidLogin();
     }
 
-    public async Task<RegisterResult> RegisterAsync(RegisterParameters input, string confirmationLinkBase)
+    public Task<RegisterResult> RegisterAsync(RegisterParameters input, string confirmationLinkBase)
+    {
+        return RegisterCoreAsync(input, confirmationLinkBase, signInWhenConfirmationNotRequired: true);
+    }
+
+    private async Task<RegisterResult> RegisterCoreAsync(RegisterParameters input, string confirmationLinkBase, bool signInWhenConfirmationNotRequired)
     {
         using var l = log.TraceScope();
 
@@ -120,7 +130,7 @@ public class AccountService : BaseService
 
         var requiresConfirmation = userManager.Options.SignIn.RequireConfirmedAccount;
 
-        if (!requiresConfirmation)
+        if (!requiresConfirmation && signInWhenConfirmationNotRequired)
         {
             await signInManager.SignInAsync(user, isPersistent: false);
         }
@@ -239,6 +249,96 @@ public class AccountService : BaseService
         }
 
         return SetPasswordResult.Failed(result.Errors.Select(e => e.Description));
+    }
+
+    // ── IAccountService (api/account) ──────────────────────────────────────────────
+    // Thin wrappers over the methods above that turn failed results into 400s and build email
+    // links from IAccountLinkBuilder. The Blazor Server account pages keep calling the methods
+    // above until they are removed (WASM migration Phase 4).
+
+    async Task<ServiceActionResult<RegisterResult>> IAccountService.RegisterAsync(RegisterParameters input)
+    {
+        // No cookie sign-in: API clients sign in through api/auth once registered.
+        var result = await RegisterCoreAsync(input, BuildLink(AccountRoutes.ConfirmEmail), signInWhenConfirmationNotRequired: false);
+        ThrowIfFailed(result.Succeeded, result.ErrorMessage);
+        return ServiceActionResult<RegisterResult>.OK(result);
+    }
+
+    async Task<ServiceActionResult<bool>> IAccountService.SendPasswordResetLinkAsync(ForgotPasswordParameters input)
+    {
+        await SendPasswordResetLinkAsync(input, BuildLink(AccountRoutes.ResetPassword));
+        return ServiceActionResult<bool>.OK(true);
+    }
+
+    async Task<ServiceActionResult<bool>> IAccountService.ResetPasswordAsync(ResetPasswordParameters input)
+    {
+        var decoded = new ResetPasswordParameters
+        {
+            Email = input.Email,
+            Password = input.Password,
+            ConfirmPassword = input.ConfirmPassword,
+            Code = TryDecodeCode(input.Code) ?? throw new BadRequestException("Invalid password reset link.")
+        };
+
+        var result = await ResetPasswordAsync(decoded);
+        ThrowIfFailed(result.Succeeded, result.ErrorMessage);
+        return ServiceActionResult<bool>.OK(true);
+    }
+
+    async Task<ServiceActionResult<ConfirmEmailResult>> IAccountService.ConfirmEmailAsync(ConfirmEmailRequest request)
+    {
+        if (TryDecodeCode(request.Code) == null)
+            throw new BadRequestException("Invalid confirmation link.");
+
+        var result = await ConfirmEmailAsync(request.UserId, request.Code);
+
+        // One message for unknown user / bad token / failure, so the endpoint does not reveal
+        // which user ids exist.
+        ThrowIfFailed(result.Succeeded, "Invalid or expired confirmation link.");
+        return ServiceActionResult<ConfirmEmailResult>.OK(result);
+    }
+
+    async Task<ServiceActionResult<bool>> IAccountService.SetInvitationPasswordAsync(InvitationPasswordRequest request)
+    {
+        using var l = log.TraceScope();
+
+        // The endpoint is anonymous: the emailed confirmation token is the only proof that the
+        // caller is the invited user. Without this check anyone could set the first password of
+        // any invited account that has not chosen one yet.
+        var user = await userManager.FindByIdAsync(request.UserId);
+        var token = TryDecodeCode(request.Code);
+        if (user == null || token == null
+            || !await userManager.VerifyUserTokenAsync(user,
+                userManager.Options.Tokens.EmailConfirmationTokenProvider,
+                UserManager<ApplicationUser>.ConfirmEmailTokenPurpose, token))
+        {
+            l.W($"Rejected invitation password for user {request.UserId}: invalid link.");
+            throw new BadRequestException("Invalid or expired invitation link.");
+        }
+
+        var result = await SetPasswordAsync(request.UserId, request);
+        ThrowIfFailed(result.Succeeded, result.ErrorMessage);
+        return ServiceActionResult<bool>.OK(true);
+    }
+
+    private string BuildLink(string route)
+    {
+        var origin = linkBuilder.TryBuildBase()
+            ?? throw new InvalidOperationException($"Cannot build account links: set {AccountLinkBuilder.BaseUrlKey}.");
+        return origin + route;
+    }
+
+    private static string? TryDecodeCode(string? encoded)
+    {
+        if (string.IsNullOrEmpty(encoded)) return null;
+        try { return Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(encoded)); }
+        catch (FormatException) { return null; }
+    }
+
+    private static void ThrowIfFailed(bool succeeded, string? message)
+    {
+        if (!succeeded)
+            throw new BadRequestException(string.IsNullOrEmpty(message) ? "The request could not be completed." : message);
     }
 
     /// <summary>

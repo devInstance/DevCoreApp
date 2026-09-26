@@ -3,8 +3,10 @@ using System;
 
 namespace DevInstance.DevCoreApp.Shared.Model.Core.BackgroundTasks;
 
-public class BackgroundTaskItem : ModelItem
+public class BackgroundTaskItem : IModelItem
 {
+    public string Id { get; set; }
+
     public string TaskType { get; set; } = string.Empty;
     public string Payload { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;

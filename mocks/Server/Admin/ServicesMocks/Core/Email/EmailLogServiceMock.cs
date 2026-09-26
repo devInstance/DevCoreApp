@@ -1,3 +1,4 @@
+using DevInstance.DevCoreApp.Shared.Model.Core.Common;
 using Bogus;
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.BlazorToolkit.Tools;
@@ -48,7 +49,7 @@ public class EmailLogServiceMock : IEmailLogService
             .RuleFor(e => e.UpdateDate, (f, e) => e.SentDate ?? e.ScheduledDate);
     }
 
-    public async Task<ServiceActionResult<ModelList<EmailLogItem>>> GetAllAsync(
+    public async Task<ServiceActionResult<PagedList<EmailLogItem>>> GetAllAsync(
         int? top, int? page, string? sortField = null, bool? isAsc = null,
         string? search = null, int? status = null, string? templateName = null,
         DateTime? startDate = null, DateTime? endDate = null)
@@ -89,11 +90,11 @@ public class EmailLogServiceMock : IEmailLogService
 
         await Task.Delay(delay);
 
-        return ServiceActionResult<ModelList<EmailLogItem>>.OK(
-            ModelListResult.CreateList(items, filteredList.Count, topVal, pageVal, sortBy, search));
+        return ServiceActionResult<PagedList<EmailLogItem>>.OK(
+            PagedList.Create(items, filteredList.Count, topVal, pageVal, sortBy, search));
     }
 
-    public Task<ServiceActionResult<ModelList<EmailLogItem>>> GetListAsync(int? top, int? page, string[] sortBy, string search)
+    public Task<ServiceActionResult<PagedList<EmailLogItem>>> GetListAsync(int? top, int? page, string[] sortBy, string search)
     {
         string sortField = null;
         bool? isAsc = null;

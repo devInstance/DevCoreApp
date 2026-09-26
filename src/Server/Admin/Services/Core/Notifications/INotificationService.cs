@@ -27,6 +27,15 @@ public interface INotificationService
 
     Task<ServiceActionResult<int>> GetUnreadCountAsync(Guid userProfileId);
 
-    Task<ServiceActionResult<ModelList<NotificationItem>>> GetNotificationsAsync(
+    Task<ServiceActionResult<PagedList<NotificationItem>>> GetNotificationsAsync(
         Guid userProfileId, int? page = null, int? pageSize = null);
+
+    // ── Current user (api/notifications) ──
+
+    /// <summary>The signed-in user's notifications, newest first.</summary>
+    Task<ServiceActionResult<PagedList<NotificationItem>>> GetMyNotificationsAsync(int? page = null, int? pageSize = null);
+
+    Task<ServiceActionResult<int>> GetMyUnreadCountAsync();
+
+    Task<ServiceActionResult<int>> MarkAllMyReadAsync();
 }

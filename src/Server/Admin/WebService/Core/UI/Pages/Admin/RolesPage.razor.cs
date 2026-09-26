@@ -1,3 +1,4 @@
+using DevInstance.DevCoreApp.Shared.Model.Core.Common;
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.DevCoreApp.Server.Admin.Services;
 using DevInstance.DevCoreApp.Server.Admin.Services.Core;
@@ -27,7 +28,7 @@ public partial class RolesPage
     [CascadingParameter]
     private IServiceExecutionHost Host { get; set; } = default!;
 
-    private ModelList<RoleItem>? RoleList { get; set; }
+    private PagedList<RoleItem>? RoleList { get; set; }
 
     public List<ColumnDescriptor<RoleItem>> Columns { get; set; } = new()
     {
@@ -133,7 +134,7 @@ public partial class RolesPage
 
     public async Task OnPageChangedAsync(int page)
     {
-        await LoadRoles(page, RoleList?.SortBy, RoleList?.IsAsc, RoleList?.Search);
+        await LoadRoles(page, RoleList?.SortField(), RoleList?.IsAscending(), RoleList?.Search);
     }
 
     public async Task OnSortAsync(HSortableHeaderSortArgs args)
@@ -162,13 +163,13 @@ public partial class RolesPage
 
     public async Task OnSearch()
     {
-        await LoadRoles(0, RoleList?.SortBy, RoleList?.IsAsc, SearchTerm);
+        await LoadRoles(0, RoleList?.SortField(), RoleList?.IsAscending(), SearchTerm);
     }
 
     public async Task OnClearSearch()
     {
         SearchTerm = string.Empty;
-        await LoadRoles(0, RoleList?.SortBy, RoleList?.IsAsc, null);
+        await LoadRoles(0, RoleList?.SortField(), RoleList?.IsAscending(), null);
     }
 
     private Task OnRowClick(RoleItem item)
@@ -261,7 +262,7 @@ public partial class RolesPage
         if (!Host.IsError)
         {
             CloseEditModal();
-            await LoadRoles(RoleList?.Page ?? 0, RoleList?.SortBy, RoleList?.IsAsc, RoleList?.Search);
+            await LoadRoles(RoleList?.Page ?? 0, RoleList?.SortField(), RoleList?.IsAscending(), RoleList?.Search);
         }
     }
 
@@ -289,7 +290,7 @@ public partial class RolesPage
 
         if (!Host.IsError)
         {
-            await LoadRoles(RoleList?.Page ?? 0, RoleList?.SortBy, RoleList?.IsAsc, RoleList?.Search);
+            await LoadRoles(RoleList?.Page ?? 0, RoleList?.SortField(), RoleList?.IsAscending(), RoleList?.Search);
         }
     }
 }

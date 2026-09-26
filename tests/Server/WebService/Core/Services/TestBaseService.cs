@@ -1,4 +1,5 @@
-﻿using DevInstance.DevCoreApp.Server.Admin.Services;
+﻿using DevInstance.DevCoreApp.Shared.Model.Core.Common;
+using DevInstance.DevCoreApp.Server.Admin.Services;
 using DevInstance.DevCoreApp.Server.Admin.Services.Core;
 using DevInstance.DevCoreApp.Server.Admin.Services.Core.Authentication;
 using DevInstance.DevCoreApp.Server.Database.Core.Data;
@@ -29,9 +30,9 @@ internal class TestBaseService : BaseService
     {
     }
 
-    public static ModelList<TestBaseServiceEntity> CreateListPageForTest(int totalItemsCount, TestBaseServiceEntity[] items, int? top, int? page)
+    public static PagedList<TestBaseServiceEntity> CreateListPageForTest(int totalItemsCount, TestBaseServiceEntity[] items, int? top, int? page)
     {
-        return ModelListResult.CreateList(items, totalItemsCount, top, page);
+        return PagedList.Create(items, totalItemsCount, top, page);
     }
 
     public static ITestBaseServiceQuery ApplyPagesForTest(ITestBaseServiceQuery q, int? top, int? page)

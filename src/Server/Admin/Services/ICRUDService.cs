@@ -1,9 +1,10 @@
-﻿using DevInstance.BlazorToolkit.Services;
+﻿using DevInstance.DevCoreApp.Shared.Model.Core.Common;
+using DevInstance.BlazorToolkit.Services;
 using DevInstance.WebServiceToolkit.Common.Model;
 
 namespace DevInstance.DevCoreApp.Server.Admin.Services;
 
-public interface ICRUDService<T> where T : ModelItem
+public interface ICRUDService<T> where T : IModelItem
 {
     /// <summary>
     /// Retrieves a paginated list of models that match the specified search and sorting criteria.
@@ -14,7 +15,7 @@ public interface ICRUDService<T> where T : ModelItem
     /// <param name="search">A search term used to filter the results. If null or empty, no filtering is applied.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains a ServiceActionResult with a
     /// ModelList of type T that holds the retrieved models. If this is a search result, the items fields should include <mark>...</mark> to highlight matched values.</returns>
-    Task<ServiceActionResult<ModelList<T>>> GetListAsync(int? top, int? page, string[] sortBy, string search);
+    Task<ServiceActionResult<PagedList<T>>> GetListAsync(int? top, int? page, string[] sortBy, string search);
 
     Task<ServiceActionResult<T>> GetAsync(string id);
 

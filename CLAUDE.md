@@ -14,7 +14,7 @@ DevCoreApp is a reusable starter template for custom ERP and CRM applications. I
 - Blazor **interactive Server** (Admin UI), Blazor WebAssembly (field worker client — standalone, not yet hosted)
 - PostgreSQL (primary), SQL Server (secondary)
 - DevInstance.BlazorToolkit — client-side Blazor utilities (`[BlazorService]`, `IApiContext<T>`, `IServiceExecutionHost`)
-- DevInstance.WebServiceToolkit — server-side utilities (`[WebService]`, `[QueryModel]`, `ModelItem`, `ModelList<T>`, `HandleWebRequestAsync()`, `IModelQuery<T,D>`)
+- DevInstance.WebServiceToolkit — server-side utilities (`[WebService]`, `[QueryModel]`, `IModelItem`, `IModelList<T>`, `HandleWebRequestAsync()`, `IModelQuery<T,D>`)
 - DevInstance.LogScope — scope-based logging (`IScopeManager`, `IScopeLog`)
 
 ## Build, Test, and Run Commands
@@ -324,7 +324,7 @@ entity that must be caught by the organization global query filter.
 - **Use `DatabaseObject`** for entities exposed via API but without user tracking
 - **Use `DatabaseEntityObject`** for business entities that track who created/modified them
 
-**The `Id` (Guid) never leaves the server.** APIs use `PublicId`. Decorators map `PublicId` → `ModelItem.Id` on ViewModels.
+**The `Id` (Guid) never leaves the server.** APIs use `PublicId`. Decorators map `PublicId` → `IModelItem.Id` on ViewModels.
 
 ## Data Access Pattern
 
@@ -537,7 +537,7 @@ implemented in `CoreQueryRepository` before services can reach it.
 - Use `[AuditExclude]` on sensitive entity properties
 - Implement `IOrganizationScoped` on new business entities — `OrganizationStampInterceptor` then fills `OrganizationId` on insert; do not set it by hand
 - Return `ServiceActionResult<T>` from services, not raw values or exceptions
-- Use `ModelList<T>` for paginated responses
+- Use `PagedList<T>` (`Shared.Model/Core/Common`, an `IModelList<T>`) for paginated responses — WebServiceToolkit's `ModelList<T>`/`ModelItem` are obsolete
 - Put shared/template code under a `Core` segment and product-specific code under `App` (see [Shared Core vs Product Code](#shared-core-vs-product-code))
 
 ## Things To Never Do

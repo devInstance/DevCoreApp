@@ -4,8 +4,10 @@ using System.ComponentModel.DataAnnotations;
 
 namespace DevInstance.DevCoreApp.Shared.Model.Core.Organizations;
 
-public class OrganizationItem : ModelItem
+public class OrganizationItem : IModelItem
 {
+    public string Id { get; set; }
+
     [Required]
     [Display(Name = "Name")]
     public string Name { get; set; } = string.Empty;

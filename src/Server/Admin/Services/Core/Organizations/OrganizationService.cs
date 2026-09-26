@@ -1,3 +1,4 @@
+using DevInstance.DevCoreApp.Shared.Model.Core.Common;
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.BlazorToolkit.Tools;
 using DevInstance.DevCoreApp.Server.Admin.Services.Core.Authentication;
@@ -37,7 +38,7 @@ public class OrganizationService : BaseService, IOrganizationService
         _operationContext = operationContext;
     }
 
-    public async Task<ServiceActionResult<ModelList<OrganizationItem>>> GetAllAsync(
+    public async Task<ServiceActionResult<PagedList<OrganizationItem>>> GetAllAsync(
         int? top, int? page, string? sortField = null, bool? isAsc = null,
         string? search = null, bool? isActive = null)
     {
@@ -67,8 +68,8 @@ public class OrganizationService : BaseService, IOrganizationService
             ? new[] { (isAsc == false ? "-" : "") + sortField }
             : null;
 
-        var modelList = ModelListResult.CreateList(items, totalCount, top, page, sortBy, search);
-        return ServiceActionResult<ModelList<OrganizationItem>>.OK(modelList);
+        var modelList = PagedList.Create(items, totalCount, top, page, sortBy, search);
+        return ServiceActionResult<PagedList<OrganizationItem>>.OK(modelList);
     }
 
     public async Task<ServiceActionResult<List<OrganizationItem>>> GetTreeAsync()

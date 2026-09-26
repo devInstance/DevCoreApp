@@ -9,7 +9,7 @@ public interface IImportExportService
     ServiceActionResult<List<string>> GetImportableEntityTypes();
     ServiceActionResult<List<ImportFieldDescriptor>> GetImportFields(string entityType);
     Task<ServiceActionResult<ImportParseResult>> ParseHeadersAsync(Stream fileStream, string fileName);
-    bool RequiresOrganizationSelection();
+    ServiceActionResult<bool> RequiresOrganizationSelection();
     Task<ServiceActionResult<ImportValidationResult>> ValidateAsync(
         Stream fileStream, string fileName, string entityType,
         List<ImportColumnMappingItem> mappings, string? organizationId = null);

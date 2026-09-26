@@ -1,3 +1,4 @@
+using DevInstance.DevCoreApp.Shared.Model.Core.Common;
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.DevCoreApp.Shared.Model.Core;
 using DevInstance.WebServiceToolkit.Common.Model;
@@ -6,7 +7,7 @@ namespace DevInstance.DevCoreApp.Server.Admin.Services.Core.Email;
 
 public interface IEmailLogService : ICRUDService<EmailLogItem>
 {
-    Task<ServiceActionResult<ModelList<EmailLogItem>>> GetAllAsync(
+    Task<ServiceActionResult<PagedList<EmailLogItem>>> GetAllAsync(
         int? top, int? page, string? sortField = null, bool? isAsc = null,
         string? search = null, int? status = null, string? templateName = null,
         DateTime? startDate = null, DateTime? endDate = null);

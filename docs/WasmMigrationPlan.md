@@ -218,11 +218,68 @@ Each phase ends green (`dotnet build`, `dotnet test`) and runnable.
    (existing JWT contract the ThreadIQ mobile client relies on) — revisit with the Phase 2
    auth client.
 
-**Phase 1 — API layer** (Blazor Server UI still works in parallel; same services)
-1. Add `api/me`, `api/account`, then one controller per feature in §4, with the page's policy on each.
-2. Add `[QueryModel]` list DTOs in `Shared.Model/Core/<Feature>`.
-3. Add integration tests with `WebApplicationFactory` for the base controller contract (success,
-   each error mapping, 401/403) and a smoke test per controller.
+**Phase 1 — API layer** — ✅ done (Blazor Server UI still works in parallel on the same services)
+1. ✅ `ModelList<T>`/`ModelItem` (obsolete in WebServiceToolkit 10.3.1) → `Shared.Model/Core/Common/PagedList<T>`
+   (`IModelList<T>`, same JSON) and DTOs implementing `IModelItem`.
+2. ✅ Query models: `ListQuery` (`top`, `page`, `sortBy=-Field,Other`, `search`), `DateRangeListQuery`
+   (dates normalized to UTC), and `AuditLogQuery`, `JobQuery`, `EmailLogQuery`, `OrganizationQuery`,
+   `SettingQuery`. There is no `+` sort prefix, because it decodes to a space in a query string.
+3. ✅ Service changes:
+   - `IAccountService` (register / forgot / reset / confirm-email / invitation set-password, JWT-era:
+     no cookie sign-in, failures → 400, links from `IAccountLinkBuilder`). **The anonymous
+     set-password re-verifies the emailed token.**
+   - `ICurrentUserService` → `CurrentUserItem` (profile, roles, effective permissions, theme).
+   - `IGridProfileService`.
+   - Current-user notification methods.
+   - `RequiresOrganizationSelection` → `ServiceActionResult<bool>`.
+4. ✅ Controllers (all `ApiControllerBase`, one service call per action, permission per verb:
+   `GET`=View, `POST`=Create, `PUT`=Edit, `DELETE`=Delete/Revoke; Owner/Admin hold all):
+   `api/account`, `api/me` (+`/profile`, `/theme`), `api/users` (+ roles, organizations,
+   permission-overrides, effective-permissions, access-state, resend-invitation, password),
+   `api/roles`, `api/permissions`, `api/organizations` (+ tree, current, toggle-active, move),
+   `api/email-logs` (+ bulk-delete, resend, resend-failed), `api/jobs` (+ logs, cancel, retry),
+   `api/audit-logs`, `api/feature-flags`, `api/api-keys` (+ revoke), `api/webhooks`
+   (+ deliveries), `api/settings`, `api/notifications` (+ unread-count, read, read-all),
+   `api/grid-profiles/{grid}`, `api/import-export` (+ entity types, fields, session, commit,
+   rollback). `api/user/profile` was removed in favour of `api/me/profile`.
+5. ✅ `AddApiControllers()` in one place: bare results, `WebServiceError` bodies, UTC dates,
+   `[QueryModel]` binding, and `null` returned as JSON `null` rather than an empty 204.
+6. ✅ Contract tests (`tests/Server/WebService/Core/Api/ApiContractTests.cs`): an in-memory host
+   covers success, `null`, every error mapping, and exceptions escaping a controller. Errors are
+   read as BlazorToolkit `ServiceActionError`. It also covers query binding and UTC dates.
+   Per-controller smoke tests need an authenticated DB-backed host, so they are deferred to Phase 2
+   together with the login client.
+7. ✅ `IOrganizationService` mock.
+
+Bugs found and fixed along the way:
+- **WebServiceToolkit 10.3.2:** the `[QueryModel]` binder split every `string` into chars (any
+  `search=` gave 400), and missed properties typed `IEnumerable<T>`.
+- **`ApiExceptionHandler` never matched in production.** With `UseExceptionHandler("/Error")`,
+  .NET 10 rewrites `Request.Path` to `/Error` before `IExceptionHandler`s run, so API errors thrown
+  outside a controller got the HTML error page. It now reads `IExceptionHandlerPathFeature.Path`.
+  It also needs `AllowStatusCode404Response = true`, or a 404 from the handler is rethrown.
+  **Forks (ThreadIQ) have the same bug.**
+- `NotificationService.MarkAsReadAsync` did not check ownership, so any user in the organization
+  could mark a colleague's notification as read.
+- `GridProfileService.SaveAsync` threw 401 for a permission failure; it now throws 403. A 401
+  makes a JWT client refresh and retry.
+
+Dependency changes:
+- **BlazorToolkit 10.1.2 → 10.5.0** (its `ModelDataPager` takes `IModelList<T>`). 10.4.0
+  inserted `Exception=1` into `ServiceActionErrorType`, the numbering `WebServiceErrorType`
+  matches. **Every client must use BlazorToolkit ≥ 10.4.0**, or error types are misread.
+- WebServiceToolkit 10.3.2 (query-binder fix).
+- All `Microsoft.*` packages 10.0.3 → 10.0.12, which BlazorToolkit 10.5.0 requires.
+- `AddBlazorServices` registers a class only under its interfaces once it has any. The pages
+  that inject `AccountService`/`GridProfileService` by concrete type get forwarding registrations
+  in `Program.cs` until Phase 4.
+
+Open for Phase 2:
+- **Profile pictures:** `api/users/{id}/profile-picture` requires auth, but a WASM `<img src>`
+  sends no bearer token. Either fetch the image through the client service as a blob/data URL,
+  or serve pictures through short-lived signed URLs.
+- **Import validate** still deserializes `mappingsJson` from a form field in the controller.
+  Revisit with the import client.
 
 **Phase 2 — Client foundation**
 1. Rename `DevCoreApp.Client` → `DevCoreApp.Client.Mobile` (folder, csproj, namespaces, slnx), and fix

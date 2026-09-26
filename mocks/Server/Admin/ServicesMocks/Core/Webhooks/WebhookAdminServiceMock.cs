@@ -1,3 +1,4 @@
+using DevInstance.DevCoreApp.Shared.Model.Core.Common;
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.BlazorToolkit.Tools;
 using DevInstance.DevCoreApp.Server.Admin.Services.Core.Webhooks;
@@ -115,7 +116,7 @@ public class WebhookAdminServiceMock : IWebhookAdminService
         };
     }
 
-    public async Task<ServiceActionResult<ModelList<WebhookSubscriptionItem>>> GetSubscriptionsAsync(
+    public async Task<ServiceActionResult<PagedList<WebhookSubscriptionItem>>> GetSubscriptionsAsync(
         int top, int page, string[]? sortBy = null, string? search = null)
     {
         await Task.Delay(delay);
@@ -132,8 +133,8 @@ public class WebhookAdminServiceMock : IWebhookAdminService
         var filtered = query.ToList();
         var items = filtered.Skip(page * top).Take(top).ToArray();
 
-        return ServiceActionResult<ModelList<WebhookSubscriptionItem>>.OK(
-            ModelListResult.CreateList(items, filtered.Count, top, page, sortBy, search));
+        return ServiceActionResult<PagedList<WebhookSubscriptionItem>>.OK(
+            PagedList.Create(items, filtered.Count, top, page, sortBy, search));
     }
 
     public async Task<ServiceActionResult<WebhookSubscriptionItem>> GetSubscriptionAsync(string id)
@@ -193,7 +194,7 @@ public class WebhookAdminServiceMock : IWebhookAdminService
         return ServiceActionResult<bool>.OK(true);
     }
 
-    public async Task<ServiceActionResult<ModelList<WebhookDeliveryItem>>> GetDeliveriesAsync(
+    public async Task<ServiceActionResult<PagedList<WebhookDeliveryItem>>> GetDeliveriesAsync(
         int top, int page, string? subscriptionId = null, string[]? sortBy = null)
     {
         await Task.Delay(delay);
@@ -206,7 +207,7 @@ public class WebhookAdminServiceMock : IWebhookAdminService
         var filtered = query.OrderByDescending(d => d.CreateDate).ToList();
         var items = filtered.Skip(page * top).Take(top).ToArray();
 
-        return ServiceActionResult<ModelList<WebhookDeliveryItem>>.OK(
-            ModelListResult.CreateList(items, filtered.Count, top, page, sortBy, null));
+        return ServiceActionResult<PagedList<WebhookDeliveryItem>>.OK(
+            PagedList.Create(items, filtered.Count, top, page, sortBy, null));
     }
 }

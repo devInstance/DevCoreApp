@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using DevInstance.BlazorToolkit.Tools;
+using DevInstance.DevCoreApp.Server.Admin.Services.Core;
 using DevInstance.DevCoreApp.Server.Admin.Services.Core.Account;
 using DevInstance.DevCoreApp.Server.Admin.Services.Core.Authentication;
 using DevInstance.DevCoreApp.Server.Admin.Services.Core.ApiKeys;
@@ -15,6 +16,7 @@ using DevInstance.DevCoreApp.Server.Admin.Services.Core.UserAdmin;
 using DevInstance.DevCoreApp.Server.Admin.WebService.Core.Hubs;
 using DevInstance.DevCoreApp.Server.Admin.WebService.Core.Identity;
 using DevInstance.DevCoreApp.Server.Admin.WebService.Core.Logging;
+using DevInstance.DevCoreApp.Server.Admin.WebService.Core.Controllers;
 using DevInstance.DevCoreApp.Server.Admin.WebService.Core.Health;
 using DevInstance.DevCoreApp.Server.Admin.WebService.Core.Hosting;
 using DevInstance.DevCoreApp.Server.Admin.WebService.Core.Middleware;
@@ -28,10 +30,8 @@ using DevInstance.DevCoreApp.Server.EmailProcessor.MailKit;
 using DevInstance.DevCoreApp.Server.StorageProcessor.Local;
 using DevInstance.DevCoreApp.Shared.Model.Core.Authentication;
 using DevInstance.DevCoreApp.Shared.Utils.Core;
-using DevInstance.DevCoreApp.Shared.Utils.Core.Json;
 using DevInstance.LogScope.Extensions.SerilogLogger;
 using DevInstance.LogScope.Formatters;
-using DevInstance.WebServiceToolkit.Controllers;
 using DevInstance.DevCoreApp.Server.Admin.WebService.Core.Identity;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -196,6 +196,11 @@ public class Program
         builder.Services.AddBlazorServicesMocks(typeof(UserProfileServiceMock).Assembly);
         builder.Services.AddBlazorServicesMocks(typeof(UserProfileService).Assembly);
 #endif
+        // AddBlazorServices registers a class only under its interfaces once it has any. The Blazor
+        // Server pages still inject these two by concrete type, so forward the concrete type to the
+        // same scoped instance. Remove with the Blazor Server UI (WASM migration Phase 4).
+        builder.Services.AddScoped(sp => (AccountService)sp.GetRequiredService<IAccountService>());
+        builder.Services.AddScoped(sp => (GridProfileService)sp.GetRequiredService<IGridProfileService>());
 
         builder.Services.AddHttpClient("WebhookDelivery", client =>
         {
@@ -205,11 +210,8 @@ public class Program
         builder.Services.AddSignalR();
         builder.Services.AddScoped<INotificationHubService, NotificationHubService>();
 
-        // Every DateTime on the wire is UTC ("...Z"); clients convert to local for display.
-        builder.Services.AddControllers()
-            .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new UtcDateTimeJsonConverter()))
-            // Model-validation 400s use the same WebServiceError body as every other API error.
-            .AddWebServiceToolkitErrors();
+        // /api wire contract: bare results, WebServiceError bodies, UTC dates, [QueryModel] binding.
+        builder.Services.AddApiControllers();
         builder.Services.AddWasmClientCors(builder.Configuration);
         builder.Services.AddMailKit(builder.Configuration);
         builder.Services.AddLocalFileStorage(builder.Configuration);
@@ -238,7 +240,14 @@ public class Program
             // Production: ApiExceptionHandler (registered via AddExceptionHandler<T>) runs
             // first inside UseExceptionHandler — handles API paths with JSON, falls through
             // to /Error page for non-API paths.
-            app.UseExceptionHandler("/Error");
+            // AllowStatusCode404Response: ApiExceptionHandler legitimately answers a
+            // RecordNotFoundException with 404; without it ASP.NET treats a 404 from the handler
+            // as a misconfigured error path and rethrows.
+            app.UseExceptionHandler(new ExceptionHandlerOptions
+            {
+                ExceptionHandlingPath = "/Error",
+                AllowStatusCode404Response = true
+            });
             // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
             app.UseHsts();
         }

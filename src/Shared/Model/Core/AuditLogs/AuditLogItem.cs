@@ -3,8 +3,10 @@ using System;
 
 namespace DevInstance.DevCoreApp.Shared.Model.Core.AuditLogs;
 
-public class AuditLogItem : ModelItem
+public class AuditLogItem : IModelItem
 {
+    public string Id { get; set; }
+
     public string TableName { get; set; } = string.Empty;
     public string RecordId { get; set; } = string.Empty;
     public string Action { get; set; } = string.Empty;

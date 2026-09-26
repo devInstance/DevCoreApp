@@ -93,7 +93,7 @@ public class UserProfileServiceMock : IUserProfileService
         });
     }
 
-    public async Task<ServiceActionResult<ModelList<UserProfileItem>>> GetListAsync(int? top, int? page, string[] sortBy, string search)
+    public async Task<ServiceActionResult<PagedList<UserProfileItem>>> GetListAsync(int? top, int? page, string[] sortBy, string search)
     {
         var pageVal = page ?? 0;
         var topVal = top ?? 10;
@@ -142,8 +142,8 @@ public class UserProfileServiceMock : IUserProfileService
                 })
                 .ToList();
 
-            return ServiceActionResult<ModelList<UserProfileItem>>.OK(
-                ModelListResult.CreateList(searchResult.ToArray(), searchResult.Count, topVal, pageVal, sortBy, search, true));
+            return ServiceActionResult<PagedList<UserProfileItem>>.OK(
+                PagedList.Create(searchResult.ToArray(), searchResult.Count, topVal, pageVal, sortBy, search, true));
         }
 
         if (days > 0 || !string.IsNullOrEmpty(status))
@@ -156,8 +156,8 @@ public class UserProfileServiceMock : IUserProfileService
 
             await Task.Delay(delay);
 
-            return ServiceActionResult<ModelList<UserProfileItem>>.OK(
-                ModelListResult.CreateList(dateItems, filteredList.Count, topVal, pageVal, sortBy, search, true));
+            return ServiceActionResult<PagedList<UserProfileItem>>.OK(
+                PagedList.Create(dateItems, filteredList.Count, topVal, pageVal, sortBy, search, true));
         }
 
         var items = modelList
@@ -167,8 +167,8 @@ public class UserProfileServiceMock : IUserProfileService
 
         await Task.Delay(delay);
 
-        return ServiceActionResult<ModelList<UserProfileItem>>.OK(
-            ModelListResult.CreateList(items, modelList.Count, topVal, pageVal, sortBy, search));
+        return ServiceActionResult<PagedList<UserProfileItem>>.OK(
+            PagedList.Create(items, modelList.Count, topVal, pageVal, sortBy, search));
     }
 
     private static void ParseSearch(string? search, out string term, out string field, out string status, out int days)

@@ -5,8 +5,10 @@ using DevInstance.WebServiceToolkit.Common.Model;
 
 namespace DevInstance.DevCoreApp.Shared.Model.Core.FeatureFlags;
 
-public class FeatureFlagItem : ModelItem
+public class FeatureFlagItem : IModelItem
 {
+    public string Id { get; set; }
+
     [Required]
     [StringLength(256, MinimumLength = 2)]
     [Display(Name = "Name")]

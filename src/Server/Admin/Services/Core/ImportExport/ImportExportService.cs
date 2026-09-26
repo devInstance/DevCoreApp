@@ -89,9 +89,9 @@ public class ImportExportService : BaseService, IImportExportService
         });
     }
 
-    public bool RequiresOrganizationSelection()
+    public ServiceActionResult<bool> RequiresOrganizationSelection()
     {
-        return OperationContext.PrimaryOrganizationId == null;
+        return ServiceActionResult<bool>.OK(OperationContext.PrimaryOrganizationId == null);
     }
 
     public async Task<ServiceActionResult<ImportValidationResult>> ValidateAsync(

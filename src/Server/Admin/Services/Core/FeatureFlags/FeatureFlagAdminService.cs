@@ -1,3 +1,4 @@
+using DevInstance.DevCoreApp.Shared.Model.Core.Common;
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.BlazorToolkit.Tools;
 using DevInstance.DevCoreApp.Server.Admin.Services.Core.Authentication;
@@ -34,7 +35,7 @@ public class FeatureFlagAdminService : BaseService, IFeatureFlagAdminService
         this.featureFlagService = featureFlagService;
     }
 
-    public async Task<ServiceActionResult<ModelList<FeatureFlagItem>>> GetFlagsAsync(
+    public async Task<ServiceActionResult<PagedList<FeatureFlagItem>>> GetFlagsAsync(
         int top, int page, string[]? sortBy = null, string? search = null)
     {
         using var l = log.TraceScope();
@@ -61,8 +62,8 @@ public class FeatureFlagAdminService : BaseService, IFeatureFlagAdminService
 
         var items = flags.Select(ff => ff.ToView()).ToArray();
 
-        var modelList = ModelListResult.CreateList(items, totalCount, top, page, sortBy, search);
-        return ServiceActionResult<ModelList<FeatureFlagItem>>.OK(modelList);
+        var modelList = PagedList.Create(items, totalCount, top, page, sortBy, search);
+        return ServiceActionResult<PagedList<FeatureFlagItem>>.OK(modelList);
     }
 
     public async Task<ServiceActionResult<FeatureFlagItem>> GetFlagAsync(string id)

@@ -1,3 +1,4 @@
+using DevInstance.DevCoreApp.Shared.Model.Core.Common;
 using System.Text.Json;
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.DevCoreApp.Server.Admin.Services;
@@ -25,7 +26,7 @@ public partial class AuditLogPage
     [CascadingParameter]
     private IServiceExecutionHost Host { get; set; } = default!;
 
-    private ModelList<AuditLogItem>? AuditLogList { get; set; }
+    private PagedList<AuditLogItem>? AuditLogList { get; set; }
 
     public List<ColumnDescriptor<AuditLogItem>> Columns { get; set; } = new()
     {
@@ -149,7 +150,7 @@ public partial class AuditLogPage
 
     public async Task OnPageChangedAsync(int page)
     {
-        await LoadAuditLogs(page, AuditLogList?.SortBy, AuditLogList?.IsAsc, AuditLogList?.Search);
+        await LoadAuditLogs(page, AuditLogList?.SortField(), AuditLogList?.IsAscending(), AuditLogList?.Search);
     }
 
     public async Task OnSave(GridSettingsResult<AuditLogItem> grid)
@@ -168,13 +169,13 @@ public partial class AuditLogPage
 
     public async Task OnSearch()
     {
-        await LoadAuditLogs(0, AuditLogList?.SortBy, AuditLogList?.IsAsc, SearchTerm);
+        await LoadAuditLogs(0, AuditLogList?.SortField(), AuditLogList?.IsAscending(), SearchTerm);
     }
 
     public async Task OnClearSearch()
     {
         SearchTerm = string.Empty;
-        await LoadAuditLogs(0, AuditLogList?.SortBy, AuditLogList?.IsAsc, null);
+        await LoadAuditLogs(0, AuditLogList?.SortField(), AuditLogList?.IsAscending(), null);
     }
 
     public async Task OnColumnsChanged()
@@ -196,7 +197,7 @@ public partial class AuditLogPage
         OldValuesMap = null;
         NewValuesMap = null;
         AllPropertyKeys = null;
-        await LoadAuditLogs(0, AuditLogList?.SortBy, AuditLogList?.IsAsc, AuditLogList?.Search);
+        await LoadAuditLogs(0, AuditLogList?.SortField(), AuditLogList?.IsAscending(), AuditLogList?.Search);
     }
 
     private Task OnRowClick(AuditLogItem item)

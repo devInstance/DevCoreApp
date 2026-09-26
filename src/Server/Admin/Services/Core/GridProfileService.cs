@@ -13,7 +13,7 @@ namespace DevInstance.DevCoreApp.Server.Admin.Services.Core;
 
 [BlazorService]
 [BlazorServiceMock]
-public class GridProfileService : BaseService
+public class GridProfileService : BaseService, IGridProfileService
 {
     public GridProfileService(IScopeManager logManager,
                               ITimeProvider timeProvider,
@@ -72,7 +72,9 @@ public class GridProfileService : BaseService
         // Authorization check for global profiles
         if (item.IsGlobal && !CanEditGlobalProfile())
         {
-            throw new UnauthorizedException(
+            // 403, not 401: the caller is signed in, just not allowed. A 401 would make the WASM
+            // client treat it as an expired token and retry.
+            throw new ForbiddenException(
                 "Only Owner, Admin, or Manager can edit global profiles.");
         }
 

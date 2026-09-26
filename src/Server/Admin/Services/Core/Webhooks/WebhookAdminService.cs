@@ -1,3 +1,4 @@
+using DevInstance.DevCoreApp.Shared.Model.Core.Common;
 using DevInstance.BlazorToolkit.Services;
 using DevInstance.BlazorToolkit.Tools;
 using DevInstance.DevCoreApp.Server.Admin.Services.Core.Authentication;
@@ -32,7 +33,7 @@ public class WebhookAdminService : BaseService, IWebhookAdminService
         log = logManager.CreateLogger(this);
     }
 
-    public async Task<ServiceActionResult<ModelList<WebhookSubscriptionItem>>> GetSubscriptionsAsync(
+    public async Task<ServiceActionResult<PagedList<WebhookSubscriptionItem>>> GetSubscriptionsAsync(
         int top, int page, string[]? sortBy = null, string? search = null)
     {
         using var l = log.TraceScope();
@@ -58,8 +59,8 @@ public class WebhookAdminService : BaseService, IWebhookAdminService
 
         var items = subscriptions.Select(ws => ws.ToView()).ToArray();
 
-        var modelList = ModelListResult.CreateList(items, totalCount, top, page, sortBy, search);
-        return ServiceActionResult<ModelList<WebhookSubscriptionItem>>.OK(modelList);
+        var modelList = PagedList.Create(items, totalCount, top, page, sortBy, search);
+        return ServiceActionResult<PagedList<WebhookSubscriptionItem>>.OK(modelList);
     }
 
     public async Task<ServiceActionResult<WebhookSubscriptionItem>> GetSubscriptionAsync(string id)
@@ -135,7 +136,7 @@ public class WebhookAdminService : BaseService, IWebhookAdminService
         return ServiceActionResult<bool>.OK(true);
     }
 
-    public async Task<ServiceActionResult<ModelList<WebhookDeliveryItem>>> GetDeliveriesAsync(
+    public async Task<ServiceActionResult<PagedList<WebhookDeliveryItem>>> GetDeliveriesAsync(
         int top, int page, string? subscriptionId = null, string[]? sortBy = null)
     {
         using var l = log.TraceScope();
@@ -166,8 +167,8 @@ public class WebhookAdminService : BaseService, IWebhookAdminService
 
         var items = deliveries.Select(wd => wd.ToView()).ToArray();
 
-        var modelList = ModelListResult.CreateList(items, totalCount, top, page, sortBy, null);
-        return ServiceActionResult<ModelList<WebhookDeliveryItem>>.OK(modelList);
+        var modelList = PagedList.Create(items, totalCount, top, page, sortBy, null);
+        return ServiceActionResult<PagedList<WebhookDeliveryItem>>.OK(modelList);
     }
 
     private static string GenerateSecret()

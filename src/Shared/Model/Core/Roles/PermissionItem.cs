@@ -2,8 +2,10 @@ using DevInstance.WebServiceToolkit.Common.Model;
 
 namespace DevInstance.DevCoreApp.Shared.Model.Core.Roles;
 
-public class PermissionItem : ModelItem
+public class PermissionItem : IModelItem
 {
+    public string Id { get; set; }
+
     public string Module { get; set; } = string.Empty;
 
     public string Entity { get; set; } = string.Empty;
