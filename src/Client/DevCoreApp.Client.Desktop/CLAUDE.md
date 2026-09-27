@@ -7,7 +7,11 @@ conventions (Core/App split, naming) are in the root [`CLAUDE.md`](../../../CLAU
 ## Run
 
 ```bash
-# Against the API (start the WebService first; ApiBaseUrl is in wwwroot/appsettings.Development.json)
+# Normal: run the Api host; it serves this app at "/" (same origin, no configuration)
+dotnet run --project src/Server/Api/DevCoreApp.Server.Api.csproj
+
+# Standalone dev server against a running Api host (launch environment "Standalone" →
+# wwwroot/appsettings.Standalone.json ApiBaseUrl)
 dotnet run --project src/Client/DevCoreApp.Client.Desktop/DevCoreApp.Client.Desktop.csproj   # http://localhost:5280
 
 # No server at all: in-memory mocks (mocks/Client/Client.Services.Mocks); sign in with anything

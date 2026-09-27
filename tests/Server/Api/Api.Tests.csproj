@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <AssemblyName>DevInstance.DevCoreApp.Server.Tests</AssemblyName>
+        <RootNamespace>DevInstance.DevCoreApp.Server.Tests</RootNamespace>
+        <IsPackable>false</IsPackable>
+        <Configurations>Debug;Release;NetApiMoqs;ServiceMoqs</Configurations>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
+        <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="coverlet.collector" Version="8.0.0">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+		<PackageReference Include="xunit.v3" Version="3.2.2" />
+		<PackageReference Include="Microsoft.AspNetCore.TestHost" Version="10.0.12" />
+	</ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\..\src\Server\Services\DevCoreApp.Server.Services.csproj" />
+      <ProjectReference Include="..\..\..\src\Server\Api\DevCoreApp.Server.Api.csproj" />
+      <ProjectReference Include="..\..\Shared\TestUtils\TestUtils.csproj" />
+    </ItemGroup>
+
+</Project>

@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<AssemblyName>DevInstance.DevCoreApp.Server.Services.Mocks</AssemblyName>
+		<RootNamespace>DevInstance.DevCoreApp.Server.Services.Mocks</RootNamespace>
+		<Configurations>Debug;Release;ServiceMocks</Configurations>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Bogus" Version="35.6.5" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\src\Server\Services\DevCoreApp.Server.Services.csproj" />
+	</ItemGroup>
+
+</Project>

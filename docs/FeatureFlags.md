@@ -34,10 +34,10 @@ The feature flag stack is composed of these parts:
 | Query layer | Filtering, search, sort, pagination | `src/Server/Database/Core/Data/Queries/BasicsImplementation/CoreFeatureFlagQuery.cs` |
 | Decorators | Maps DB entity to shared UI/service model | `src/Server/Database/Core/Data/Decorators/FeatureFlagDecorators.cs` |
 | Shared DTO | Validation rules for create/edit operations | `src/Shared/Model/Core/FeatureFlags/FeatureFlagItem.cs` |
-| Admin CRUD service | Create, read, update, delete flag records | `src/Server/Admin/Services/Core/FeatureFlags/FeatureFlagAdminService.cs` |
-| Runtime evaluation service | Determines whether a feature is enabled for the current context | `src/Server/Admin/Services/Core/FeatureFlags/FeatureFlagService.cs` |
-| Admin UI | Displays and edits flags in the back office | `src/Server/Admin/WebService/Core/UI/Pages/Admin/FeatureFlagsPage.razor` |
-| Mock service | Enables UI development without a database | `mocks/Server/Admin/ServicesMocks/Core/FeatureFlags/FeatureFlagAdminServiceMock.cs` |
+| Admin CRUD service | Create, read, update, delete flag records | `src/Server/Services/Core/FeatureFlags/FeatureFlagAdminService.cs` |
+| Runtime evaluation service | Determines whether a feature is enabled for the current context | `src/Server/Services/Core/FeatureFlags/FeatureFlagService.cs` |
+| Admin UI | Displays and edits flags in the back office | `src/Server/Api/Core/UI/Pages/Admin/FeatureFlagsPage.razor` |
+| Mock service | Enables UI development without a database | `mocks/Server/Services.Mocks/Core/FeatureFlags/FeatureFlagAdminServiceMock.cs` |
 
 ## Data Model
 
@@ -407,15 +407,15 @@ If you want this starter feature to be production-ready for new projects, the hi
 
 | Concern | File |
 |---|---|
-| Runtime evaluation | `src/Server/Admin/Services/Core/FeatureFlags/FeatureFlagService.cs` |
-| Admin CRUD | `src/Server/Admin/Services/Core/FeatureFlags/FeatureFlagAdminService.cs` |
+| Runtime evaluation | `src/Server/Services/Core/FeatureFlags/FeatureFlagService.cs` |
+| Admin CRUD | `src/Server/Services/Core/FeatureFlags/FeatureFlagAdminService.cs` |
 | Shared DTO | `src/Shared/Model/Core/FeatureFlags/FeatureFlagItem.cs` |
 | DB entity | `src/Server/Database/Core/Models/FeatureFlag.cs` |
 | EF model config | `src/Server/Database/Core/ApplicationDbContext.cs` |
 | Query implementation | `src/Server/Database/Core/Data/Queries/BasicsImplementation/CoreFeatureFlagQuery.cs` |
 | Entity/DTO mapping | `src/Server/Database/Core/Data/Decorators/FeatureFlagDecorators.cs` |
-| Admin page UI | `src/Server/Admin/WebService/Core/UI/Pages/Admin/FeatureFlagsPage.razor` |
-| Admin page logic | `src/Server/Admin/WebService/Core/UI/Pages/Admin/FeatureFlagsPage.razor.cs` |
-| Mock service | `mocks/Server/Admin/ServicesMocks/Core/FeatureFlags/FeatureFlagAdminServiceMock.cs` |
+| Admin page UI | `src/Server/Api/Core/UI/Pages/Admin/FeatureFlagsPage.razor` |
+| Admin page logic | `src/Server/Api/Core/UI/Pages/Admin/FeatureFlagsPage.razor.cs` |
+| Mock service | `mocks/Server/Services.Mocks/Core/FeatureFlags/FeatureFlagAdminServiceMock.cs` |
 | Permission constants | `src/Shared/Model/Core/Permissions/PermissionDefinitions.cs` |
 

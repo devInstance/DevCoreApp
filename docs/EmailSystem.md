@@ -32,15 +32,15 @@ The email feature is split across configuration, templating, background processi
 | Area | Responsibility | Main files |
 |---|---|---|
 | Provider abstraction | Defines the delivery contract | `src/Server/Email/Processor/Core/IEmailProvider.cs` |
-| Provider registration | Registers the active mail provider in DI | `src/Server/Admin/WebService/Program.cs` |
+| Provider registration | Registers the active mail provider in DI | `src/Server/Api/Program.cs` |
 | Mail provider implementations | Connects to SMTP-style services | `src/Server/Email/MailKit/ConfigurationExtensions.cs`, `src/Server/Email/MailKit/Core/MailKitEmailSender.cs`, `src/Server/Email/Smtp/Core/SmtpEmailProvider.cs` |
-| Identity email sender | Queues account-related emails | `src/Server/Admin/Services/Core/Notifications/IdentityEmailSender.cs` |
-| Template rendering | Resolves template files and replaces placeholders | `src/Server/Admin/Services/Core/Notifications/Templates/EmailTemplateService.cs` |
-| Background queue | Creates `EmailLog` rows and `BackgroundTask` jobs | `src/Server/Admin/Services/Core/Background/BackgroundWorker.cs` |
-| Delivery handler | Sends queued email and updates log status | `src/Server/Admin/Services/Core/Background/Tasks/Handlers/SendEmailTaskHandler.cs` |
-| Email log admin service | Lists, filters, deletes, and resends log entries | `src/Server/Admin/Services/Core/Email/EmailLogService.cs` |
-| Admin UI | Email log list and detail pages | `src/Server/Admin/WebService/Core/UI/Pages/Admin/EmailLog.razor`, `src/Server/Admin/WebService/Core/UI/Pages/Admin/EmailLogDetail.razor` |
-| Health check | Detects stale queued emails | `src/Server/Admin/WebService/Core/Health/StuckEmailsHealthCheck.cs` |
+| Identity email sender | Queues account-related emails | `src/Server/Services/Core/Notifications/IdentityEmailSender.cs` |
+| Template rendering | Resolves template files and replaces placeholders | `src/Server/Services/Core/Notifications/Templates/EmailTemplateService.cs` |
+| Background queue | Creates `EmailLog` rows and `BackgroundTask` jobs | `src/Server/Services/Core/Background/BackgroundWorker.cs` |
+| Delivery handler | Sends queued email and updates log status | `src/Server/Services/Core/Background/Tasks/Handlers/SendEmailTaskHandler.cs` |
+| Email log admin service | Lists, filters, deletes, and resends log entries | `src/Server/Services/Core/Email/EmailLogService.cs` |
+| Admin UI | Email log list and detail pages | `src/Server/Api/Core/UI/Pages/Admin/EmailLog.razor`, `src/Server/Api/Core/UI/Pages/Admin/EmailLogDetail.razor` |
+| Health check | Detects stale queued emails | `src/Server/Api/Core/Health/StuckEmailsHealthCheck.cs` |
 
 ## Active Provider
 
@@ -59,7 +59,7 @@ Other provider code exists, but it is not the active runtime path by default.
 
 ## Configuration
 
-The default configuration block lives in `src/Server/Admin/WebService/appsettings.json`:
+The default configuration block lives in `src/Server/Api/appsettings.json`:
 
 ```json
 "EmailConfiguration": {
@@ -337,7 +337,7 @@ Notes:
 
 To add a new templated email:
 
-1. add a new HTML or text file under `src/Server/Admin/WebService/wwwroot/email-templates`
+1. add a new HTML or text file under `src/Server/Api/wwwroot/email-templates`
 2. register it in `EmailTemplateRepository`
 3. render it through `IEmailTemplateService`
 4. queue the resulting content with `IBackgroundWorker`

@@ -15,7 +15,7 @@ namespace DevInstance.DevCoreApp.Server.Database.Postgres;
 /// Usage:
 ///   dotnet ef migrations add MyMigration
 ///     --project src/Server/Database/Postgres
-///     --startup-project src/Server/Admin/WebService
+///     --startup-project src/Server/Api
 /// </summary>
 public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<PostgresApplicationDbContext>
 {

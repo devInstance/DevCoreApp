@@ -1,0 +1,20 @@
+using DevInstance.DevCoreApp.Shared.Model.Core.Common;
+using DevInstance.BlazorToolkit.Services;
+using DevInstance.DevCoreApp.Shared.Model.Core.BackgroundTasks;
+using DevInstance.WebServiceToolkit.Common.Model;
+
+namespace DevInstance.DevCoreApp.Server.Services.Core.BackgroundTasks;
+
+public interface IJobDashboardService
+{
+    Task<ServiceActionResult<PagedList<BackgroundTaskItem>>> GetAllAsync(
+        int? top, int? page, string? sortField = null, bool? isAsc = null,
+        string? search = null, int? status = null, string? taskType = null,
+        DateTime? startDate = null, DateTime? endDate = null);
+
+    Task<ServiceActionResult<List<BackgroundTaskLogItem>>> GetJobLogsAsync(string jobPublicId);
+
+    Task<ServiceActionResult<bool>> CancelJobAsync(string jobPublicId);
+
+    Task<ServiceActionResult<bool>> RetryJobAsync(string jobPublicId);
+}

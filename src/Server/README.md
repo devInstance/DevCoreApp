@@ -8,9 +8,8 @@ The server side of DevCoreApp is split into multiple projects, each with a clear
 
 ```
 /src/Server/
-├── Admin/
-│   ├── Services/          # Business logic, authentication, notifications
-│   └── WebService/        # Blazor SSR host, API controllers, SignalR, UI pages
+├── Api/                 # HTTP host: /api controllers, SignalR, health, /setup; hosts the WASM clients
+├── Services/            # Business logic, authentication, notifications, background jobs
 ├── Database/
 │   ├── Core/              # Entities, queries, decorators, EF configuration
 │   ├── Postgres/          # PostgreSQL provider and migrations
@@ -31,14 +30,14 @@ The server side of DevCoreApp is split into multiple projects, each with a clear
 The server follows a layered architecture with strict dependency rules:
 
 ```
-Pages/Controllers → Services → Queries/Repository → Database
+WASM clients → /api controllers → Services → Queries/Repository → Database
 ```
 
-### WebService (Admin/WebService)
+### Api
 
-The entry point of the application. Hosts Blazor SSR pages, API controllers, and SignalR hubs. Pages use `IServiceExecutionHost` as a cascading parameter for all service calls. Controllers use `HandleWebRequestAsync()` for consistent error handling. This project never accesses the database directly — all data access goes through Services.
+The entry point of the application. Hosts the `/api` controllers, the SignalR hub, health checks and the first-run `/setup` page, and serves the Blazor WebAssembly clients (`src/Client`: Desktop at `/`, Mobile at `/mobile`). Controllers derive from `ApiControllerBase` and make one service call per action through `HandleServiceAsync()`, which maps results and exceptions to the API wire contract. This project never accesses the database directly — all data access goes through Services.
 
-### Services (Admin/Services)
+### Services
 
 Contains all business logic. Services inherit from `BaseService`, are annotated with `[BlazorService]` for automatic DI registration, and return `ServiceActionResult<T>`. They access data through query classes obtained from `IQueryRepository`, never through `DbContext` directly.
 

@@ -1,0 +1,50 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<UserSecretsId>aspnet-DevInstance.DevCoreApp-0533fd67-bb14-4bd3-b8b1-646b0cb66317</UserSecretsId>
+		<AssemblyName>DevInstance.DevCoreApp.Server.Api</AssemblyName>
+		<RootNamespace>DevInstance.DevCoreApp.Server.Api</RootNamespace>
+		<Copyright>Copyright 2021-2026 DevInstance LLC</Copyright>
+		<PackageProjectUrl>https://devinstance.net/blog/aspnet-core-introduction-to-the-clean-architecture</PackageProjectUrl>
+		<Configurations>Debug;Release;ServiceMocks</Configurations>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="DevInstance.LogScope.Extensions.SerilogLogger" Version="10.1.0" />
+		<PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
+		<PackageReference Include="Serilog.Sinks.PostgreSQL" Version="2.3.0" />
+		<PackageReference Include="DevInstance.WebServiceToolkit" Version="10.3.2" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.12" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.12" />
+		<PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.12" />
+		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.12" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.12" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.12">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.12" />
+		<PackageReference Include="Microsoft.Extensions.Localization" Version="10.0.12" />
+		<PackageReference Include="Microsoft.Extensions.Localization.Abstractions" Version="10.0.12" />
+		<PackageReference Include="System.Text.Json" Version="10.0.3" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Services\DevCoreApp.Server.Services.csproj" />
+	</ItemGroup>
+
+	<!-- The WASM clients, hosted by this app (the standard "hosted Blazor WebAssembly" model): their
+	     published files flow in as static web assets — Desktop at "/", Mobile at "/mobile" (its
+	     StaticWebAssetBasePath). Build-time only: the server uses no client code. -->
+	<ItemGroup>
+		<ProjectReference Include="..\..\Client\DevCoreApp.Client.Desktop\DevCoreApp.Client.Desktop.csproj" />
+		<ProjectReference Include="..\..\Client\DevCoreApp.Client.Mobile\DevCoreApp.Client.Mobile.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\mocks\Server\Services.Mocks\DevCoreApp.Server.Services.Mocks.csproj" Condition="'$(Configuration)' == 'ServiceMocks'" />
+	</ItemGroup>
+
+</Project>

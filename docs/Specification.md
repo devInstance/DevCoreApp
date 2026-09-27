@@ -39,7 +39,7 @@ Provides client-side Blazor utilities used in `DevCoreApp.Client` and `DevCoreAp
 
 NuGet: `DevInstance.WebServiceToolkit`, `DevInstance.WebServiceToolkit.Common`, `DevInstance.WebServiceToolkit.Database`
 
-Provides server-side ASP.NET Core utilities used in `DevCoreApp.Admin.WebService`, `DevCoreApp.Admin.Services`, and `DevCoreApp.Database`:
+Provides server-side ASP.NET Core utilities used in `DevCoreApp.Server.Api`, `DevCoreApp.Server.Services`, and `DevCoreApp.Database`:
 
 - **`[WebService]` attribute** — Marks service classes for automatic DI registration via `AddServerWebServices()`. Equivalent of `[BlazorService]` for the server side.
 - **`[QueryModel]` / `[QueryName]` attributes** — Automatic query string binding to strongly-typed POCO classes for API endpoints.
@@ -621,7 +621,7 @@ DevCoreApp/
 │   │
 │   ├── Server/
 │   │   ├── Admin/
-│   │   │   ├── DevCoreApp.Admin.Services/         # Business logic, auth, notifications
+│   │   │   ├── DevCoreApp.Server.Services/         # Business logic, auth, notifications
 │   │   │   │   ├── Invoices/
 │   │   │   │   │   ├── InvoiceService.cs
 │   │   │   │   │   └── InvoiceValidator.cs
@@ -638,7 +638,7 @@ DevCoreApp/
 │   │   │   │   └── Settings/
 │   │   │   │       └── SettingsService.cs
 │   │   │   │
-│   │   │   └── DevCoreApp.Admin.WebService/       # Blazor SSR host + API controllers + SignalR hubs
+│   │   │   └── DevCoreApp.Server.Api/       # Blazor SSR host + API controllers + SignalR hubs
 │   │   │       ├── Invoices/
 │   │   │       │   ├── InvoiceController.cs
 │   │   │       │   ├── InvoiceListPage.razor
@@ -761,8 +761,8 @@ DevCoreApp/
 │   ├── Client/
 │   │   └── DevCoreApp.Client.Tests/
 │   ├── Server/
-│   │   ├── DevCoreApp.Admin.Services.Tests/
-│   │   ├── DevCoreApp.Admin.WebService.Tests/
+│   │   ├── DevCoreApp.Server.Services.Tests/
+│   │   ├── DevCoreApp.Server.Api.Tests/
 │   │   ├── DevCoreApp.Worker.Tests/
 │   │   ├── DevCoreApp.Database.Tests/
 │   │   ├── DevCoreApp.Email.Tests/
@@ -808,8 +808,8 @@ The data flow for any feature:
 ```
 Client (WASM)
   → calls API with InvoiceCreateRequest (ViewModel from Shared)
-    → InvoiceController (WebService)
-      → InvoiceService (Admin.Services)
+    → InvoiceController (Server.Api)
+      → InvoiceService (Server.Services)
         → InvoiceQuery (Database) — reads/writes via IModelQuery<T,D>
         → InvoiceDecorator (Database) — converts Entity ↔ ViewModel
       ← returns InvoiceViewModel (from Shared)
@@ -834,7 +834,7 @@ public interface IOperationContext
 
 | Host | Implementation |
 |------|---------------|
-| `Admin.WebService` | Populated from `HttpContext`, `ClaimsPrincipal`, and resolved organization context |
+| `Server.Api` | Populated from `HttpContext`, `ClaimsPrincipal`, and resolved organization context |
 | `Worker` | Populated from the job's stored context (user who queued the job, their organization) |
 | Database triggers | No context available — `ChangedByUserId` is null (expected) |
 
@@ -852,12 +852,12 @@ DevCoreApp.Email                   ← Email provider abstractions & implementat
                                       References: Shared
 DevCoreApp.Storage                 ← File storage provider abstractions & implementations
                                       References: Shared
-DevCoreApp.Admin.Services          ← Business logic, auth, notifications
+DevCoreApp.Server.Services          ← Business logic, auth, notifications
                                       References: Database, Email, Storage, Shared
-DevCoreApp.Admin.WebService        ← Web host, controllers, Blazor SSR pages, SignalR hubs
-                                      References: Admin.Services, Shared
+DevCoreApp.Server.Api        ← Web host, controllers, Blazor SSR pages, SignalR hubs
+                                      References: Server.Services, Shared
 DevCoreApp.Worker                  ← Background job worker (separate hosted process)
-                                      References: Admin.Services, Database, Shared
+                                      References: Server.Services, Database, Shared
 DevCoreApp.Client.Services         ← Client-side API clients
                                       References: Shared
 DevCoreApp.Client                  ← Blazor WASM app
@@ -886,12 +886,12 @@ This is the recommended order of implementation to minimize rework and maximize 
 
 ## Codebase Conventions
 
-- **Business logic lives in `Admin.Services`, not in `Database`.** Entity classes in `Database` are data models only. If an entity method does more than simple property computation, it belongs in a service.
+- **Business logic lives in `Server.Services`, not in `Database`.** Entity classes in `Database` are data models only. If an entity method does more than simple property computation, it belongs in a service.
 - **All database access goes through query classes.** Services never call `DbContext` directly. Query classes implement `IModelQuery<T,D>` from WebServiceToolkit.Database and are the single point of data access per feature.
 - **Entities never leave the server.** Every entity displayed by the client has a corresponding ViewModel in `Shared` (implementing `IModelItem` where appropriate). Paginated results use `PagedList<T>`. Decorator classes handle the conversion. No exceptions.
 - **Cross-feature queries live in the feature that owns the primary entity.** An overdue invoice report lives in `Invoices/`, not in a separate `Reporting/` folder.
 - **`IOperationContext` is the bridge between the application layer and the data layer.** It replaces direct ASP.NET Core dependencies in `Database`.
-- **Feature folders are the unit of organization.** Each feature folder contains everything related to that feature at that layer: entity, configuration, query, decorator (in Database); service, validator (in Admin.Services); controller, pages (in WebService); ViewModel, requests (in Shared).
+- **Feature folders are the unit of organization.** Each feature folder contains everything related to that feature at that layer: entity, configuration, query, decorator (in Database); service, validator (in Server.Services); controller, pages (in WebService); ViewModel, requests (in Shared).
 - **Service registration uses toolkit attributes.** Server services use `[WebService]` (registered via `AddServerWebServices()`). Client services use `[BlazorService]` (registered via `AddBlazorServices()`). Manual DI registration is the exception.
 - **API controllers use `HandleWebRequestAsync()`.** All controller actions wrap their logic with WebServiceToolkit's `HandleWebRequestAsync()` for standardized exception-to-HTTP-status mapping.
 - **Query parameters use `[QueryModel]`.** API endpoints that accept filters, pagination, or sorting bind to POCO classes decorated with `[QueryModel]` from WebServiceToolkit.
@@ -912,4 +912,4 @@ This is the recommended order of implementation to minimize rework and maximize 
 - All timestamps stored as UTC, converted to user timezone in UI layer
 - API versioning via URL path (`/api/v1/`) from the start
 - ASP.NET Identity tables (`AspNetUsers`, `AspNetRoles`, `AspNetUserRoles`, etc.) retain their default names for compatibility, but the entity classes are extended with PascalCase custom properties
-- `DevCoreApp.Worker` runs as a separate hosted process from `DevCoreApp.Admin.WebService`, enabling independent deployment, scaling, and restarts
+- `DevCoreApp.Worker` runs as a separate hosted process from `DevCoreApp.Server.Api`, enabling independent deployment, scaling, and restarts

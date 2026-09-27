@@ -18,14 +18,13 @@
       <Build Solution="Release|*" Project="false" />
     </Project>
   </Folder>
-  <Folder Name="/Server/" />
-  <Folder Name="/Server/Admin/">
-    <Project Path="mocks/Server/Admin/ServicesMocks/DevCoreApp.Admin.Services.Mocks.csproj" Id="8f994a43-3290-4943-8afc-49ddd0dd83c0">
+  <Folder Name="/Server/">
+    <Project Path="mocks/Server/Services.Mocks/DevCoreApp.Server.Services.Mocks.csproj" Id="8f994a43-3290-4943-8afc-49ddd0dd83c0">
       <Build Solution="Debug|*" Project="false" />
       <Build Solution="Release|*" Project="false" />
     </Project>
-    <Project Path="src/Server/Admin/Services/DevCoreApp.Admin.Services.csproj" />
-    <Project Path="src/Server/Admin/WebService/DevCoreApp.Admin.WebService.csproj" />
+    <Project Path="src/Server/Services/DevCoreApp.Server.Services.csproj" />
+    <Project Path="src/Server/Api/DevCoreApp.Server.Api.csproj" />
   </Folder>
   <Folder Name="/Server/Database/">
     <Project Path="src/Server/Database/Core/Core.csproj" />
@@ -54,7 +53,7 @@
     <Project Path="tests/Server/Database/Core/Core.Tests.csproj">
       <BuildType Solution="ServiceMocks|*" Project="Debug" />
     </Project>
-    <Project Path="tests/Server/WebService/WebService.Tests.csproj">
+    <Project Path="tests/Server/Api/Api.Tests.csproj">
       <BuildType Solution="ServiceMocks|*" Project="Debug" />
     </Project>
     <Project Path="tests/Shared/TestUtils/TestUtils.csproj">

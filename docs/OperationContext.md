@@ -32,7 +32,7 @@ Database.Core/Data/IOperationContext.cs
 
 ### HttpOperationContext
 
-**Location:** `Admin.WebService/Identity/HttpOperationContext.cs`
+**Location:** `Server.Api/Identity/HttpOperationContext.cs`
 
 Used during HTTP requests (Blazor SSR pages, API controllers). Registered as `Scoped`.
 
@@ -48,7 +48,7 @@ Used during HTTP requests (Blazor SSR pages, API controllers). Registered as `Sc
 
 ### BackgroundOperationContext
 
-**Location:** `Admin.Services/Background/BackgroundOperationContext.cs`
+**Location:** `Server.Services/Background/BackgroundOperationContext.cs`
 
 Used during background job execution. All properties have public setters so the `BackgroundWorker` can populate them from job metadata before processing each job.
 
@@ -96,7 +96,7 @@ This prevents memory growth from entity tracking and enables future per-job cont
 
 | | `IAuthorizationContext` | `IOperationContext` |
 |---|---|---|
-| **Layer** | Services (Admin.Services) | Data (Database.Core) |
+| **Layer** | Services (Server.Services) | Data (Database.Core) |
 | **Returns** | Full `UserProfile` entity, `ClaimsPrincipal` | Primitive IDs only (Guid, string) |
 | **Used by** | Business logic, authorization checks | EF interceptors, query filters |
 | **HTTP dependency** | Yes (references `IHttpContextAccessor`) | No (interface is HTTP-independent) |

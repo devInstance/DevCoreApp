@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-This is the root-level guide for the entire DevCoreApp solution. Project-specific conventions (page patterns, service patterns, mocks) are in `src/Server/Admin/WebService/CLAUDE.md`.
+This is the root-level guide for the entire DevCoreApp solution. Project-specific conventions (page patterns, service patterns, mocks) are in `src/Server/Api/CLAUDE.md`.
 
 ## What Is This Project?
 
@@ -28,11 +28,11 @@ dotnet build DevInstance.DevCoreApp.slnx
 # Run everything: the API host serves Desktop at / and Mobile at /mobile (the server project
 # references both clients). Needs a reachable database — see the Database/Configuration notes
 # below (default: Postgres on localhost:5432, db `sample_app`). No users yet → open /setup.
-dotnet run --project src/Server/Admin/WebService/DevCoreApp.Admin.WebService.csproj
+dotnet run --project src/Server/Api/DevCoreApp.Server.Api.csproj
 
 # The same with in-memory mocks on both sides — the SERVICEMOCKS symbol swaps real services for
 # [BlazorServiceMock] ones in the server and in the Desktop client (any login works).
-dotnet run -c ServiceMocks --project src/Server/Admin/WebService/DevCoreApp.Admin.WebService.csproj
+dotnet run -c ServiceMocks --project src/Server/Api/DevCoreApp.Server.Api.csproj
 
 # Optional: a client on its own dev server against the API above (launch profile environment
 # "Standalone" → wwwroot/appsettings.Standalone.json ApiBaseUrl; dev CORS allows these origins).
@@ -43,10 +43,10 @@ dotnet run --project src/Client/DevCoreApp.Client.Desktop/DevCoreApp.Client.Desk
 dotnet test DevInstance.DevCoreApp.slnx
 
 # Run one test project
-dotnet test tests/Server/WebService/WebService.Tests.csproj
+dotnet test tests/Server/Api/Api.Tests.csproj
 
 # Run a single test (or class) by name filter
-dotnet test tests/Server/WebService/WebService.Tests.csproj --filter "FullyQualifiedName~MyTestClass.MyTestMethod"
+dotnet test tests/Server/Api/Api.Tests.csproj --filter "FullyQualifiedName~MyTestClass.MyTestMethod"
 ```
 
 - Three build configurations exist: `Debug`, `Release`, and `ServiceMocks`. CI (`azure-pipelines-ci.yml`) builds `Release` and runs `**/tests/**/*[Tt]ests.csproj`.
@@ -58,7 +58,7 @@ dotnet test tests/Server/WebService/WebService.Tests.csproj --filter "FullyQuali
   (`mocks/Client/Client.Services.Mocks`, referenced by Desktop in `ServiceMocks`).
 - Three test projects, all xUnit v3: `tests/Server/Database/Core/Core.Tests.csproj` (org query
   filter, organization stamping, unit-of-work concurrency, decorators),
-  `tests/Server/WebService/WebService.Tests.csproj` (service tests and the `/api` wire-contract
+  `tests/Server/Api/Api.Tests.csproj` (service tests and the `/api` wire-contract
   tests; its assembly is named `DevInstance.DevCoreApp.Server.Tests`), and
   `tests/Client/Client.Services.Tests` (query encoding, local time, JWT handler/refresh, client
   permission policies). Shared fakes (`IScopeManagerMock`, `TimerProviderMock`)
@@ -72,7 +72,7 @@ dotnet test tests/Server/WebService/WebService.Tests.csproj --filter "FullyQuali
 
 ### Configuration
 
-All runtime configuration is in `src/Server/Admin/WebService/appsettings*.json`. The committed
+All runtime configuration is in `src/Server/Api/appsettings*.json`. The committed
 values are development placeholders (JWT secret, SMTP password) — override them via environment
 variables or user secrets, never by editing the file for a real deployment.
 
@@ -111,14 +111,13 @@ DevCoreApp/
 │   │                                #   Api/ (IApiContext base, query encoding), Auth/ (JWT store,
 │   │                                #   refresh handler, AuthenticationStateProvider), Time/, Me/, …
 │   ├── Server/
-│   │   ├── Admin/
-│   │   │   ├── Services/            # → DevCoreApp.Admin.Services  (business logic, auth, background)
-│   │   │   │   ├── Core/<Feature>/  # ApiKeys, Authentication, Background, ImportExport, …
-│   │   │   │   └── BaseService.cs, ICRUDService.cs     # host shell, no marker
-│   │   │   └── WebService/          # → DevCoreApp.Admin.WebService (API + SignalR + client host)
-│   │   │       ├── Core/{Controllers,Health,Hosting,Hubs,Identity,Logging,Middleware}/
-│   │   │       ├── Core/Pages/      # Razor Pages: /setup (first-run owner), /Error — nothing else
-│   │   │       └── Program.cs, appsettings*.json   # host shell
+│   │   ├── Api/                     # → DevCoreApp.Server.Api (API + SignalR + client host)
+│   │   │   ├── Core/{Controllers,Health,Hosting,Hubs,Identity,Logging,Middleware}/
+│   │   │   ├── Core/Pages/          # Razor Pages: /setup (first-run owner), /Error — nothing else
+│   │   │   └── Program.cs, appsettings*.json   # host shell
+│   │   ├── Services/                # → DevCoreApp.Server.Services (business logic, auth, background)
+│   │   │   ├── Core/<Feature>/      # ApiKeys, Authentication, Background, ImportExport, …
+│   │   │   └── BaseService.cs, ICRUDService.cs     # host shell, no marker
 │   │   ├── Database/
 │   │   │   ├── Core/                # Provider-agnostic: entities, queries, decorators, interceptors
 │   │   │   │                        #   already the shared root — no second Core (see Rule 3)
@@ -130,12 +129,12 @@ DevCoreApp/
 │   └── Shared/
 │       ├── Model/Core/<Feature>/    # ViewModels/DTOs → DevCoreApp.Shared.Model.Core.<Feature>
 │       └── Utils/Core/              # Shared helpers (ITimeProvider, etc.)
-├── mocks/Server/Admin/ServicesMocks/Core/  # [BlazorServiceMock] services for UI development
+├── mocks/Server/Services.Mocks/Core/  # [BlazorServiceMock] services for UI development
 ├── tests/                            # Mirrors src/ (xUnit v3 — see Build, Test, and Run Commands)
 └── docs/
 ```
 
-**There is no separate Worker process.** Background jobs run in-process inside WebService as a
+**There is no separate Worker process.** Background jobs run in-process inside the Api host as a
 hosted service — see [Background Jobs](#background-jobs).
 
 ## Dependency Rules — Do Not Violate
@@ -145,8 +144,8 @@ Shared.Model / Shared.Utils    ← Referenced by everything. No project dependen
 Database.Core                  ← References: Shared
 Database.Postgres/.SqlServer   ← References: Database.Core
 Email.* / Storage.*            ← References: Shared    (Processor = abstraction, rest = providers)
-Admin.Services                 ← References: Database.Core + both providers, Email, Storage, Shared
-Admin.WebService               ← References: Admin.Services (+ ServicesMocks in ServiceMocks config),
+Server.Services                 ← References: Database.Core + both providers, Email, Storage, Shared
+Server.Api               ← References: Server.Services (+ Services.Mocks in ServiceMocks config),
                                  Client.Desktop + Client.Mobile (build-time only: hosts their static assets)
 Client.Services                ← References: Shared
 Client.Desktop / Client.Mobile ← References: Client.Services, Shared
@@ -154,15 +153,15 @@ Client.Desktop / Client.Mobile ← References: Client.Services, Shared
 
 **Hard rules:**
 - Client and Client.Services NEVER reference Database or any Server project
-- Database NEVER references Admin.Services, Admin.WebService, or ASP.NET Core HTTP abstractions
-- Admin.WebService NEVER references Database directly — always through Admin.Services
-- Admin.WebService references the client projects only to host their files — never use a client type in server code
+- Database NEVER references Server.Services, Server.Api, or ASP.NET Core HTTP abstractions
+- Server.Api NEVER references Database directly — always through Server.Services
+- Server.Api references the client projects only to host their files — never use a client type in server code
 - Provider-specific EF code stays in `Database/Postgres` or `Database/SqlServer`; anything
   provider-agnostic belongs in `Database/Core`
 
 ## Hosting & Request Entry Points
 
-Everything is one host: `src/Server/Admin/WebService/Program.cs` (~310 lines, worth reading before
+Everything is one host: `src/Server/Api/Program.cs` (~310 lines, worth reading before
 touching startup). It serves four kinds of traffic, each with a different auth path:
 
 | Entry point | Wiring | Auth |
@@ -212,19 +211,19 @@ The folder layout mirrors the namespace exactly — `<ProjectDir>/Core/<rest>`:
 
 | File | Namespace |
 |---|---|
-| `src/Server/Admin/Services/Core/ApiKeys/ApiKeyAdminService.cs` | `…Server.Admin.Services.Core.ApiKeys` |
-| `src/Server/Admin/WebService/Core/Controllers/FileController.cs` | `…Server.Admin.WebService.Core.Controllers` |
-| `src/Server/Admin/WebService/Core/UI/Pages/Admin/Users.razor` | `…Server.Admin.WebService.Core.UI.Pages.Admin` |
+| `src/Server/Services/Core/ApiKeys/ApiKeyAdminService.cs` | `…Server.Services.Core.ApiKeys` |
+| `src/Server/Api/Core/Controllers/FileController.cs` | `…Server.Api.Core.Controllers` |
+| `src/Server/Api/Core/UI/Pages/Admin/Users.razor` | `…Server.Api.Core.UI.Pages.Admin` |
 | `src/Shared/Model/Core/ApiKeys/ApiKeyItem.cs` | `…Shared.Model.Core.ApiKeys` |
-| `src/Server/Admin/Services/App/Jobs/JobService.cs` | `…Server.Admin.Services.App.Jobs` |
+| `src/Server/Services/App/Jobs/JobService.cs` | `…Server.Services.App.Jobs` |
 
 The split uses **namespaces + folders inside the existing assemblies** — no new `.csproj`, the dependency graph is unchanged. Assembly identity (`<RootNamespace>` / `<AssemblyName>`) never gains a `Core` segment.
 
 **Rule 2 — files directly at a project root keep the root namespace and get no marker.** These are the host/entry/shell files the framework or convention pins in place. They are shared surface by definition; a fork that must change one fences it (Rule 6) instead of moving it.
 
 ```
-Admin.WebService/   Program.cs, appsettings*.json, wwwroot/
-Admin.Services/     BaseService.cs, ICRUDService.cs
+Server.Api/   Program.cs, appsettings*.json, wwwroot/
+Server.Services/     BaseService.cs, ICRUDService.cs
 Client.Desktop/     Program.cs, UI/App.razor, _Imports.razor, wwwroot/, Styles/, Scripts/
 Client.Mobile/      Program.cs, UI/App.razor, _Imports.razor, wwwroot/
 Email/*, Storage/*  ConfigurationExtensions.cs
@@ -252,7 +251,7 @@ check, drop a throwaway `namespace <RootNs>.App; internal class Probe { }` into
 
 **Rule 4 — the operative sync rule is `.App.`, not `Core`.** A file is *local* if and only if its namespace contains an `.App.` segment. Everything else is shared surface. This is why Rules 2 and 3 can omit the marker without breaking anything — `Core` is a locator convenience, not the source of truth.
 
-**Rule 5 — sync key.** A file's cross-repo identity is its namespace with the `DevInstance.{Product}` prefix stripped (e.g. `Server.Database.Core.Models.ApiKey`, `Server.Admin.Services.Core.ApiKeys.ApiKeyAdminService`). Files with the same sync key and no `.App.` segment are the *same shared surface* and must stay in lockstep across DevCoreApp/ThreadIQ/Tentrie.
+**Rule 5 — sync key.** A file's cross-repo identity is its namespace with the `DevInstance.{Product}` prefix stripped (e.g. `Server.Database.Core.Models.ApiKey`, `Server.Services.Core.ApiKeys.ApiKeyAdminService`). Files with the same sync key and no `.App.` segment are the *same shared surface* and must stay in lockstep across DevCoreApp/ThreadIQ/Tentrie.
 
 **Rule 6** is the deviation fence, below.
 
@@ -301,7 +300,7 @@ Deep-dive docs for individual features and subsystems live in [`docs/`](docs/):
 - [Health Checks](docs/HealthChecks.md) · [Operation Context](docs/OperationContext.md) · [Settings](docs/Settings.md) · [Webhooks](docs/Webhooks.md)
 - [Specification](docs/Specification.md) — overall product spec
 
-Subsystem guides also live next to the code: [`src/Server/Database/UnitOfWork.md`](src/Server/Database/UnitOfWork.md), [`src/Server/Storage/FileStorage.md`](src/Server/Storage/FileStorage.md), [`src/Server/Admin/Services/Core/ImportExport/ImportExport.md`](src/Server/Admin/Services/Core/ImportExport/ImportExport.md), [`src/Client/DevCoreApp.Client.Desktop/Core/UI/Components/HDataGrid.md`](src/Client/DevCoreApp.Client.Desktop/Core/UI/Components/HDataGrid.md), and the WebService-specific [`src/Server/Admin/WebService/CLAUDE.md`](src/Server/Admin/WebService/CLAUDE.md).
+Subsystem guides also live next to the code: [`src/Server/Database/UnitOfWork.md`](src/Server/Database/UnitOfWork.md), [`src/Server/Storage/FileStorage.md`](src/Server/Storage/FileStorage.md), [`src/Server/Services/Core/ImportExport/ImportExport.md`](src/Server/Services/Core/ImportExport/ImportExport.md), [`src/Client/DevCoreApp.Client.Desktop/Core/UI/Components/HDataGrid.md`](src/Client/DevCoreApp.Client.Desktop/Core/UI/Components/HDataGrid.md), and the WebService-specific [`src/Server/Api/CLAUDE.md`](src/Server/Api/CLAUDE.md).
 
 ## Naming Conventions
 
@@ -396,7 +395,7 @@ Tenant: "Acme Corp"
 **`IOperationContext`** provides the resolved context to the data layer:
 - `UserId`, `PrimaryOrganizationId`, `VisibleOrganizationIds`, `IpAddress`, `CorrelationId`
 - Two implementations, chosen by a DI factory lambda based on whether an `HttpContext` exists:
-  `HttpOperationContext` (WebService — reads org values from claims) and `BackgroundOperationContext`
+  `HttpOperationContext` (Api host — reads org values from claims) and `BackgroundOperationContext`
   (Services — mutable, populated per background job)
 - Database project depends on this interface, NOT on `IHttpContextAccessor`
 - `ApplicationDbContext` applies the global filter to every entity implementing `IOrganizationScoped`
@@ -459,7 +458,7 @@ Both write to the same `AuditLogs` table, distinguished by the `AuditSource` enu
 
 ## Background Jobs
 
-The worker runs **in-process** inside WebService: `BackgroundWorker` is registered as a singleton
+The worker runs **in-process** inside the Api host: `BackgroundWorker` is registered as a singleton
 `AddHostedService`, and `BackgroundTaskWorker` does the claiming/execution. There is no separate
 worker host project.
 
@@ -484,8 +483,8 @@ atomically flipping status to `Running` → dispatches to the matching `IBackgro
 `NotificationHub` is a bare `[Authorize] Hub` at `/hubs/notifications` — it declares no
 client-callable methods; traffic is server → browser only. Services call `INotificationHubService`
 (`SendNotificationAsync` / `SendUnreadCountAsync`, which emit the `ReceiveNotification` and
-`UpdateUnreadCount` client events), implemented in `WebService/Core/Hubs/NotificationHubService.cs`
-over `IHubContext<NotificationHub>`. **That interface is the seam** — it lets `Admin.Services` push
+`UpdateUnreadCount` client events), implemented in `Api/Core/Hubs/NotificationHubService.cs`
+over `IHubContext<NotificationHub>`. **That interface is the seam** — it lets `Server.Services` push
 notifications without referencing SignalR. Persistence, read state, and per-user preferences live in
 `NotificationService` and the `Notifications` / `UserNotificationPreferences` tables. Browsers
 connect with a JWT in `?access_token=` (see the `JwtBearerEvents` hook in `Program.cs`).
@@ -505,17 +504,17 @@ Provider-based file storage with local disk (default) and S3 (stub). Configurati
 
 ## Feature Folder Organization
 
-`Admin.Services`, `Shared/Model`, and the WebService UI use **vertical slices** — group by feature,
+`Server.Services`, `Shared/Model`, and the Desktop client UI use **vertical slices** — group by feature,
 not by technical layer:
 
 Feature folders sit under the `Core/` (shared) or `App/` (product) marker — invoices as a
 product feature of a fork would be:
 
 ```
-Admin.Services/App/Invoices/          InvoiceService.cs, InvoiceValidator.cs
+Server.Services/App/Invoices/          InvoiceService.cs, InvoiceValidator.cs
 Shared/Model/App/Invoices/            InvoiceItem.cs, InvoiceCreateRequest.cs
-Admin.WebService/App/UI/Pages/…       InvoiceListPage.razor, InvoiceDetailPage.razor
-Admin.WebService/App/Controllers/     InvoiceController.cs
+Server.Api/App/UI/Pages/…       InvoiceListPage.razor, InvoiceDetailPage.razor
+Server.Api/App/Controllers/     InvoiceController.cs
 ```
 
 The same feature as *shared template* code would use `Core/` in place of `App/` in each path.

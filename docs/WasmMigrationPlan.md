@@ -435,14 +435,64 @@ Open for Phase 2:
    - the new owner signed in with the Owner role, all permissions, the browser time zone and the
      root organization.
 
+**Phase 4b — Rename the server projects (drop `Admin`)** — ✅ done (host name: `Api`)
+
+> Phases 0–4 above describe the tree as it was then (`src/Server/Admin/WebService`,
+> `Server.Admin.Services`, …). From here on, the paths are the post-rename ones.
+The "Admin" level no longer describes anything. The admin UI moved to `Client.Desktop`; the
+business-logic project was never admin-specific; and the host is now the HTTP surface for every
+client (API, SignalR, health, `/setup`, and hosting of the two WASM apps).
+
+| Today | Proposed folder | Assembly / root namespace |
+|---|---|---|
+| `src/Server/Admin/WebService` (`DevCoreApp.Admin.WebService`) | `src/Server/Api` | `DevInstance.DevCoreApp.Server.Api` |
+| `src/Server/Admin/Services` (`DevCoreApp.Admin.Services`) | `src/Server/Services` | `DevInstance.DevCoreApp.Server.Services` |
+| `mocks/Server/Admin/ServicesMocks` | `mocks/Server/Services.Mocks` | `DevInstance.DevCoreApp.Server.Services.Mocks` |
+| `tests/Server/WebService` (`WebService.Tests`) | `tests/Server/Api` (`Api.Tests.csproj`) | unchanged: `DevInstance.DevCoreApp.Server.Tests` |
+
+The result is `src/Server/{Api, Services, Database, Email, Storage}` next to
+`src/Client/{Client.Desktop, Client.Mobile, Client.Services}`.
+- **Host name:** `Api` (recommended; says the UI lives elsewhere) or `Host` (more neutral about the
+  SignalR/health/static-hosting side). `Web` and `Gateway`/`Backend` were rejected as misleading.
+- **Scope:**
+  - namespaces and `using`s in both projects, plus mocks and tests;
+  - `.csproj` names and references, the `.slnx`, `launchSettings.json`;
+  - CI's test glob (`**/tests/**/*[Tt]ests.csproj` still matches);
+  - every `CLAUDE.md`, `CONTRIBUTING.md` and this plan;
+  - `docs/*` paths.
+  Database, Email, Storage, Shared and Client are untouched.
+- **Cross-repo impact:** sync keys change, for example
+  `Server.Admin.Services.Core.ApiKeys.ApiKeyAdminService` →
+  `Server.Services.Core.ApiKeys.ApiKeyAdminService`. Forks must rename the same way, including
+  their `App` code under these namespaces, so the rename ships in the **same** fork migration doc
+  as the WASM move: one disruptive change, not two.
+- **Order:** after Phase 4, before Phase 5, so the migration doc and docs describe the final layout.
+- **Verification (done):**
+  - full build (Debug and ServiceMocks) and all 82 tests pass;
+  - every `ProjectReference` in the repo resolves, and every relative link in current Markdown does too;
+  - no `Server.Admin` or `Admin.*` references remain outside the historical `docs/migration/**` and
+    `.github/upgrades`;
+  - the Rule 2 `App` probe built cleanly in Api, Services, Desktop and Mobile;
+  - the host ran: both clients and runtimes were served, `/setup` returned 404, `/Error` rendered,
+    `api/users` worked, and the server logged no errors.
+- **Found while verifying (pre-existing, not the rename):** `UserProfileService.GetListAsync` counts and
+  pages *profiles*, then drops each profile whose Identity user no longer exists. With orphaned
+  profiles, `totalCount` is too high and pages come back short or empty (`top=3` → 0 of 7). The
+  fix belongs in the query (exclude orphans before count/paging), plus finding out why user
+  deletion leaves profiles behind. Tracked as a follow-up.
+
 **Phase 5 — Docs & fan-out**
-- Update the root `CLAUDE.md`, `src/Server/Admin/WebService/CLAUDE.md`, and add `docs/Api.md` (wire
-  contract, error shape, UTC rule, base controller) and a `CLAUDE.md` for Desktop.
-- Write `docs/migration/out/2026-MM-DD-wasm-client-and-api-layer.md` (see §6).
+- Update the root `CLAUDE.md`, the host project's `CLAUDE.md` and `CONTRIBUTING.md`, and add
+  `docs/Api.md` (wire contract, error shape, UTC rule, base controller) and a `CLAUDE.md` for Mobile.
+- Write `docs/migration/out/2026-MM-DD-wasm-client-and-api-layer.md` (see §6), including the
+  Phase 4b rename.
 
 ## 6. Fork migration doc (outline)
 
 Target: ThreadIQ, Tentrie, future forks. Content:
+0. **Project rename (Phase 4b):** `Server.Admin.Services` → `Server.Services` and
+   `Server.Admin.WebService` → `Server.Api` (or the confirmed name). Apply it first, because every
+   other step's sync keys use the new names.
 1. **Shared surface added:**
    - `ApiControllerBase`, `ServiceActionError` contract, `UtcDateTimeJsonConverter`;
    - `Core` controllers, `ClientHosting`, `IAccountService`/`IGridProfileService`/`ICurrentUserService`;
