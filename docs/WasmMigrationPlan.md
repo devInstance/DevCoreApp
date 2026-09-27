@@ -481,11 +481,28 @@ The result is `src/Server/{Api, Services, Database, Email, Storage}` next to
   fix belongs in the query (exclude orphans before count/paging), plus finding out why user
   deletion leaves profiles behind. Tracked as a follow-up.
 
-**Phase 5 — Docs & fan-out**
-- Update the root `CLAUDE.md`, the host project's `CLAUDE.md` and `CONTRIBUTING.md`, and add
-  `docs/Api.md` (wire contract, error shape, UTC rule, base controller) and a `CLAUDE.md` for Mobile.
-- Write `docs/migration/out/2026-MM-DD-wasm-client-and-api-layer.md` (see §6), including the
-  Phase 4b rename.
+**Phase 5 — Docs & fan-out** — ✅ done
+- ✅ `docs/Api.md` (wire contract: responses, error shape and numbering, lists and queries, UTC, auth
+  endpoints, binary endpoints, notifications, hosting). It is linked from the root and Api `CLAUDE.md`.
+- ✅ Mobile `CLAUDE.md` (base path, shared session, where field features go).
+- ✅ `src/Server/Api/CONTRIBUTING.md` rewritten as an end-to-end walk-through of one feature (API keys)
+  from entity to Desktop page, with a checklist. It replaces the Blazor Server–era guide.
+- ✅ Fork migration doc `docs/migration/out/2026-09-26-wasm-client-and-api-layer.md`: step 0 is the
+  rename, then packages, standalone server fixes, contract, lists, services, controllers,
+  notifications, the client layer, the clients and the cut-over, with per-fork notes for ThreadIQ
+  (local→UTC dates are breaking for the shipped mobile app; the envelope-based `CrmCrudControllerBase`)
+  and Tentrie (Core/App restructure first; 89 envelope actions; ~26 product pages).
+- **Follow-ups (not in this migration):**
+  - the orphaned-profile paging bug (Phase 4b);
+  - the login page should redirect when already signed in;
+  - the import-validate `mappingsJson` TODO;
+  - running from Visual Studio;
+  - clicking through every write flow by hand;
+  - bUnit page tests;
+  - the dead `AuthorizationServiceTests` file;
+  - the stale `.github/workflows/blazor-app-dev_devcoreapp.yml`;
+  - committing the local WebServiceToolkit branches (`feature/service-error-contract`,
+    `fix/query-binder-string`).
 
 ## 6. Fork migration doc (outline)
 

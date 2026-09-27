@@ -1,648 +1,223 @@
-# Contributing to DevCoreApp Server.Api
+# Contributing: adding a feature end to end
 
-> **Outdated — the UI moved to WebAssembly.** This project no longer contains Blazor pages; it is
-> the `/api` host (plus the `/setup` and `/Error` Razor Pages). The page, grid and
-> `IServiceExecutionHost` sections below now apply to `src/Client/DevCoreApp.Client.Desktop`,
-> with pages calling *client* services from `Client.Services` instead of server services, and the
-> folder layout below predates the Core/App restructure. Current guides:
-> [`CLAUDE.md`](CLAUDE.md) (server, API controllers), the Desktop
-> [`CLAUDE.md`](../../Client/DevCoreApp.Client.Desktop/CLAUDE.md) (pages, client services,
-> dates) and [`docs/WasmMigrationPlan.md`](../../../docs/WasmMigrationPlan.md).
+A feature crosses seven layers, from the database to the WASM page. This guide follows one real
+feature, **API keys**, through all of them. Copy its files when you add yours.
 
-This document outlines the coding conventions and patterns used in this project.
-
-## Project Structure
+Put product features under `App/` and shared template features under `Core/`. The paths below use
+`Core/`; see the root [`CLAUDE.md`](../../../CLAUDE.md) for the rule.
 
 ```
-WebService/
-├── Authentication/          # Identity and authorization
-├── Background/              # Background services and workers
-│   └── Requests/            # Background request models
-├── Controllers/             # API controllers
-├── Grid/                    # Grid components (ColumnDescriptor)
-├── Notifications/           # Email and notification services
-├── Services/                # Business logic services
-├── Tools/                   # Utility classes and extensions
-└── UI/                      # Blazor UI components
-    ├── Account/             # Identity-related pages
-    │   └── Pages/
-    │       └── Admin/       # Admin account pages (e.g., Setup)
-    ├── Components/          # Reusable UI components
-    ├── Layout/              # Layout components
-    └── Pages/               # Application pages
-        └── Admin/           # Admin pages
-
-Database/
-├── Core/
-│   ├── Data/
-│   │   ├── Decorators/      # Model-to-ViewModel converters
-│   │   └── Queries/         # Query interfaces
-│   │       └── BasicsImplementation/  # Query implementations
-│   └── Models/              # Database entities
-├── Postgres/
-│   └── Migrations/          # PostgreSQL migrations
-└── SqlServer/
-    └── Migrations/          # SQL Server migrations
-
-Shared/
-└── Model/                   # Shared view models (DTOs)
+Desktop page ─► client service ─HTTP─► controller ─► server service ─► query ─► DbContext
+ (Client.Desktop)  (Client.Services)    (Server.Api)   (Server.Services)  (Database.Core)
+        ▲                                                     │
+        └──────────── Shared.Model DTO (ApiKeyItem) ◄─────────┘ decorator ToView()
 ```
 
-## Data Flow Architecture
+Also read: [`docs/Api.md`](../../../docs/Api.md) (wire contract),
+[`CLAUDE.md`](CLAUDE.md) (server conventions), the Desktop
+[`CLAUDE.md`](../../Client/DevCoreApp.Client.Desktop/CLAUDE.md) (pages, dates) and
+[`UnitOfWork.md`](../Database/UnitOfWork.md).
 
-The application follows a layered architecture for fetching and displaying data:
+## 1. Entity: `Database/Core/Models/ApiKey.cs`
 
+- Inherit `DatabaseEntityObject` for user-tracked business data, `DatabaseObject` for API-exposed
+  data without user tracking, or `DatabaseBaseObject` for infrastructure.
+- Implement `IOrganizationScoped` on business data. Do **not** set `OrganizationId` yourself; the
+  interceptor stamps it.
+- Mark secrets `[AuditExclude]`.
+- Product entities go in `Database/Core/App/Models/<Entity>` (there is no `Core.Core`).
+- **A schema change needs a migration in both `Database/Postgres` and `Database/SqlServer`.** Do
+  not scaffold it: tell the maintainer a migration is needed.
+
+## 2. Query: `Database/Core/Data/Queries/`
+
+- Interface `IApiKeyQuery : IModelQuery<ApiKey, IApiKeyQuery>` (+ `IQSearchable`, `IQSortable`,
+  `IQPageable` as needed), with the implementation `BasicsImplementation/CoreApiKeyQuery.cs`.
+- Add `GetApiKeyQuery(UserProfile currentProfile)` to `IQueryRepository` and implement it in
+  `CoreQueryRepository`.
+- `CreateNew()` on the query is the only way to create an entity outside seeders.
+
+## 3. DTO and decorator
+
+- `Shared/Model/Core/ApiKeys/ApiKeyItem.cs`: implements `IModelItem`. `Id` is the entity's
+  **`PublicId`**. Validation attributes (`[Required]`, …) go here, and both the API and the WASM
+  forms enforce them.
+- `Database/Core/Data/Decorators/ApiKeyDecorators.cs`: `ToView()` (entity → DTO) and
+  `ToRecord(dto)` (DTO → entity). Pure mapping; dates stay UTC.
+
+## 4. Server service: `Server/Services/Core/ApiKeys/`
+
+```csharp
+[BlazorService]
+public class ApiKeyAdminService : BaseService, IApiKeyAdminService
+{
+    public async Task<ServiceActionResult<PagedList<ApiKeyItem>>> GetKeysAsync(
+        int top, int page, string[]? sortBy = null, string? search = null)
+    {
+        using var l = log.TraceScope();
+
+        await using var repo = RepositoryFactory.Create();          // one unit of work per method
+        var query = repo.GetApiKeyQuery(AuthorizationContext.CurrentProfile);
+        // search, sort, count, page …
+        var items = keys.Select(ak => ak.ToView()).ToArray();
+        return ServiceActionResult<PagedList<ApiKeyItem>>.OK(
+            PagedList.Create(items, totalCount, top, page, sortBy, search));
+    }
+}
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                           UI Layer                                       │
-│  ┌─────────────┐    ┌──────────────┐    ┌─────────────────────────────┐ │
-│  │ Users.razor │───▶│ Users.razor.cs│───▶│ IServiceExecutionHost      │ │
-│  │  (markup)   │    │ (code-behind) │    │ (MainLayout)               │ │
-│  └─────────────┘    └──────────────┘    └─────────────────────────────┘ │
-└────────────────────────────────┬────────────────────────────────────────┘
-                                 │ Host.ServiceReadAsync()
-                                 ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         Service Layer                                    │
-│  ┌────────────────────────────────────────────────────────────────────┐ │
-│  │ UserProfileService : BaseService                                    │ │
-│  │   - GetAllUsersAsync(top, page, sortField, isAsc, search)          │ │
-│  │   - Returns ServiceActionResult<ModelList<UserProfileItem>>         │ │
-│  └────────────────────────────────────────────────────────────────────┘ │
-└────────────────────────────────┬────────────────────────────────────────┘
-                                 │ Repository.GetUserProfilesQuery()
-                                 ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                          Query Layer                                     │
-│  ┌────────────────────────────────────────────────────────────────────┐ │
-│  │ IUserProfilesQuery (interface)                                      │ │
-│  │   - Search(), SortBy(), Paginate(), Select()                        │ │
-│  │                                                                     │ │
-│  │ CoreUserProfilesQuery (implementation)                              │ │
-│  │   - Builds LINQ queries with fluent API                             │ │
-│  └────────────────────────────────────────────────────────────────────┘ │
-└────────────────────────────────┬────────────────────────────────────────┘
-                                 │ EF Core
-                                 ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                        Database Layer                                    │
-│  ┌────────────────────────────────────────────────────────────────────┐ │
-│  │ UserProfile (Database Model)                                        │ │
-│  │   - Maps to database table                                          │ │
-│  └────────────────────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────────────────┘
+
+- Interface first (`IApiKeyAdminService`). `[BlazorService]` registers the class **only under its
+  interfaces**, so always inject the interface.
+- Return `ServiceActionResult<T>`. For expected failures throw WebServiceToolkit exceptions:
+  - `BadRequestException(message, propertyName)` → 400;
+  - `RecordNotFoundException` → 404;
+  - `ForbiddenException` → 403;
+  - `BusinessRuleException` → 422.
+
+  Never throw `Exception` / `InvalidOperationException` for these.
+- Check **ownership** in the service when a user may only touch their own records. The controller's
+  permission check is not enough.
+- Log with `IScopeLog` (`log.TraceScope()`, `l.I(...)`), never `ILogger`.
+- Add a `[BlazorServiceMock]` twin in `mocks/Server/Services.Mocks/Core/<Feature>`, which is
+  compiled into the Api host by `-c ServiceMocks`.
+
+## 5. Permission: `Shared/Model/Core/Permissions/PermissionDefinitions.cs`
+
+```csharp
+public static class ApiKeys
+{
+    public const string View = "Admin.ApiKeys.View";
+    public const string Create = "Admin.ApiKeys.Create";
+    public const string Revoke = "Admin.ApiKeys.Revoke";
+}
 ```
 
-### Data Conversion Flow
+`PermissionSeeder` picks the constants up on startup, and `PermissionPolicyProvider` builds the
+policies. There is no `AddPolicy` call to write. Assign the permission to roles in the seeder or
+the Roles page.
 
+## 6. Controller: `Server/Api/Core/Controllers/ApiKeysController.cs`
+
+```csharp
+[Route("api/api-keys")]
+[Authorize]
+public class ApiKeysController : ApiControllerBase
+{
+    private readonly IApiKeyAdminService _service;
+
+    public ApiKeysController(IApiKeyAdminService service) => _service = service;
+
+    [HttpGet]
+    [Authorize(Policy = PermissionDefinitions.Admin.ApiKeys.View)]
+    public Task<ActionResult<PagedList<ApiKeyItem>>> GetListAsync([FromQuery] ListQuery query)
+        => HandleServiceAsync(() => _service.GetKeysAsync(query.Top, query.Page, query.SortBy, query.Search));
+
+    /// <summary>The plain-text key is only in this response; it is never retrievable again.</summary>
+    [HttpPost]
+    [Authorize(Policy = PermissionDefinitions.Admin.ApiKeys.Create)]
+    public Task<ActionResult<ApiKeyCreateResult>> CreateAsync([FromBody] ApiKeyItem item)
+        => HandleServiceAsync(() => _service.CreateKeyAsync(item));
+
+    [HttpPost("{id}/revoke")]
+    [Authorize(Policy = PermissionDefinitions.Admin.ApiKeys.Revoke)]
+    public Task<ActionResult<bool>> RevokeAsync(string id)
+        => HandleServiceAsync(() => _service.RevokeKeyAsync(id));
+}
 ```
-UserProfile (DB Model) ──▶ ToView() ──▶ UserProfileItem (DTO) ──▶ UI Display
-     │                    Decorator                                    │
-     │                                                                 │
-     └─── Database/Core/Models/          Shared/Model/ ◀───────────────┘
+
+- Use a literal kebab-case `api/...` route, with a permission per action (GET → View, POST → Create,
+  PUT → Edit, DELETE → Delete).
+- Make **one service call per action** and do nothing else: no mapping, validation, branching or
+  `try/catch`. If a controller must do something (read an `IFormFile` stream, pass the client IP),
+  explain it in a comment.
+- List endpoints take `[FromQuery] ListQuery`, or a `[QueryModel]` class deriving from it or from
+  `DateRangeListQuery` for filters. Put new query models in `Shared/Model/Core/<Feature>`.
+- Route ids are `PublicId`s.
+
+## 7. Client service: `Client/Client.Services/Core/ApiKeys/`
+
+The interface mirrors the server's, with the same name and signatures, so the page code is the
+same either way:
+
+```csharp
+[BlazorService]
+public class ApiKeyAdminService : ApiServiceBase, IApiKeyAdminService
+{
+    public ApiKeyAdminService(IHttpApiContextFactory apiFactory, IScopeManager logManager) : base(apiFactory, logManager) { }
+
+    public Task<ServiceActionResult<PagedList<ApiKeyItem>>> GetKeysAsync(int top, int page, string[]? sortBy = null, string? search = null) =>
+        CallAsync(() => Api<ApiKeyItem>("api/api-keys").Get()
+            .Query(new ListQuery { Top = top, Page = page, SortBy = sortBy!, Search = search! })
+            .ExecuteAsync<PagedList<ApiKeyItem>>());
+
+    public Task<ServiceActionResult<bool>> RevokeKeyAsync(string id) =>
+        CallAsync(() => Api<bool>($"api/api-keys/{Segment(id)}/revoke").Post<object?>(null).ExecuteAsync());
+}
 ```
 
-## Complete Example: Users List Page
+- `CallAsync` turns the response, or the server's `WebServiceError`, into a `ServiceActionResult<T>`.
+- Query strings go through `.Query(model)`, and path values through `Segment(id)`. Both escape the
+  value, and `.Query` also formats it invariantly.
+- Dates the user typed are local: convert them with `ILocalTimeService.ToUtc` **here**, before
+  sending.
+- Business logic that belongs to the client (combining calls, caching) lives in the client service,
+  not in the page.
+- Add a `[BlazorServiceMock]` twin in `mocks/Client/Client.Services.Mocks/Core/<Feature>`. It is
+  what `dotnet run -c ServiceMocks` on Desktop uses.
+- Add tests in `tests/Client/Client.Services.Tests` for anything beyond a straight call.
 
-### 1. Razor Markup (`UI/Pages/Admin/Users.razor`)
+## 8. Page: `Client/DevCoreApp.Client.Desktop/Core/UI/Pages/Admin/ApiKeysPage.razor(.cs)`
 
 ```razor
-@page "/admin/users"
-@attribute [Authorize(Roles = "Owner,Admin")]
-
-<PageTitle>Users</PageTitle>
-
-<!-- Search and Action Bar -->
-<div class="row mb-3">
-    <div class="col col-md-6 col-lg-4 d-flex">
-        <input class="form-control" placeholder="Search users..."
-               @bind="SearchTerm" @bind:event="oninput"
-               disabled="@Host.InProgress" />
-        <button class="btn btn-primary ms-2" @onclick="OnSearch"
-                disabled="@Host.InProgress">
-            <i class="bi bi-search"></i>
-        </button>
-    </div>
-    <div class="col col-md-6 col-lg-8">
-        <div class="float-end">
-            <a class="btn btn-primary ms-2" role="button" href="admin/users/new">
-                <i class="bi bi-person-plus-fill me-1"></i>New User
-            </a>
-        </div>
-    </div>
-</div>
-
-<!-- Loading State -->
-@if (Host.InProgress)
-{
-    <div class="text-center">
-        <div class="spinner-border" role="status">
-            <span class="visually-hidden">Loading...</span>
-        </div>
-    </div>
-}
-else if (UserList != null)
-{
-    <!-- Search Indicator -->
-    @if (!string.IsNullOrEmpty(UserList.Search))
-    {
-        <div class="alert alert-light">
-            Searching for <strong>@SearchTerm</strong>
-            <button type="button" class="btn-close ms-2" @onclick="OnClearSearch"></button>
-        </div>
-    }
-
-    @if (!UserList.Items.Any())
-    {
-        <p>No users found.</p>
-    }
-    else
-    {
-        <!-- Data Table with Sortable Headers -->
-        <table class="table table-striped table-hover">
-            <thead>
-                <tr>
-                    @foreach (var col in Columns.Where(c => c.IsVisible))
-                    {
-                        @if (col.IsSortable)
-                        {
-                            <th scope="col">
-                                <HSortableHeader Model="UserList" Label="@col.Label"
-                                                 SortField="@col.Field" OnSort="OnSortAsync" />
-                            </th>
-                        }
-                        else
-                        {
-                            <th scope="col">@col.Label</th>
-                        }
-                    }
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var row in UserList.Items)
-                {
-                    <tr>
-                        @foreach (var col in Columns.Where(c => c.IsVisible))
-                        {
-                            <td>
-                                @if (col.Template is not null)
-                                {
-                                    @col.Template(col.ValueSelector(row))
-                                }
-                                else
-                                {
-                                    @col.ValueSelector(row)
-                                }
-                            </td>
-                        }
-                    </tr>
-                }
-            </tbody>
-        </table>
-
-        <!-- Pagination -->
-        <ModelDataPager List="UserList" OnPageChanged="OnPageChangedAsync" />
-    }
-}
-
-<!-- Grid Settings Panel -->
-<GridSettings Columns="Columns" OnSave="OnSave" TItem="UserProfileItem" />
-```
-
-### 2. Code-Behind (`UI/Pages/Admin/Users.razor.cs`)
-
-```csharp
-using DevInstance.BlazorToolkit.Services;
-using DevInstance.DevCoreApp.Server.WebService.Grid;
-using DevInstance.DevCoreApp.Server.WebService.Services;
-using DevInstance.DevCoreApp.Server.WebService.UI.Components;
-using DevInstance.DevCoreApp.Shared.Model;
-using DevInstance.WebServiceToolkit.Common.Model;
-using Microsoft.AspNetCore.Components;
-
-namespace DevInstance.DevCoreApp.Server.WebService.UI.Pages.Admin;
-
-public partial class Users
-{
-    [Inject]
-    private UserProfileService UserService { get; set; } = default!;
-
-    [CascadingParameter]
-    private IServiceExecutionHost Host { get; set; } = default!;
-
-    // Data bound to the grid
-    private ModelList<UserProfileItem>? UserList { get; set; }
-
-    // Column definitions with sorting and visibility
-    public List<ColumnDescriptor<UserProfileItem>> Columns { get; set; } = new()
-    {
-        new() { Label = "Email", Field = "email", ValueSelector = u => u.Email },
-        new() { Label = "First Name", Field = "firstname", ValueSelector = u => u.FirstName },
-        new() { Label = "Middle Name", Field = "middlename", ValueSelector = u => u.MiddleName, IsVisible = false },
-        new() { Label = "Last Name", Field = "lastname", ValueSelector = u => u.LastName },
-        new() { Label = "Phone", Field = "phone", ValueSelector = u => u.PhoneNumber },
-        new() { Label = "Roles", Field = "roles", ValueSelector = u => u.Roles, IsSortable = false },
-        new() { Label = "Status", Field = "status", ValueSelector = u => u.Status.ToString() },
-    };
-
-    // Grid state
-    private int pageCount = 10;
-    private string SearchTerm { get; set; } = string.Empty;
-    private string SortField { get; set; } = string.Empty;
-    private bool IsAsc { get; set; } = true;
-
-    // Initial load
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadUsers(0, null, null, null);
-    }
-
-    // Central data loading method
-    private async Task LoadUsers(int page, string? sortField, bool? isAsc, string? search)
-    {
-        await Host.ServiceReadAsync(
-            async () => await UserService.GetAllUsersAsync(pageCount, page, sortField, isAsc, search),
-            (result) => UserList = result
-        );
-    }
-
-    // Event handlers
-    public async Task OnPageChangedAsync(int page)
-    {
-        await LoadUsers(page, UserList?.SortBy, UserList?.IsAsc, UserList?.Search);
-    }
-
-    public async Task OnSave(GridSettingsResult<UserProfileItem> grid)
-    {
-        Columns = grid.Columns;
-        if (pageCount != grid.PageSize)
-        {
-            pageCount = grid.PageSize;
-            await LoadUsers(0, SortField, IsAsc, null);
-        }
-    }
-
-    public async Task OnSearch()
-    {
-        await LoadUsers(0, UserList?.SortBy, UserList?.IsAsc, SearchTerm);
-    }
-
-    public async Task OnClearSearch()
-    {
-        SearchTerm = string.Empty;
-        await LoadUsers(0, UserList?.SortBy, UserList?.IsAsc, null);
-    }
-
-    public async Task OnSortAsync(HSortableHeaderSortArgs args)
-    {
-        SortField = args.SortBy;
-        IsAsc = args.IsAscending;
-        await LoadUsers(UserList?.Page ?? 0, args.SortBy, args.IsAscending, UserList?.Search);
-    }
-}
-```
-
-### 3. Service (`Services/UserProfileService.cs`)
-
-```csharp
-[AppService]
-public class UserProfileService : BaseService
-{
-    public UserManager<ApplicationUser> UserManager { get; }
-
-    public UserProfileService(IScopeManager logManager,
-                              ITimeProvider timeProvider,
-                              IQueryRepository query,
-                              IAuthorizationContext authorizationContext,
-                              UserManager<ApplicationUser> userManager)
-        : base(logManager, timeProvider, query, authorizationContext)
-    {
-        UserManager = userManager;
-    }
-
-    public async Task<ServiceActionResult<ModelList<UserProfileItem>>> GetAllUsersAsync(
-        int? top, int? page, string? sortField = null, bool? isAsc = null, string? search = null)
-    {
-        // Get query from repository
-        var profilesQuery = Repository.GetUserProfilesQuery(AuthorizationContext.CurrentProfile);
-
-        // Apply search filter
-        if (!string.IsNullOrEmpty(search))
-        {
-            profilesQuery = profilesQuery.Search(search);
-        }
-
-        // Apply sorting
-        if (!string.IsNullOrEmpty(sortField))
-        {
-            profilesQuery = profilesQuery.SortBy(sortField, isAsc ?? true);
-        }
-
-        // Get total count before pagination
-        var totalCount = await profilesQuery.Clone().Select().CountAsync();
-
-        // Apply pagination and execute
-        var userProfiles = await profilesQuery.Paginate(top, page).Select().ToListAsync();
-
-        // Convert to view models
-        var users = new List<UserProfileItem>();
-        foreach (var profile in userProfiles)
-        {
-            var appUser = await UserManager.FindByIdAsync(profile.ApplicationUserId.ToString());
-            if (appUser != null)
-            {
-                var roles = await UserManager.GetRolesAsync(appUser);
-                users.Add(profile.ToView(appUser, roles));  // Decorator method
-            }
-        }
-
-        // Create paginated result
-        var modelList = ModelListResult.CreateList(users.ToArray(), totalCount, top, page, sortField, isAsc, search);
-        return ServiceActionResult<ModelList<UserProfileItem>>.OK(modelList);
-    }
-}
-```
-
-### 4. Query Interface (`Database/Core/Data/Queries/IUserProfilesQuery.cs`)
-
-```csharp
-public interface IUserProfilesQuery : IModelQuery<UserProfile, IUserProfilesQuery>,
-        IQSearchable<IUserProfilesQuery>,
-        IQPageable<IUserProfilesQuery>,
-        IQSortable<IUserProfilesQuery>
-{
-    IQueryable<UserProfile> Select();
-    IUserProfilesQuery ByLastName(string lastName);
-    IUserProfilesQuery ByApplicationUserId(Guid id);
-}
-```
-
-### 5. Query Implementation (`Database/Core/Data/Queries/BasicsImplementation/CoreUserProfilesQuery.cs`)
-
-```csharp
-public class CoreUserProfilesQuery : CoreBaseQuery, IUserProfilesQuery
-{
-    private IQueryable<UserProfile> currentQuery;
-
-    public CoreUserProfilesQuery(IScopeManager logManager,
-                                 ITimeProvider timeProvider,
-                                 ApplicationDbContext dB,
-                                 UserProfile currentProfile)
-        : base(logManager, timeProvider, dB, currentProfile)
-    {
-        currentQuery = from ts in dB.UserProfiles select ts;
-    }
-
-    public IUserProfilesQuery Search(string search)
-    {
-        currentQuery = from profile in currentQuery
-                       where profile.FirstName.IndexOf(search) >= 0 ||
-                             profile.LastName.IndexOf(search) >= 0 ||
-                             profile.Email.IndexOf(search) >= 0 ||
-                             profile.PhoneNumber.IndexOf(search) >= 0 ||
-                             profile.MiddleName.IndexOf(search) >= 0
-                       select profile;
-        return this;
-    }
-
-    public IUserProfilesQuery SortBy(string column, bool isAsc)
-    {
-        // Example for one column - implement for each sortable field
-        if (string.Compare(column, "Email", true) == 0)
-        {
-            currentQuery = isAsc
-                ? currentQuery.OrderBy(ts => ts.Email)
-                : currentQuery.OrderByDescending(ts => ts.Email);
-        }
-        // ... other columns
-        return this;
-    }
-
-    public IUserProfilesQuery Clone()
-    {
-        return new CoreUserProfilesQuery(currentQuery, LogManager, TimeProvider, DB, CurrentProfile);
-    }
-
-    public IQueryable<UserProfile> Select() => currentQuery;
-}
-```
-
-### 6. Decorator (`Database/Core/Data/Decorators/UserProfileDecorators.cs`)
-
-```csharp
-public static class UserProfileDecorators
-{
-    public static UserProfileItem ToView(this UserProfile profile,
-        ApplicationUser? appUser = null, IList<string>? roles = null)
-    {
-        return new UserProfileItem
-        {
-            Id = profile.PublicId,
-            Email = appUser?.Email ?? string.Empty,
-            FirstName = profile.FirstName ?? string.Empty,
-            MiddleName = profile.MiddleName ?? string.Empty,
-            LastName = profile.LastName ?? string.Empty,
-            PhoneNumber = profile.PhoneNumber ?? string.Empty,
-            Roles = roles != null ? string.Join(", ", roles) : string.Empty,
-            Status = profile.Status.ToString(),
-            CreateDate = profile.CreateDate,
-            UpdateDate = profile.UpdateDate
-        };
-    }
-
-    public static UserProfile ToRecord(this UserProfile profile, UserProfileItem newProfile)
-    {
-        profile.FirstName = newProfile.FirstName;
-        profile.MiddleName = newProfile.MiddleName;
-        profile.LastName = newProfile.LastName;
-        profile.PhoneNumber = newProfile.PhoneNumber;
-        return profile;
-    }
-}
-```
-
-### 7. Database Model (`Database/Core/Models/UserProfile.cs`)
-
-```csharp
-public class UserProfile : DatabaseObject
-{
-    public string Email { get; set; }
-    public string FirstName { get; set; }
-    public string MiddleName { get; set; }
-    public string LastName { get; set; }
-    public string PhoneNumber { get; set; }
-    public Guid ApplicationUserId { get; set; }
-    public UserStatus Status { get; set; }
-}
-```
-
-### 8. Shared DTO (`Shared/Model/Core/UserProfileItem.cs`)
-
-```csharp
-public class UserProfileItem : ModelItem
-{
-    public string Email { get; set; }
-    public string FirstName { get; set; }
-    public string MiddleName { get; set; }
-    public string LastName { get; set; }
-    public string PhoneNumber { get; set; }
-    public string Roles { get; set; } = string.Empty;
-    public string Status { get; set; } = string.Empty;
-    public DateTime CreateDate { get; set; }
-    public DateTime UpdateDate { get; set; }
-
-    // Computed property
-    public string FullName => string.Join(" ", new[] { FirstName, MiddleName, LastName }
-        .Where(s => !string.IsNullOrWhiteSpace(s)));
-}
-```
-
-## Grid Components
-
-### ColumnDescriptor (`Grid/ColumnDescriptor.cs`)
-
-```csharp
-public class ColumnDescriptor<TItem>
-{
-    public string Field { get; init; } = default!;           // Field name for sorting
-    public string Label { get; init; } = default!;           // Display label
-    public Func<TItem, object?> ValueSelector { get; init; } // Value extractor
-    public RenderFragment<object?>? Template { get; init; }  // Custom rendering
-    public bool IsVisible { get; set; } = true;              // Show/hide column
-    public bool IsDragable { get; set; } = false;            // Drag state
-    public bool IsSortable { get; set; } = true;             // Enable sorting
-    public string Class { get; set; } = string.Empty;        // CSS class
-}
-```
-
-### HSortableHeader (`UI/Components/HSortableHeader.razor`)
-
-Sortable column header component with ascending/descending toggle.
-
-### GridSettings (`UI/Components/GridSettings.razor`)
-
-Offcanvas panel for column visibility, ordering, and page size settings.
-
-## Services
-
-### Creating a New Service
-
-1. Define an interface (`I{Entity}Service`) in the appropriate subfolder under `Services/`
-2. Create the implementation class in the same folder
-3. Inherit from `BaseService` for repository access
-4. Add `[BlazorService]` attribute for auto-registration (registers both concrete type and interfaces)
-5. Return `ServiceActionResult<T>` from methods
-6. Pages and controllers inject the **interface**, not the concrete class
-
-### Creating a Service Mock
-
-Mock services allow running the UI without a database. See the `mocks/` directory.
-
-1. Create `{Entity}ServiceMock.cs` under `mocks/Server/Services.Mocks/`
-2. Implement the same service interface (e.g., `IUserProfileService`)
-3. Annotate with `[BlazorServiceMock]` (not `[BlazorService]`)
-4. Use the [Bogus](https://github.com/bchavez/Bogus) library to generate fake data in the constructor
-5. Store data in an in-memory `List<T>` and implement all interface methods against it
-6. Build and run with the `ServiceMocks` configuration: `dotnet run -c ServiceMocks`
-
-Services that should work in both real and mock modes (no separate mock needed) must carry both attributes: `[BlazorService]` and `[BlazorServiceMock]`.
-
-### BaseService Dependencies
-
-- `IScopeManager logManager` - Logging
-- `ITimeProvider timeProvider` - Current time
-- `IQueryRepository query` - Database queries
-- `IAuthorizationContext authorizationContext` - Current user
-
-## IServiceExecutionHost
-
-The `MainLayout` implements `IServiceExecutionHost` and provides:
-- `InProgress` - Loading state indicator
-- `IsError` - Error state flag
-- `ErrorMessage` - Error details
-- `ServiceReadAsync()` - Execute read operations with automatic state management
-
-## Authorization
-
-### Role-Based Access
-
-Available roles in `Authentication/ApplicationRoles.cs`:
-- `Owner` - System owner (first registered user)
-- `Admin` - Administrator
-- `Manager` - Manager
-- `Employee` - Employee
-- `Client` - Client
-
-### Protecting Pages
-
-```razor
-@attribute [Authorize(Roles = "Owner,Admin")]
-```
-
-### Protecting Navigation Items
-
-```razor
-<AuthorizeView Roles="Owner,Admin">
-    <Authorized>
-        <NavLink href="admin/users">Users</NavLink>
-    </Authorized>
+@page "/admin/api-keys"
+@attribute [Authorize(Policy = "Admin.ApiKeys.View")]
+
+<AuthorizeView Policy="Admin.ApiKeys.Create">
+    <button class="btn btn-primary" @onclick="ShowCreateModal" disabled="@Host.InProgress">New API Key</button>
 </AuthorizeView>
 ```
 
-## Migrations
-
-Create migrations for both database providers:
-- `Database/Postgres/Migrations/`
-- `Database/SqlServer/Migrations/`
-
-Naming convention: `YYYYMMDDHHMMSS_DescriptiveName.cs`
-
-## Background Services
-
-For async operations like email sending:
-
 ```csharp
-_backgroundWorker.Submit(new BackgroundRequestItem
+public partial class ApiKeysPage
 {
-    RequestType = BackgroundRequestType.SendEmail,
-    Content = emailRequest
-});
-```
+    [Inject] private IApiKeyAdminService KeyService { get; set; } = default!;
+    [CascadingParameter] private IServiceExecutionHost Host { get; set; } = default!;
 
-## API Controllers
-
-Controllers derive from `ApiControllerBase`, use a literal `api/...` route, carry the permission
-policy, and make exactly one service call per action (see "API Controller Pattern" in `CLAUDE.md`):
-
-```csharp
-[Route("api/feature-flags")]
-[Authorize]
-public class FeatureFlagsController : ApiControllerBase
-{
-    private readonly IFeatureFlagAdminService _service;
-
-    public FeatureFlagsController(IFeatureFlagAdminService service) => _service = service;
-
-    [HttpGet]
-    [Authorize(Policy = PermissionDefinitions.Admin.FeatureFlags.View)]
-    public Task<ActionResult<PagedList<FeatureFlagItem>>> GetListAsync([FromQuery] ListQuery query)
-        => HandleServiceAsync(() => _service.GetFlagsAsync(query.Top, query.Page, query.SortBy, query.Search));
-
-    [HttpPut("{id}")]
-    [Authorize(Policy = PermissionDefinitions.Admin.FeatureFlags.Edit)]
-    public Task<ActionResult<FeatureFlagItem>> UpdateAsync(string id, [FromBody] FeatureFlagItem item)
-        => HandleServiceAsync(() => _service.UpdateFlagAsync(id, item));
+    private async Task LoadKeys(int page, string[]? sortBy, string? search) =>
+        await Host.ServiceReadAsync(
+            async () => await KeyService.GetKeysAsync(pageCount, page, sortBy, search),
+            result => KeyList = result);
 }
 ```
 
-List endpoints bind a `[QueryModel]` (`ListQuery`, or a feature query deriving from it such as
-`EmailLogQuery`): `?top=20&page=0&sortBy=-CreateDate,Name&search=abc`, dates in UTC.
+- Pages inject **client** service interfaces and call them through `IServiceExecutionHost`
+  (`ServiceReadAsync` / `ServiceSubmitAsync`), which drives `Host.InProgress`, `Host.IsError` and
+  `Host.ErrorMessage`.
+- A page never touches `HttpClient`, the API URL or tokens.
+- Permissions in `[Authorize]` / `<AuthorizeView>` only show or hide UI; the API enforces them.
+  Nested `<AuthorizeView>`s need distinct `Context` names.
+- **Never display a raw `DateTime`.** Use `<LocalTime Value="…" />` or `LocalClock.Format(…)`.
+- Grids use `HDataGrid` with `ColumnDescriptor<T>` and a grid profile. See
+  [`HDataGrid.md`](../../Client/DevCoreApp.Client.Desktop/Core/UI/Components/HDataGrid.md).
+- Add the link to `Core/UI/Layout/NavMenu.razor` inside an `<AuthorizeView Policy="…">`.
 
-## Naming Conventions
+## Checklist
 
-- **Services**: `{Feature}Service` (e.g., `UserProfileService`)
-- **DTOs**: `{Entity}Item` (e.g., `UserProfileItem`)
-- **Pages**: Match the feature (e.g., `Users.razor`)
-- **Controllers**: `{Entity}Controller` (e.g., `UserProfileController`)
-- **Queries**: `I{Entity}Query` / `Core{Entity}Query`
-- **Decorators**: `{Entity}Decorators` (static class)
+- [ ] Entity (+ `IOrganizationScoped`) → tell the maintainer a migration is needed for **both**
+      providers
+- [ ] Query + `IQueryRepository.Get{Entity}Query` + `CoreQueryRepository`
+- [ ] DTO (`IModelItem`, validation attributes) + decorators
+- [ ] Server service + interface + server mock
+- [ ] Permission constants
+- [ ] Controller on `ApiControllerBase`, one call per action, policy per action
+- [ ] Client service + interface + client mock (+ tests)
+- [ ] Desktop page + nav link (and Mobile screen if it applies)
+- [ ] `dotnet build DevInstance.DevCoreApp.slnx` **and** `-c ServiceMocks`, then `dotnet test`
+- [ ] Run the Api host and exercise the page: the server log shows only 2xx for its `/api` calls
+
+## Running
+
+```bash
+dotnet run --project src/Server/Api/DevCoreApp.Server.Api.csproj                              # server + both clients
+dotnet run -c ServiceMocks --project src/Client/DevCoreApp.Client.Desktop/DevCoreApp.Client.Desktop.csproj   # UI on mocks, no server
+```

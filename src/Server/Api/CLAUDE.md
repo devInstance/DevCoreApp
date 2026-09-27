@@ -74,7 +74,9 @@ Queue emails via `IBackgroundWorker.Submit()` with a `BackgroundRequestItem` of 
 - No mapping, validation or branching in controllers. When something must happen there (reading
   an `IFormFile` stream, client IP), say why in a comment.
 - Every `DateTime` on the wire is UTC (`UtcDateTimeJsonConverter`); clients convert for display.
-- Plan and rationale: [`docs/WasmMigrationPlan.md`](../../../docs/WasmMigrationPlan.md).
+- Full wire contract: [`docs/Api.md`](../../../docs/Api.md). Walk-through of a feature across all
+  layers: [`CONTRIBUTING.md`](CONTRIBUTING.md). Plan and rationale:
+  [`docs/WasmMigrationPlan.md`](../../../docs/WasmMigrationPlan.md).
 
 ### Import/Export Engine
 Generic CSV/Excel import and export for any entity type via handler pattern. Full documentation: [`../Services/Core/ImportExport/ImportExport.md`](../Services/Core/ImportExport/ImportExport.md).
@@ -111,14 +113,15 @@ The `SERVICEMOCKS` preprocessor symbol controls which services are registered in
 ```
 mocks/Server/Services.Mocks/
 ├── DevCoreApp.Server.Services.Mocks.csproj   # References real services project + Bogus
-├── UserAdmin/
-│   └── UserProfileServiceMock.cs            # Mock for IUserProfileService
-└── Email/
-    └── EmailLogServiceMock.cs               # Mock for IEmailLogService
+└── Core/                                    # mirrors Server.Services/Core/<Feature>
+    ├── UserAdmin/
+    │   └── UserProfileServiceMock.cs        # Mock for IUserProfileService
+    └── Email/
+        └── EmailLogServiceMock.cs           # Mock for IEmailLogService
 ```
 
 ### Creating a New Mock
-1. Create `{Entity}ServiceMock.cs` in the appropriate subfolder under `mocks/Server/Services.Mocks/`
+1. Create `{Entity}ServiceMock.cs` in `mocks/Server/Services.Mocks/Core/<Feature>/`
 2. Implement the service interface (e.g., `IUserProfileService`)
 3. Annotate with `[BlazorServiceMock]` (not `[BlazorService]`)
 4. Generate fake data in the constructor using Bogus `Faker<T>`

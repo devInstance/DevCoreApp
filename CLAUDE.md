@@ -296,11 +296,11 @@ Flow: a fork's `out` → DevCoreApp's `in` (upstream); apply to canonical `Core`
 
 Deep-dive docs for individual features and subsystems live in [`docs/`](docs/):
 
-- [API Keys](docs/ApiKeys.md) · [Background Tasks](docs/BackgroundTasks.md) · [Email System](docs/EmailSystem.md) · [Feature Flags](docs/FeatureFlags.md)
+- [API wire contract](docs/Api.md) · [API Keys](docs/ApiKeys.md) · [Background Tasks](docs/BackgroundTasks.md) · [Email System](docs/EmailSystem.md) · [Feature Flags](docs/FeatureFlags.md)
 - [Health Checks](docs/HealthChecks.md) · [Operation Context](docs/OperationContext.md) · [Settings](docs/Settings.md) · [Webhooks](docs/Webhooks.md)
 - [Specification](docs/Specification.md) — overall product spec
 
-Subsystem guides also live next to the code: [`src/Server/Database/UnitOfWork.md`](src/Server/Database/UnitOfWork.md), [`src/Server/Storage/FileStorage.md`](src/Server/Storage/FileStorage.md), [`src/Server/Services/Core/ImportExport/ImportExport.md`](src/Server/Services/Core/ImportExport/ImportExport.md), [`src/Client/DevCoreApp.Client.Desktop/Core/UI/Components/HDataGrid.md`](src/Client/DevCoreApp.Client.Desktop/Core/UI/Components/HDataGrid.md), and the WebService-specific [`src/Server/Api/CLAUDE.md`](src/Server/Api/CLAUDE.md).
+Subsystem guides also live next to the code: [`src/Server/Database/UnitOfWork.md`](src/Server/Database/UnitOfWork.md), [`src/Server/Storage/FileStorage.md`](src/Server/Storage/FileStorage.md), [`src/Server/Services/Core/ImportExport/ImportExport.md`](src/Server/Services/Core/ImportExport/ImportExport.md), [`src/Client/DevCoreApp.Client.Desktop/Core/UI/Components/HDataGrid.md`](src/Client/DevCoreApp.Client.Desktop/Core/UI/Components/HDataGrid.md), the server's [`src/Server/Api/CLAUDE.md`](src/Server/Api/CLAUDE.md) and end-to-end feature guide [`src/Server/Api/CONTRIBUTING.md`](src/Server/Api/CONTRIBUTING.md), and the clients' [`Desktop/CLAUDE.md`](src/Client/DevCoreApp.Client.Desktop/CLAUDE.md) and [`Mobile/CLAUDE.md`](src/Client/DevCoreApp.Client.Mobile/CLAUDE.md).
 
 ## Naming Conventions
 
