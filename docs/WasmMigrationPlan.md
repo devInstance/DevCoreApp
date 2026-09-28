@@ -481,7 +481,16 @@ The result is `src/Server/{Api, Services, Database, Email, Storage}` next to
   pages *profiles*, then drops each profile whose Identity user no longer exists. With orphaned
   profiles, `totalCount` is too high and pages come back short or empty (`top=3` → 0 of 7). The
   fix belongs in the query (exclude orphans before count/paging), plus finding out why user
-  deletion leaves profiles behind. Tracked as a follow-up.
+  deletion leaves profiles behind.
+  - ✅ **Fixed:** `IUserProfilesQuery.WithApplicationUser()` (`EXISTS` on `AspNetUsers`), applied
+    before count and paging, with tests in `Core.Tests/UserAdmin/UserProfilesQueryTests`. On the dev
+    DB, `top=3` now returns 3 + 1 of 4.
+  - **Origin:** the three orphans were all owner profiles from 2026-02-04 setup attempts. No
+    current code path deletes a user and keeps its profile (delete removes the profile first;
+    setup and registration create the user first). The enabler is that
+    `UserProfiles.ApplicationUserId` has **no foreign key** to `AspNetUsers`. Adding one needs a
+    migration in both providers, plus a cleanup of existing orphans. It is left undone because the
+    model documents profiles without accounts as intended.
 
 **Phase 5 — Docs & fan-out** — ✅ done
 - ✅ `docs/Api.md` (wire contract: responses, error shape and numbering, lists and queries, UTC, auth
@@ -495,7 +504,7 @@ The result is `src/Server/{Api, Services, Database, Email, Storage}` next to
   (local→UTC dates are breaking for the shipped mobile app; the envelope-based `CrmCrudControllerBase`)
   and Tentrie (Core/App restructure first; 89 envelope actions; ~26 product pages).
 - **Follow-ups (not in this migration):**
-  - the orphaned-profile paging bug (Phase 4b);
+  - ~~the orphaned-profile paging bug (Phase 4b)~~: fixed (see Phase 4b);
   - the login page should redirect when already signed in;
   - the import-validate `mappingsJson` TODO;
   - ~~running from Visual Studio~~: done — `DevInstance.DevCoreApp.slnLaunch` (Api + Desktop / Mobile,

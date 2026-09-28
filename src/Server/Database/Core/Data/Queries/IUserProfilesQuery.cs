@@ -16,4 +16,11 @@ public interface IUserProfilesQuery : IModelQuery<UserProfile, IUserProfilesQuer
     IUserProfilesQuery ById(Guid id);
     IUserProfilesQuery ByApplicationUserId(Guid id);
     IUserProfilesQuery ByOrganizationId(Guid organizationId);
+
+    /// <summary>
+    /// Only profiles whose Identity user exists. <c>ApplicationUserId</c> has no foreign key, so a
+    /// profile outlives an <c>AspNetUsers</c> row deleted outside the application. Apply it before
+    /// counting or paging a list that shows accounts, or the count and the pages disagree.
+    /// </summary>
+    IUserProfilesQuery WithApplicationUser();
 }

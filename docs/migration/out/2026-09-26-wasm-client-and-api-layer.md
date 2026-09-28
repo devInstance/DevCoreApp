@@ -25,6 +25,8 @@ scope:
   - Server.Services.Core.UserAdmin.{CurrentUserService,ICurrentUserService}
   - Server.Services.Core.Notifications.{INotificationService,NotificationService,NotificationSettings}
   - Server.Services.Core.Exceptions.BusinessRuleException
+  - Server.Database.Core.Data.Queries.{IUserProfilesQuery,CoreUserProfilesQuery}  # WithApplicationUser()
+  - Server.Services.Core.UserAdmin.UserProfileService   # GetListAsync filters orphans; ownership checks
   # Clients
   - Client.Services.Core.*                         # Api, Auth, Time, Me, Users, Notifications + one folder per admin feature
   - Client.Desktop.*                               # new project: the admin UI
@@ -140,6 +142,13 @@ Pre-existing bugs, each independent of the WASM work:
   - `GridProfileService` must throw `ForbiddenException`, not `UnauthorizedException` (a 401
     makes JWT clients refresh and retry).
 - Identity cookie: `HttpOnly = true`.
+- **Users list count and paging.** `UserProfileService.GetListAsync` counted and paged *profiles*,
+  then dropped each profile without an Identity user (`ApplicationUserId` has no foreign key). The
+  result was an inflated `totalCount` and short or empty pages. Add
+  `IUserProfilesQuery.WithApplicationUser()` (`DB.Users.Any(u => u.Id == pr.ApplicationUserId)`) and
+  apply it before counting and paging. Tests: `Core.Tests/UserAdmin/UserProfilesQueryTests`. Check
+  your database:
+  `select count(*) from "UserProfiles" p left join "AspNetUsers" u on u."Id" = p."ApplicationUserId" where u."Id" is null;`
 
 ### 2. Wire contract
 
@@ -343,6 +352,6 @@ See `scope` above. Collisions to expect with local fences:
   not, it needs a toolkit change before CRM can drop the envelope.
 - **Token storage for offline clients:** `localStorage` in Core, or `ITokenStorage` over IndexedDB
   as an `App` override? DevCoreApp has no offline requirement, so it keeps `localStorage`.
-- **Known Core bug, not fixed in this change:** `UserProfileService.GetListAsync` pages profiles and
-  then drops those whose Identity user is gone, so counts and pages are wrong when orphaned
-  profiles exist. A follow-up doc will carry the fix.
+- **Foreign key for `UserProfiles.ApplicationUserId`?** There is none, which is why orphaned
+  profiles can exist (see the users-list fix in step 1). Adding one is a schema change in every
+  repo, and the model documents profiles without accounts as intended, so it is left open.

@@ -99,7 +99,9 @@ public class UserProfileService : BaseService, IUserProfileService
         using var l = log.TraceScope();
 
         await using var repo = RepositoryFactory.Create();
-        var profilesQuery = repo.GetUserProfilesQuery(AuthorizationContext.CurrentProfile);
+        // Accounts only: filtered before count and paging, so orphaned profiles (no Identity user)
+        // don't inflate totalCount or leave short pages.
+        var profilesQuery = repo.GetUserProfilesQuery(AuthorizationContext.CurrentProfile).WithApplicationUser();
 
         if (!string.IsNullOrEmpty(search))
         {
