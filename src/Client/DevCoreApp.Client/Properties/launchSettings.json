@@ -1,9 +1,0 @@
-{
-  "profiles": {
-    "DevCoreApp.Client": {
-      "commandName": "Project",
-      "launchBrowser": true,
-      "applicationUrl": "https://localhost:7128;http://localhost:5276"
-    }
-  }
-}

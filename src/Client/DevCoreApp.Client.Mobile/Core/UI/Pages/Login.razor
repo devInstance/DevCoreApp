@@ -1,0 +1,70 @@
+@page "/login"
+@using DevInstance.DevCoreApp.Shared.Model.Core.Authentication
+@inject IAuthService Auth
+@inject NavigationManager Navigation
+
+<PageTitle>Sign in</PageTitle>
+
+@if (ready)
+{
+<h1 class="h4 mb-3">Sign in</h1>
+
+<ErrorMessageBanner IsError="Host.IsError" Message="@Host.ErrorMessage" />
+
+<EditForm Model="Input" OnValidSubmit="LoginAsync">
+    <DataAnnotationsValidator />
+
+    <div class="mb-3">
+        <label for="email" class="form-label">Email</label>
+        <InputText @bind-Value="Input.Email" id="email" type="email" class="form-control form-control-lg" autocomplete="username" />
+        <ValidationMessage For="() => Input.Email" class="text-danger" />
+    </div>
+
+    <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <InputText @bind-Value="Input.Password" id="password" type="password" class="form-control form-control-lg" autocomplete="current-password" />
+        <ValidationMessage For="() => Input.Password" class="text-danger" />
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-lg w-100" disabled="@Host.InProgress">Sign in</button>
+</EditForm>
+}
+
+@code {
+    [CascadingParameter] private IServiceExecutionHost Host { get; set; } = default!;
+
+    [CascadingParameter] private Task<AuthenticationState> AuthState { get; set; } = default!;
+
+    [SupplyParameterFromQuery] private string? ReturnUrl { get; set; }
+
+    private JwtLoginRequest Input { get; } = new();
+    private bool ready;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Already signed in: go where the user was headed. No loop: only anonymous users are sent
+        // here (App.razor, and ShowLogin after a 401 that signed the session out).
+        if ((await AuthState).User.Identity?.IsAuthenticated == true)
+        {
+            Navigation.NavigateTo(SafeReturnUrl(), replace: true);
+            return;
+        }
+
+        ready = true;
+    }
+
+    private async Task LoginAsync()
+    {
+        await Host.ServiceSubmitAsync(
+            async () => await Auth.LoginAsync(Input),
+            _ => Navigation.NavigateTo(SafeReturnUrl()));
+    }
+
+    // Only app-relative targets: "//evil.example" or "https://..." would be an open redirect.
+    // Never back to this page, or a signed-in user would bounce here forever.
+    private string SafeReturnUrl() =>
+        ReturnUrl is { Length: > 0 } url && url.StartsWith('/') && !url.StartsWith("//") && !url.StartsWith("/\\")
+            && !url.TrimStart('/').Split('?', '#')[0].TrimEnd('/').Equals("login", StringComparison.OrdinalIgnoreCase)
+            ? url.TrimStart('/')
+            : "";
+}

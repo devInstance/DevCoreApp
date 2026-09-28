@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
@@ -10,12 +10,12 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <PackageReference Include="DevInstance.BlazorToolkit" Version="10.5.0" />
 	  <PackageReference Include="DevInstance.LogScope" Version="10.1.0" />
-	  <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="10.0.3" />
-	  <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.3" />
-	  <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.3" />
-	  <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.3" />
-	  <PackageReference Include="Microsoft.Extensions.Localization.Abstractions" Version="10.0.3" />
+	  <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="10.0.12" />
+	  <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.12" />
+	  <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.12" />
+	  <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.12" />
 	</ItemGroup>
 
 	<ItemGroup>

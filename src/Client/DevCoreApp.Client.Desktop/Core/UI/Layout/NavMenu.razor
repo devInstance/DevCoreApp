@@ -1,0 +1,123 @@
+<div class="sidebar-nav">
+    <nav class="nav flex-column">
+        <div class="nav-item">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <i class="bi bi-house-door me-2"></i>
+                <span>Home</span>
+            </NavLink>
+        </div>
+        <AuthorizeView>
+            <div class="nav-item">
+                <NavLink class="nav-link" href="user/profile">
+                    <i class="bi bi-person me-2"></i>
+                    <span>My Profile</span>
+                </NavLink>
+            </div>
+
+            @* Each link needs the permission its page requires (the same one the API enforces),
+               so users only see what they can open. Import has no permission of its own yet; it
+               keeps the Owner/Admin role check of its API. *@
+            <div class="nav-group">
+                <div class="nav-group-header @(adminCollapsed ? "collapsed" : "")" @onclick="() => adminCollapsed = !adminCollapsed">
+                    <i class="bi bi-gear me-2"></i>
+                    <span class="flex-grow-1">Administration</span>
+                    <i class="bi bi-chevron-down"></i>
+                </div>
+                <div class="nav-group-items @(adminCollapsed ? "d-none" : "")">
+                    <AuthorizeView Context="item" Policy="Admin.Users.View">
+                        <div class="nav-item">
+                            <NavLink class="nav-link" href="admin/users">
+                                <i class="bi bi-people me-2"></i>
+                                <span>Users</span>
+                            </NavLink>
+                        </div>
+                    </AuthorizeView>
+                    <AuthorizeView Context="item" Policy="Admin.Roles.Edit">
+                        <div class="nav-item">
+                            <NavLink class="nav-link" href="admin/roles">
+                                <i class="bi bi-shield-lock me-2"></i>
+                                <span>Roles</span>
+                            </NavLink>
+                        </div>
+                    </AuthorizeView>
+                    <AuthorizeView Context="item" Policy="Admin.Organizations.Edit">
+                        <div class="nav-item">
+                            <NavLink class="nav-link" href="admin/organizations">
+                                <i class="bi bi-diagram-3 me-2"></i>
+                                <span>Organizations</span>
+                            </NavLink>
+                        </div>
+                    </AuthorizeView>
+                    <AuthorizeView Context="item" Policy="System.EmailLog.View">
+                        <div class="nav-item">
+                            <NavLink class="nav-link" href="admin/email-log">
+                                <i class="bi bi-envelope me-2"></i>
+                                <span>Email Log</span>
+                            </NavLink>
+                        </div>
+                    </AuthorizeView>
+                    <AuthorizeView Context="item" Policy="System.Jobs.View">
+                        <div class="nav-item">
+                            <NavLink class="nav-link" href="admin/jobs">
+                                <i class="bi bi-list-task me-2"></i>
+                                <span>Job Dashboard</span>
+                            </NavLink>
+                        </div>
+                    </AuthorizeView>
+                    <AuthorizeView Context="item" Policy="System.AuditLog.View">
+                        <div class="nav-item">
+                            <NavLink class="nav-link" href="admin/audit-log">
+                                <i class="bi bi-journal-text me-2"></i>
+                                <span>Audit Log</span>
+                            </NavLink>
+                        </div>
+                    </AuthorizeView>
+                    <AuthorizeView Context="item" Roles="Owner,Admin">
+                        <div class="nav-item">
+                            <NavLink class="nav-link" href="admin/import">
+                                <i class="bi bi-cloud-upload me-2"></i>
+                                <span>Import</span>
+                            </NavLink>
+                        </div>
+                    </AuthorizeView>
+                    <AuthorizeView Context="item" Policy="Admin.FeatureFlags.View">
+                        <div class="nav-item">
+                            <NavLink class="nav-link" href="admin/feature-flags">
+                                <i class="bi bi-toggles me-2"></i>
+                                <span>Feature Flags</span>
+                            </NavLink>
+                        </div>
+                    </AuthorizeView>
+                    <AuthorizeView Context="item" Policy="Admin.ApiKeys.View">
+                        <div class="nav-item">
+                            <NavLink class="nav-link" href="admin/api-keys">
+                                <i class="bi bi-key me-2"></i>
+                                <span>API Keys</span>
+                            </NavLink>
+                        </div>
+                    </AuthorizeView>
+                    <AuthorizeView Context="item" Policy="Admin.Webhooks.View">
+                        <div class="nav-item">
+                            <NavLink class="nav-link" href="admin/webhooks">
+                                <i class="bi bi-broadcast me-2"></i>
+                                <span>Webhooks</span>
+                            </NavLink>
+                        </div>
+                    </AuthorizeView>
+                    <AuthorizeView Context="item" Policy="Admin.Settings.View">
+                        <div class="nav-item">
+                            <NavLink class="nav-link" href="admin/settings">
+                                <i class="bi bi-sliders me-2"></i>
+                                <span>Settings</span>
+                            </NavLink>
+                        </div>
+                    </AuthorizeView>
+                </div>
+            </div>
+        </AuthorizeView>
+    </nav>
+</div>
+
+@code {
+    private bool adminCollapsed;
+}

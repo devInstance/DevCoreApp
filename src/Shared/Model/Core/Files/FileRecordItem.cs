@@ -3,8 +3,10 @@ using System;
 
 namespace DevInstance.DevCoreApp.Shared.Model.Core.Files;
 
-public class FileRecordItem : ModelItem
+public class FileRecordItem : IModelItem
 {
+    public string Id { get; set; }
+
     public string FileName { get; set; } = string.Empty;
     public string OriginalName { get; set; } = string.Empty;
     public string ContentType { get; set; } = string.Empty;

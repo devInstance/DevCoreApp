@@ -1,0 +1,66 @@
+@page "/account/register"
+@using DevInstance.DevCoreApp.Client.Services.Core.Account
+@using DevInstance.DevCoreApp.Shared.Model.Core.Account
+@inject IAccountService Account
+
+<PageTitle>Register</PageTitle>
+
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h1 class="h4 mb-4 text-center">Create an account</h1>
+
+                @if (result != null)
+                {
+                    <div class="alert alert-success" role="alert">
+                        @(result.RequiresEmailConfirmation
+                            ? "Account created. Check your email for a link to confirm it, then log in."
+                            : "Account created. You can now log in.")
+                    </div>
+                    <div class="text-center"><a href="account/login" class="btn btn-primary">Log in</a></div>
+                }
+                else
+                {
+                    @if (Host.IsError)
+                    {
+                        <div class="alert alert-danger" role="alert">@Host.ErrorMessage</div>
+                    }
+
+                    <EditForm Model="Input" OnValidSubmit="RegisterAsync">
+                        <DataAnnotationsValidator />
+
+                        <div class="form-floating mb-3">
+                            <InputText @bind-Value="Input.Email" id="email" class="form-control" autocomplete="username" placeholder="name@example.com" />
+                            <label for="email">Email</label>
+                            <ValidationMessage For="() => Input.Email" class="text-danger" />
+                        </div>
+                        <div class="form-floating mb-3">
+                            <InputText type="password" @bind-Value="Input.Password" id="password" class="form-control" autocomplete="new-password" placeholder="password" />
+                            <label for="password">Password</label>
+                            <ValidationMessage For="() => Input.Password" class="text-danger" />
+                        </div>
+                        <div class="form-floating mb-3">
+                            <InputText type="password" @bind-Value="Input.ConfirmPassword" id="confirmPassword" class="form-control" autocomplete="new-password" placeholder="password" />
+                            <label for="confirmPassword">Confirm password</label>
+                            <ValidationMessage For="() => Input.ConfirmPassword" class="text-danger" />
+                        </div>
+
+                        <button type="submit" class="w-100 btn btn-primary mb-3" disabled="@Host.InProgress">Register</button>
+                        <div class="text-center"><a href="account/login" class="text-decoration-none">Already have an account? Log in</a></div>
+                    </EditForm>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [CascadingParameter] private IServiceExecutionHost Host { get; set; } = default!;
+
+    private RegisterParameters Input { get; } = new();
+    private RegisterResult? result;
+
+    private async Task RegisterAsync() =>
+        await Host.ServiceSubmitAsync(async () => await Account.RegisterAsync(Input), r => result = r);
+}

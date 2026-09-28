@@ -3,8 +3,10 @@ using DevInstance.WebServiceToolkit.Common.Model;
 
 namespace DevInstance.DevCoreApp.Shared.Model.Core.Webhooks;
 
-public class WebhookDeliveryItem : ModelItem
+public class WebhookDeliveryItem : IModelItem
 {
+    public string Id { get; set; }
+
     public string SubscriptionId { get; set; } = string.Empty;
 
     public string EventType { get; set; } = string.Empty;

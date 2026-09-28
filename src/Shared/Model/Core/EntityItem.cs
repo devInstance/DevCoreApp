@@ -4,8 +4,10 @@ using System.Collections.Generic;
 
 namespace DevInstance.DevCoreApp.Shared.Model.Core;
 
-public class EntityItem : ModelItem
+public class EntityItem : IModelItem
 {
+    public string Id { get; set; }
+
     public UserProfileItem CreatedBy { get; set; }
     public DateTime CreateDate { get; set; }
 

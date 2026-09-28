@@ -66,6 +66,14 @@ public class CoreUserProfilesQuery : CoreDatabaseObjectQuery<UserProfile, CoreUs
         return this;
     }
 
+    public IUserProfilesQuery WithApplicationUser()
+    {
+        currentQuery = from pr in currentQuery
+                       where DB.Users.Any(u => u.Id == pr.ApplicationUserId)
+                       select pr;
+        return this;
+    }
+
     public IUserProfilesQuery Search(string search)
     {
         currentQuery = from profile in currentQuery

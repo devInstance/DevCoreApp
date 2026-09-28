@@ -1,0 +1,469 @@
+@page "/admin/users/{UserId}/edit"
+@attribute [Authorize(Policy = PermissionDefinitions.Admin.Users.Edit)]
+
+@using DevInstance.DevCoreApp.Shared.Model.Core.Common
+@using DevInstance.DevCoreApp.Shared.Model.Core.UserAdmin
+@using DevInstance.DevCoreApp.Shared.Model.Core.Roles
+@using DevInstance.DevCoreApp.Client.Desktop.Core.UI.Components
+
+<PageTitle>Edit User</PageTitle>
+
+<h1>Edit User</h1>
+
+@if (Host.IsError)
+{
+    <div class="alert alert-danger" role="alert">
+        @Host.ErrorMessage
+    </div>
+}
+
+@if (Input == null && Host.InProgress)
+{
+    <div class="text-center">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+}
+else if (Input != null)
+{
+    <ul class="nav nav-tabs mb-3">
+        <li class="nav-item">
+            <button class="nav-link @(ActiveTab == "profile" ? "active" : "")" type="button"
+                    @onclick='() => SetActiveTab("profile")'>
+                <i class="bi bi-person me-1"></i>Profile
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link @(ActiveTab == "organizations" ? "active" : "")" type="button"
+                    @onclick='() => SetActiveTab("organizations")'>
+                <i class="bi bi-building me-1"></i>Organizations
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link @(ActiveTab == "access" ? "active" : "")" type="button"
+                    @onclick='() => SetActiveTab("access")'>
+                <i class="bi bi-key me-1"></i>Access
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link @(ActiveTab == "overrides" ? "active" : "")" type="button"
+                    @onclick='() => SetActiveTab("overrides")'>
+                <i class="bi bi-shield-lock me-1"></i>Permission Overrides
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link @(ActiveTab == "effective" ? "active" : "")" type="button"
+                    @onclick='() => SetActiveTab("effective")'>
+                <i class="bi bi-shield-check me-1"></i>Effective Permissions
+            </button>
+        </li>
+    </ul>
+
+    @* ── Profile Tab ── *@
+    @if (ActiveTab == "profile")
+    {
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="text-center mb-4">
+                    <ProfilePictureUpload PictureUrl="@Input.ProfilePictureUrl"
+                                          FirstName="@Input.FirstName"
+                                          LastName="@Input.LastName"
+                                          AllowEdit="true"
+                                          Size="large"
+                                          OnUpload="OnProfilePictureUpload"
+                                          OnDelete="OnProfilePictureDelete" />
+                </div>
+                <EditForm Model="Input" OnValidSubmit="UpdateUser" FormName="edituser">
+                    <DataAnnotationsValidator />
+                    <hr />
+                    <ValidationSummary class="text-danger" role="alert" />
+                    <div class="form-floating mb-3">
+                        <InputText @bind-Value="Input.FirstName" id="Input.FirstName" class="form-control" autocomplete="given-name" aria-required="true" placeholder="First Name" />
+                        <label for="Input.FirstName">First Name</label>
+                        <ValidationMessage For="() => Input.FirstName" class="text-danger" />
+                    </div>
+                    <div class="form-floating mb-3">
+                        <InputText @bind-Value="Input.MiddleName" id="Input.MiddleName" class="form-control" autocomplete="additional-name" placeholder="Middle Name" />
+                        <label for="Input.MiddleName">Middle Name</label>
+                        <ValidationMessage For="() => Input.MiddleName" class="text-danger" />
+                    </div>
+                    <div class="form-floating mb-3">
+                        <InputText @bind-Value="Input.LastName" id="Input.LastName" class="form-control" autocomplete="family-name" aria-required="true" placeholder="Last Name" />
+                        <label for="Input.LastName">Last Name</label>
+                        <ValidationMessage For="() => Input.LastName" class="text-danger" />
+                    </div>
+                    <div class="form-floating mb-3">
+                        <InputText @bind-Value="Input.PhoneNumber" id="Input.PhoneNumber" class="form-control" autocomplete="tel" placeholder="Phone Number" />
+                        <label for="Input.PhoneNumber">Phone Number</label>
+                        <ValidationMessage For="() => Input.PhoneNumber" class="text-danger" />
+                    </div>
+                    <div class="form-floating mb-3">
+                        <InputText @bind-Value="Input.Email" id="Input.Email" class="form-control" autocomplete="email" aria-required="true" placeholder="name@example.com" />
+                        <label for="Input.Email">Email</label>
+                        <ValidationMessage For="() => Input.Email" class="text-danger" />
+                    </div>
+                    @if (SelectedRole == "Owner")
+                    {
+                        <label for="Input.Email">Role: Owner</label>
+                        <div class="alert alert-warning" role="alert">
+                            The Owner role cannot be changed. To change this user's role, please contact another Owner.
+                        </div>
+                    }
+                    else
+                    {
+                    <div class="form-floating mb-3">
+                        <InputSelect @bind-Value="SelectedRole" id="SelectedRole" class="form-select" aria-required="true">
+                            <option value="">Select a role...</option>
+                            @foreach (var role in AvailableRoles)
+                            {
+                                <option value="@role">@role</option>
+                            }
+                        </InputSelect>
+                        <label for="SelectedRole">Role</label>
+                        @if (!string.IsNullOrEmpty(RoleError))
+                        {
+                            <div class="text-danger">@RoleError</div>
+                        }
+                    </div>
+                    }
+                    <div class="mb-3">
+                        <span class="text-muted">Status: @Input.StatusLabel</span>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-lg btn-primary" disabled="@Host.InProgress">
+                            @if (Host.InProgress)
+                            {
+                                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                            }
+                            Save Changes
+                        </button>
+                        <a href="/admin/users" class="btn btn-lg btn-outline-secondary">Cancel</a>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    }
+
+    @* ── Access Tab ── *@
+    @if (ActiveTab == "access")
+    {
+        @if (AccessState == null)
+        {
+            <div class="text-center py-3">
+                <div class="spinner-border spinner-border-sm" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="row">
+                <div class="col-lg-8">
+                    @if (!string.IsNullOrEmpty(AccessNotice))
+                    {
+                        <div class="alert alert-success" role="alert">@AccessNotice</div>
+                    }
+
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">Sign-in status</h5>
+                            <p class="text-muted small">
+                                Signing in needs both a confirmed email address and a password.
+                            </p>
+                            <div class="d-flex gap-2 mb-2">
+                                @if (AccessState.EmailConfirmed)
+                                {
+                                    <span class="badge bg-success"><i class="bi bi-check-lg me-1"></i>Email confirmed</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle me-1"></i>Email not confirmed</span>
+                                }
+                                @if (AccessState.HasPassword)
+                                {
+                                    <span class="badge bg-success"><i class="bi bi-check-lg me-1"></i>Password set</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle me-1"></i>No password</span>
+                                }
+                            </div>
+                            @if (AccessState.CanSignIn)
+                            {
+                                <div class="text-success small"><i class="bi bi-check-circle me-1"></i>This user can sign in.</div>
+                            }
+                            else
+                            {
+                                <div class="text-muted small">This user cannot sign in yet.</div>
+                            }
+                        </div>
+                    </div>
+
+                    @if (!AccessState.CanSignIn)
+                    {
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">Invitation link</h5>
+                                <p class="text-muted small">
+                                    Opening this link confirms the address and lets the user choose a password.
+                                    Send it yourself when outbound email is not working.
+                                </p>
+
+                                @if (AccessState.InvitationLink != null)
+                                {
+                                    <div class="input-group mb-2">
+                                        <input type="text" class="form-control font-monospace small"
+                                               value="@AccessState.InvitationLink" readonly
+                                               @onclick="CopyInvitationLink" />
+                                        <button class="btn btn-outline-secondary" type="button" @onclick="CopyInvitationLink">
+                                            <i class="bi bi-clipboard me-1"></i>@(InviteLinkCopied ? "Copied" : "Copy")
+                                        </button>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="alert alert-warning small" role="alert">
+                                        The public site URL is unknown, so no link can be built. Set
+                                        <code>App:BaseUrl</code> in <code>appsettings.json</code>.
+                                    </div>
+                                }
+
+                                <button type="button" class="btn btn-outline-primary" @onclick="ResendInvitation" disabled="@Host.InProgress">
+                                    <i class="bi bi-envelope me-1"></i>Resend invitation email
+                                </button>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">Set password</h5>
+                            <p class="text-muted small">
+                                Sets the password directly and confirms the email address, so the user can
+                                sign in immediately. Deliver the password over a channel you trust.
+                            </p>
+
+                            @if (!string.IsNullOrEmpty(PasswordError))
+                            {
+                                <div class="alert alert-danger py-2" role="alert">@PasswordError</div>
+                            }
+
+                            <div class="mb-2">
+                                <label class="form-label" for="newPassword">New password</label>
+                                <input type="password" id="newPassword" class="form-control"
+                                       autocomplete="new-password" @bind="NewPassword" />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label" for="confirmNewPassword">Confirm password</label>
+                                <input type="password" id="confirmNewPassword" class="form-control"
+                                       autocomplete="new-password" @bind="ConfirmNewPassword" />
+                            </div>
+
+                            <button type="button" class="btn btn-primary" @onclick="SetPassword" disabled="@Host.InProgress">
+                                @if (Host.InProgress)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                }
+                                Set Password
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+
+    @* ── Organizations Tab ── *@
+    @if (ActiveTab == "organizations")
+    {
+        @if (UserOrganizations == null)
+        {
+            <div class="text-center py-3">
+                <div class="spinner-border spinner-border-sm" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        }
+        else
+        {
+            @if (UserOrganizations.Count > 0)
+            {
+                <table class="table table-bordered table-sm">
+                    <thead>
+                        <tr>
+                            <th>Organization</th>
+                            <th>Path</th>
+                            <th style="width: 180px;">Scope</th>
+                            <th style="width: 80px;" class="text-center">Primary</th>
+                            <th style="width: 80px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var org in UserOrganizations)
+                        {
+                            <tr>
+                                <td>@org.OrganizationName</td>
+                                <td class="text-muted small">@org.OrganizationPath</td>
+                                <td>
+                                    <select class="form-select form-select-sm"
+                                            value="@org.Scope"
+                                            @onchange="(e) => OnScopeChanged(org, e)">
+                                        <option value="@OrganizationAccessScope.Self">Self</option>
+                                        <option value="@OrganizationAccessScope.WithChildren">With Children</option>
+                                    </select>
+                                </td>
+                                <td class="text-center">
+                                    <input type="radio" class="form-check-input" name="primaryOrg"
+                                           checked="@org.IsPrimary"
+                                           @onchange="() => SetPrimaryOrg(org)" />
+                                </td>
+                                <td class="text-center">
+                                    <button type="button" class="btn btn-sm btn-outline-danger"
+                                            @onclick="() => RemoveOrg(org)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="alert alert-info">No organizations assigned.</div>
+            }
+
+            <div class="d-flex gap-2 mt-3">
+                <button type="button" class="btn btn-outline-primary" @onclick="ShowAddOrgModal">
+                    <i class="bi bi-plus-circle me-1"></i>Add Organization
+                </button>
+                <button type="button" class="btn btn-primary" disabled="@Host.InProgress" @onclick="SaveOrganizations">
+                    @if (Host.InProgress)
+                    {
+                        <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                    }
+                    Save Organizations
+                </button>
+            </div>
+
+            @if (ShowOrgModal)
+            {
+                <div class="modal d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Add Organization</h5>
+                                <button type="button" class="btn-close" @onclick="CloseOrgModal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Organization</label>
+                                    <select class="form-select" @bind="NewOrgId">
+                                        <option value="">Select an organization...</option>
+                                        @if (AvailableOrganizations != null)
+                                        {
+                                            @foreach (var org in AvailableOrganizations)
+                                            {
+                                                <option value="@org.Id">@(new string('\u00A0', org.Level * 4))@org.Name</option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Scope</label>
+                                    <select class="form-select" @bind="NewOrgScope">
+                                        <option value="@OrganizationAccessScope.Self">Self</option>
+                                        <option value="@OrganizationAccessScope.WithChildren">With Children</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" @onclick="CloseOrgModal">Cancel</button>
+                                <button type="button" class="btn btn-primary" @onclick="AddOrganization"
+                                        disabled="@string.IsNullOrEmpty(NewOrgId)">Add</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    }
+
+    @* ── Permission Overrides Tab ── *@
+    @if (ActiveTab == "overrides")
+    {
+        @if (AllPermissions == null || OverrideStates == null)
+        {
+            <div class="text-center py-3">
+                <div class="spinner-border spinner-border-sm" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        }
+        else
+        {
+            <p class="text-muted mb-3">Set per-user permission overrides. <strong>Inherit</strong> uses the role default. <strong>Grant</strong> adds the permission. <strong>Deny</strong> removes it regardless of role.</p>
+
+            @foreach (var module in GroupedAllPermissions!)
+            {
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <strong>@module.Key</strong>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-sm table-bordered mb-0">
+                            <thead>
+                                <tr>
+                                    <th style="width: 200px;">Entity</th>
+                                    @foreach (var action in GetOverrideModuleActions(module.Key))
+                                    {
+                                        <th class="text-center" style="width: 140px;">@action</th>
+                                    }
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var entity in module.Value)
+                                {
+                                    <tr>
+                                        <td>@entity.Key</td>
+                                        @foreach (var action in GetOverrideModuleActions(module.Key))
+                                        {
+                                            var permission = entity.Value.FirstOrDefault(p => p.Action == action);
+                                            <td class="text-center">
+                                                @if (permission != null)
+                                                {
+                                                    <select class="form-select form-select-sm"
+                                                            value="@GetOverrideState(permission.Key)"
+                                                            @onchange="(e) => OnOverrideChanged(permission.Key, e)">
+                                                        <option value="inherit">Inherit</option>
+                                                        <option value="grant">Grant</option>
+                                                        <option value="deny">Deny</option>
+                                                    </select>
+                                                }
+                                            </td>
+                                        }
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+
+            <button type="button" class="btn btn-primary" disabled="@Host.InProgress" @onclick="SaveOverrides">
+                @if (Host.InProgress)
+                {
+                    <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                }
+                Save Permission Overrides
+            </button>
+        }
+    }
+
+    @* ── Effective Permissions Tab ── *@
+    @if (ActiveTab == "effective")
+    {
+        <EffectivePermissionsView Permissions="EffectivePermissions" />
+    }
+}

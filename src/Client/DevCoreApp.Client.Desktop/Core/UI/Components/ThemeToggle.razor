@@ -1,0 +1,75 @@
+@implements IDisposable
+@inject IMeService Me
+@inject ICurrentUserState CurrentUser
+@inject AuthenticationStateProvider AuthState
+@inject IJSRuntime JS
+
+<div class="dropdown">
+    <button class="btn btn-link dropdown-toggle p-1" type="button" data-bs-toggle="dropdown"
+            aria-expanded="false" title="Toggle theme">
+        <i class="bi @CurrentIcon fs-5"></i>
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end">
+        @foreach (var (theme, icon) in Themes)
+        {
+            <li>
+                <button class="dropdown-item d-flex align-items-center" @onclick="() => SetThemeAsync(theme)">
+                    <i class="bi @icon me-2"></i>
+                    @theme
+                    @if (currentTheme == theme)
+                    {
+                        <i class="bi bi-check2 ms-auto"></i>
+                    }
+                </button>
+            </li>
+        }
+    </ul>
+</div>
+
+@code {
+    private static readonly (string Theme, string Icon)[] Themes =
+        { ("Light", "bi-sun"), ("Dark", "bi-moon"), ("System", "bi-display") };
+
+    private string currentTheme = "System";
+
+    private string CurrentIcon => Themes.First(t => t.Theme == currentTheme).Icon;
+
+    protected override void OnInitialized() => AuthState.AuthenticationStateChanged += OnAuthStateChanged;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Before sign-in there is no server preference: use the one cached in the browser.
+            var stored = await JS.InvokeAsync<string?>("themeInterop.getStoredPreference");
+            currentTheme = stored ?? "System";
+            StateHasChanged();
+        }
+    }
+
+    // The signed-in user's saved preference (from api/me) wins over the browser cache.
+    private async void OnAuthStateChanged(Task<AuthenticationState> task)
+    {
+        await task;
+        var theme = CurrentUser.User?.Theme;
+        if (!string.IsNullOrEmpty(theme) && theme != currentTheme)
+        {
+            currentTheme = theme;
+            await JS.InvokeVoidAsync("themeInterop.setTheme", theme);
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task SetThemeAsync(string theme)
+    {
+        currentTheme = theme;
+        await JS.InvokeVoidAsync("themeInterop.setTheme", theme);
+
+        if (CurrentUser.User != null)
+        {
+            await Me.SetThemeAsync(theme);
+        }
+    }
+
+    public void Dispose() => AuthState.AuthenticationStateChanged -= OnAuthStateChanged;
+}

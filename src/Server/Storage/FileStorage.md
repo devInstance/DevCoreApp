@@ -97,11 +97,11 @@ public interface IFileStorageProvider
 
 3. Create a `ConfigurationExtensions.cs` with an `Add{Provider}FileStorage` method that reads from `StorageConfiguration` and registers the provider as `IFileStorageProvider`.
 
-4. Reference the new project from `DevCoreApp.Admin.WebService.csproj` and swap the registration in `Program.cs`.
+4. Reference the new project from `DevCoreApp.Server.Api.csproj` and swap the registration in `Program.cs`.
 
 ## Service Layer
 
-`IFileService` (`src/Server/Admin/Services/Core/Files/`) wraps the provider with business logic:
+`IFileService` (`src/Server/Services/Core/Files/`) wraps the provider with business logic:
 
 - **Validation** — checks content type and file size against runtime Settings before upload
 - **Organization scoping** — sets `OrganizationId` on every `FileRecord` from `IOperationContext`
@@ -142,7 +142,7 @@ src/Server/Storage/
     ConfigurationExtensions.cs
     StorageProcessor.S3.csproj
 
-src/Server/Admin/Services/Core/Files/      # Business logic
+src/Server/Services/Core/Files/      # Business logic
   IFileService.cs
   FileService.cs
   FileDownloadResult.cs
@@ -156,6 +156,6 @@ src/Server/Database/Core/
 src/Shared/Model/Core/Files/
   FileRecordItem.cs                   # ViewModel
 
-src/Server/Admin/WebService/
+src/Server/Api/
   Controllers/FileController.cs       # API endpoints
 ```

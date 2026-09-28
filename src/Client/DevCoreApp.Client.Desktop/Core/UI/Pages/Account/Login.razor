@@ -1,0 +1,105 @@
+@page "/account/login"
+@using DevInstance.DevCoreApp.Shared.Model.Core.Authentication
+@inject IAuthService Auth
+@inject DevInstance.DevCoreApp.Client.Services.Core.Account.IAccountService Account
+@inject NavigationManager Navigation
+
+<PageTitle>Log in</PageTitle>
+
+@if (ready)
+{
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h1 class="h4 mb-4 text-center">Log in</h1>
+
+                @if (setupRequired)
+                {
+                    @* /setup is a server page, not a client route: target="_top" makes the browser load it. *@
+                    <div class="alert alert-info" role="alert">
+                        No accounts exist yet. <a href="/setup" target="_top" class="alert-link">Set up the owner account</a> first.
+                    </div>
+                }
+
+                @if (Host.IsError)
+                {
+                    <div class="alert alert-danger" role="alert">@Host.ErrorMessage</div>
+                }
+
+                <EditForm Model="Input" OnValidSubmit="LoginAsync">
+                    <DataAnnotationsValidator />
+
+                    <div class="form-floating mb-3">
+                        <InputText @bind-Value="Input.Email" id="email" class="form-control" autocomplete="username" placeholder="name@example.com" />
+                        <label for="email">Email</label>
+                        <ValidationMessage For="() => Input.Email" class="text-danger" />
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <InputText type="password" @bind-Value="Input.Password" id="password" class="form-control" autocomplete="current-password" placeholder="password" />
+                        <label for="password">Password</label>
+                        <ValidationMessage For="() => Input.Password" class="text-danger" />
+                    </div>
+
+                    <button type="submit" class="w-100 btn btn-primary mb-3" disabled="@Host.InProgress">
+                        @if (Host.InProgress)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                        }
+                        Log in
+                    </button>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="account/forgot-password" class="text-decoration-none">Forgot your password?</a>
+                        <a href="account/register" class="text-decoration-none">Register</a>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+</div>
+}
+
+@code {
+    [CascadingParameter] private IServiceExecutionHost Host { get; set; } = default!;
+
+    [CascadingParameter] private Task<AuthenticationState> AuthState { get; set; } = default!;
+
+    [SupplyParameterFromQuery] private string? ReturnUrl { get; set; }
+
+    private JwtLoginRequest Input { get; } = new();
+    private bool setupRequired;
+    private bool ready;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Already signed in (bookmark, back button, a second tab): go where the user was headed.
+        // No loop: only anonymous users are sent here (App.razor, and ShowLogin after a 401 that
+        // signed the session out).
+        if ((await AuthState).User.Identity?.IsAuthenticated == true)
+        {
+            Navigation.NavigateTo(SafeReturnUrl(), replace: true);
+            return;
+        }
+
+        var result = await Account.IsSetupRequiredAsync();
+        setupRequired = result.Success && result.Result;
+        ready = true;
+    }
+
+    private async Task LoginAsync()
+    {
+        await Host.ServiceSubmitAsync(
+            async () => await Auth.LoginAsync(Input),
+            _ => Navigation.NavigateTo(SafeReturnUrl()));
+    }
+
+    // Only app-relative targets: "//evil.example" or "https://..." would be an open redirect.
+    // Never back to this page, or a signed-in user would bounce here forever.
+    private string SafeReturnUrl() =>
+        ReturnUrl is { Length: > 0 } url && url.StartsWith('/') && !url.StartsWith("//") && !url.StartsWith("/\\")
+            && !url.TrimStart('/').Split('?', '#')[0].TrimEnd('/').Equals("account/login", StringComparison.OrdinalIgnoreCase)
+            ? url.TrimStart('/')
+            : "";
+}

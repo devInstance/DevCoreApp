@@ -1,0 +1,40 @@
+@inherits LayoutComponentBase
+
+@implements IServiceExecutionHost
+
+@inject NavigationManager Navigation
+
+<CascadingValue Value="this" IsFixed="true">
+    <div class="page">
+        <div class="sidebar">
+            <NavMenu />
+        </div>
+
+        <main>
+            <article class="content px-3 py-3">
+                @Body
+            </article>
+        </main>
+    </div>
+</CascadingValue>
+
+@code {
+    public ServiceExecutionType ServiceState { get; set; }
+    public string ErrorMessage { get; set; } = string.Empty;
+    public bool IsError { get; set; }
+    public bool InProgress { get; set; }
+
+    // Called by BlazorToolkit when a service call comes back unauthorized (session gone).
+    public void ShowLogin()
+    {
+        var returnUrl = "/" + Navigation.ToBaseRelativePath(Navigation.Uri);
+        Navigation.NavigateTo($"login?returnUrl={Uri.EscapeDataString(returnUrl)}");
+    }
+
+    // No prerendering in a standalone WASM app, so there is no component state to persist.
+    public PersistentComponentState ComponentState => null!;
+
+    public Dictionary<string, string> State { get; } = new();
+
+    public new void StateHasChanged() => InvokeAsync(() => base.StateHasChanged());
+}

@@ -1,0 +1,151 @@
+@inherits LayoutComponentBase
+
+@implements IServiceExecutionHost
+@implements IDisposable
+
+@inject NavigationManager Navigation
+@inject IAuthService Auth
+
+<CascadingValue Value="this" IsFixed="true">
+    <div class="app-container">
+        <aside class="sidebar @GetSidebarClass()">
+            <div class="sidebar-header">
+                <a class="sidebar-brand" href="">
+                    <i class="bi bi-box-seam me-2"></i>
+                    <span class="brand-text">DevCoreApp</span>
+                </a>
+            </div>
+            <NavMenu />
+        </aside>
+
+        <div class="main-wrapper">
+            <header class="topbar">
+                <div class="topbar-start">
+                    <button class="btn btn-link sidebar-toggle" @onclick="ToggleSidebar" title="Toggle sidebar">
+                        <i class="bi bi-list fs-5"></i>
+                    </button>
+                </div>
+                <div class="topbar-end">
+                    <div class="topbar-item">
+                        <ThemeToggle />
+                    </div>
+
+                    <AuthorizeView>
+                        <Authorized>
+                            <div class="topbar-item">
+                                <NotificationBell />
+                            </div>
+
+                            <div class="topbar-item dropdown">
+                                <button class="btn btn-link dropdown-toggle d-flex align-items-center" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <div class="avatar-placeholder me-2">@GetInitials(context.User.Identity?.Name)</div>
+                                    <span class="d-none d-md-inline">@context.User.Identity?.Name</span>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <a class="dropdown-item" href="user/profile">
+                                            <i class="bi bi-person me-2"></i>Profile
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <button type="button" class="dropdown-item" @onclick="SignOutAsync">
+                                            <i class="bi bi-box-arrow-right me-2"></i>Sign out
+                                        </button>
+                                    </li>
+                                </ul>
+                            </div>
+                        </Authorized>
+                        <NotAuthorized>
+                            <div class="topbar-item">
+                                <a href="account/login" class="btn btn-outline-primary btn-sm">Log in</a>
+                            </div>
+                        </NotAuthorized>
+                    </AuthorizeView>
+                </div>
+            </header>
+
+            <main class="main-content">
+                <div class="container-fluid py-4">
+                    @Body
+                </div>
+            </main>
+        </div>
+    </div>
+</CascadingValue>
+
+@code {
+    public ServiceExecutionType ServiceState { get; set; }
+    public string ErrorMessage { get; set; } = string.Empty;
+    public bool IsError { get; set; }
+    public bool InProgress { get; set; }
+
+    private SidebarMode sidebarMode = SidebarMode.Expanded;
+
+    private enum SidebarMode
+    {
+        Expanded,   // Full width with icons and text
+        IconsOnly,  // Narrow with icons only
+        Hidden      // Completely hidden
+    }
+
+    protected override void OnInitialized()
+    {
+        // A page's error belongs to that page; clear it when navigating away.
+        Navigation.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        IsError = false;
+        ErrorMessage = string.Empty;
+    }
+
+    private void ToggleSidebar()
+    {
+        sidebarMode = sidebarMode switch
+        {
+            SidebarMode.Expanded => SidebarMode.IconsOnly,
+            SidebarMode.IconsOnly => SidebarMode.Hidden,
+            _ => SidebarMode.Expanded
+        };
+    }
+
+    private string GetSidebarClass() => sidebarMode switch
+    {
+        SidebarMode.IconsOnly => "icons-only",
+        SidebarMode.Hidden => "hidden",
+        _ => ""
+    };
+
+    private static string GetInitials(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "?";
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length >= 2
+            ? $"{parts[0][0]}{parts[^1][0]}".ToUpperInvariant()
+            : name[..Math.Min(2, name.Length)].ToUpperInvariant();
+    }
+
+    private async Task SignOutAsync()
+    {
+        await Auth.LogoutAsync();
+        Navigation.NavigateTo("account/login");
+    }
+
+    // Called by BlazorToolkit when a service call comes back unauthorized (session gone).
+    public void ShowLogin()
+    {
+        var returnUrl = Navigation.ToBaseRelativePath(Navigation.Uri);
+        Navigation.NavigateTo($"account/login?returnUrl={Uri.EscapeDataString("/" + returnUrl)}");
+    }
+
+    // No prerendering in a standalone WASM app, so there is no component state to persist.
+    public PersistentComponentState ComponentState => null!;
+
+    public Dictionary<string, string> State { get; } = new();
+
+    public new void StateHasChanged() => InvokeAsync(() => base.StateHasChanged());
+
+    public void Dispose() => Navigation.LocationChanged -= OnLocationChanged;
+}

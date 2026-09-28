@@ -6,8 +6,10 @@ using System.Text;
 
 namespace DevInstance.DevCoreApp.Shared.Model.Core;
 
-public class UserProfileItem : ModelItem
+public class UserProfileItem : IModelItem
 {
+    public string Id { get; set; }
+
     [Required]
     [EmailAddress]
     [Display(Name = "Email")]

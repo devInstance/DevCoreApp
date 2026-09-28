@@ -30,10 +30,10 @@ The webhook feature is split into four main parts:
 
 | Area | Responsibility | Main files |
 |---|---|---|
-| Subscription management | Stores and manages webhook endpoints | `src/Server/Admin/Services/Core/Webhooks/WebhookAdminService.cs` |
-| Event dispatching | Finds matching subscriptions and creates delivery jobs | `src/Server/Admin/Services/Core/Webhooks/WebhookDispatcher.cs` |
-| Background delivery | Sends HTTP requests and updates delivery status | `src/Server/Admin/Services/Core/Background/Tasks/Handlers/WebhookDeliveryTaskHandler.cs` |
-| Admin visibility | Lets admins manage subscriptions and inspect delivery logs | `src/Server/Admin/WebService/Core/UI/Pages/Admin/WebhooksPage.razor` |
+| Subscription management | Stores and manages webhook endpoints | `src/Server/Services/Core/Webhooks/WebhookAdminService.cs` |
+| Event dispatching | Finds matching subscriptions and creates delivery jobs | `src/Server/Services/Core/Webhooks/WebhookDispatcher.cs` |
+| Background delivery | Sends HTTP requests and updates delivery status | `src/Server/Services/Core/Background/Tasks/Handlers/WebhookDeliveryTaskHandler.cs` |
+| Admin visibility | Lets admins manage subscriptions and inspect delivery logs | `src/Server/Api/Core/UI/Pages/Admin/WebhooksPage.razor` |
 
 The flow is:
 
@@ -568,12 +568,12 @@ If you want to make this webhook starter more production-ready, the highest-valu
 
 | Concern | File |
 |---|---|
-| Admin service | `src/Server/Admin/Services/Core/Webhooks/WebhookAdminService.cs` |
-| Dispatcher | `src/Server/Admin/Services/Core/Webhooks/WebhookDispatcher.cs` |
-| Dispatcher interface | `src/Server/Admin/Services/Core/Webhooks/IWebhookDispatcher.cs` |
-| Background delivery handler | `src/Server/Admin/Services/Core/Background/Tasks/Handlers/WebhookDeliveryTaskHandler.cs` |
-| Delivery request payload | `src/Server/Admin/Services/Core/Background/Requests/WebhookDeliveryRequest.cs` |
-| Background task types | `src/Server/Admin/Services/Core/Background/Tasks/BackgroundTaskTypes.cs` |
+| Admin service | `src/Server/Services/Core/Webhooks/WebhookAdminService.cs` |
+| Dispatcher | `src/Server/Services/Core/Webhooks/WebhookDispatcher.cs` |
+| Dispatcher interface | `src/Server/Services/Core/Webhooks/IWebhookDispatcher.cs` |
+| Background delivery handler | `src/Server/Services/Core/Background/Tasks/Handlers/WebhookDeliveryTaskHandler.cs` |
+| Delivery request payload | `src/Server/Services/Core/Background/Requests/WebhookDeliveryRequest.cs` |
+| Background task types | `src/Server/Services/Core/Background/Tasks/BackgroundTaskTypes.cs` |
 | Subscription entity | `src/Server/Database/Core/Models/Webhooks/WebhookSubscription.cs` |
 | Delivery entity | `src/Server/Database/Core/Models/Webhooks/WebhookDelivery.cs` |
 | Subscription DTO | `src/Shared/Model/Core/Webhooks/WebhookSubscriptionItem.cs` |
@@ -585,7 +585,7 @@ If you want to make this webhook starter more production-ready, the highest-valu
 | Delivery query | `src/Server/Database/Core/Data/Queries/BasicsImplementation/CoreWebhookDeliveryQuery.cs` |
 | Subscription mapping | `src/Server/Database/Core/Data/Decorators/WebhookSubscriptionDecorators.cs` |
 | Delivery mapping | `src/Server/Database/Core/Data/Decorators/WebhookDeliveryDecorators.cs` |
-| Admin subscriptions page | `src/Server/Admin/WebService/Core/UI/Pages/Admin/WebhooksPage.razor` |
-| Admin deliveries page | `src/Server/Admin/WebService/Core/UI/Pages/Admin/WebhookDeliveriesPage.razor` |
-| Mock service | `mocks/Server/Admin/ServicesMocks/Core/Webhooks/WebhookAdminServiceMock.cs` |
+| Admin subscriptions page | `src/Server/Api/Core/UI/Pages/Admin/WebhooksPage.razor` |
+| Admin deliveries page | `src/Server/Api/Core/UI/Pages/Admin/WebhookDeliveriesPage.razor` |
+| Mock service | `mocks/Server/Services.Mocks/Core/Webhooks/WebhookAdminServiceMock.cs` |
 

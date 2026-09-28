@@ -2,8 +2,10 @@ using DevInstance.WebServiceToolkit.Common.Model;
 
 namespace DevInstance.DevCoreApp.Shared.Model.Core.Settings;
 
-public class SettingItem : ModelItem
+public class SettingItem : IModelItem
 {
+    public string Id { get; set; }
+
     public string Category { get; set; } = string.Empty;
     public string Key { get; set; } = string.Empty;
     public string Value { get; set; } = string.Empty;

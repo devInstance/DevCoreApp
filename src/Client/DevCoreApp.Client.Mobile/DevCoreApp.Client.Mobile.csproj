@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<OverrideHtmlAssetPlaceholders>true</OverrideHtmlAssetPlaceholders>
+		<ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
+		<NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
+		<!-- Served under /mobile by the server (and by `dotnet run` standalone): must match <base href> in index.html. -->
+		<StaticWebAssetBasePath>mobile</StaticWebAssetBasePath>
+		<AssemblyName>DevInstance.DevCoreApp.Client.Mobile</AssemblyName>
+		<RootNamespace>DevInstance.DevCoreApp.Client.Mobile</RootNamespace>
+		<Configurations>Debug;Release;ServiceMocks</Configurations>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="DevInstance.BlazorToolkit" Version="10.5.0" />
+		<PackageReference Include="DevInstance.LogScope.NET" Version="10.1.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="10.0.12" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.12" />
+		<PackageReference Include="Microsoft.Extensions.Localization" Version="10.0.12" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.12" PrivateAssets="all" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Client.Services\Client.Services.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ServiceWorker Include="wwwroot\service-worker.js" PublishedContent="wwwroot\service-worker.published.js" />
+	</ItemGroup>
+
+</Project>

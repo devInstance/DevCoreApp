@@ -4,8 +4,10 @@ using DevInstance.WebServiceToolkit.Common.Model;
 
 namespace DevInstance.DevCoreApp.Shared.Model.Core.Webhooks;
 
-public class WebhookSubscriptionItem : ModelItem
+public class WebhookSubscriptionItem : IModelItem
 {
+    public string Id { get; set; }
+
     [Required]
     [StringLength(256, MinimumLength = 2)]
     [Display(Name = "Event Type")]

@@ -1,0 +1,57 @@
+@* Unread-notification badge. The count is kept current by IUnreadNotificationsMonitor: live over
+   SignalR when the server offers it, otherwise by polling — plus a refresh when the window regains
+   focus. The notification list itself arrives in Phase 3. *@
+@implements IAsyncDisposable
+@inject IUnreadNotificationsMonitor Monitor
+@inject ICurrentUserState CurrentUser
+@inject IJSRuntime JS
+
+<button class="btn btn-link position-relative" title="@(Monitor.IsLive ? "Notifications" : "Notifications (updates every minute)")">
+    <i class="bi bi-bell fs-5"></i>
+    @if (Monitor.UnreadCount > 0)
+    {
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+            @(Monitor.UnreadCount > 99 ? "99+" : Monitor.UnreadCount.ToString())
+        </span>
+    }
+</button>
+
+@code {
+    private DotNetObjectReference<NotificationBell>? self;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Monitor.Changed += OnChanged;
+        await Monitor.StartAsync(CurrentUser.User?.RealTimeNotifications == true);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            self = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("devcore_onWindowFocus", self, nameof(OnWindowFocus));
+        }
+    }
+
+    [JSInvokable]
+    public Task OnWindowFocus() => Monitor.RefreshAsync();
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    // The bell lives inside <AuthorizeView>: it is disposed on sign-out, which stops the monitor.
+    public async ValueTask DisposeAsync()
+    {
+        Monitor.Changed -= OnChanged;
+        await Monitor.StopAsync();
+        try
+        {
+            await JS.InvokeVoidAsync("devcore_onWindowFocus", null, null);
+        }
+        catch (JSDisconnectedException)
+        {
+            // App shutting down.
+        }
+        self?.Dispose();
+    }
+}

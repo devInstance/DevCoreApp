@@ -1,0 +1,14 @@
+@page "/Error"
+@model ErrorModel
+@{
+    ViewData["Title"] = "Error";
+}
+
+<div class="text-center">
+    <h1 class="h3 text-danger">An error occurred while processing your request.</h1>
+    @if (!string.IsNullOrEmpty(Model.CorrelationId))
+    {
+        <p class="text-muted">Reference: <code>@Model.CorrelationId</code></p>
+    }
+    <a href="/" class="btn btn-primary mt-3">Go to the application</a>
+</div>

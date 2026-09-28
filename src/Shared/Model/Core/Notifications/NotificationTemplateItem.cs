@@ -3,8 +3,10 @@ using System;
 
 namespace DevInstance.DevCoreApp.Shared.Model.Core.Notifications;
 
-public class NotificationTemplateItem : ModelItem
+public class NotificationTemplateItem : IModelItem
 {
+    public string Id { get; set; }
+
     public string Name { get; set; } = string.Empty;
     public string TitleTemplate { get; set; } = string.Empty;
     public string BodyTemplate { get; set; } = string.Empty;

@@ -1,0 +1,91 @@
+@page "/account/confirm-email"
+@using DevInstance.DevCoreApp.Client.Services.Core.Account
+@using DevInstance.DevCoreApp.Shared.Model.Core.Account
+@inject IAccountService Account
+
+<PageTitle>Complete your account</PageTitle>
+
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                @if (Host.IsError && confirmation == null)
+                {
+                    <h1 class="h4 mb-4 text-center">Link not valid</h1>
+                    <div class="alert alert-danger" role="alert">@Host.ErrorMessage</div>
+                    <div class="text-center"><a href="account/login" class="text-decoration-none">Go to log in</a></div>
+                }
+                else if (passwordSet)
+                {
+                    <h1 class="h4 mb-4 text-center">Account ready</h1>
+                    <div class="alert alert-success" role="alert">Your password has been set. You can now log in.</div>
+                    <div class="text-center"><a href="account/login" class="btn btn-primary">Log in</a></div>
+                }
+                else if (confirmation is { NeedsPassword: true })
+                {
+                    @* Invitation: the user was created by an administrator and has no password yet. *@
+                    <h1 class="h4 mb-4 text-center">Set your password</h1>
+                    <p class="text-muted mb-3">Your email has been confirmed. Choose a password for your account.</p>
+
+                    @if (Host.IsError)
+                    {
+                        <div class="alert alert-danger" role="alert">@Host.ErrorMessage</div>
+                    }
+
+                    <EditForm Model="Password" OnValidSubmit="SetPasswordAsync">
+                        <DataAnnotationsValidator />
+                        <div class="form-floating mb-3">
+                            <InputText type="password" @bind-Value="Password.Password" id="password" class="form-control" autocomplete="new-password" placeholder="password" />
+                            <label for="password">Password</label>
+                            <ValidationMessage For="() => Password.Password" class="text-danger" />
+                        </div>
+                        <div class="form-floating mb-3">
+                            <InputText type="password" @bind-Value="Password.ConfirmPassword" id="confirmPassword" class="form-control" autocomplete="new-password" placeholder="password" />
+                            <label for="confirmPassword">Confirm password</label>
+                            <ValidationMessage For="() => Password.ConfirmPassword" class="text-danger" />
+                        </div>
+                        <button type="submit" class="w-100 btn btn-primary" disabled="@Host.InProgress">Set password</button>
+                    </EditForm>
+                }
+                else if (confirmation != null)
+                {
+                    <h1 class="h4 mb-4 text-center">Email confirmed</h1>
+                    <div class="alert alert-success" role="alert">Thank you for confirming your email. You can now log in.</div>
+                    <div class="text-center"><a href="account/login" class="btn btn-primary">Log in</a></div>
+                }
+                else
+                {
+                    <h1 class="h4 mb-4 text-center">Confirming email...</h1>
+                    <div class="text-center"><div class="spinner-border text-primary" role="status"></div></div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [CascadingParameter] private IServiceExecutionHost Host { get; set; } = default!;
+
+    [SupplyParameterFromQuery] private string? UserId { get; set; }
+
+    /// <summary>The code from the emailed link, passed to the server exactly as received.</summary>
+    [SupplyParameterFromQuery] private string? Code { get; set; }
+
+    private ConfirmEmailResult? confirmation;
+    private InvitationPasswordRequest Password { get; } = new();
+    private bool passwordSet;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Host.ServiceReadAsync(
+            async () => await Account.ConfirmEmailAsync(new ConfirmEmailRequest { UserId = UserId ?? "", Code = Code ?? "" }),
+            result => confirmation = result);
+    }
+
+    private async Task SetPasswordAsync()
+    {
+        Password.UserId = UserId ?? "";
+        Password.Code = Code ?? "";
+        await Host.ServiceSubmitAsync(async () => await Account.SetInvitationPasswordAsync(Password), _ => passwordSet = true);
+    }
+}
