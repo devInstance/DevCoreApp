@@ -387,8 +387,8 @@ Open for Phase 2:
    - The unread badge fetched twice per load (the hub reports its first connect as a change);
      that is fixed and tested.
 9. Open:
-   - the login page should redirect when already signed in;
-   - Visual Studio multi-project launch (see Phase 2);
+   - ~~the login page should redirect when already signed in~~ (done, see Phase 5 follow-ups);
+   - ~~Visual Studio multi-project launch~~ (done: `DevInstance.DevCoreApp.slnLaunch`);
    - write flows (create/edit/delete) were exercised only through the API contract, not clicked
      through in the browser.
 
@@ -505,7 +505,10 @@ The result is `src/Server/{Api, Services, Database, Email, Storage}` next to
   and Tentrie (Core/App restructure first; 89 envelope actions; ~26 product pages).
 - **Follow-ups (not in this migration):**
   - ~~the orphaned-profile paging bug (Phase 4b)~~: fixed (see Phase 4b);
-  - the login page should redirect when already signed in;
+  - ~~the login page should redirect when already signed in~~: done. Desktop and Mobile login forward
+    a signed-in user to the (safe, never-the-login-page) `returnUrl`. `AuthTokenHandler` now signs
+    out when even the replay with a freshly refreshed token gets a 401, so a dead session can't
+    bounce between the login page and the page that sent it there;
   - the import-validate `mappingsJson` TODO;
   - ~~running from Visual Studio~~: done — `DevInstance.DevCoreApp.slnLaunch` (Api + Desktop / Mobile,
     http and https), API-only `http-api`/`https-api` profiles, and Mobile's dev server gets

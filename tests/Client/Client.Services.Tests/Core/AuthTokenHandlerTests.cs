@@ -129,6 +129,26 @@ public class AuthTokenHandlerTests
     }
 
     [Fact]
+    public async Task replay_rejected_after_refresh_signs_out()
+    {
+        var signedOut = false;
+        var (api, store, storage, _, server) = Create(
+            new AuthTokens("a1", "r1", Later),
+            _ => Task.FromResult(new HttpResponseMessage(HttpStatusCode.Unauthorized)),
+            _ => RefreshTo("a2", "r2"));
+        await store.GetAsync();
+        store.SignedInChanged += () => signedOut = true;
+
+        var response = await api.GetAsync("api/me");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal(new[] { "/api/me a1", "/api/me a2" }, server.Calls);
+        Assert.Null(store.Current);
+        Assert.Null(storage.Saved);
+        Assert.True(signedOut);
+    }
+
+    [Fact]
     public async Task expired_token_is_refreshed_before_sending()
     {
         var (api, _, _, auth, server) = Create(

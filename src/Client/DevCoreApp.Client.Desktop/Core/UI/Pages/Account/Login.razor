@@ -6,6 +6,8 @@
 
 <PageTitle>Log in</PageTitle>
 
+@if (ready)
+{
 <div class="row justify-content-center">
     <div class="col-md-6 col-lg-4">
         <div class="card shadow-sm">
@@ -57,19 +59,33 @@
         </div>
     </div>
 </div>
+}
 
 @code {
     [CascadingParameter] private IServiceExecutionHost Host { get; set; } = default!;
+
+    [CascadingParameter] private Task<AuthenticationState> AuthState { get; set; } = default!;
 
     [SupplyParameterFromQuery] private string? ReturnUrl { get; set; }
 
     private JwtLoginRequest Input { get; } = new();
     private bool setupRequired;
+    private bool ready;
 
     protected override async Task OnInitializedAsync()
     {
+        // Already signed in (bookmark, back button, a second tab): go where the user was headed.
+        // No loop: only anonymous users are sent here (App.razor, and ShowLogin after a 401 that
+        // signed the session out).
+        if ((await AuthState).User.Identity?.IsAuthenticated == true)
+        {
+            Navigation.NavigateTo(SafeReturnUrl(), replace: true);
+            return;
+        }
+
         var result = await Account.IsSetupRequiredAsync();
         setupRequired = result.Success && result.Result;
+        ready = true;
     }
 
     private async Task LoginAsync()
@@ -80,8 +96,10 @@
     }
 
     // Only app-relative targets: "//evil.example" or "https://..." would be an open redirect.
+    // Never back to this page, or a signed-in user would bounce here forever.
     private string SafeReturnUrl() =>
         ReturnUrl is { Length: > 0 } url && url.StartsWith('/') && !url.StartsWith("//") && !url.StartsWith("/\\")
+            && !url.TrimStart('/').Split('?', '#')[0].TrimEnd('/').Equals("account/login", StringComparison.OrdinalIgnoreCase)
             ? url.TrimStart('/')
             : "";
 }

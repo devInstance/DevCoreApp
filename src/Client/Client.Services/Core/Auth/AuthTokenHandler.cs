@@ -57,7 +57,15 @@ public sealed class AuthTokenHandler : DelegatingHandler
         response.Dispose();
         var retry = await CloneAsync(request);
         SetBearer(retry, refreshed);
-        return await base.SendAsync(retry, cancellationToken);
+        var retryResponse = await base.SendAsync(retry, cancellationToken);
+        if (retryResponse.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            // A token issued a moment ago was rejected too: the session is unusable. Sign out, or the
+            // app keeps "signed in" state and the login page bounces straight back to this request.
+            await store.ClearAsync();
+        }
+
+        return retryResponse;
     }
 
     private static void SetBearer(HttpRequestMessage request, string? accessToken) =>
