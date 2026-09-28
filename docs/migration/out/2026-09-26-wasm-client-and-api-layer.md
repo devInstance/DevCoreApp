@@ -235,8 +235,16 @@ instances without a SignalR backplane (Redis / Azure SignalR) must set it to `fa
   - login and profile over the same services.
 - **`Client.Services.Mocks`**: the server mocks retargeted to the client interfaces, plus
   auth/me/grid/notifications/pictures/account mocks.
-- **Standalone client dev:** launch environment `Standalone` → `appsettings.Standalone.json`
-  (`ApiBaseUrl`). Hosted clients use the same origin.
+- **Standalone client dev:** `wwwroot/appsettings.Development.json` `DevServers` maps each dev-server
+  origin to the Api host (`ApiBaseAddress.Resolve`); any other origin calls itself (hosted).
+  ⚠ Do not switch on the environment: the .NET 10 WASM SDK bakes it in at build time
+  (`WasmApplicationEnvironmentName`, `Development` for every Debug build) and ignores the launch
+  profile's `ASPNETCORE_ENVIRONMENT`, and the Api host serves that same build.
+- **Visual Studio:** `<Solution>.slnLaunch` (checked in) holds multi-project profiles that start the
+  Api (browserless `http-api`/`https-api` profiles) together with each client's dev server. A client
+  with a base path (Mobile at `/mobile/`) needs `"pathbase": "/mobile"` in its launch profile's
+  `environmentVariables`. The dev server ignores `StaticWebAssetBasePath` and would otherwise serve
+  at `/`, so the app's `/mobile/_framework/…` requests 404.
 
 ### 9. Cut-over
 

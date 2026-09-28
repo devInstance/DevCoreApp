@@ -418,8 +418,10 @@ Open for Phase 2:
    - ⚠ `UseBlazorFrameworkFiles` must **not** be used with `MapStaticAssets`. It branches the
      pipeline for `/_framework` and those requests end in a 500 ("reached the end of the pipeline
      without executing the endpoint").
-   - Hosted clients call their own origin (`ApiBaseUrl` empty). Standalone client dev uses the
-     `Standalone` launch environment and `appsettings.Standalone.json`.
+   - Hosted clients call their own origin (`ApiBaseUrl` empty). Standalone client dev maps the
+     dev-server origin to the Api host in `appsettings.Development.json` (`DevServers`,
+     `ApiBaseAddress`). A `Standalone` launch environment was tried first and never worked: the
+     .NET 10 WASM SDK bakes the environment into the build and ignores `ASPNETCORE_ENVIRONMENT`.
 5. ✅ Verified with the server alone:
    - `/` and deep links serve Desktop; `/mobile/…` serves Mobile; the runtimes are served;
    - `/setup` returns 404 because users exist; `/Error` renders;
@@ -496,7 +498,9 @@ The result is `src/Server/{Api, Services, Database, Email, Storage}` next to
   - the orphaned-profile paging bug (Phase 4b);
   - the login page should redirect when already signed in;
   - the import-validate `mappingsJson` TODO;
-  - running from Visual Studio;
+  - ~~running from Visual Studio~~: done — `DevInstance.DevCoreApp.slnLaunch` (Api + Desktop / Mobile,
+    http and https), API-only `http-api`/`https-api` profiles, and Mobile's dev server gets
+    `pathbase=/mobile` (it was serving at `/` while the app asked for `/mobile/_framework/…`);
   - clicking through every write flow by hand;
   - bUnit page tests;
   - the dead `AuthorizationServiceTests` file;

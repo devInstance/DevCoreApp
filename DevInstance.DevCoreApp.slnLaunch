@@ -1,0 +1,72 @@
+[
+  {
+    "Name": "Api + Desktop",
+    "Projects": [
+      {
+        "Path": "src\\Server\\Api\\DevCoreApp.Server.Api.csproj",
+        "Action": "Start",
+        "DebugTarget": "http-api"
+      },
+      {
+        "Path": "src\\Client\\DevCoreApp.Client.Desktop\\DevCoreApp.Client.Desktop.csproj",
+        "Action": "Start",
+        "DebugTarget": "http"
+      }
+    ]
+  },
+  {
+    "Name": "Api + Mobile",
+    "Projects": [
+      {
+        "Path": "src\\Server\\Api\\DevCoreApp.Server.Api.csproj",
+        "Action": "Start",
+        "DebugTarget": "http-api"
+      },
+      {
+        "Path": "src\\Client\\DevCoreApp.Client.Mobile\\DevCoreApp.Client.Mobile.csproj",
+        "Action": "Start",
+        "DebugTarget": "http"
+      }
+    ]
+  },
+  {
+    "Name": "Api + Desktop + Mobile",
+    "Projects": [
+      {
+        "Path": "src\\Server\\Api\\DevCoreApp.Server.Api.csproj",
+        "Action": "Start",
+        "DebugTarget": "http-api"
+      },
+      {
+        "Path": "src\\Client\\DevCoreApp.Client.Desktop\\DevCoreApp.Client.Desktop.csproj",
+        "Action": "Start",
+        "DebugTarget": "http"
+      },
+      {
+        "Path": "src\\Client\\DevCoreApp.Client.Mobile\\DevCoreApp.Client.Mobile.csproj",
+        "Action": "Start",
+        "DebugTarget": "http"
+      }
+    ]
+  },
+  {
+    "Name": "Api + Desktop + Mobile (https)",
+    "Projects": [
+      {
+        "Path": "src\\Server\\Api\\DevCoreApp.Server.Api.csproj",
+        "Action": "Start",
+        "DebugTarget": "https-api"
+      },
+      {
+        "Path": "src\\Client\\DevCoreApp.Client.Desktop\\DevCoreApp.Client.Desktop.csproj",
+        "Action": "Start",
+        "DebugTarget": "https"
+      },
+      {
+        "Path": "src\\Client\\DevCoreApp.Client.Mobile\\DevCoreApp.Client.Mobile.csproj",
+        "Action": "Start",
+        "DebugTarget": "https"
+      }
+    ]
+  }
+]

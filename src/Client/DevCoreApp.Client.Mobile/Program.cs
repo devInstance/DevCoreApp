@@ -1,5 +1,6 @@
 using DevInstance.BlazorToolkit.Tools;
 using DevInstance.DevCoreApp.Client.Services.Core;
+using DevInstance.DevCoreApp.Client.Services.Core.Api;
 using DevInstance.LogScope.Extensions;
 using DevInstance.LogScope.Formatters;
 using Microsoft.AspNetCore.Components.Web;
@@ -28,21 +29,9 @@ public class Program
         builder.Services.AddLocalization();
 
         // The same client services as the Desktop app: auth, api/me, local time, notifications.
-        builder.Services.AddDevCoreClientServices(ResolveApiBase(builder));
+        builder.Services.AddDevCoreClientServices(ApiBaseAddress.Resolve(builder.Configuration, builder.HostEnvironment.BaseAddress));
         builder.Services.AddBlazorServices(typeof(Program).Assembly);
 
         await builder.Build().RunAsync();
-    }
-
-    /// <summary>
-    /// <c>ApiBaseUrl</c> when configured; otherwise the origin the app is served from. Origin only —
-    /// when hosted at <c>/mobile/</c> that base path is not part of the API URL.
-    /// </summary>
-    private static Uri ResolveApiBase(WebAssemblyHostBuilder builder)
-    {
-        var configured = builder.Configuration["ApiBaseUrl"];
-        return !string.IsNullOrWhiteSpace(configured)
-            ? new Uri(configured)
-            : new Uri(new Uri(builder.HostEnvironment.BaseAddress).GetLeftPart(UriPartial.Authority));
     }
 }

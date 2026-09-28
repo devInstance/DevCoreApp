@@ -34,10 +34,14 @@ dotnet run --project src/Server/Api/DevCoreApp.Server.Api.csproj
 # [BlazorServiceMock] ones in the server and in the Desktop client (any login works).
 dotnet run -c ServiceMocks --project src/Server/Api/DevCoreApp.Server.Api.csproj
 
-# Optional: a client on its own dev server against the API above (launch profile environment
-# "Standalone" → wwwroot/appsettings.Standalone.json ApiBaseUrl; dev CORS allows these origins).
+# Optional: a client on its own dev server against the API above (wwwroot/appsettings.Development.json
+# DevServers maps the dev-server origin to the Api host; dev CORS allows these origins).
 # Desktop: http://localhost:5280, Mobile: http://localhost:5290/mobile/
 dotnet run --project src/Client/DevCoreApp.Client.Desktop/DevCoreApp.Client.Desktop.csproj
+
+# Visual Studio: pick a multi-project launch profile from DevInstance.DevCoreApp.slnLaunch —
+# "Api + Desktop", "Api + Mobile", "Api + Desktop + Mobile" (http) or "… (https)". They start the
+# Api with its browserless "http-api"/"https-api" profile plus each client's own dev server.
 
 # Run all tests (xUnit v3)
 dotnet test DevInstance.DevCoreApp.slnx

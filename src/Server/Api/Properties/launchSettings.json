@@ -18,6 +18,24 @@
       "dotnetRunMessages": true,
       "applicationUrl": "https://devcoreapp.dev.localhost:7082;http://devcoreapp.dev.localhost:5212"
     },
+    "http-api": {
+      "commandName": "Project",
+      "launchBrowser": false,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "dotnetRunMessages": true,
+      "applicationUrl": "http://devcoreapp.dev.localhost:5211"
+    },
+    "https-api": {
+      "commandName": "Project",
+      "launchBrowser": false,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "dotnetRunMessages": true,
+      "applicationUrl": "https://devcoreapp.dev.localhost:7082;http://devcoreapp.dev.localhost:5212"
+    },
     "IIS Express": {
       "commandName": "IISExpress",
       "launchBrowser": true,

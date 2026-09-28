@@ -1,6 +1,7 @@
 using DevInstance.BlazorToolkit.Tools;
 using DevInstance.DevCoreApp.Client.Desktop.Core.UI;
 using DevInstance.DevCoreApp.Client.Services.Core;
+using DevInstance.DevCoreApp.Client.Services.Core.Api;
 using DevInstance.DevCoreApp.Client.Services.Core.Time;
 using DevInstance.LogScope.Extensions;
 using DevInstance.LogScope.Formatters;
@@ -27,7 +28,7 @@ public class Program
             new DefaultFormattersOptions { ShowTimestamp = false, ShowThreadNumber = false, ShowId = false });
 #endif
 
-        builder.Services.AddDevCoreClientServices(ResolveApiBase(builder));
+        builder.Services.AddDevCoreClientServices(ApiBaseAddress.Resolve(builder.Configuration, builder.HostEnvironment.BaseAddress));
         builder.Services.AddBlazorServices(typeof(Program).Assembly);
 
 #if SERVICEMOCKS
@@ -42,17 +43,5 @@ public class Program
         LocalClock.Service = host.Services.GetRequiredService<ILocalTimeService>();
 
         await host.RunAsync();
-    }
-
-    /// <summary>
-    /// <c>ApiBaseUrl</c> when configured; otherwise the origin the app is served from. Origin only —
-    /// the app's base path (e.g. <c>/mobile/</c>) is not part of the API URL.
-    /// </summary>
-    private static Uri ResolveApiBase(WebAssemblyHostBuilder builder)
-    {
-        var configured = builder.Configuration["ApiBaseUrl"];
-        return !string.IsNullOrWhiteSpace(configured)
-            ? new Uri(configured)
-            : new Uri(new Uri(builder.HostEnvironment.BaseAddress).GetLeftPart(UriPartial.Authority));
     }
 }

@@ -10,8 +10,8 @@ conventions (Core/App split, naming) are in the root [`CLAUDE.md`](../../../CLAU
 # Normal: run the Api host; it serves this app at "/" (same origin, no configuration)
 dotnet run --project src/Server/Api/DevCoreApp.Server.Api.csproj
 
-# Standalone dev server against a running Api host (launch environment "Standalone" →
-# wwwroot/appsettings.Standalone.json ApiBaseUrl)
+# Standalone dev server against a running Api host (wwwroot/appsettings.Development.json
+# DevServers maps this dev server's origin to the Api host; see ApiBaseAddress)
 dotnet run --project src/Client/DevCoreApp.Client.Desktop/DevCoreApp.Client.Desktop.csproj   # http://localhost:5280
 
 # No server at all: in-memory mocks (mocks/Client/Client.Services.Mocks); sign in with anything

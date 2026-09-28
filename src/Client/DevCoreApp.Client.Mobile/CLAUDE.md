@@ -14,8 +14,8 @@ Pages, client services, dates and authorization follow the same rules as Desktop
 # Normal: run the Api host; it serves this app at /mobile/ (same origin, shares Desktop's sign-in)
 dotnet run --project src/Server/Api/DevCoreApp.Server.Api.csproj
 
-# Standalone dev server against a running Api host (launch environment "Standalone" →
-# wwwroot/appsettings.Standalone.json ApiBaseUrl)
+# Standalone dev server against a running Api host (wwwroot/appsettings.Development.json
+# DevServers maps this dev server's origin to the Api host; see ApiBaseAddress)
 dotnet run --project src/Client/DevCoreApp.Client.Mobile/DevCoreApp.Client.Mobile.csproj   # http://localhost:5290
 ```
 
@@ -26,6 +26,8 @@ dotnet run --project src/Client/DevCoreApp.Client.Mobile/DevCoreApp.Client.Mobil
     `<base href="/mobile/">`. Keep them in sync.
   - Links and `NavigateTo` use **relative** URLs (`profile`, not `/profile`), so they resolve
     under the base.
+  - The standalone dev server does not apply `StaticWebAssetBasePath`; the launch profiles set
+    `pathbase=/mobile` (read by `blazor-devserver`) so it serves the app under `/mobile/` too.
   - The API base is the **origin** only (`Program.ResolveApiBase`), so API calls go to `/api/...`,
     not `/mobile/api/...`.
 - **Shared session.** Both clients store tokens in the same origin's `localStorage`
