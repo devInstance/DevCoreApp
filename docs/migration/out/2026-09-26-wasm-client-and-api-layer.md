@@ -204,6 +204,11 @@ Create, `PUT` = Edit, `DELETE` = Delete/Revoke):
 - `api/notifications`, `api/grid-profiles`, `api/import-export`.
 
 `api/auth`, `api/files` and the profile-picture controller move onto `ApiControllerBase`.
+`POST api/import-export/import/validate` binds a multipart `ImportValidateForm`
+(`Server.Api.Core.Controllers`: `File`, `EntityType`, `OrganizationId`, and `Mappings[i].SourceColumnIndex`,
+`.SourceColumnName`, `.TargetField` as indexed form fields). It no longer takes a `mappingsJson`
+field or `entityType`/`organizationId` in the query string. The client service sends that form, and
+`ImportValidateBindingTests` pins both sides.
 `api/user/profile` is removed in favour of `api/me/profile`.
 
 ### 6. Real-time notifications are optional

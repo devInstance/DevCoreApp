@@ -180,7 +180,7 @@ List endpoints take a `[QueryModel]` (WebServiceToolkit) instead of loose `top/p
 | `api/jobs` (+ `/{id}/logs`, `/{id}/cancel`, `/{id}/retry`) | `IJobDashboardService` | |
 | `api/audit-logs` | `IAuditLogService` | |
 | `api/feature-flags` · `api/api-keys` · `api/webhooks` (+ `/{id}/deliveries`) · `api/settings` | respective admin services | |
-| `api/import-export` (+ commit, rollback, session, entity-types, fields) | `IImportExportService` | `validate` currently deserializes `mappingsJson` in the controller → move to a model-bound multipart DTO |
+| `api/import-export` (+ commit, rollback, session, entity-types, fields) | `IImportExportService` | `validate` binds the multipart `ImportValidateForm` (done; was a `mappingsJson` field deserialized in the controller) |
 | `api/notifications` (list, unread-count, mark-read, mark-all-read) | `INotificationService` | current-user overloads needed (today takes a `Guid`) |
 | `api/grid-profiles/{grid}` | `IGridProfileService` (new interface) | |
 | `api/files` | `IFileService` | exists; `download` returns `File` — the one documented non-JSON action |
@@ -278,7 +278,7 @@ Open for Phase 2:
 - **Profile pictures:** `api/users/{id}/profile-picture` requires auth, but a WASM `<img src>`
   sends no bearer token. Either fetch the image through the client service as a blob/data URL,
   or serve pictures through short-lived signed URLs.
-- **Import validate** still deserializes `mappingsJson` from a form field in the controller.
+- ~~**Import validate** still deserializes `mappingsJson` from a form field in the controller.~~ Fixed: see the Phase 5 follow-ups.
   Revisit with the import client.
 
 **Phase 2 — Client foundation** — ✅ done (Desktop verified signed-in; Mobile signed-in flow to be checked by hand)
@@ -509,7 +509,11 @@ The result is `src/Server/{Api, Services, Database, Email, Storage}` next to
     a signed-in user to the (safe, never-the-login-page) `returnUrl`. `AuthTokenHandler` now signs
     out when even the replay with a freshly refreshed token gets a 401, so a dead session can't
     bounce between the login page and the page that sent it there;
-  - the import-validate `mappingsJson` TODO;
+  - ~~the import-validate `mappingsJson` TODO~~: done. `POST api/import-export/import/validate` binds a
+    multipart `ImportValidateForm` (`File`, `EntityType`, `OrganizationId`, `Mappings[i].*` as indexed
+    form fields); the client service sends exactly that. `ImportValidateBindingTests` drives the
+    real client service against a server action binding the form. **Wire change:** `entityType` and
+    `organizationId` moved from the query string to the form, and `mappingsJson` is gone;
   - ~~running from Visual Studio~~: done — `DevInstance.DevCoreApp.slnLaunch` (Api + Desktop / Mobile,
     http and https), API-only `http-api`/`https-api` profiles, and Mobile's dev server gets
     `pathbase=/mobile` (it was serving at `/` while the app asked for `/mobile/_framework/…`);

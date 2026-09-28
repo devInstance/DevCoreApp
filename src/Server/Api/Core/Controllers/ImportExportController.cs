@@ -92,16 +92,11 @@ public class ImportExportController : ApiControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<ImportValidationResult>> Validate(
-        IFormFile file,
-        [FromQuery] string entityType,
-        [FromForm] string mappingsJson,
-        [FromQuery] string? organizationId = null)
+    public async Task<ActionResult<ImportValidationResult>> Validate([FromForm] ImportValidateForm form)
     {
-        // TODO (WASM Phase 1): bind the mappings as part of a multipart DTO instead of
-        // deserializing a form field in the controller.
-        var mappings = System.Text.Json.JsonSerializer.Deserialize<List<ImportColumnMappingItem>>(mappingsJson) ?? new();
-        await using var stream = file.OpenReadStream();
-        return await HandleServiceAsync(() => _importExportService.ValidateAsync(stream, file.FileName, entityType, mappings, organizationId));
+        // IFormFile is an HTTP type services must not see; the stream stays open for the call.
+        await using var stream = form.File.OpenReadStream();
+        return await HandleServiceAsync(() => _importExportService.ValidateAsync(
+            stream, form.File.FileName, form.EntityType, form.Mappings, form.OrganizationId));
     }
 }

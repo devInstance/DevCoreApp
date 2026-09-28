@@ -5,6 +5,7 @@ using DevInstance.DevCoreApp.Client.Services.Core.Api;
 using DevInstance.DevCoreApp.Client.Services.Core.Time;
 using DevInstance.DevCoreApp.Shared.Model.Core.Common;
 using DevInstance.LogScope;
+using System.Globalization;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -52,15 +53,25 @@ public class ImportExportService : ApiServiceBase, IImportExportService
         List<ImportColumnMappingItem> mappings, string? organizationId = null) =>
         CallAsync(async () =>
         {
+            // Multipart form bound by the server's ImportValidateForm: the mappings go as indexed
+            // fields (Mappings[i].Property), which MVC binds into the list without any JSON.
             using var content = await FileContentAsync(fileStream, fileName);
-            content.Add(new StringContent(JsonSerializer.Serialize(mappings)), "mappingsJson");
-
-            var url = $"{Root}/import/validate?entityType={Segment(entityType)}";
+            content.Add(new StringContent(entityType), "EntityType");
             if (!string.IsNullOrEmpty(organizationId))
             {
-                url += $"&organizationId={Segment(organizationId)}";
+                content.Add(new StringContent(organizationId), "OrganizationId");
             }
-            return await ReadAsync<ImportValidationResult>(await Http.PostAsync(url, content));
+            for (var i = 0; i < mappings.Count; i++)
+            {
+                var mapping = mappings[i];
+                content.Add(new StringContent(mapping.SourceColumnIndex.ToString(CultureInfo.InvariantCulture)), $"Mappings[{i}].SourceColumnIndex");
+                content.Add(new StringContent(mapping.SourceColumnName), $"Mappings[{i}].SourceColumnName");
+                if (mapping.TargetField != null)
+                {
+                    content.Add(new StringContent(mapping.TargetField), $"Mappings[{i}].TargetField");
+                }
+            }
+            return await ReadAsync<ImportValidationResult>(await Http.PostAsync($"{Root}/import/validate", content));
         });
 
     public Task<ServiceActionResult<ImportCommitResult>> CommitAsync(string sessionId, List<int>? excludedRows = null) =>
