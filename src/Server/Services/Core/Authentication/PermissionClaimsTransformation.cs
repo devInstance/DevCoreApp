@@ -18,9 +18,10 @@ namespace DevInstance.DevCoreApp.Server.Services.Core.Authentication;
 ///   1. Read role claims already present on the principal (from Identity cookie)
 ///   2. Query RolePermissions to collect all permission keys for those roles
 ///   3. Query UserPermissionOverrides to apply per-user grants and denials
-///   4. Add Permission:{key} claims for each effective permission
-///   5. Resolve the user's organization context and add org claims
-///   6. Stamp a PermissionsLoaded sentinel claim to skip on subsequent calls
+///   4. For an API-key principal, intersect with the key's scopes (a key never exceeds its owner)
+///   5. Add Permission:{key} claims for each effective permission
+///   6. Resolve the user's organization context and add org claims
+///   7. Stamp a PermissionsLoaded sentinel claim to skip on subsequent calls
 ///
 /// Registered as IClaimsTransformation — ASP.NET Core calls TransformAsync
 /// on every authentication. The sentinel claim prevents repeated DB queries
@@ -57,29 +58,6 @@ public class PermissionClaimsTransformation : IClaimsTransformation
         if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
             return principal;
 
-        var apiKeyIdClaim = identity.FindFirst("ApiKeyId")?.Value;
-        if (!string.IsNullOrEmpty(apiKeyIdClaim))
-        {
-            var apiKey = await _repository.GetApiKeyQuery(null!)
-                .ByPublicId(apiKeyIdClaim)
-                .Select()
-                .FirstOrDefaultAsync();
-
-            if (apiKey?.Scopes != null)
-            {
-                foreach (var key in apiKey.Scopes
-                    .Where(k => !string.IsNullOrWhiteSpace(k))
-                    .Distinct(StringComparer.Ordinal))
-                {
-                    identity.AddClaim(new Claim(PermissionClaimType, key));
-                }
-            }
-
-            await AddOrganizationClaimsAsync(identity, userId);
-            identity.AddClaim(new Claim(PermissionsLoadedClaimType, "true"));
-            return principal;
-        }
-
         // 1. Collect role names from existing claims
         var roleNames = identity.Claims
             .Where(c => c.Type == identity.RoleClaimType)
@@ -115,16 +93,33 @@ public class PermissionClaimsTransformation : IClaimsTransformation
                 permissionKeys.Remove(ov.Permission!.Key);
         }
 
-        // 4. Add permission claims
+        // 4. An API key acts for its owner but never beyond them: its effective permissions are the
+        //    key's scopes intersected with the owner's current permissions. Scopes are a snapshot
+        //    taken at creation, so without the intersection a key would keep permissions the owner
+        //    has since lost, and a requested scope the owner never had would be honored.
+        var apiKeyIdClaim = identity.FindFirst("ApiKeyId")?.Value;
+        if (!string.IsNullOrEmpty(apiKeyIdClaim))
+        {
+            var apiKey = await _repository.GetApiKeyQuery(null!)
+                .ByPublicId(apiKeyIdClaim)
+                .Select()
+                .FirstOrDefaultAsync();
+
+            permissionKeys.IntersectWith(apiKey?.Scopes?
+                .Where(k => !string.IsNullOrWhiteSpace(k))
+                .Select(k => k.Trim()) ?? Enumerable.Empty<string>());
+        }
+
+        // 5. Add permission claims
         foreach (var key in permissionKeys)
         {
             identity.AddClaim(new Claim(PermissionClaimType, key));
         }
 
-        // 5. Resolve organization context
+        // 6. Resolve organization context
         await AddOrganizationClaimsAsync(identity, userId);
 
-        // 6. Mark as loaded
+        // 7. Mark as loaded
         identity.AddClaim(new Claim(PermissionsLoadedClaimType, "true"));
 
         return principal;

@@ -23,6 +23,13 @@
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.12" PrivateAssets="all" />
 	</ItemGroup>
 
+	<!-- Dev-only (DevServers origin map for the standalone dev server); never ship it. Removing it from
+	     Content also keeps it out of the static web asset set, where a release build can see it twice
+	     ("More than one compatible asset found for target path 'appsettings.Development...json'"). -->
+	<ItemGroup Condition="'$(Configuration)' == 'Release'">
+		<Content Remove="wwwroot\appsettings.Development.json" />
+	</ItemGroup>
+
 	<ItemGroup>
 		<ProjectReference Include="..\Client.Services\Client.Services.csproj" />
 	</ItemGroup>

@@ -37,8 +37,8 @@ public class FileController : ApiControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> DownloadAsync(string filePublicId)
     {
-        var result = await _fileService.DownloadAsync(filePublicId);
-        var download = result.Result;
+        // Unwrap: a failed result maps to its status (404, 403, …) instead of a null dereference → 500.
+        var download = Unwrap(await _fileService.DownloadAsync(filePublicId));
         return File(download.Stream, download.ContentType, download.FileName);
     }
 

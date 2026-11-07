@@ -40,7 +40,7 @@
             }
         </HColumnTemplate>
         <HColumnTemplate TItem="DevInstance.DevCoreApp.Shared.Model.Core.Roles.RoleItem" Field="actions" Context="role">
-            <button class="btn btn-sm btn-outline-primary me-1" title="Edit" @onclick="() => ShowEditModal(role)" @onclick:stopPropagation="true">
+            <button class="btn btn-sm btn-outline-primary me-1" title="Edit" @onclick="() => EditRole(role)" @onclick:stopPropagation="true">
                 <i class="bi bi-pencil"></i>
             </button>
             @if (!role.IsSystemRole)
@@ -97,75 +97,6 @@
                                 <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
                             }
                             Create
-                        </button>
-                    </div>
-                </EditForm>
-            </div>
-        </div>
-    </div>
-}
-
-@* ---------- Edit + Permissions Modal ---------- *@
-@if (EditingRole != null)
-{
-    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <EditForm Model="EditingRole" OnValidSubmit="SaveRoleAndPermissions">
-                    <DataAnnotationsValidator />
-                    <div class="modal-header">
-                        <h5 class="modal-title">Edit Role: @EditingRole.Name</h5>
-                        <button type="button" class="btn-close" @onclick="CloseEditModal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <ValidationSummary class="text-danger" role="alert" />
-
-                        @if (EditingRole.IsSystemRole)
-                        {
-                            <div class="alert alert-info">
-                                <i class="bi bi-info-circle me-1"></i>
-                                This is a system role. Its name and permissions are managed automatically.
-                                Only the description can be edited.
-                            </div>
-                        }
-
-                        <div class="form-floating mb-3">
-                            <InputText @bind-Value="EditingRole.Name" id="EditingRole.Name" class="form-control" placeholder="Name"
-                                       disabled="@EditingRole.IsSystemRole" />
-                            <label for="EditingRole.Name">Name</label>
-                            <ValidationMessage For="() => EditingRole.Name" class="text-danger" />
-                        </div>
-                        <div class="form-floating mb-3">
-                            <InputText @bind-Value="EditingRole.Description" id="EditingRole.Description" class="form-control" placeholder="Description" />
-                            <label for="EditingRole.Description">Description</label>
-                            <ValidationMessage For="() => EditingRole.Description" class="text-danger" />
-                        </div>
-
-                        <h6 class="mt-4 mb-3">Permissions</h6>
-
-                        @if (allPermissions != null)
-                        {
-                            <PermissionGrid AllPermissions="allPermissions"
-                                            @bind-SelectedKeys="selectedPermissionKeys"
-                                            ReadOnly="EditingRole.IsSystemRole" />
-                        }
-                        else
-                        {
-                            <div class="text-center py-3">
-                                <div class="spinner-border spinner-border-sm" role="status">
-                                    <span class="visually-hidden">Loading permissions...</span>
-                                </div>
-                            </div>
-                        }
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" @onclick="CloseEditModal">Cancel</button>
-                        <button type="submit" class="btn btn-primary" disabled="@Host.InProgress">
-                            @if (Host.InProgress)
-                            {
-                                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-                            }
-                            Save Changes
                         </button>
                     </div>
                 </EditForm>

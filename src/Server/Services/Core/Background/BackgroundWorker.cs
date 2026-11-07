@@ -33,7 +33,7 @@ public class BackgroundWorker : BackgroundService, IBackgroundWorker
     {
         using var log = _log.TraceScope();
 
-        using var scope = _scopeFactory.CreateScope();
+        await using var scope = _scopeFactory.CreateAsyncScope();
         var operationContext = scope.ServiceProvider.GetRequiredService<BackgroundOperationContext>();
         operationContext.Reset();
 

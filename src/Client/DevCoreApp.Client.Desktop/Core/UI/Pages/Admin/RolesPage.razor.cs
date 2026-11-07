@@ -8,6 +8,7 @@ using DevInstance.DevCoreApp.Shared.Model.Core.Roles;
 using DevInstance.DevCoreApp.Shared.Model.Core.Settings;
 using DevInstance.WebServiceToolkit.Common.Model;
 using Microsoft.AspNetCore.Components;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -20,6 +21,9 @@ public partial class RolesPage
 
     [Inject]
     private IRoleManagementService RoleService { get; set; } = default!;
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = default!;
 
     [Inject]
     private IGridProfileService GridProfileService { get; set; } = default!;
@@ -45,11 +49,6 @@ public partial class RolesPage
     // Create modal state
     private bool showCreateModal;
     private RoleItem CreateItem { get; set; } = new();
-
-    // Edit modal state
-    private RoleItem? EditingRole { get; set; }
-    private List<PermissionItem>? allPermissions;
-    private HashSet<string> selectedPermissionKeys = new();
 
     // Delete modal state
     private RoleItem? DeletingRole { get; set; }
@@ -171,11 +170,10 @@ public partial class RolesPage
         await LoadRoles(0, RoleList?.SortField(), RoleList?.IsAscending(), null);
     }
 
-    private Task OnRowClick(RoleItem item)
-    {
-        ShowEditModal(item);
-        return Task.CompletedTask;
-    }
+    private void OnRowClick(RoleItem item) => EditRole(item);
+
+    private void EditRole(RoleItem role) =>
+        NavigationManager.NavigateTo($"/admin/roles/{Uri.EscapeDataString(role.Id)}/edit");
 
     // ---------- Create Modal ----------
 
@@ -200,68 +198,6 @@ public partial class RolesPage
         {
             CloseCreateModal();
             await LoadRoles(0, SortField, IsAsc, null);
-        }
-    }
-
-    // ---------- Edit + Permissions Modal ----------
-
-    private async Task ShowEditModal(RoleItem role)
-    {
-        EditingRole = new RoleItem
-        {
-            Id = role.Id,
-            Name = role.Name,
-            Description = role.Description,
-            IsSystemRole = role.IsSystemRole,
-            PermissionCount = role.PermissionCount
-        };
-
-        allPermissions = null;
-        selectedPermissionKeys = new HashSet<string>();
-
-        // Load permissions catalog and current role's permission keys in parallel
-        await Host.ServiceReadAsync(
-            async () => await RoleService.GetAllPermissionsAsync(),
-            result => allPermissions = result
-        );
-
-        await Host.ServiceReadAsync(
-            async () => await RoleService.GetRolePermissionKeysAsync(role.Id),
-            result => selectedPermissionKeys = new HashSet<string>(result)
-        );
-    }
-
-    private void CloseEditModal()
-    {
-        EditingRole = null;
-        allPermissions = null;
-        selectedPermissionKeys = new HashSet<string>();
-    }
-
-    private async Task SaveRoleAndPermissions()
-    {
-        if (EditingRole == null) return;
-
-        await Host.ServiceSubmitAsync(
-            async () => await RoleService.UpdateRoleAsync(EditingRole.Id, EditingRole)
-        );
-
-        if (!Host.IsError && !EditingRole.IsSystemRole)
-        {
-            var request = new RolePermissionsRequest
-            {
-                PermissionKeys = selectedPermissionKeys.ToList()
-            };
-
-            await Host.ServiceSubmitAsync(
-                async () => await RoleService.SetRolePermissionsAsync(EditingRole.Id, request)
-            );
-        }
-
-        if (!Host.IsError)
-        {
-            CloseEditModal();
-            await LoadRoles(RoleList?.Page ?? 0, RoleList?.SortField(), RoleList?.IsAscending(), RoleList?.Search);
         }
     }
 

@@ -20,18 +20,18 @@ public class FeatureFlagService : IFeatureFlagService
     private const string CachePrefix = "featureflag:";
     private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(5);
 
-    private readonly IQueryRepository? _repository;
+    private readonly IQueryRepositoryFactory? _repositoryFactory;
     private readonly IOperationContext? _operationContext;
     private readonly IMemoryCache? _cache;
     private readonly IScopeLog _log;
 
     public FeatureFlagService(IScopeManager logManager,
-                              IQueryRepository? repository = null,
+                              IQueryRepositoryFactory? repositoryFactory = null,
                               IOperationContext? operationContext = null,
                               IMemoryCache? cache = null)
     {
         _log = logManager.CreateLogger(this);
-        _repository = repository;
+        _repositoryFactory = repositoryFactory;
         _operationContext = operationContext;
         _cache = cache;
     }
@@ -41,14 +41,19 @@ public class FeatureFlagService : IFeatureFlagService
         using var l = _log.TraceScope();
 
         // In mock mode (no repository), all flags are disabled
-        if (_repository == null || _cache == null)
+        if (_repositoryFactory == null || _cache == null)
             return false;
+
+        // One unit of work per call (UnitOfWork.md): flag checks run from many places in a request,
+        // possibly concurrently, so they must not share the request's scoped context. A context
+        // costs nothing until its first query, so a cache hit still opens no connection.
+        await using var repo = _repositoryFactory.Create();
 
         var cacheKey = $"{CachePrefix}{name}";
 
         if (!_cache.TryGetValue(cacheKey, out List<FeatureFlag>? flags))
         {
-            flags = await _repository.GetFeatureFlagQuery(null!)
+            flags = await repo.GetFeatureFlagQuery(null!)
                 .ByNameForEvaluation(name)
                 .Select()
                 .ToListAsync();
@@ -66,7 +71,7 @@ public class FeatureFlagService : IFeatureFlagService
         // 1. User allowlist check
         if (currentUserId.HasValue)
         {
-            currentUserPublicId = await _repository.GetUserProfilesQuery(null!)
+            currentUserPublicId = await repo.GetUserProfilesQuery(null!)
                 .Select()
                 .Where(u => u.Id == currentUserId.Value)
                 .Select(u => u.PublicId)

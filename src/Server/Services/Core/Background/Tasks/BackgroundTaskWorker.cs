@@ -108,7 +108,7 @@ public class BackgroundTaskWorker : IBackgroundTaskWorker
 
         try
         {
-            using var scope = _scopeFactory.CreateScope();
+            await using var scope = _scopeFactory.CreateAsyncScope();
             var operationContext = scope.ServiceProvider.GetRequiredService<BackgroundOperationContext>();
             operationContext.Reset();
 
@@ -145,7 +145,7 @@ public class BackgroundTaskWorker : IBackgroundTaskWorker
         }
 
         // Poll database for queued tasks
-        using var scope = _scopeFactory.CreateScope();
+        await using var scope = _scopeFactory.CreateAsyncScope();
         var operationContext = scope.ServiceProvider.GetRequiredService<BackgroundOperationContext>();
         operationContext.Reset();
 
@@ -191,7 +191,7 @@ public class BackgroundTaskWorker : IBackgroundTaskWorker
     {
         using var l = _log.TraceScope();
 
-        using var scope = _scopeFactory.CreateScope();
+        await using var scope = _scopeFactory.CreateAsyncScope();
         var operationContext = scope.ServiceProvider.GetRequiredService<BackgroundOperationContext>();
         operationContext.Reset();
 

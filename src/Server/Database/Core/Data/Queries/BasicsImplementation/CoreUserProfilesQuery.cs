@@ -76,12 +76,14 @@ public class CoreUserProfilesQuery : CoreDatabaseObjectQuery<UserProfile, CoreUs
 
     public IUserProfilesQuery Search(string search)
     {
+        // Case-insensitive: both sides lower-cased, which every provider (and InMemory) translates.
+        var term = search.ToLowerInvariant();
         currentQuery = from profile in currentQuery
-                       where profile.FirstName.IndexOf(search) >= 0 ||
-                                profile.LastName.IndexOf(search) >= 0 ||
-                                profile.Email.IndexOf(search) >= 0 ||
-                                profile.PhoneNumber.IndexOf(search) >= 0 ||
-                                profile.MiddleName.IndexOf(search) >= 0
+                       where profile.FirstName.ToLower().Contains(term) ||
+                                profile.LastName.ToLower().Contains(term) ||
+                                profile.Email.ToLower().Contains(term) ||
+                                profile.PhoneNumber.ToLower().Contains(term) ||
+                                profile.MiddleName.ToLower().Contains(term)
                        select profile;
         return this;
     }

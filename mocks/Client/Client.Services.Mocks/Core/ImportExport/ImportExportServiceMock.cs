@@ -246,6 +246,20 @@ public class ImportExportServiceMock : IImportExportService
         return ServiceActionResult<List<ExportFieldDescriptor>>.OK(userProfileExportFields);
     }
 
+    public async Task<ServiceActionResult<ExportDownloadResult>> DownloadTemplateAsync(string entityType, ExportFileFormat format)
+    {
+        await Task.Delay(delay);
+
+        var bytes = System.Text.Encoding.UTF8.GetBytes(
+            string.Join(",", userProfileImportFields.Select(f => f.Field)) + Environment.NewLine);
+        return ServiceActionResult<ExportDownloadResult>.OK(new ExportDownloadResult
+        {
+            Stream = new MemoryStream(bytes),
+            ContentType = "text/csv",
+            FileName = $"{entityType}-template.csv"
+        });
+    }
+
     public async Task<ServiceActionResult<ExportDownloadResult>> ExportAsync(ExportRequestItem request)
     {
         await Task.Delay(delay);

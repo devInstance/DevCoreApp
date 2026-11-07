@@ -63,8 +63,21 @@ List endpoints return `PagedList<T>` (`Shared.Model.Core.Common`), which is Blaz
 `IModelList<T>`:
 
 ```json
-{ "totalCount": 42, "pagesCount": 3, "page": 0, "count": 20, "sortOrder": ["-CreateDate"], "search": null, "items": [ … ] }
+{ "totalCount": 42, "pagesCount": 3, "page": 0, "count": 20, "sortOrder": ["-CreateDate"], "search": null, "items": [ … ], "highlights": null }
 ```
+
+`highlights` is present only on a searched list whose service computes it (otherwise `null` or
+absent). It says where `search` matched, so clients can highlight without re-implementing the
+matching. Keys are the item `id`, then the **C# property name** of the DTO field (`FullName` — dictionary
+keys are not camel-cased), then ranges of UTF-16 offsets into that field's value as sent:
+
+```json
+"highlights": { "k3J9x": { "FullName": [ { "start": 0, "length": 4 } ], "Phone": [ { "start": 6, "length": 6 } ] } }
+```
+
+Item fields never carry markup. Servers build this with `SearchHighlighter` (`Server.Services.Core.Search`),
+configured next to the query's `Search()` so the two match the same way; clients render it with
+`PagedList.HighlightsFor(id, field)` and the Desktop `<SearchHighlight>` component.
 
 Query parameters bind to `[QueryModel]` classes deriving from `ListQuery`:
 

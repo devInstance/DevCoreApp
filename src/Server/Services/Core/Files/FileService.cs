@@ -129,7 +129,10 @@ public class FileService : BaseService, IFileService
 
         await using var repo = RepositoryFactory.Create();
         var fileQuery = repo.GetFileRecordQuery(AuthorizationContext.CurrentProfile);
-        var fileRecord = await fileQuery.ByPublicId(filePublicId).Select().FirstOrDefaultAsync();
+        // Filter IsActive: a soft-deleted file (Storage:SoftDelete) must not remain downloadable.
+        var fileRecord = await fileQuery.ByPublicId(filePublicId).Select()
+            .Where(f => f.IsActive)
+            .FirstOrDefaultAsync();
 
         if (fileRecord == null)
             throw new RecordNotFoundException("File not found.");
@@ -180,7 +183,9 @@ public class FileService : BaseService, IFileService
 
         await using var repo = RepositoryFactory.Create();
         var fileQuery = repo.GetFileRecordQuery(AuthorizationContext.CurrentProfile);
-        var fileRecord = await fileQuery.ByPublicId(filePublicId).Select().FirstOrDefaultAsync();
+        var fileRecord = await fileQuery.ByPublicId(filePublicId).Select()
+            .Where(f => f.IsActive)
+            .FirstOrDefaultAsync();
 
         if (fileRecord == null)
             throw new RecordNotFoundException("File not found.");

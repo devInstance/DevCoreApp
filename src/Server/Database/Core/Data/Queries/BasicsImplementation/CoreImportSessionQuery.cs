@@ -61,9 +61,11 @@ public class CoreImportSessionQuery : CoreDatabaseObjectQuery<ImportSession, Cor
 
     public IImportSessionQuery Search(string search)
     {
+        // Case-insensitive: both sides lower-cased, which every provider (and InMemory) translates.
+        var term = search.ToLowerInvariant();
         currentQuery = from s in currentQuery
-                       where s.OriginalFileName.IndexOf(search) >= 0 ||
-                             s.EntityType.IndexOf(search) >= 0
+                       where s.OriginalFileName.ToLower().Contains(term) ||
+                             s.EntityType.ToLower().Contains(term)
                        select s;
         return this;
     }

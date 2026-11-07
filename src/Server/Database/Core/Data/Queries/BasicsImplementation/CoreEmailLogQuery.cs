@@ -78,10 +78,12 @@ public class CoreEmailLogQuery : CoreDatabaseObjectQuery<EmailLog, CoreEmailLogQ
 
     public IEmailLogQuery Search(string search)
     {
+        // Case-insensitive: both sides lower-cased, which every provider (and InMemory) translates.
+        var term = search.ToLowerInvariant();
         currentQuery = from el in currentQuery
-                       where el.Subject.IndexOf(search) >= 0 ||
-                             el.ToAddress.IndexOf(search) >= 0 ||
-                             el.FromAddress.IndexOf(search) >= 0
+                       where el.Subject.ToLower().Contains(term) ||
+                             el.ToAddress.ToLower().Contains(term) ||
+                             el.FromAddress.ToLower().Contains(term)
                        select el;
         return this;
     }

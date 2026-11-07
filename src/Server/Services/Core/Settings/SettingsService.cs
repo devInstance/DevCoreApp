@@ -24,7 +24,7 @@ public class SettingsService : ISettingsService, ISettingsActionService, ISettin
     private const string CacheVersionPrefix = "settings-version:";
     private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(10);
 
-    private readonly IQueryRepository _repository;
+    private readonly IQueryRepositoryFactory _repositoryFactory;
     private readonly IOperationContext _operationContext;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly UserManager<ApplicationUser> _userManager;
@@ -33,14 +33,14 @@ public class SettingsService : ISettingsService, ISettingsActionService, ISettin
 
     public SettingsService(
         IScopeManager logManager,
-        IQueryRepository repository,
+        IQueryRepositoryFactory repositoryFactory,
         IOperationContext operationContext,
         IHttpContextAccessor httpContextAccessor,
         UserManager<ApplicationUser> userManager,
         IMemoryCache cache)
     {
         _log = logManager.CreateLogger(this);
-        _repository = repository;
+        _repositoryFactory = repositoryFactory;
         _operationContext = operationContext;
         _httpContextAccessor = httpContextAccessor;
         _userManager = userManager;
@@ -85,7 +85,10 @@ public class SettingsService : ISettingsService, ISettingsActionService, ISettin
         var serializedValue = SerializeValue(value);
         var valueType = InferValueType<T>();
 
-        var existing = await _repository.GetSettingsQuery(null!)
+        // One unit of work per operation (UnitOfWork.md): read → update/insert share this context.
+        await using var repo = _repositoryFactory.Create();
+
+        var existing = await repo.GetSettingsQuery(null!)
             .ByCategoryAndKey(category, key)
             .ByTenantId(tenantId)
             .ByOrganizationId(organizationId)
@@ -97,11 +100,11 @@ public class SettingsService : ISettingsService, ISettingsActionService, ISettin
         {
             existing.Value = serializedValue;
             existing.ValueType = valueType;
-            await _repository.GetSettingsQuery(null!).UpdateAsync(existing);
+            await repo.GetSettingsQuery(null!).UpdateAsync(existing);
         }
         else
         {
-            var settingsQuery = _repository.GetSettingsQuery(null!);
+            var settingsQuery = repo.GetSettingsQuery(null!);
             var setting = settingsQuery.CreateNew();
             setting.TenantId = tenantId;
             setting.OrganizationId = organizationId;
@@ -125,7 +128,8 @@ public class SettingsService : ISettingsService, ISettingsActionService, ISettin
         var context = ResolveContext();
 
         // Load all settings for this category; PickMostSpecific selects the right tier per key.
-        var allSettings = await _repository.GetSettingsQuery(null!)
+        await using var repo = _repositoryFactory.Create();
+        var allSettings = await repo.GetSettingsQuery(null!)
             .ByCategory(category)
             .Select()
             .ToListAsync();
@@ -178,7 +182,8 @@ public class SettingsService : ISettingsService, ISettingsActionService, ISettin
     /// </summary>
     private async Task<Setting?> ResolveSettingAsync(string category, string key, SettingsContext context)
     {
-        var candidates = await _repository.GetSettingsQuery(null!)
+        await using var repo = _repositoryFactory.Create();
+        var candidates = await repo.GetSettingsQuery(null!)
             .ByCategoryAndKey(category, key)
             .Select()
             .ToListAsync();

@@ -92,10 +92,12 @@ public class CoreOrganizationsQuery : CoreDatabaseObjectQuery<Organization, Core
 
     public IOrganizationsQuery Search(string search)
     {
+        // Case-insensitive: both sides lower-cased, which every provider (and InMemory) translates.
+        var term = search.ToLowerInvariant();
         currentQuery = from o in currentQuery
-                       where o.Name.IndexOf(search) >= 0 ||
-                                o.Code.IndexOf(search) >= 0 ||
-                                o.Path.IndexOf(search) >= 0
+                       where o.Name.ToLower().Contains(term) ||
+                                o.Code.ToLower().Contains(term) ||
+                                o.Path.ToLower().Contains(term)
                        select o;
         return this;
     }

@@ -101,3 +101,12 @@
         content: "An error has occurred.";
     }
 }
+
+// Search matches rendered by <SearchHighlight> from PagedList.Highlights.
+// A soft accent tint, not the browser's yellow <mark>.
+mark.search-mark {
+    background: var(--accent-bg, #fff3cd);
+    color: var(--accent, inherit);
+    padding: 0;
+    border-radius: 3px;
+}

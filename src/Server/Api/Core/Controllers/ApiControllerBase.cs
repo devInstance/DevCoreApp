@@ -1,4 +1,5 @@
 using DevInstance.BlazorToolkit.Services;
+using DevInstance.LogScope;
 using DevInstance.WebServiceToolkit.Controllers;
 using DevInstance.WebServiceToolkit.Exceptions;
 using Microsoft.AspNetCore.Mvc;
@@ -28,7 +29,7 @@ public abstract class ApiControllerBase : ControllerBase
     /// </summary>
     protected Task<ActionResult<T>> HandleServiceAsync<T>(Func<Task<ServiceActionResult<T>>> serviceCall)
     {
-        return this.HandleWebRequestAsync<T>(async () => Ok(Unwrap(await serviceCall())));
+        return this.HandleWebRequestAsync<T>(async () => Ok(Unwrap(await serviceCall())), CreateLog());
     }
 
     /// <summary>
@@ -37,7 +38,16 @@ public abstract class ApiControllerBase : ControllerBase
     /// </summary>
     protected ActionResult<T> HandleService<T>(Func<ServiceActionResult<T>> serviceCall)
     {
-        return this.HandleWebRequest<T>(() => Ok(Unwrap(serviceCall())));
+        return this.HandleWebRequest<T>(() => Ok(Unwrap(serviceCall())), CreateLog());
+    }
+
+    /// <summary>
+    /// <c>HandleWebRequest*</c> catches the exception itself, so it never reaches
+    /// <c>ApiExceptionHandler</c>; without a logger here an unexpected 500 leaves no trace in the log.
+    /// </summary>
+    private IScopeLog? CreateLog()
+    {
+        return HttpContext?.RequestServices.GetService<IScopeManager>()?.CreateLogger(this);
     }
 
     /// <summary>

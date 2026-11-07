@@ -19,6 +19,13 @@
 		<PackageReference Include="DartSassBuilder" Version="1.1.0" />
 	</ItemGroup>
 
+	<!-- Dev-only (DevServers origin map for the standalone dev server); never ship it. Removing it from
+	     Content also keeps it out of the static web asset set, where a release build can see it twice
+	     ("More than one compatible asset found for target path 'appsettings.Development...json'"). -->
+	<ItemGroup Condition="'$(Configuration)' == 'Release'">
+		<Content Remove="wwwroot\appsettings.Development.json" />
+	</ItemGroup>
+
 	<ItemGroup>
 		<ProjectReference Include="..\Client.Services\Client.Services.csproj" />
 	</ItemGroup>
@@ -39,11 +46,18 @@
 	<Target Name="CompileTypeScript" BeforeTargets="BeforeBuild"
 	        Inputs="@(TypeScriptInput)"
 	        Outputs="@(TypeScriptSource->'wwwroot\scripts\%(Filename).js')">
-		<Exec Command="tsc -p tsconfig.json" IgnoreExitCode="true">
+		<!-- A fresh checkout (CI) has arbitrary timestamps, so this target can fire with no tsc on the
+		     agent. Fall back to the committed JS when tsc is absent; fail only on a real compile error. -->
+		<Exec Command="tsc --version" IgnoreExitCode="true" StandardOutputImportance="low" StandardErrorImportance="low">
+			<Output TaskParameter="ExitCode" PropertyName="TscCheckCode" />
+		</Exec>
+		<Message Condition="'$(TscCheckCode)' != '0'" Importance="high"
+		         Text="tsc not found — skipping TypeScript compilation. Committed JS files will be used. Install tsc (npm i -g typescript) to compile locally." />
+		<Exec Condition="'$(TscCheckCode)' == '0'" Command="tsc -p tsconfig.json" IgnoreExitCode="true">
 			<Output TaskParameter="ExitCode" PropertyName="TscExitCode" />
 		</Exec>
-		<Error Condition="'$(TscExitCode)' != '0'"
-		       Text="TypeScript files changed but compilation failed (exit code $(TscExitCode)). Install tsc (npm i -g typescript) and run: tsc -p tsconfig.json" />
+		<Error Condition="'$(TscCheckCode)' == '0' AND '$(TscExitCode)' != '0'"
+		       Text="TypeScript compilation failed (exit code $(TscExitCode)). Run: tsc -p tsconfig.json" />
 	</Target>
 
 	<!-- SCSS: DartSassBuilder compiles Styles/app.scss; the result is served from wwwroot. -->

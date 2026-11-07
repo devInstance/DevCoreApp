@@ -52,10 +52,12 @@ public class CoreNotificationTemplateQuery : CoreDatabaseObjectQuery<Notificatio
 
     public INotificationTemplateQuery Search(string search)
     {
+        // Case-insensitive: both sides lower-cased, which every provider (and InMemory) translates.
+        var term = search.ToLowerInvariant();
         currentQuery = from nt in currentQuery
-                       where nt.Name.IndexOf(search) >= 0 ||
-                             nt.TitleTemplate.IndexOf(search) >= 0 ||
-                             nt.Category.IndexOf(search) >= 0
+                       where nt.Name.ToLower().Contains(term) ||
+                             nt.TitleTemplate.ToLower().Contains(term) ||
+                             nt.Category.ToLower().Contains(term)
                        select nt;
         return this;
     }

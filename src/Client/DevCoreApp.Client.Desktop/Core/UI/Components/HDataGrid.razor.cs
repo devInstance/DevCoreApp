@@ -99,6 +99,10 @@ public partial class HDataGrid<TItem> where TItem : IModelItem
         _columnTemplates[field] = template;
     }
 
+    /// <summary>The server's search matches for one field of a row (see <see cref="ColumnDescriptor{TItem}.HighlightField"/>).</summary>
+    private HighlightRange[]? HighlightsFor(TItem item, string field) =>
+        Data.HighlightsFor(IdSelector?.Invoke(item) ?? item.Id, field);
+
     private RenderFragment<TItem>? GetCellTemplate(ColumnDescriptor<TItem> col)
     {
         if (_columnTemplates.TryGetValue(col.Field, out var template))

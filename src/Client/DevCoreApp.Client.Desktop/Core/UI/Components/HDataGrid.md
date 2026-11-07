@@ -110,6 +110,7 @@ public class ColumnDescriptor<TItem>
     string   Field          // Unique field key (used for sort, profile, template matching)
     string   Label          // Display header text
     Func<TItem, object?> ValueSelector  // Extracts display value from item
+    string?  HighlightField // DTO property (nameof) whose search highlights apply — see "Search Highlighting"
 
     // Templates (see "Cell Templates" section)
     RenderFragment<object?>? Template      // Value-level template (receives ValueSelector output)
@@ -125,6 +126,23 @@ public class ColumnDescriptor<TItem>
     string?  CellClass      // CSS class on <td>
 }
 ```
+
+## Search Highlighting
+
+The server marks where a search matched; the grid only draws it. A list service that supports it fills
+`PagedList.Highlights` (item `Id` → DTO property name → ranges) with `SearchHighlighter`, next to its
+query's `Search()` call, so the highlight always agrees with what was found. Item fields stay plain
+values — never put `<mark>` into a DTO.
+
+- **Plain cells:** set `HighlightField = nameof(MyItem.Title)` on the column. The grid renders the value
+  through `<SearchHighlight>` with that field's ranges.
+- **Templated cells** do it themselves:
+  `<SearchHighlight Text="@item.Name" Ranges="@List.HighlightsFor(item.Id, nameof(MyItem.Name))" />`.
+- Only highlight a field the server highlights (a field the query searches); anything else gets no ranges
+  and renders unchanged.
+- `<SearchHighlight>` writes text nodes plus `<mark class="search-mark">` (styled in `_components.scss`),
+  so it is safe for any content, and it clips ranges to the text, so a truncated preview can pass the
+  whole field's ranges.
 
 ## Cell Templates
 

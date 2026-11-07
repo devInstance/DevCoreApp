@@ -77,9 +77,11 @@ public class CoreUserLoginHistoryQuery : CoreBaseQuery<UserLoginHistory, CoreUse
 
     public IUserLoginHistoryQuery Search(string search)
     {
+        // Case-insensitive: both sides lower-cased, which every provider (and InMemory) translates.
+        var term = search.ToLowerInvariant();
         currentQuery = from ulh in currentQuery
-                       where (ulh.IpAddress != null && ulh.IpAddress.Contains(search)) ||
-                             (ulh.FailureReason != null && ulh.FailureReason.Contains(search))
+                       where (ulh.IpAddress != null && ulh.IpAddress.ToLower().Contains(term)) ||
+                             (ulh.FailureReason != null && ulh.FailureReason.ToLower().Contains(term))
                        select ulh;
         return this;
     }

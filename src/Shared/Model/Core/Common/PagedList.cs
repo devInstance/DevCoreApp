@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using DevInstance.WebServiceToolkit.Common.Model;
 using DevInstance.WebServiceToolkit.Common.Tools;
 
@@ -21,6 +22,14 @@ public class PagedList<T> : IModelList<T>
     public string Search { get; set; }
     public T[] Items { get; set; } = Array.Empty<T>();
 
+    /// <summary>
+    /// Where <see cref="Search"/> matched, for clients to highlight: item <c>Id</c> → DTO property name
+    /// (C# spelling, e.g. <c>FullName</c>) → ranges in that property's value. Null when the list was
+    /// not searched or the service does not compute highlights; items and fields without a match are
+    /// absent. The server owns the matching, so the highlight always agrees with what was found.
+    /// </summary>
+    public Dictionary<string, Dictionary<string, HighlightRange[]>> Highlights { get; set; }
+
     public static PagedList<T> Empty() => new();
 
     public static bool IsEmpty(PagedList<T> list) => list?.Items == null || list.Items.Length == 0;
@@ -42,6 +51,19 @@ public static class PagedList
     }
 
     public static PagedList<T> Single<T>(T item) => Create(new[] { item });
+
+    /// <summary>
+    /// The highlight ranges for one field of one item, or null when it has none.
+    /// <paramref name="field"/> is the DTO property name — pass <c>nameof(UserProfileItem.FirstName)</c>.
+    /// </summary>
+    public static HighlightRange[] HighlightsFor<T>(this PagedList<T> list, string itemId, string field)
+    {
+        if (list?.Highlights == null || itemId == null || field == null)
+            return null;
+        return list.Highlights.TryGetValue(itemId, out var fields) && fields.TryGetValue(field, out var ranges)
+            ? ranges
+            : null;
+    }
 
     /// <summary>Primary sort field without its "+"/"-" direction prefix, or null when unsorted.</summary>
     public static string SortField<T>(this PagedList<T> list)

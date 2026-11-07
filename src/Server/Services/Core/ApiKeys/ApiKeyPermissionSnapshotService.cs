@@ -15,16 +15,20 @@ public interface IApiKeyPermissionSnapshotService
 
 public class ApiKeyPermissionSnapshotService : IApiKeyPermissionSnapshotService
 {
-    private readonly IQueryRepository _repository;
+    private readonly IQueryRepositoryFactory _repositoryFactory;
 
-    public ApiKeyPermissionSnapshotService(IQueryRepository repository)
+    public ApiKeyPermissionSnapshotService(IQueryRepositoryFactory repositoryFactory)
     {
-        _repository = repository;
+        _repositoryFactory = repositoryFactory;
     }
 
     public async Task<List<string>> GetEffectivePermissionsAsync(Guid userProfileId, CancellationToken cancellationToken = default)
     {
-        var applicationUserId = await _repository.GetUserProfilesQuery(null!)
+        // Own unit of work: the caller (ApiKeyAdminService.CreateKeyAsync) is mid-operation on its
+        // own context, and must not share the request's scoped one with this read.
+        await using var repo = _repositoryFactory.Create();
+
+        var applicationUserId = await repo.GetUserProfilesQuery(null!)
             .ById(userProfileId)
             .Select()
             .Select(up => (Guid?)up.ApplicationUserId)
@@ -33,23 +37,24 @@ public class ApiKeyPermissionSnapshotService : IApiKeyPermissionSnapshotService
         if (!applicationUserId.HasValue)
             return new List<string>();
 
-        var roleIds = await _repository.GetRolePermissionQuery(null!)
+        var roleIds = await repo.GetRolePermissionQuery(null!)
             .GetRoleIdsForUserAsync(applicationUserId.Value);
 
         var permissionKeys = new HashSet<string>(StringComparer.Ordinal);
 
         if (roleIds.Count > 0)
         {
-            var rolePermissions = await _repository.GetRolePermissionQuery(null!)
+            var rolePermissions = await repo.GetRolePermissionQuery(null!)
                 .GetPermissionKeysForRoleIdsAsync(roleIds);
 
             foreach (var key in rolePermissions)
                 permissionKeys.Add(key);
         }
 
-        // Note: overrides are keyed by userProfileId here (preserves existing behavior).
-        var overrides = await _repository.GetUserPermissionOverrideQuery(null!)
-            .ByUserId(userProfileId)
+        // Overrides are keyed by the Identity user id (UserPermissionOverride.UserId → ApplicationUser),
+        // the same key PermissionClaimsTransformation uses — not the profile id.
+        var overrides = await repo.GetUserPermissionOverrideQuery(null!)
+            .ByUserId(applicationUserId.Value)
             .IncludePermission()
             .Select()
             .ToListAsync(cancellationToken);

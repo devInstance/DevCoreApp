@@ -130,6 +130,10 @@ else
                                             {
                                                 @col.Template(col.ValueSelector(item))
                                             }
+                                            else if (col.HighlightField != null)
+                                            {
+                                                <SearchHighlight Text="@(col.ValueSelector(item)?.ToString())" Ranges="@HighlightsFor(item, col.HighlightField)" />
+                                            }
                                             else
                                             {
                                                 @col.ValueSelector(item)
@@ -167,6 +171,10 @@ else
                                     else if (col.Template != null)
                                     {
                                         @col.Template(col.ValueSelector(item))
+                                    }
+                                    else if (col.HighlightField != null)
+                                    {
+                                        <SearchHighlight Text="@(col.ValueSelector(item)?.ToString())" Ranges="@HighlightsFor(item, col.HighlightField)" />
                                     }
                                     else
                                     {

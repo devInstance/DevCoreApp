@@ -103,6 +103,22 @@ public class ImportExportService : ApiServiceBase, IImportExportService
             };
         });
 
+    public Task<ServiceActionResult<ExportDownloadResult>> DownloadTemplateAsync(string entityType, ExportFileFormat format) =>
+        CallAsync(async () =>
+        {
+            using var response = await Http.GetAsync(
+                $"{Root}/template?entityType={Uri.EscapeDataString(entityType)}&format={format}");
+            await ThrowIfFailedAsync(response);
+            return new ExportDownloadResult
+            {
+                Stream = new MemoryStream(await response.Content.ReadAsByteArrayAsync()),
+                ContentType = response.Content.Headers.ContentType?.MediaType ?? "application/octet-stream",
+                FileName = response.Content.Headers.ContentDisposition?.FileNameStar
+                    ?? response.Content.Headers.ContentDisposition?.FileName?.Trim('"')
+                    ?? $"{entityType}-template"
+            };
+        });
+
     /// <summary>
     /// Copies the caller's stream (from its current position) instead of wrapping it: disposing
     /// the form would otherwise close it, and the import page reuses one buffered file stream for

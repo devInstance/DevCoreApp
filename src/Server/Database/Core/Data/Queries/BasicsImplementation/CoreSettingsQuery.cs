@@ -91,10 +91,12 @@ public class CoreSettingsQuery : CoreBaseQuery<Setting, CoreSettingsQuery>, ISet
 
     public ISettingsQuery Search(string search)
     {
+        // Case-insensitive: both sides lower-cased, which every provider (and InMemory) translates.
+        var term = search.ToLowerInvariant();
         currentQuery = from s in currentQuery
-                       where s.Category.Contains(search) ||
-                             s.Key.Contains(search) ||
-                             (s.Description != null && s.Description.Contains(search))
+                       where s.Category.ToLower().Contains(term) ||
+                             s.Key.ToLower().Contains(term) ||
+                             (s.Description != null && s.Description.ToLower().Contains(term))
                        select s;
         return this;
     }

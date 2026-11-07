@@ -23,16 +23,16 @@ public class RoleManagementService : IRoleManagementService
 {
     private readonly IScopeLog log;
     private readonly RoleManager<ApplicationRole> _roleManager;
-    private readonly IQueryRepository _repository;
+    private readonly IQueryRepositoryFactory _repositoryFactory;
 
     public RoleManagementService(
         IScopeManager logManager,
         RoleManager<ApplicationRole> roleManager,
-        IQueryRepository repository)
+        IQueryRepositoryFactory repositoryFactory)
     {
         log = logManager.CreateLogger(this);
         _roleManager = roleManager;
-        _repository = repository;
+        _repositoryFactory = repositoryFactory;
     }
 
     public async Task<ServiceActionResult<PagedList<RoleItem>>> GetRolesAsync(int? top, int? page, string[]? sortBy, string? search)
@@ -65,7 +65,8 @@ public class RoleManagementService : IRoleManagementService
         var roles = await query.Skip(pageVal * topVal).Take(topVal).ToListAsync();
 
         var roleIds = roles.Select(r => r.Id).ToList();
-        var permissionCounts = await _repository.GetRolePermissionQuery(null!)
+        await using var repo = _repositoryFactory.Create();
+        var permissionCounts = await repo.GetRolePermissionQuery(null!)
             .CountByRoleIdsAsync(roleIds);
 
         var items = roles.Select(r => new RoleItem
@@ -92,7 +93,8 @@ public class RoleManagementService : IRoleManagementService
         if (role == null)
             throw new RecordNotFoundException("Role not found.");
 
-        var permissionCount = await _repository.GetRolePermissionQuery(null!).CountForRoleIdAsync(guid);
+        await using var repo = _repositoryFactory.Create();
+        var permissionCount = await repo.GetRolePermissionQuery(null!).CountForRoleIdAsync(guid);
 
         return ServiceActionResult<RoleItem>.OK(new RoleItem
         {
@@ -166,7 +168,8 @@ public class RoleManagementService : IRoleManagementService
         if (!result.Succeeded)
             throw new BadRequestException(string.Join("; ", result.Errors.Select(e => e.Description)));
 
-        var permissionCount = await _repository.GetRolePermissionQuery(null!).CountForRoleIdAsync(role.Id);
+        await using var repo = _repositoryFactory.Create();
+        var permissionCount = await repo.GetRolePermissionQuery(null!).CountForRoleIdAsync(role.Id);
 
         l.I($"Role updated: {role.Name}");
 
@@ -191,12 +194,13 @@ public class RoleManagementService : IRoleManagementService
         if (role.IsSystemRole)
             throw new BusinessRuleException("System roles cannot be deleted.");
 
-        var hasUsers = await _repository.GetRolePermissionQuery(null!).RoleHasUsersAsync(role.Id);
+        await using var repo = _repositoryFactory.Create();
+        var hasUsers = await repo.GetRolePermissionQuery(null!).RoleHasUsersAsync(role.Id);
         if (hasUsers)
             throw new BusinessRuleException("Cannot delete a role that has users assigned to it. Remove all users from this role first.");
 
         // Remove role permissions first
-        await _repository.GetRolePermissionQuery(null!).RemoveAllForRoleAsync(role.Id);
+        await repo.GetRolePermissionQuery(null!).RemoveAllForRoleAsync(role.Id);
 
         var result = await _roleManager.DeleteAsync(role);
         if (!result.Succeeded)
@@ -211,7 +215,8 @@ public class RoleManagementService : IRoleManagementService
     {
         using var l = log.TraceScope();
 
-        var permissions = await _repository.GetPermissionQuery(null!)
+        await using var repo = _repositoryFactory.Create();
+        var permissions = await repo.GetPermissionQuery(null!)
             .OrderedByDisplayOrder()
             .Select()
             .ToListAsync();
@@ -241,7 +246,8 @@ public class RoleManagementService : IRoleManagementService
         if (role == null)
             throw new RecordNotFoundException("Role not found.");
 
-        var keys = await _repository.GetRolePermissionQuery(null!).GetPermissionKeysForRoleIdAsync(guid);
+        await using var repo = _repositoryFactory.Create();
+        var keys = await repo.GetRolePermissionQuery(null!).GetPermissionKeysForRoleIdAsync(guid);
 
         return ServiceActionResult<List<string>>.OK(keys.ToList());
     }
@@ -261,7 +267,8 @@ public class RoleManagementService : IRoleManagementService
             throw new BusinessRuleException("Permissions for system roles are managed automatically and cannot be modified.");
 
         // Full replace: remove existing, add new
-        await _repository.GetRolePermissionQuery(null!)
+        await using var repo = _repositoryFactory.Create();
+        await repo.GetRolePermissionQuery(null!)
             .ReplaceRolePermissionsAsync(guid, request.PermissionKeys);
 
         l.I($"Role permissions updated for: {role.Name} ({request.PermissionKeys.Count} permissions)");

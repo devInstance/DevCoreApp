@@ -69,9 +69,11 @@ public class CoreNotificationQuery : CoreBaseQuery<Notification, CoreNotificatio
 
     public INotificationQuery Search(string search)
     {
+        // Case-insensitive: both sides lower-cased, which every provider (and InMemory) translates.
+        var term = search.ToLowerInvariant();
         currentQuery = from n in currentQuery
-                       where n.Title.IndexOf(search) >= 0 ||
-                             n.Message.IndexOf(search) >= 0
+                       where n.Title.ToLower().Contains(term) ||
+                             n.Message.ToLower().Contains(term)
                        select n;
         return this;
     }

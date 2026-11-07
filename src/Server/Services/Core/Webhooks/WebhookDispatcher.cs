@@ -15,19 +15,19 @@ namespace DevInstance.DevCoreApp.Server.Services.Core.Webhooks;
 [BlazorService]
 public class WebhookDispatcher : IWebhookDispatcher
 {
-    private readonly IQueryRepository _repository;
+    private readonly IQueryRepositoryFactory _repositoryFactory;
     private readonly IBackgroundWorker _backgroundWorker;
     private readonly IOperationContext _operationContext;
     private readonly IScopeLog _log;
 
     public WebhookDispatcher(
         IScopeManager logManager,
-        IQueryRepository repository,
+        IQueryRepositoryFactory repositoryFactory,
         IBackgroundWorker backgroundWorker,
         IOperationContext operationContext)
     {
         _log = logManager.CreateLogger(this);
-        _repository = repository;
+        _repositoryFactory = repositoryFactory;
         _backgroundWorker = backgroundWorker;
         _operationContext = operationContext;
     }
@@ -36,7 +36,11 @@ public class WebhookDispatcher : IWebhookDispatcher
     {
         using var l = _log.TraceScope();
 
-        var subscriptions = await _repository.GetWebhookSubscriptionQuery(null!)
+        // One unit of work per dispatch (UnitOfWork.md). Dispatch is called from inside other
+        // services' operations, so it must not share the request's scoped context with them.
+        await using var repo = _repositoryFactory.Create();
+
+        var subscriptions = await repo.GetWebhookSubscriptionQuery(null!)
             .ByEventType(eventType)
             .ActiveOnly()
             .Select()
@@ -53,7 +57,7 @@ public class WebhookDispatcher : IWebhookDispatcher
         foreach (var subscription in subscriptions)
         {
             // Create a WebhookDelivery record
-            var deliveryQuery = _repository.GetWebhookDeliveryQuery(null!);
+            var deliveryQuery = repo.GetWebhookDeliveryQuery(null!);
             var delivery = deliveryQuery.CreateNew();
             delivery.SubscriptionId = subscription.Id;
             delivery.EventType = eventType;

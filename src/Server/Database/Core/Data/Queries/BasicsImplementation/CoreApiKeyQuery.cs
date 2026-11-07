@@ -73,9 +73,11 @@ public class CoreApiKeyQuery : CoreDatabaseObjectQuery<ApiKey, CoreApiKeyQuery>,
 
     public IApiKeyQuery Search(string search)
     {
+        // Case-insensitive: both sides lower-cased, which every provider (and InMemory) translates.
+        var term = search.ToLowerInvariant();
         currentQuery = from ak in currentQuery
-                       where ak.Name.Contains(search) ||
-                             ak.Prefix.Contains(search)
+                       where ak.Name.ToLower().Contains(term) ||
+                             ak.Prefix.ToLower().Contains(term)
                        select ak;
         return this;
     }

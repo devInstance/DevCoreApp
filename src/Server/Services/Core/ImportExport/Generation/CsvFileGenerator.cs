@@ -1,21 +1,32 @@
-using System.Globalization;
 using CsvHelper;
 
 namespace DevInstance.DevCoreApp.Server.Services.Core.ImportExport.Generation;
 
 public class CsvFileGenerator : IFileGenerator
 {
+    private static readonly CsvWriterOptions Options = new()
+    {
+        // Padded values stay quoted, so they read back unchanged in other tools.
+        Quoting = CsvQuoting.WhenNeededOrWhitespace
+    };
+
     public Task<Stream> GenerateAsync(List<string> headers, List<Dictionary<string, string?>> rows)
     {
         var stream = new MemoryStream();
-        using (var writer = new StreamWriter(stream, leaveOpen: true))
-        using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+
+        // CsvWriter refuses to end a record with no fields.
+        if (headers.Count == 0)
+        {
+            return Task.FromResult<Stream>(stream);
+        }
+
+        using (var csv = CsvWriter.Create(stream, Options, leaveOpen: true))
         {
             foreach (var header in headers)
             {
                 csv.WriteField(header);
             }
-            csv.NextRecord();
+            csv.EndRecord();
 
             foreach (var row in rows)
             {
@@ -24,7 +35,7 @@ public class CsvFileGenerator : IFileGenerator
                     row.TryGetValue(header, out var value);
                     csv.WriteField(value ?? string.Empty);
                 }
-                csv.NextRecord();
+                csv.EndRecord();
             }
         }
 

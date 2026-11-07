@@ -24,4 +24,10 @@ public interface IImportExportService
     // Export
     Task<ServiceActionResult<List<ExportFieldDescriptor>>> GetExportFieldsAsync(string entityType);
     Task<ServiceActionResult<ExportDownloadResult>> ExportAsync(ExportRequestItem request);
+
+    /// <summary>
+    /// Empty import template for <paramref name="entityType"/>. Fetched through the API client
+    /// because a plain <c>&lt;a href&gt;</c> cannot send the bearer token (the endpoint is authorized).
+    /// </summary>
+    Task<ServiceActionResult<ExportDownloadResult>> DownloadTemplateAsync(string entityType, ExportFileFormat format);
 }

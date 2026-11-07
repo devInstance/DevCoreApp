@@ -14,7 +14,8 @@ public interface ICRUDService<T> where T : IModelItem
     /// <param name="sortBy">An array of property names used to sort the results. Use "+"/"-" for ascending or descending order. If null or empty, the default sort order is applied.</param>
     /// <param name="search">A search term used to filter the results. If null or empty, no filtering is applied.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains a ServiceActionResult with a
-    /// ModelList of type T that holds the retrieved models. If this is a search result, the items fields should include <mark>...</mark> to highlight matched values.</returns>
+    /// PagedList of type T that holds the retrieved models. Item fields carry plain values, never markup; a service that
+    /// wants the client to highlight search matches sets <c>PagedList.Highlights</c> (see <c>SearchHighlighter</c>).</returns>
     Task<ServiceActionResult<PagedList<T>>> GetListAsync(int? top, int? page, string[] sortBy, string search);
 
     Task<ServiceActionResult<T>> GetAsync(string id);

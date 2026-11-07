@@ -5,6 +5,7 @@ using DevInstance.DevCoreApp.Shared.Model.Core.ImportExport;
 using DevInstance.DevCoreApp.Shared.Model.Core.Organizations;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.JSInterop;
 
 namespace DevInstance.DevCoreApp.Client.Desktop.Core.UI.Pages.Admin;
 
@@ -26,6 +27,9 @@ public partial class ImportPage
 
     [Inject]
     private IOrganizationService OrganizationService { get; set; } = default!;
+
+    [Inject]
+    private IJSRuntime JS { get; set; } = default!;
 
     [CascadingParameter]
     private IServiceExecutionHost Host { get; set; } = default!;
@@ -382,5 +386,18 @@ public partial class ImportPage
     {
         pollingTimer?.Stop();
         pollingTimer?.Dispose();
+    }
+
+    // A plain <a href> cannot send the bearer token, so the template is fetched through the API
+    // client and handed to the browser as bytes.
+    private async Task DownloadTemplateAsync(ExportFileFormat format)
+    {
+        ExportDownloadResult? file = null;
+        await Host.ServiceReadAsync(async () => await ImportExportService.DownloadTemplateAsync(SelectedEntityType, format), r => file = r);
+        if (file == null) return;
+
+        using var buffer = new MemoryStream();
+        await file.Stream.CopyToAsync(buffer);
+        await JS.InvokeVoidAsync("downloadFileFromBytes", file.FileName, file.ContentType, buffer.ToArray());
     }
 }

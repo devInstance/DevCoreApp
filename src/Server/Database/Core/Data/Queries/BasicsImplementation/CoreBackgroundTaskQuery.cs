@@ -82,10 +82,12 @@ public class CoreBackgroundTaskQuery : CoreDatabaseObjectQuery<BackgroundTask, C
 
     public IBackgroundTaskQuery Search(string search)
     {
+        // Case-insensitive: both sides lower-cased, which every provider (and InMemory) translates.
+        var term = search.ToLowerInvariant();
         currentQuery = from bt in currentQuery
-                       where bt.TaskType.IndexOf(search) >= 0 ||
-                             (bt.ResultReference != null && bt.ResultReference.IndexOf(search) >= 0) ||
-                             (bt.ErrorMessage != null && bt.ErrorMessage.IndexOf(search) >= 0)
+                       where bt.TaskType.ToLower().Contains(term) ||
+                             (bt.ResultReference != null && bt.ResultReference.ToLower().Contains(term)) ||
+                             (bt.ErrorMessage != null && bt.ErrorMessage.ToLower().Contains(term))
                        select bt;
         return this;
     }

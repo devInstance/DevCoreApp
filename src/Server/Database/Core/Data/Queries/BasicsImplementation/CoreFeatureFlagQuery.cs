@@ -67,9 +67,11 @@ public class CoreFeatureFlagQuery : CoreDatabaseObjectQuery<FeatureFlag, CoreFea
 
     public IFeatureFlagQuery Search(string search)
     {
+        // Case-insensitive: both sides lower-cased, which every provider (and InMemory) translates.
+        var term = search.ToLowerInvariant();
         currentQuery = from ff in currentQuery
-                       where ff.Name.Contains(search) ||
-                             (ff.Description != null && ff.Description.Contains(search))
+                       where ff.Name.ToLower().Contains(term) ||
+                             (ff.Description != null && ff.Description.ToLower().Contains(term))
                        select ff;
         return this;
     }

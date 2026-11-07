@@ -83,6 +83,19 @@ public class ApiContractTests
         Assert.Equal("null", await response.Content.ReadAsStringAsync());
     }
 
+    [Fact]
+    public async Task string_result_is_json_string_not_plain_text()
+    {
+        var (app, client) = await StartAsync();
+        await using var _ = app;
+
+        var response = await client.GetAsync("/api/test/string");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("application/json", response.Content.Headers.ContentType?.MediaType);
+        Assert.Equal("\"Kanban\"", await response.Content.ReadAsStringAsync());
+    }
+
     [Theory]
     [InlineData("/api/test/failed-validation", HttpStatusCode.BadRequest, ServiceActionErrorType.Validation, "Name is required", "Name")]
     [InlineData("/api/test/failed-general", HttpStatusCode.UnprocessableEntity, ServiceActionErrorType.Validation, "Rule broken", null)]
@@ -219,6 +232,9 @@ public class ContractTestController : ApiControllerBase
 
     [HttpGet("null")]
     public ActionResult<ContractItem?> GetNull() => HandleService(() => ServiceActionResult<ContractItem?>.OK(null));
+
+    [HttpGet("string")]
+    public ActionResult<string> GetString() => HandleService(() => ServiceActionResult<string>.OK("Kanban"));
 
     [HttpGet("failed-validation")]
     public ActionResult<ContractItem> FailedValidation() => HandleService(() => ServiceActionResult<ContractItem>.Failed(

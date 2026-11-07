@@ -60,9 +60,11 @@ public class CoreFileRecordQuery : CoreDatabaseObjectQuery<FileRecord, CoreFileR
 
     public IFileRecordQuery Search(string search)
     {
+        // Case-insensitive: both sides lower-cased, which every provider (and InMemory) translates.
+        var term = search.ToLowerInvariant();
         currentQuery = from fr in currentQuery
-                       where fr.OriginalName.IndexOf(search) >= 0 ||
-                             fr.FileName.IndexOf(search) >= 0
+                       where fr.OriginalName.ToLower().Contains(term) ||
+                             fr.FileName.ToLower().Contains(term)
                        select fr;
         return this;
     }

@@ -20,7 +20,7 @@ public class JwtAuthService : IJwtAuthService
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly SignInManager<ApplicationUser> _signInManager;
-    private readonly IQueryRepository _repository;
+    private readonly IQueryRepositoryFactory _repositoryFactory;
     private readonly JwtSettings _jwtSettings;
     private readonly IScopeLog _log;
 
@@ -28,13 +28,13 @@ public class JwtAuthService : IJwtAuthService
         IScopeManager logManager,
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
-        IQueryRepository repository,
+        IQueryRepositoryFactory repositoryFactory,
         IOptions<JwtSettings> jwtSettings)
     {
         _log = logManager.CreateLogger(this);
         _userManager = userManager;
         _signInManager = signInManager;
-        _repository = repository;
+        _repositoryFactory = repositoryFactory;
         _jwtSettings = jwtSettings.Value;
     }
 
@@ -42,11 +42,14 @@ public class JwtAuthService : IJwtAuthService
     {
         using var l = _log.TraceScope();
 
+        // One unit of work per operation (UnitOfWork.md); the private helpers below take this repo.
+        await using var repo = _repositoryFactory.Create();
+
         var user = await _userManager.FindByEmailAsync(request.Email);
         if (user == null)
         {
             l.I("Login failed: user not found for email");
-            await RecordLoginAttemptAsync(null, ipAddress, userAgent, false, "User not found");
+            await RecordLoginAttemptAsync(repo, null, ipAddress, userAgent, false, "User not found");
             return ServiceActionResult<JwtLoginResponse>.OK(
                 JwtLoginResponse.Failure("Invalid email or password."));
         }
@@ -54,7 +57,7 @@ public class JwtAuthService : IJwtAuthService
         if (user.Status != AccountStatus.Active)
         {
             l.I("Login failed: account not active");
-            await RecordLoginAttemptAsync(user.Id, ipAddress, userAgent, false, "Account not active");
+            await RecordLoginAttemptAsync(repo, user.Id, ipAddress, userAgent, false, "Account not active");
             return ServiceActionResult<JwtLoginResponse>.OK(
                 JwtLoginResponse.Failure("Account is not active."));
         }
@@ -63,7 +66,7 @@ public class JwtAuthService : IJwtAuthService
         if (!result.Succeeded)
         {
             l.I("Login failed: invalid password");
-            await RecordLoginAttemptAsync(user.Id, ipAddress, userAgent, false, "Invalid password");
+            await RecordLoginAttemptAsync(repo, user.Id, ipAddress, userAgent, false, "Invalid password");
             return ServiceActionResult<JwtLoginResponse>.OK(
                 JwtLoginResponse.Failure("Invalid email or password."));
         }
@@ -71,12 +74,12 @@ public class JwtAuthService : IJwtAuthService
         var roles = await _userManager.GetRolesAsync(user);
         var expiresAt = DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenExpirationMinutes);
         var accessToken = GenerateAccessToken(user, roles, expiresAt);
-        var refreshToken = await CreateRefreshTokenAsync(user.Id, ipAddress);
+        var refreshToken = await CreateRefreshTokenAsync(repo, user.Id, ipAddress);
 
         user.LastLoginAt = DateTime.UtcNow;
         await _userManager.UpdateAsync(user);
 
-        await RecordLoginAttemptAsync(user.Id, ipAddress, userAgent, true, null);
+        await RecordLoginAttemptAsync(repo, user.Id, ipAddress, userAgent, true, null);
 
         l.I($"JWT login succeeded for user {user.Id}");
 
@@ -89,7 +92,11 @@ public class JwtAuthService : IJwtAuthService
         using var l = _log.TraceScope();
 
         var tokenHash = HashToken(refreshToken);
-        var storedToken = await _repository.GetRefreshTokenQuery(null!)
+
+        // One context for the whole rotation: storedToken is tracked here, and the AddAsync below
+        // flushes its revoke fields together with the new token.
+        await using var repo = _repositoryFactory.Create();
+        var storedToken = await repo.GetRefreshTokenQuery(null!)
             .ByTokenHash(tokenHash)
             .Select()
             .FirstOrDefaultAsync();
@@ -105,7 +112,7 @@ public class JwtAuthService : IJwtAuthService
         if (storedToken.IsRevoked)
         {
             l.I($"Refresh token reuse detected for user {storedToken.UserId}, revoking all tokens");
-            await RevokeAllUserTokensAsync(storedToken.UserId, ipAddress);
+            await RevokeAllUserTokensAsync(repo, storedToken.UserId, ipAddress);
             return ServiceActionResult<JwtLoginResponse>.OK(
                 JwtLoginResponse.Failure("Token has been revoked. All sessions terminated."));
         }
@@ -133,7 +140,7 @@ public class JwtAuthService : IJwtAuthService
         storedToken.RevokedByIp = ipAddress;
         storedToken.ReplacedByTokenHash = newTokenHash;
 
-        var refreshTokenQuery = _repository.GetRefreshTokenQuery(null!);
+        var refreshTokenQuery = repo.GetRefreshTokenQuery(null!);
         var newRefreshToken = refreshTokenQuery.CreateNew();
         newRefreshToken.UserId = storedToken.UserId;
         newRefreshToken.TokenHash = newTokenHash;
@@ -159,7 +166,8 @@ public class JwtAuthService : IJwtAuthService
         using var l = _log.TraceScope();
 
         var tokenHash = HashToken(refreshToken);
-        var refreshTokenQuery = _repository.GetRefreshTokenQuery(null!);
+        await using var repo = _repositoryFactory.Create();
+        var refreshTokenQuery = repo.GetRefreshTokenQuery(null!);
         var storedToken = await refreshTokenQuery
             .ByTokenHash(tokenHash)
             .Select()
@@ -207,12 +215,12 @@ public class JwtAuthService : IJwtAuthService
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
-    private async Task<string> CreateRefreshTokenAsync(Guid userId, string? ipAddress)
+    private async Task<string> CreateRefreshTokenAsync(IQueryRepository repo, Guid userId, string? ipAddress)
     {
         var rawToken = GenerateSecureToken();
         var tokenHash = HashToken(rawToken);
 
-        var refreshTokenQuery = _repository.GetRefreshTokenQuery(null!);
+        var refreshTokenQuery = repo.GetRefreshTokenQuery(null!);
         var refreshToken = refreshTokenQuery.CreateNew();
         refreshToken.UserId = userId;
         refreshToken.TokenHash = tokenHash;
@@ -225,9 +233,9 @@ public class JwtAuthService : IJwtAuthService
         return rawToken;
     }
 
-    private async Task RevokeAllUserTokensAsync(Guid userId, string? ipAddress)
+    private async Task RevokeAllUserTokensAsync(IQueryRepository repo, Guid userId, string? ipAddress)
     {
-        await _repository.GetRefreshTokenQuery(null!)
+        await repo.GetRefreshTokenQuery(null!)
             .RevokeAllActiveForUserAsync(userId, ipAddress, DateTime.UtcNow);
     }
 
@@ -245,12 +253,12 @@ public class JwtAuthService : IJwtAuthService
         return Convert.ToHexStringLower(bytes);
     }
 
-    private async Task RecordLoginAttemptAsync(Guid? userId, string? ipAddress, string? userAgent, bool success, string? failureReason)
+    private async Task RecordLoginAttemptAsync(IQueryRepository repo, Guid? userId, string? ipAddress, string? userAgent, bool success, string? failureReason)
     {
         if (!userId.HasValue)
             return;
 
-        var loginHistoryQuery = _repository.GetUserLoginHistoryQuery(null!);
+        var loginHistoryQuery = repo.GetUserLoginHistoryQuery(null!);
         var entry = loginHistoryQuery.CreateNew();
         entry.UserId = userId.Value;
         entry.LoginAt = DateTime.UtcNow;

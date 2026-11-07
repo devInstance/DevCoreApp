@@ -92,12 +92,14 @@ public class ApiKey : DatabaseEntityObject
 
 ### Important design detail
 
-`Scopes` are now treated as the key’s own permission snapshot.
+`Scopes` are the key’s own permission **ceiling**. At request time the key gets its scopes
+**intersected with the owner’s current effective permissions** (see Authorization and Scopes).
 
 That means:
 
-- the key does not dynamically inherit future owner role changes
-- old integrations remain stable when the owner is promoted or demoted
+- the key never gains access when the owner is promoted (new owner permissions are not in its scopes)
+- the key **loses** access when the owner is demoted (a scope the owner no longer has stops working)
+- a scope the owner never had is never honored, even if it was stored at creation
 - leaving scopes empty during creation does not mean unlimited future access
 
 Instead, empty scopes at creation time are converted into a snapshot of the creator’s current effective permissions.
@@ -232,24 +234,41 @@ Authorization still uses the normal permission-policy system.
 
 For API-key-authenticated requests:
 
-- `PermissionClaimsTransformation` detects the `ApiKeyId` claim
-- it loads the key’s stored `Scopes`
-- it creates `Permission` claims directly from those stored values
-- it does not rebuild permissions from the owner’s current roles
+- `PermissionClaimsTransformation` resolves the owner’s effective permissions exactly as for an
+  interactive user (role permissions from the role claims the handler copied from the owner, then
+  per-user overrides)
+- it detects the `ApiKeyId` claim, loads the key’s stored `Scopes`, and intersects the two
+- it creates `Permission` claims from the intersection only
 
 This is the key behavioral rule in the current implementation:
 
-> API key authorization comes from the key record, not from the owner’s live role membership.
+> An API key acts for its owner but never beyond them: effective permissions = key scopes ∩ owner’s live permissions.
 
 ### Why this changed
 
-Earlier behavior allowed old keys to silently gain or lose access when the owner’s roles changed. That made integrations unstable and made least-privilege reviews hard to reason about.
+Two earlier behaviors were wrong:
 
-The current approach is safer:
+1. Keys inherited the owner’s live roles, so old keys silently **gained** access when the owner was
+   promoted. The stored-scope snapshot fixed that.
+2. The snapshot alone then trusted the key record completely. Scopes requested at creation are not
+   checked against the creator’s permissions, so a user who could create keys could mint one with
+   permissions they lack, and a key kept permissions its owner had since lost (2026-11-07 fix,
+   `docs/migration/out/2026-11-07-core-fixes-from-threadiq-sync.md`, item 1).
 
-- every key has its own explicit permission set
-- owner role changes do not broaden existing keys
+The current approach:
+
+- every key has its own explicit permission ceiling
+- owner promotions do not broaden existing keys; owner demotions do narrow them
 - keys can still be revoked centrally by revoking the key or deactivating the owner account
+
+### Known gaps (under study)
+
+Scopes are enforced only through `Permission:*` claims, so they do **not** constrain endpoints
+guarded by `[Authorize(Roles = …)]` (the key inherits its owner’s role claims; e.g. the whole
+import/export API), endpoints guarded only by `[Authorize]` (files, profile picture, grid profiles,
+notifications), or the organizations the key can see (see Organization Association). Details and
+options: the Open questions section of
+`docs/migration/out/2026-11-07-core-fixes-from-threadiq-sync.md`.
 
 ## Scope Resolution on Create
 
@@ -276,7 +295,10 @@ The service snapshots the creator’s current effective permissions by:
 
 That means “empty scopes” currently means:
 
-`use my current permissions right now as the key's stored permission set`
+`use my current permissions right now as the key's permission ceiling`
+
+(Owner overrides are looked up by the owner’s Identity user id; before 2026-11-07 they were looked up
+by profile id and silently ignored.)
 
 It does not mean:
 

@@ -54,12 +54,12 @@
                 <div class="mb-3">
                     <label class="form-label">Download Template</label>
                     <div class="d-flex gap-2">
-                        <a class="btn btn-sm btn-outline-secondary" href="api/import-export/template?entityType=@SelectedEntityType&format=Csv" target="_blank">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="() => DownloadTemplateAsync(ExportFileFormat.Csv)">
                             <i class="bi bi-filetype-csv me-1"></i>CSV Template
-                        </a>
-                        <a class="btn btn-sm btn-outline-secondary" href="api/import-export/template?entityType=@SelectedEntityType&format=Xlsx" target="_blank">
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="() => DownloadTemplateAsync(ExportFileFormat.Xlsx)">
                             <i class="bi bi-file-earmark-excel me-1"></i>Excel Template
-                        </a>
+                        </button>
                     </div>
                 </div>
             }

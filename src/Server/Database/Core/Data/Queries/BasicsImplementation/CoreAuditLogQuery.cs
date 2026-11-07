@@ -101,11 +101,13 @@ public class CoreAuditLogQuery : CoreBaseQuery<AuditLog, CoreAuditLogQuery>, IAu
 
     public IAuditLogQuery Search(string search)
     {
+        // Case-insensitive: both sides lower-cased, which every provider (and InMemory) translates.
+        var term = search.ToLowerInvariant();
         currentQuery = from al in currentQuery
-                       where al.TableName.Contains(search) ||
-                             al.RecordId.Contains(search) ||
-                             (al.IpAddress != null && al.IpAddress.Contains(search)) ||
-                             (al.CorrelationId != null && al.CorrelationId.Contains(search))
+                       where al.TableName.ToLower().Contains(term) ||
+                             al.RecordId.ToLower().Contains(term) ||
+                             (al.IpAddress != null && al.IpAddress.ToLower().Contains(term)) ||
+                             (al.CorrelationId != null && al.CorrelationId.ToLower().Contains(term))
                        select al;
         return this;
     }

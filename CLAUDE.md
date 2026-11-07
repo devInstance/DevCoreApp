@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-This is the root-level guide for the entire DevCoreApp solution. Project-specific conventions (page patterns, service patterns, mocks) are in `src/Server/Api/CLAUDE.md`.
+This is the root-level guide for the entire DevCoreApp solution. Project-specific conventions live next to the code: server/controller/service/mock patterns in `src/Server/Api/CLAUDE.md`, page and client patterns in `src/Client/DevCoreApp.Client.Desktop/CLAUDE.md` (and `…Client.Mobile/CLAUDE.md`).
 
 ## What Is This Project?
 
@@ -39,6 +39,9 @@ dotnet run -c ServiceMocks --project src/Server/Api/DevCoreApp.Server.Api.csproj
 # Desktop: http://localhost:5280, Mobile: http://localhost:5290/mobile/
 dotnet run --project src/Client/DevCoreApp.Client.Desktop/DevCoreApp.Client.Desktop.csproj
 
+# Desktop UI alone on client-side mocks — no server, no database
+dotnet run -c ServiceMocks --project src/Client/DevCoreApp.Client.Desktop/DevCoreApp.Client.Desktop.csproj
+
 # Visual Studio: pick a multi-project launch profile from DevInstance.DevCoreApp.slnLaunch —
 # "Api + Desktop", "Api + Mobile", "Api + Desktop + Mobile" (http) or "… (https)". They start the
 # Api with its browserless "http-api"/"https-api" profile plus each client's own dev server.
@@ -66,12 +69,17 @@ dotnet test tests/Server/Api/Api.Tests.csproj --filter "FullyQualifiedName~MyTes
   tests; its assembly is named `DevInstance.DevCoreApp.Server.Tests`), and
   `tests/Client/Client.Services.Tests` (query encoding, local time, JWT handler/refresh, client
   permission policies). Shared fakes (`IScopeManagerMock`, `TimerProviderMock`)
-  live in `tests/Shared/TestUtils`. The suite is small (~75 tests) — a smoke net, not a safety
+  live in `tests/Shared/TestUtils`. (`tests/Server/WebService`, `tests/Shared/NoCrast.TestUtils`
+  and `src/Client/DevCoreApp.Client` are leftover `bin/obj`-only folders, not projects.) The suite is small (~95 test methods) — a smoke net, not a safety
   net. Green tests are not evidence a behavior change works; build and exercise the app too.
 - **Database provider is selected at runtime** via `Database:Provider` in `appsettings.json` (`Postgres` — default — or `SqlServer`), with connection strings under `ConnectionStrings:PostgresConnection` / `:SqlServerConnection`. The `Database/` solution folder splits into `Core` (provider-agnostic) plus `Postgres` and `SqlServer` projects. **Each provider owns its own `Migrations/` folder** — a schema change needs a migration in both.
 - On startup the app calls `MigrateAndSeedAsync()`: it applies pending migrations and runs every
   registered `IDataSeeder` (organizations, settings, permissions, API keys). Adding seed data means
   adding an `IDataSeeder`, not a migration insert.
+- Desktop builds its own front-end assets: `Styles/app.scss` → `wwwroot/app.css` via the
+  DartSassBuilder package, and `Scripts/*.ts` → `wwwroot/scripts/*.js` via a `CompileTypeScript`
+  MSBuild target that shells out to `tsc` (only when a `.ts` changed; the compiled JS is committed).
+  Editing a `.ts` file needs `tsc` on PATH (`npm i -g typescript`).
 - After changing entities, **do not** scaffold EF migrations yourself — see the rule in "Things To Never Do".
 
 ### Configuration
@@ -165,7 +173,7 @@ Client.Desktop / Client.Mobile ← References: Client.Services, Shared
 
 ## Hosting & Request Entry Points
 
-Everything is one host: `src/Server/Api/Program.cs` (~310 lines, worth reading before
+Everything is one host: `src/Server/Api/Program.cs` (~340 lines, worth reading before
 touching startup). It serves four kinds of traffic, each with a different auth path:
 
 | Entry point | Wiring | Auth |
@@ -217,7 +225,7 @@ The folder layout mirrors the namespace exactly — `<ProjectDir>/Core/<rest>`:
 |---|---|
 | `src/Server/Services/Core/ApiKeys/ApiKeyAdminService.cs` | `…Server.Services.Core.ApiKeys` |
 | `src/Server/Api/Core/Controllers/FileController.cs` | `…Server.Api.Core.Controllers` |
-| `src/Server/Api/Core/UI/Pages/Admin/Users.razor` | `…Server.Api.Core.UI.Pages.Admin` |
+| `src/Client/DevCoreApp.Client.Desktop/Core/UI/Pages/Admin/Users.razor` | `…Client.Desktop.Core.UI.Pages.Admin` |
 | `src/Shared/Model/Core/ApiKeys/ApiKeyItem.cs` | `…Shared.Model.Core.ApiKeys` |
 | `src/Server/Services/App/Jobs/JobService.cs` | `…Server.Services.App.Jobs` |
 
@@ -517,8 +525,9 @@ product feature of a fork would be:
 ```
 Server.Services/App/Invoices/          InvoiceService.cs, InvoiceValidator.cs
 Shared/Model/App/Invoices/            InvoiceItem.cs, InvoiceCreateRequest.cs
-Server.Api/App/UI/Pages/…       InvoiceListPage.razor, InvoiceDetailPage.razor
-Server.Api/App/Controllers/     InvoiceController.cs
+Client.Desktop/App/UI/Pages/…          InvoiceListPage.razor, InvoiceDetailPage.razor
+Client.Services/App/Invoices/          IInvoiceService.cs, InvoiceService.cs (client side, calls /api)
+Server.Api/App/Controllers/            InvoiceController.cs
 ```
 
 The same feature as *shared template* code would use `Core/` in place of `App/` in each path.

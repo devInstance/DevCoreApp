@@ -18,6 +18,9 @@ public static class ApiConfigurationExtensions
                 // A null result is JSON "null" with 200, not an empty 204 — BlazorToolkit clients
                 // deserialize every success body, and an empty one fails to parse.
                 options.OutputFormatters.RemoveType<HttpNoContentOutputFormatter>();
+                // A string result is a JSON string ("Kanban"), not raw text/plain — the clients
+                // read every success body as JSON, and a bare word fails to parse.
+                options.OutputFormatters.RemoveType<StringOutputFormatter>();
             })
             // Every DateTime on the wire is UTC ("...Z"); clients convert to local for display.
             .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new UtcDateTimeJsonConverter()))

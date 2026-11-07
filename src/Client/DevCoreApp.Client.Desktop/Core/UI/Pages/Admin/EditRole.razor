@@ -1,0 +1,95 @@
+@page "/admin/roles/{RoleId}/edit"
+@attribute [Authorize(Policy = PermissionDefinitions.Admin.Roles.Edit)]
+
+@using DevInstance.DevCoreApp.Client.Desktop.Core.UI.Components
+
+<PageTitle>Edit Role</PageTitle>
+
+<div class="mb-3">
+    <a href="/admin/roles" class="text-decoration-none">
+        <i class="bi bi-arrow-left me-1"></i>Roles
+    </a>
+</div>
+
+@if (Host.IsError)
+{
+    <div class="alert alert-danger" role="alert">
+        @Host.ErrorMessage
+    </div>
+}
+
+@if (Role == null || allPermissions == null)
+{
+    @if (Host.InProgress)
+    {
+        <div class="text-center py-3">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+}
+else
+{
+    <EditForm Model="Role" OnValidSubmit="SaveRoleAndPermissions" FormName="editrole">
+        <DataAnnotationsValidator />
+
+        <div class="d-flex align-items-center mb-3">
+            <h1 class="h3 mb-0 flex-grow-1">
+                @Role.Name
+                @if (Role.IsSystemRole)
+                {
+                    <span class="badge bg-info ms-1 fs-6 align-middle">System</span>
+                }
+            </h1>
+            <div class="d-flex gap-2">
+                <a href="/admin/roles" class="btn btn-outline-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary" disabled="@Host.InProgress">
+                    @if (Host.InProgress)
+                    {
+                        <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                    }
+                    Save Changes
+                </button>
+            </div>
+        </div>
+
+        <ValidationSummary class="text-danger" role="alert" />
+
+        @if (Role.IsSystemRole)
+        {
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle me-1"></i>
+                This is a system role. Its name and permissions are managed automatically.
+                Only the description can be edited.
+            </div>
+        }
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="form-floating">
+                    <InputText @bind-Value="Role.Name" id="Role.Name" class="form-control" placeholder="Name"
+                               disabled="@Role.IsSystemRole" />
+                    <label for="Role.Name">Name</label>
+                    <ValidationMessage For="() => Role.Name" class="text-danger" />
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="form-floating">
+                    <InputText @bind-Value="Role.Description" id="Role.Description" class="form-control" placeholder="Description" />
+                    <label for="Role.Description">Description</label>
+                    <ValidationMessage For="() => Role.Description" class="text-danger" />
+                </div>
+            </div>
+        </div>
+
+        <h2 class="h5 mb-3">
+            Permissions
+            <span class="text-muted fw-normal small ms-1">@selectedPermissionKeys.Count of @allPermissions.Count selected</span>
+        </h2>
+
+        <PermissionGrid AllPermissions="allPermissions"
+                        @bind-SelectedKeys="selectedPermissionKeys"
+                        ReadOnly="Role.IsSystemRole" />
+    </EditForm>
+}

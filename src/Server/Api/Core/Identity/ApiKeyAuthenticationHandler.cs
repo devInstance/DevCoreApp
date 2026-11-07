@@ -92,7 +92,7 @@ public class ApiKeyAuthenticationHandler : AuthenticationHandler<AuthenticationS
         var keyPublicId = apiKey.PublicId;
         _ = Task.Run(async () =>
         {
-            using var scope = _serviceProvider.CreateScope();
+            await using var scope = _serviceProvider.CreateAsyncScope();
             var repository = scope.ServiceProvider.GetRequiredService<IQueryRepository>();
             await repository.GetApiKeyQuery(null!).TouchLastUsedAsync(keyPublicId, DateTime.UtcNow);
         });

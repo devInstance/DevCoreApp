@@ -52,9 +52,11 @@ public class CoreWebhookSubscriptionQuery : CoreDatabaseObjectQuery<WebhookSubsc
 
     public IWebhookSubscriptionQuery Search(string search)
     {
+        // Case-insensitive: both sides lower-cased, which every provider (and InMemory) translates.
+        var term = search.ToLowerInvariant();
         currentQuery = from ws in currentQuery
-                       where ws.EventType.Contains(search) ||
-                             ws.Url.Contains(search)
+                       where ws.EventType.ToLower().Contains(term) ||
+                             ws.Url.ToLower().Contains(term)
                        select ws;
         return this;
     }
