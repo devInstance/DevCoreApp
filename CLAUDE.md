@@ -14,6 +14,7 @@ DevCoreApp is a reusable starter template for custom ERP and CRM applications. I
 - Blazor **WebAssembly** clients — `Client.Desktop` (admin UI, served at `/`) and `Client.Mobile` (served at `/mobile`) — over the `/api` layer with JWT. The server renders only the first-run `/setup` page (Razor Pages). Background: [`docs/WasmMigrationPlan.md`](docs/WasmMigrationPlan.md).
 - PostgreSQL (primary), SQL Server (secondary)
 - DevInstance.BlazorToolkit — client-side Blazor utilities (`[BlazorService]`, `IApiContext<T>`, `IServiceExecutionHost`)
+- DevInstance.BlazorToolkit.Components — UI components used by Desktop (`HDataGrid`, `GridSettings`, `HSearchBar`, `SearchHighlight`, `ModelDataPager`); Mobile keeps its own copies under `Core/UI/Components/Shared`
 - DevInstance.WebServiceToolkit — server-side utilities (`[WebService]`, `[QueryModel]`, `IModelItem`, `IModelList<T>`, `HandleWebRequestAsync()`, `IModelQuery<T,D>`)
 - DevInstance.LogScope — scope-based logging (`IScopeManager`, `IScopeLog`)
 

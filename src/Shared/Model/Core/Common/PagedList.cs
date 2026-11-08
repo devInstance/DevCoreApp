@@ -9,7 +9,7 @@ namespace DevInstance.DevCoreApp.Shared.Model.Core.Common;
 /// The one paginated list type used by services, the API and the clients.
 /// Replaces WebServiceToolkit's obsolete <c>ModelList&lt;T&gt;</c> and serializes to the same JSON.
 /// </summary>
-public class PagedList<T> : IModelList<T>
+public class PagedList<T> : IModelList<T>, IModelListHighlights
 {
     public int TotalCount { get; set; }
     public int PagesCount { get; set; }

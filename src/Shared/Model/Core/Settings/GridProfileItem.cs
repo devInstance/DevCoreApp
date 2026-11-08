@@ -34,4 +34,9 @@ public class GridColumnState
     public string Field { get; set; } = string.Empty;
     public bool IsVisible { get; set; } = true;
     public int Order { get; set; }
+
+    /// <summary>Width the user dragged the column to (a percentage, e.g. "23.50%"); null keeps the page default.</summary>
+    public string? Width { get; set; }
+    /// <summary>True for the column the grid is grouped by (at most one).</summary>
+    public bool IsGrouped { get; set; }
 }

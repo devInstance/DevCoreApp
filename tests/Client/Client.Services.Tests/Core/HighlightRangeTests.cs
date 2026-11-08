@@ -1,5 +1,6 @@
 using System.Text.Json;
 using DevInstance.DevCoreApp.Shared.Model.Core.Common;
+using DevInstance.WebServiceToolkit.Common.Model;
 using Xunit;
 
 namespace DevInstance.DevCoreApp.Client.Services.Tests.Core;

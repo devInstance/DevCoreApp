@@ -8,14 +8,17 @@
 		<AssemblyName>DevInstance.DevCoreApp.Client.Desktop</AssemblyName>
 		<RootNamespace>DevInstance.DevCoreApp.Client.Desktop</RootNamespace>
 		<Configurations>Debug;Release;ServiceMocks</Configurations>
+		<!-- A missing component package only warns (RZ10012) and renders nothing; fail the build instead. -->
+		<WarningsAsErrors>$(WarningsAsErrors);RZ10012</WarningsAsErrors>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="DevInstance.BlazorToolkit" Version="10.5.0" />
-		<PackageReference Include="DevInstance.LogScope.NET" Version="10.1.0" />
-		<PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="10.0.12" />
-		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.12" />
-		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.12" PrivateAssets="all" />
+		<PackageReference Include="DevInstance.BlazorToolkit" Version="10.7.0" />
+		<PackageReference Include="DevInstance.BlazorToolkit.Components" Version="10.7.0" />
+		<PackageReference Include="DevInstance.LogScope.NET" Version="10.1.1" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="10.0.14" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.14" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.14" PrivateAssets="all" />
 		<PackageReference Include="DartSassBuilder" Version="1.1.0" />
 	</ItemGroup>
 

@@ -77,7 +77,9 @@ keys are not camel-cased), then ranges of UTF-16 offsets into that field's value
 
 Item fields never carry markup. Servers build this with `SearchHighlighter` (`Server.Services.Core.Search`),
 configured next to the query's `Search()` so the two match the same way; clients render it with
-`PagedList.HighlightsFor(id, field)` and the Desktop `<SearchHighlight>` component.
+`PagedList.HighlightsFor(id, field)` and `<SearchHighlight>` (BlazorToolkit.Components; `PagedList<T>`
+implements WebServiceToolkit's `IModelListHighlights`, and `HighlightRange` lives in
+`DevInstance.WebServiceToolkit.Common.Model`).
 
 Query parameters bind to `[QueryModel]` classes deriving from `ListQuery`:
 

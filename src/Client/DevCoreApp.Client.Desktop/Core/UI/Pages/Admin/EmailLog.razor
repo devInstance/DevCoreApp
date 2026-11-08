@@ -79,7 +79,7 @@
     </GroupHeaderTemplate>
 </HDataGrid>
 
-<GridSettings Columns="Columns" OnSave="OnSave" PageSize="pageCount" TItem="DevInstance.DevCoreApp.Shared.Model.Core.EmailLogItem" />
+<GridSettings Columns="Columns" OnSave="OnSave" PageSize="pageCount" EnableGrouping="!GroupByStatus" TItem="DevInstance.DevCoreApp.Shared.Model.Core.EmailLogItem" />
 
 @if (SelectedEmail != null)
 {

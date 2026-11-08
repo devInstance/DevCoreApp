@@ -3,6 +3,7 @@ using DevInstance.BlazorToolkit.Services;
 using DevInstance.DevCoreApp.Client.Services.Core.GridProfiles;
 using DevInstance.DevCoreApp.Client.Services.Core.ApiKeys;
 using DevInstance.DevCoreApp.Client.Desktop.Core.UI.Components;
+using DevInstance.BlazorToolkit.Components.DataGrid;
 using DevInstance.DevCoreApp.Client.Desktop.Core.UI.Model.Grid;
 using DevInstance.DevCoreApp.Shared.Model.Core.ApiKeys;
 using DevInstance.DevCoreApp.Shared.Model.Core.Settings;
@@ -103,19 +104,7 @@ public partial class ApiKeysPage
         SortField = profile.SortField ?? string.Empty;
         IsAsc = profile.IsAsc;
 
-        foreach (var columnState in profile.Columns)
-        {
-            var column = Columns.FirstOrDefault(c => c.Field == columnState.Field);
-            if (column != null)
-                column.IsVisible = columnState.IsVisible;
-        }
-
-        if (profile.Columns.Count > 0)
-        {
-            Columns = Columns
-                .OrderBy(c => profile.Columns.FindIndex(cs => cs.Field == c.Field) is var idx && idx >= 0 ? idx : int.MaxValue)
-                .ToList();
-        }
+        Columns = Columns.ApplyProfile(profile);
     }
 
     private async Task SaveGridProfile()
@@ -127,17 +116,12 @@ public partial class ApiKeysPage
             PageSize = pageCount,
             SortField = string.IsNullOrEmpty(SortField) ? null : SortField,
             IsAsc = IsAsc,
-            Columns = Columns.Select((c, index) => new GridColumnState
-            {
-                Field = c.Field,
-                IsVisible = c.IsVisible,
-                Order = index
-            }).ToList()
+            Columns = Columns.ToColumnStates()
         };
 
-        await Host.ServiceSubmitAsync(
-            async () => await GridProfileService.SaveAsync(profileItem)
-        );
+        // Not through Host: it would flip Host.InProgress, which the grid shows as loading rows on
+        // every resize / move / sort. A layout preference that fails to save is not worth an error banner.
+        await GridProfileService.SaveAsync(profileItem);
     }
 
     // ---------- Grid Events ----------
